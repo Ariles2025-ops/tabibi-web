@@ -12,6 +12,16 @@ export interface Medecin {
   ville: string;
 }
 
+/** Creneau de consultation propose par un medecin. */
+export interface Creneau {
+  id: string;
+  medecinId: string;
+  /** Date/heure de debut au format ISO 8601. */
+  debut: string;
+  dureeMinutes: number;
+  disponible: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AnnuaireService {
   private http = inject(HttpClient);
@@ -23,5 +33,13 @@ export class AnnuaireService {
     if (wilaya) params = params.set('wilaya', wilaya);
     if (q) params = params.set('q', q);
     return this.http.get<Medecin[]>(`${this.base}/api/medecins`, { params });
+  }
+
+  medecin(id: string): Observable<Medecin> {
+    return this.http.get<Medecin>(`${this.base}/api/medecins/${id}`);
+  }
+
+  creneaux(medecinId: string): Observable<Creneau[]> {
+    return this.http.get<Creneau[]>(`${this.base}/api/medecins/${medecinId}/creneaux`);
   }
 }

@@ -1,7 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OAuthService } from 'angular-oauth2-oidc';
-import { authConfig } from '../auth/auth.config';
+import { AuthService } from '../auth/auth.service';
 import { Moi, MoiService } from './moi.service';
 
 @Component({
@@ -10,7 +9,7 @@ import { Moi, MoiService } from './moi.service';
   imports: [CommonModule],
   template: `
     <main style="max-width:640px;margin:40px auto;padding:0 16px">
-      <h1 style="color:var(--vert)">Tabibi</h1>
+      <h1 style="color:var(--vert)">Mon compte</h1>
       <button *ngIf="!connecte()" (click)="seConnecter()">Se connecter</button>
       <div *ngIf="connecte()">
         <p>Connecte en tant que <b>{{ moi()?.nom }}</b></p>
@@ -21,20 +20,19 @@ import { Moi, MoiService } from './moi.service';
   `,
 })
 export class MoiComponent implements OnInit {
-  private oauth = inject(OAuthService);
+  private auth = inject(AuthService);
   private service = inject(MoiService);
   connecte = signal(false);
   moi = signal<Moi | null>(null);
 
   async ngOnInit() {
-    this.oauth.configure(authConfig);
-    await this.oauth.loadDiscoveryDocumentAndTryLogin();
-    if (this.oauth.hasValidAccessToken()) {
+    await this.auth.pret();
+    if (this.auth.estConnecte()) {
       this.connecte.set(true);
       this.service.moi().subscribe((m) => this.moi.set(m));
     }
   }
 
-  seConnecter() { this.oauth.initCodeFlow(); }
-  seDeconnecter() { this.oauth.logOut(); this.connecte.set(false); }
+  seConnecter() { this.auth.seConnecter(); }
+  seDeconnecter() { this.auth.seDeconnecter(); this.connecte.set(false); }
 }

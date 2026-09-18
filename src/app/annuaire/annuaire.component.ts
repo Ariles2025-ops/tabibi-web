@@ -10,10 +10,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <header style="display:flex;justify-content:space-between;align-items:center">
-        <h1 style="color:var(--vert);margin:0">Tabibi</h1>
-        <a routerLink="/moi">Mon compte</a>
-      </header>
+      <h1 style="color:var(--vert);margin:0">Trouver un praticien</h1>
 
       <form (ngSubmit)="rechercher()" style="display:flex;gap:8px;flex-wrap:wrap;margin:20px 0">
         <input [(ngModel)]="q" name="q" placeholder="Nom du medecin"
@@ -33,10 +30,11 @@ import { AnnuaireService, Medecin } from './annuaire.service';
 
       <p *ngIf="charge()">Recherche…</p>
       <ul style="list-style:none;padding:0;display:grid;gap:10px">
-        <li *ngFor="let m of resultats()"
-            style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
-          <strong>{{ m.nomComplet }}</strong><br>
-          <span style="color:#566b64">{{ m.specialiteFr }} · {{ m.ville }} ({{ m.wilayaFr }})</span>
+        <li *ngFor="let m of resultats()" style="border:1px solid #e4e9e7;border-radius:12px">
+          <a [routerLink]="['/medecins', m.id]" style="display:block;padding:14px;color:inherit;text-decoration:none">
+            <strong style="color:var(--vert)">{{ m.nomComplet }}</strong><br>
+            <span style="color:#566b64">{{ m.specialiteFr }} · {{ m.ville }} ({{ m.wilayaFr }})</span>
+          </a>
         </li>
       </ul>
       <p *ngIf="!charge() && resultats().length === 0">Aucun praticien trouve.</p>
