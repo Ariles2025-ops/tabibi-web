@@ -17,3 +17,7 @@ npm start          # http://localhost:4200
 ## Prochaines etapes
 - Recherche de medecins, fiche, reservation (parcours patient).
 - SSR (Angular Universal) pour les pages publiques / SEO.
+
+## v0.2.0 — Annuaire (web)
+- Ecran d'accueil public : recherche de praticiens (specialite, wilaya, nom) via `GET /api/medecins`.
+- `/moi` : compte utilisateur (connexion Keycloak).
