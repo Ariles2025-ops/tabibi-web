@@ -14,6 +14,19 @@ npm start          # http://localhost:4200
 # necessite l'API (tabibi-backend) + Keycloak (docker compose up) en marche
 ```
 
+## Tester
+Tests unitaires Karma / Jasmine (`*.spec.ts` a cote de chaque fichier ; services avec `HttpTestingController`,
+composants avec un service factice) :
+```bash
+npx ng test                                                    # Chrome, mode veille
+npx ng test --watch=false --browsers=ChromeHeadless            # une passe, Chrome headless
+npx ng test --watch=false --browsers=ChromeHeadlessCI          # idem sans bac a sable (CI, conteneur, execution en root)
+CHROME_BIN=/chemin/vers/chrome npx ng test --watch=false --browsers=ChromeHeadlessCI   # Chrome hors du PATH
+```
+Le lanceur `ChromeHeadlessCI` (`ChromeHeadless` + `--no-sandbox --disable-gpu`) est defini dans `karma.conf.js`.
+L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, `ng build` et `ng test` headless ;
+`package-lock.json` est versionne pour la reproductibilite. Le journal des versions est dans `docs/JOURNAL.md`.
+
 ## Prochaines etapes
 - Nom du patient dans l'agenda et sur l'ordonnance (l'API n'expose que l'identifiant).
 - SSR (Angular Universal) pour les pages publiques / SEO.
@@ -61,3 +74,17 @@ npm start          # http://localhost:4200
   rendez-vous partagés (« Honoré » ajouté, un rendez-vous honoré ne s'annule plus).
 - Barre de navigation : section « Espace médecin » (Agenda, Disponibilités, Mes ordonnances rédigées), visible
   uniquement si `estMedecin()`.
+
+## v0.6.0 — Notifications
+- Cloche de notifications dans la barre de navigation (utilisateurs connectés) : lien « Notifications (n) » avec le
+  nombre de non lues (`GET /api/notifications/non-lues/nombre`), relu toutes les 60 s (`timer` + `switchMap`,
+  arrêt à la destruction du composant), au clic et après chaque marquage lu ; une erreur de l'API laisse le
+  dernier compteur connu.
+- `/notifications` : boîte de réception (`GET /api/notifications/mes`), les plus récentes d'abord, non lues mises
+  en avant (fond teinté, sujet en vert), bouton « Marquer comme lue » (`POST /api/notifications/{id}/lue`) et
+  « Tout marquer comme lu » (`POST /api/notifications/toutes-lues`) ; état vide « Aucune notification pour le
+  moment. ». Redirige vers la connexion si l'utilisateur n'est pas connecté.
+- `NotificationService` (`mesNotifications`, `nombreNonLues`, `marquerLue`, `toutMarquerLu`, flux `changements$`).
+- Infrastructure de test : Karma / Jasmine (`tsconfig.spec.json`, cible `test` d'`angular.json`, `karma.conf.js`
+  avec le lanceur `ChromeHeadlessCI`), specs du service, des deux composants et test de fumée d'`AppComponent` ;
+  workflow GitHub Actions.

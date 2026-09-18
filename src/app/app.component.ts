@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
+import { ClocheNotificationsComponent } from './notifications/cloche-notifications.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ClocheNotificationsComponent],
   template: `
     <nav style="background:var(--vert)">
       <div style="max-width:720px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
@@ -17,6 +18,7 @@ import { RoleService } from './auth/role.service';
         <a *ngIf="connecte()" routerLink="/mes-ordonnances" routerLinkActive="actif">Mes ordonnances</a>
         <a routerLink="/verifier" routerLinkActive="actif">Vérifier une ordonnance</a>
         <a routerLink="/moi" routerLinkActive="actif" style="margin-left:auto">Mon compte</a>
+        <app-cloche-notifications *ngIf="connecte()" />
       </div>
       <div *ngIf="estMedecin()" style="background:#0b5c4b">
         <div style="max-width:720px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;font-size:.95rem">

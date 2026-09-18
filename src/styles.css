@@ -9,6 +9,11 @@ button:disabled { opacity:.6; cursor:default; }
 .bouton { padding:10px 16px; background:var(--vert); color:#fff; border:0; border-radius:8px; font:inherit; cursor:pointer; text-decoration:none; display:inline-block; }
 .bouton-secondaire { padding:10px 16px; background:#fff; color:var(--vert); border:1px solid var(--vert); border-radius:8px; font:inherit; cursor:pointer; text-decoration:none; display:inline-block; }
 
+/* Notifications : une non lue ressort (fond teinte, sujet en vert), une lue est attenuee. */
+.notification-non-lue { background:#f3faf7; }
+.notification-non-lue strong { color:var(--vert); }
+.notification-lue { color:#566b64; }
+
 /* Impression (ordonnance) : seul le contenu de la page est imprime. */
 @media print {
   nav, .sans-impression { display:none !important; }

@@ -1,0 +1,20 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Dependances (package-lock.json)
+        run: npm ci
+      - name: Build
+        run: npx ng build
+      - name: Tests unitaires (Chrome headless, sans bac a sable)
+        run: npx ng test --watch=false --browsers=ChromeHeadlessCI
