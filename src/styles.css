@@ -3,3 +3,15 @@ body { font-family: system-ui, sans-serif; margin: 0; color:#10241F; }
 nav a { color:#fff; text-decoration:none; }
 nav a.actif { text-decoration:underline; text-underline-offset:4px; }
 button:disabled { opacity:.6; cursor:default; }
+
+/* Champs et boutons des formulaires. */
+.champ { padding:10px; border:1px solid #ddd; border-radius:8px; font:inherit; box-sizing:border-box; }
+.bouton { padding:10px 16px; background:var(--vert); color:#fff; border:0; border-radius:8px; font:inherit; cursor:pointer; text-decoration:none; display:inline-block; }
+.bouton-secondaire { padding:10px 16px; background:#fff; color:var(--vert); border:1px solid var(--vert); border-radius:8px; font:inherit; cursor:pointer; text-decoration:none; display:inline-block; }
+
+/* Impression (ordonnance) : seul le contenu de la page est imprime. */
+@media print {
+  nav, .sans-impression { display:none !important; }
+  body { color:#000; }
+  main { max-width:none !important; margin:0 !important; padding:0 !important; }
+}
