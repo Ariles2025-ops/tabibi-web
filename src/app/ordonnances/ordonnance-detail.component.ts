@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
+import { RoleService } from '../auth/role.service';
 import { Ordonnance, OrdonnanceService } from './ordonnance.service';
 import { libelleStatutOrdonnance } from './statut-ordonnance';
 
@@ -14,7 +15,8 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <p class="sans-impression" style="margin:0 0 16px">
-        <a routerLink="/mes-ordonnances" style="color:var(--vert)">Retour à mes ordonnances</a>
+        <a *ngIf="!estMedecin()" routerLink="/mes-ordonnances" style="color:var(--vert)">Retour à mes ordonnances</a>
+        <a *ngIf="estMedecin()" routerLink="/medecin/ordonnances" style="color:var(--vert)">Retour à mes ordonnances rédigées</a>
       </p>
 
       <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
@@ -72,9 +74,12 @@ export class OrdonnanceDetailComponent implements OnInit {
   private auth = inject(AuthService);
   private service = inject(OrdonnanceService);
   private annuaire = inject(AnnuaireService);
+  private roleService = inject(RoleService);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
+  /** Lien de retour : liste du patient ou liste des ordonnances redigees par le medecin. */
+  estMedecin = this.roleService.estMedecin;
   ordonnance = signal<Ordonnance | null>(null);
   /** Praticien emetteur, lu dans l'annuaire pour afficher son nom. */
   medecin = signal<Medecin | null>(null);

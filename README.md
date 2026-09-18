@@ -15,7 +15,7 @@ npm start          # http://localhost:4200
 ```
 
 ## Prochaines etapes
-- Espace praticien (gestion des creneaux).
+- Nom du patient dans l'agenda et sur l'ordonnance (l'API n'expose que l'identifiant).
 - SSR (Angular Universal) pour les pages publiques / SEO.
 
 ## v0.2.0 — Annuaire (web)
@@ -43,3 +43,21 @@ npm start          # http://localhost:4200
   émise le … » ou « Code inconnu ». Accepte `?code=…` (lien depuis le détail d'une ordonnance).
 - `OrdonnanceService` (`mes`, `parId`, `verifier`, `emettre`) ; composant `app-liste-ordonnances` partagé.
 - Barre de navigation : « Mes ordonnances » (utilisateurs connectés) et « Vérifier une ordonnance » (public).
+
+## v0.5.0 — Espace médecin
+- `RoleService` : profil et rôles lus une seule fois sur `GET /api/moi` après connexion (`moi()`, `roles()`,
+  `estMedecin()`, mis en cache) ; `/moi` réutilise ce cache.
+- `medecinGuard` (`canActivate` sur `/medecin/...`) : non connecté → connexion Keycloak puis retour sur la page
+  demandée ; connecté sans le rôle MEDECIN → redirection vers l'accueil.
+- `/medecin/agenda` : rendez-vous du praticien (`GET /api/medecin/rendezvous`) — date, statut, identifiant du patient,
+  bouton « Marquer honoré » (`POST /api/rendezvous/{id}/honorer`, si CONFIRME) et « Rédiger une ordonnance »
+  (ouvre le formulaire prérempli).
+- `/medecin/disponibilites` : ouverture d'un créneau — date et heure (`<input type="datetime-local">`, converties en
+  ISO 8601 UTC) et durée en minutes → `POST /api/medecin/creneaux`, message de succès.
+- `/medecin/ordonnance/nouvelle?patientId=&rendezVousId=` : formulaire à lignes dynamiques (ajouter / supprimer
+  une ligne : médicament, posologie, durée) → `POST /api/ordonnances` puis redirection vers le détail.
+- `/medecin/ordonnances` : ordonnances rédigées par le praticien (`GET /api/medecin/ordonnances`).
+- `MedecinService` (`agenda`, `ouvrirCreneau`, `honorer`, `ordonnancesRedigees`) ; libellés de statut de
+  rendez-vous partagés (« Honoré » ajouté, un rendez-vous honoré ne s'annule plus).
+- Barre de navigation : section « Espace médecin » (Agenda, Disponibilités, Mes ordonnances rédigées), visible
+  uniquement si `estMedecin()`.

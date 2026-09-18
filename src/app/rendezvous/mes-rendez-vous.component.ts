@@ -5,13 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RendezVous, RendezVousService } from './rendezvous.service';
-
-/** Libelles francais des statuts connus ; un statut inconnu est affiche tel quel. */
-const LIBELLES_STATUT: Partial<Record<string, string>> = {
-  CONFIRME: 'Confirmé',
-  RESERVE: 'Réservé',
-  ANNULE: 'Annulé',
-};
+import { libelleStatutRendezVous } from './statut-rendez-vous';
 
 @Component({
   selector: 'app-mes-rendez-vous',
@@ -112,12 +106,13 @@ export class MesRendezVousComponent implements OnInit {
     });
   }
 
+  /** Un rendez-vous deja annule ou deja honore (consultation passee) ne s'annule plus. */
   peutAnnuler(rdv: RendezVous): boolean {
-    return rdv.statut !== 'ANNULE';
+    return rdv.statut !== 'ANNULE' && rdv.statut !== 'HONORE';
   }
 
   libelleStatut(statut: string): string {
-    return LIBELLES_STATUT[statut] ?? statut;
+    return libelleStatutRendezVous(statut);
   }
 
   /** Recupere (une seule fois par praticien) le nom des medecins des rendez-vous. */

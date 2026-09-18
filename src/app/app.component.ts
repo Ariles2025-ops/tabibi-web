@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './auth/auth.service';
+import { RoleService } from './auth/role.service';
 
 @Component({
   selector: 'app-root',
@@ -17,19 +18,31 @@ import { AuthService } from './auth/auth.service';
         <a routerLink="/verifier" routerLinkActive="actif">Vérifier une ordonnance</a>
         <a routerLink="/moi" routerLinkActive="actif" style="margin-left:auto">Mon compte</a>
       </div>
+      <div *ngIf="estMedecin()" style="background:#0b5c4b">
+        <div style="max-width:720px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;font-size:.95rem">
+          <span style="color:#cfe7e0">Espace médecin</span>
+          <a routerLink="/medecin/agenda" routerLinkActive="actif">Agenda</a>
+          <a routerLink="/medecin/disponibilites" routerLinkActive="actif">Disponibilités</a>
+          <a routerLink="/medecin/ordonnances" routerLinkActive="actif">Mes ordonnances rédigées</a>
+        </div>
+      </div>
     </nav>
     <router-outlet />
   `,
 })
 export class AppComponent implements OnInit {
   private auth = inject(AuthService);
+  private roleService = inject(RoleService);
 
   /** Etat de connexion, connu une fois l'initialisation OIDC terminee (liens reserves aux connectes). */
   connecte = signal(false);
+  /** Vrai si l'utilisateur connecte a le role MEDECIN (section « Espace médecin »). */
+  estMedecin = this.roleService.estMedecin;
 
-  /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()). */
+  /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()), puis roles. */
   async ngOnInit() {
     await this.auth.initialiser();
     this.connecte.set(this.auth.estConnecte());
+    this.roleService.charger();
   }
 }
