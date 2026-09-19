@@ -7,6 +7,7 @@ import { AuthService } from '../auth/auth.service';
 import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { libelleStatutTeleconsultation } from './statut-teleconsultation';
 import { Teleconsultation, TeleconsultationService, salleAccessible } from './teleconsultation.service';
+import { SeoService } from '../seo/seo.service';
 
 /**
  * Teleconsultations du patient connecte (GET /api/teleconsultations/mes). Le lien de la salle video n'est
@@ -63,6 +64,7 @@ import { Teleconsultation, TeleconsultationService, salleAccessible } from './te
   `,
 })
 export class MesTeleconsultationsComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(TeleconsultationService);
   private rendezVousService = inject(RendezVousService);
@@ -81,6 +83,7 @@ export class MesTeleconsultationsComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Mes téléconsultations');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);

@@ -472,3 +472,55 @@ decrite dans le README et le journal de tabibi-backend.
 
 ## v0.19.1 — Version alignee
 - package.json / package-lock.json : version 0.19.x, alignee sur ce journal.
+
+## v0.20.0 — SEO : titres, descriptions, page 404, robots et plan du site
+- Pourquoi : les pages rendues par le serveur (v0.19.0) portaient toutes le titre « Tabibi », sans description ; une
+  URL inconnue rendait la coquille en 200 ; pas de `robots.txt` ni de plan du site.
+- `seo/seo.service.ts` (`SeoService`, `Title` + `Meta` d'Angular) : `definir({ titre, description?, canonique?,
+  privee? })` → `<title>… | Tabibi</title>`, `<meta name="description">` (`DESCRIPTION_PAR_DEFAUT` sinon),
+  `<link rel="canonical">` (origine de `document.location` + chemin, retire sans chemin, jamais duplique),
+  `<meta name="robots" content="noindex, nofollow">` sur une page privee (retire sur une page publique) ;
+  `definirPrivee(titre)` ; `introuvable(titre = 'Page introuvable')` pose en plus `statut = 404` sur
+  `REPONSE_SERVEUR` (`seo/reponse-serveur.ts`, jeton optionnel : `@angular/ssr` 18.2 n'a pas de `tokens` — verifie
+  dans node_modules, seul `CommonEngine` est exporte — le jeton est donc fourni par `server.ts`, objet `{ statut: 200 }`
+  cree par requete, passe dans `providers` de `CommonEngine.render`, puis `res.status(reponse.statut)`).
+- Pages : annuaire « Trouver un médecin en Algérie » (description, canonique `/`) ; verification « Vérifier une
+  ordonnance » (canonique `/verifier`) ; fiche « Dr <nom>, <spécialité> à <ville> » (le « Dr » en tete de
+  `nomComplet` n'est pas double), description « Prenez rendez-vous avec … : créneaux disponibles, avis des patients
+  et liste d'attente sur Tabibi. », canonique `/medecins/<id>` ; « Fiche du praticien » tant que l'API n'a pas
+  repondu ; 404 de l'API → « Praticien introuvable », `noindex`, statut 404. Les 28 autres pages (toutes reservees a
+  un utilisateur connecte) appellent `definirPrivee(<h1>)` en tete de `ngOnInit` (`DisponibilitesComponent` gagne
+  un `ngOnInit`).
+- `page-introuvable/page-introuvable.component.ts` (`PageIntrouvableComponent`, route `**` en fin de
+  `app.routes.ts`) : « Page introuvable », liens « Trouver un médecin » et « Vérifier une ordonnance »,
+  `seo.introuvable()`.
+- `server.ts` : `origineSite(req)` (`https://DOMAINE` sinon `protocol://host` de la requete, `trust proxy`) ;
+  `robotsTxt(origine)` (`User-agent: *`, `Disallow` de `CHEMINS_PRIVES` : `/moi`, `/mes-`, `/ordonnances/`,
+  `/medecin/`, `/medecin$`, `/admin`, `/secretaire`, `/pharmacie`, `/messagerie`, `/notifications`, `/dawini`,
+  `/avis`, `/liste-attente`, `/teleconsultations` — `/medecin` seul aurait exclu les fiches `/medecins/...` —,
+  `Sitemap: <origine>/sitemap.xml`) ; `sitemapXml(origine, chemins)` (`urlset` sitemaps.org, `loc` echappes) ;
+  `creerListeFiches(apiUrl)` : `fetch` de `GET /api/medecins` (delai 5 s, `AbortSignal.timeout`), chemins
+  `/medecins/<id>` gardes une heure en memoire, `[]` avec trace en cas d'erreur (repli sur `PAGES_PUBLIQUES` :
+  `/`, `/verifier`) ; routes `GET /robots.txt` (`text/plain`) et `GET /sitemap.xml` (`application/xml`) declarees
+  avant `express.static` (`*.*` les aurait prises pour des fichiers absents), `Cache-Control: public, max-age=3600`.
+- Verifie (`ng build`, `PORT=4100 TABIBI_API_URL=http://localhost:4101 node dist/tabibi-web/server/server.mjs` face a
+  une API factice de deux praticiens) : `/` → `<title>Trouver un médecin en Algérie | Tabibi</title>`, description,
+  canonique `http://localhost:4100/`, pas de robots ; `/medecins/m1` → 200, « Dr Amina Belkacem, Généraliste à
+  Alger | Tabibi », description, canonique ; `/medecins/inconnu-xyz` → **404**, « Praticien introuvable | Tabibi »,
+  `noindex`, texte « Praticien introuvable. » ; `/page-inexistante` → **404**, « Page introuvable | Tabibi »,
+  `noindex`, `<h1>Page introuvable</h1>` ; `/verifier` → titre et canonique ; `/mes-rendez-vous` → « Mes rendez-vous
+  | Tabibi », `noindex` ; `/robots.txt` → 200 `text/plain`, les Disallow et `Sitemap: http://localhost:4100/sitemap.xml`
+  (avec `DOMAINE=tabibi.dz` : `https://tabibi.dz/sitemap.xml`) ; `/sitemap.xml` → 200 `application/xml`, `/`,
+  `/verifier`, `/medecins/m1`, `/medecins/m2` ; API injoignable → `/` et `/verifier` seulement, trace « Plan du site :
+  liste des praticiens indisponible ».
+- Limite : sous un garde de role (`/medecin/agenda`, `/admin`), aucun composant n'est rendu cote serveur, la page
+  garde le titre « Tabibi » sans `noindex` (chemins exclus par `robots.txt`).
+- README : « Deploiement » (`server.ts`, `DOMAINE`), « Rendu cote serveur » (limites), nouvelle section
+  « Referencement (SEO) », « Prochaines etapes ». `package.json` 0.20.0.
+- Tests (15 specs ajoutees, 286 au total) : `SeoService` (titre + suffixe, description, canonique, remplacement sans
+  doublon, description par defaut et canonique retire, `definirPrivee` noindex puis retrait, `introuvable` 404, titre
+  particulier, sans `REPONSE_SERVEUR`), `PageIntrouvableComponent` (message, liens, service appele, titre, noindex,
+  statut 404), `AnnuaireComponent` (nouveau spec : recherche au chargement, liens, titre / description / canonique,
+  criteres), `FicheMedecinComponent` (titre « Dr Amina Belkacem, Généraliste à Alger | Tabibi », description,
+  canonique, indexable ; praticien inconnu → titre, noindex, 404), `MesNotificationsComponent` (titre, noindex).
+

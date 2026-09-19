@@ -7,6 +7,7 @@ import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { Ordonnance, OrdonnanceService } from './ordonnance.service';
 import { libelleStatutOrdonnance } from './statut-ordonnance';
+import { SeoService } from '../seo/seo.service';
 
 @Component({
   selector: 'app-ordonnance-detail',
@@ -70,6 +71,7 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
   `,
 })
 export class OrdonnanceDetailComponent implements OnInit {
+  private seo = inject(SeoService);
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
   private service = inject(OrdonnanceService);
@@ -87,6 +89,7 @@ export class OrdonnanceDetailComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Ordonnance');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);

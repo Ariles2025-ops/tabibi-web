@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../auth/auth.service';
 import { Notification, NotificationService } from './notification.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Boite de reception de l'utilisateur connecte (GET /api/notifications/mes), avec marquage lu. */
 @Component({
@@ -45,6 +46,7 @@ import { Notification, NotificationService } from './notification.service';
   `,
 })
 export class MesNotificationsComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(NotificationService);
 
@@ -58,6 +60,7 @@ export class MesNotificationsComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Mes notifications');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);

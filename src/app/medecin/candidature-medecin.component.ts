@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { Candidature, DemandeCandidature, libelleStatutCandidature } from '../admin/admin.service';
 import { AuthService } from '../auth/auth.service';
 import { MedecinService } from './medecin.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Champs du formulaire, vides ou prerempli depuis une candidature refusee. */
 function formulaireVide(): DemandeCandidature {
@@ -100,6 +101,7 @@ function formulaireVide(): DemandeCandidature {
   `,
 })
 export class CandidatureMedecinComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(MedecinService);
 
@@ -114,6 +116,7 @@ export class CandidatureMedecinComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
+    this.seo.definirPrivee('Ma candidature');
     this.charger();
   }
 

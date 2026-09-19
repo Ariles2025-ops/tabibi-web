@@ -1,4 +1,4 @@
-import { Component, LOCALE_ID, inject, signal } from '@angular/core';
+import { Component, LOCALE_ID, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { DUREE_MAX_MINUTES, DUREE_MIN_MINUTES } from '../secretaire/secretaire.service';
 import { MedecinService } from './medecin.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Creneau que le medecin vient d'ouvrir (message de confirmation). */
 interface CreneauOuvert {
@@ -51,10 +52,15 @@ interface CreneauOuvert {
     </main>
   `,
 })
-export class DisponibilitesComponent {
+export class DisponibilitesComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(MedecinService);
   private locale = inject(LOCALE_ID);
+
+  ngOnInit() {
+    this.seo.definirPrivee('Disponibilités');
+  }
 
   /** Valeur du champ datetime-local : heure locale sans fuseau (« 2026-09-21T09:30 »). */
   debut = '';

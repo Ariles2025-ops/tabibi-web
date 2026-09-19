@@ -11,6 +11,7 @@ import { AvisService, SyntheseAvis } from '../avis/avis.service';
 import { InscriptionAttente, ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { Conversation, MessagerieService } from '../messagerie/messagerie.service';
 import { RendezVousService } from '../rendezvous/rendezvous.service';
+import { REPONSE_SERVEUR, ReponseServeur } from '../seo/reponse-serveur';
 import { FicheMedecinComponent } from './fiche-medecin.component';
 
 const MEDECIN: Medecin = {
@@ -51,10 +52,13 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
   let listeAttente: jasmine.SpyObj<ListeAttenteService>;
   let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy };
   let naviguer: jasmine.Spy;
+  let annuaire: jasmine.SpyObj<AnnuaireService>;
+  let reponse: ReponseServeur;
 
   beforeEach(() => {
     registerLocaleData(localeFr);
-    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'creneaux']);
+    reponse = { statut: 200 };
+    annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'creneaux']);
     annuaire.medecin.and.returnValue(of(MEDECIN));
     annuaire.creneaux.and.returnValue(of([]));
     messagerie = jasmine.createSpyObj<MessagerieService>('MessagerieService', ['ouvrir']);
@@ -75,6 +79,7 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
         { provide: ListeAttenteService, useValue: listeAttente },
         { provide: AuthService, useValue: auth },
         { provide: LOCALE_ID, useValue: 'fr' },
+        { provide: REPONSE_SERVEUR, useValue: reponse },
       ],
     });
     naviguer = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
@@ -196,5 +201,27 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
     await afficher();
     expect(texte()).toContain("Seul un compte patient peut s'inscrire sur une liste d'attente.");
     expect(boutonInscrire()!.disabled).toBeFalse();
+  });
+
+  it('titre et description SEO de la fiche : « Dr <nom>, <spécialité> à <ville> | Tabibi », canonique, indexable', async () => {
+    await afficher();
+
+    expect(document.title).toBe('Dr Amina Belkacem, Généraliste à Alger | Tabibi');
+    expect(document.querySelector('meta[name="description"]')?.getAttribute('content')).toContain(
+      'Prenez rendez-vous avec Dr Amina Belkacem, généraliste à Alger (Alger)',
+    );
+    expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(`${location.origin}/medecins/m1`);
+    expect(document.querySelector('meta[name="robots"]')).toBeNull();
+    expect(reponse.statut).toBe(200);
+  });
+
+  it('praticien inconnu (404) : message, titre « Praticien introuvable », noindex et statut 404 pour le rendu serveur', async () => {
+    annuaire.medecin.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+    await afficher();
+
+    expect(texte()).toContain('Praticien introuvable.');
+    expect(document.title).toBe('Praticien introuvable | Tabibi');
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, nofollow');
+    expect(reponse.statut).toBe(404);
   });
 });

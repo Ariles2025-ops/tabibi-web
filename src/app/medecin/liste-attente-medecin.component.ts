@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { InscriptionAttente, ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { abregerIdentifiant } from '../messagerie/messagerie.service';
+import { SeoService } from '../seo/seo.service';
 
 /**
  * Liste d'attente du medecin (GET /api/medecin/liste-attente) : patients inscrits, du plus ancien au plus recent,
@@ -40,6 +41,7 @@ import { abregerIdentifiant } from '../messagerie/messagerie.service';
   `,
 })
 export class ListeAttenteMedecinComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(ListeAttenteService);
 
@@ -48,6 +50,7 @@ export class ListeAttenteMedecinComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
+    this.seo.definirPrivee("Liste d'attente");
     this.charge.set(true);
     this.service.duMedecin().subscribe({
       next: (liste) => {

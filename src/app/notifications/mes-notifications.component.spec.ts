@@ -124,4 +124,11 @@ describe('MesNotificationsComponent', () => {
     expect(service.mesNotifications).not.toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).toContain('Redirection vers la page de connexion');
   });
+
+  it('page privee : titre « Mes notifications | Tabibi » et robots noindex', async () => {
+    await afficher();
+
+    expect(document.title).toBe('Mes notifications | Tabibi');
+    expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex, nofollow');
+  });
 });

@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { SeoService } from '../seo/seo.service';
 import {
   ANNEE_NAISSANCE_MIN,
   DemandeProfil,
@@ -90,6 +91,7 @@ function formulaireVide(): DemandeProfil {
   `,
 })
 export class ProfilComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(ProfilService);
 
@@ -112,6 +114,7 @@ export class ProfilComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Mon profil');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);

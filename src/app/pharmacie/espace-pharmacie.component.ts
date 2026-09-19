@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../auth/auth.service';
 import { Besoin, DawiniService, DemandeReponse, libelleReponses } from '../dawini/dawini.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Cle localStorage du nom de la pharmacie (confort : prerempli d'une visite a l'autre, jamais indispensable). */
 const CLE_NOM_PHARMACIE = 'tabibi.pharmacie.nom';
@@ -99,6 +100,7 @@ function formulaireVide(): FormulaireReponse {
   `,
 })
 export class EspacePharmacieComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(DawiniService);
 
@@ -119,6 +121,7 @@ export class EspacePharmacieComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
+    this.seo.definirPrivee('Espace pharmacie');
     this.nomPharmacie = lireNomMemorise();
   }
 

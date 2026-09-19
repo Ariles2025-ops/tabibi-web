@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
+import { SeoService } from '../seo/seo.service';
 
 /**
  * Mon compte : utilisateur connecte, roles, identifiant du compte (sujet du jeton Keycloak, a communiquer par une
@@ -37,6 +38,7 @@ import { RoleService } from '../auth/role.service';
   `,
 })
 export class MoiComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   connecte = signal(false);
@@ -47,6 +49,7 @@ export class MoiComponent implements OnInit {
   erreurCopie = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Mon compte');
     await this.auth.pret();
     if (this.auth.estConnecte()) {
       this.connecte.set(true);

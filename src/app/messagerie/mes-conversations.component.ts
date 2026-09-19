@@ -6,6 +6,7 @@ import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { Conversation, MessagerieService, abregerIdentifiant } from './messagerie.service';
+import { SeoService } from '../seo/seo.service';
 
 /**
  * Mes conversations (GET /api/conversations), la plus recente activite d'abord. L'interlocuteur est le
@@ -51,6 +52,7 @@ import { Conversation, MessagerieService, abregerIdentifiant } from './messageri
   `,
 })
 export class MesConversationsComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   private service = inject(MessagerieService);
@@ -68,6 +70,7 @@ export class MesConversationsComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Messagerie');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);

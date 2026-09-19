@@ -7,6 +7,7 @@ import { AuthService } from '../auth/auth.service';
 import { AvisService } from '../avis/avis.service';
 import { RendezVous, RendezVousService } from './rendezvous.service';
 import { libelleStatutRendezVous } from './statut-rendez-vous';
+import { SeoService } from '../seo/seo.service';
 
 @Component({
   selector: 'app-mes-rendez-vous',
@@ -46,6 +47,7 @@ import { libelleStatutRendezVous } from './statut-rendez-vous';
   `,
 })
 export class MesRendezVousComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(RendezVousService);
   private annuaire = inject(AnnuaireService);
@@ -64,6 +66,7 @@ export class MesRendezVousComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Mes rendez-vous');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);

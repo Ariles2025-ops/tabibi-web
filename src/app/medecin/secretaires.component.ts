@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../auth/auth.service';
 import { Rattachement, estUuid } from '../secretaire/secretaire.service';
 import { MedecinService } from './medecin.service';
+import { SeoService } from '../seo/seo.service';
 
 /**
  * Secretaires du cabinet (role MEDECIN) : rattachements en cours (GET /api/medecin/secretaires), ajout par
@@ -58,6 +59,7 @@ import { MedecinService } from './medecin.service';
   `,
 })
 export class SecretairesComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(MedecinService);
 
@@ -73,6 +75,7 @@ export class SecretairesComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
+    this.seo.definirPrivee('Mes secrétaires');
     this.charger();
   }
 

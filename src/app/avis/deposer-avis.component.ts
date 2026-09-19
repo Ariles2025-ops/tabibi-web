@@ -7,6 +7,7 @@ import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RendezVous, RendezVousService } from '../rendezvous/rendezvous.service';
 import { AvisService, LONGUEUR_MAX_COMMENTAIRE, NOTE_MAX, NOTE_MIN } from './avis.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Notes proposees, de 1 a 5. */
 const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN + i);
@@ -66,6 +67,7 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
   `,
 })
 export class DeposerAvisComponent implements OnInit {
+  private seo = inject(SeoService);
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
   private service = inject(AvisService);
@@ -88,6 +90,7 @@ export class DeposerAvisComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Donner mon avis');
     this.rendezVousId = this.route.snapshot.paramMap.get('rendezVousId') ?? '';
     await this.auth.pret();
     const connecte = this.auth.estConnecte();

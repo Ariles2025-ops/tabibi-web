@@ -8,6 +8,7 @@ import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { Conversation, LONGUEUR_MAX_MESSAGE, Message, MessagerieService, abregerIdentifiant } from './messagerie.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Intervalle de relecture du fil tant que la page est ouverte. */
 const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
@@ -58,6 +59,7 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
   `,
 })
 export class ConversationComponent implements OnInit, OnDestroy {
+  private seo = inject(SeoService);
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
@@ -94,6 +96,7 @@ export class ConversationComponent implements OnInit, OnDestroy {
   });
 
   async ngOnInit() {
+    this.seo.definirPrivee('Conversation');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);

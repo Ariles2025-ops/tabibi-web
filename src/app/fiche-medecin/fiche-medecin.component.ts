@@ -8,6 +8,7 @@ import { AuthService } from '../auth/auth.service';
 import { SyntheseAvisComponent } from '../avis/synthese-avis.component';
 import { ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { MessagerieService } from '../messagerie/messagerie.service';
+import { SeoService } from '../seo/seo.service';
 
 @Component({
   selector: 'app-fiche-medecin',
@@ -83,6 +84,7 @@ export class FicheMedecinComponent implements OnInit {
   private messagerie = inject(MessagerieService);
   private listeAttente = inject(ListeAttenteService);
   private router = inject(Router);
+  private seo = inject(SeoService);
 
   private medecinId = '';
   medecin = signal<Medecin | null>(null);
@@ -114,10 +116,24 @@ export class FicheMedecinComponent implements OnInit {
     this.erreurMessagerie.set('');
     this.inscription.set('');
     this.erreurInscription.set('');
+    this.seo.definir({ titre: 'Fiche du praticien', canonique: `/medecins/${id}` });
     this.annuaire.medecin(id).subscribe({
-      next: (m) => this.medecin.set(m),
-      error: (e: HttpErrorResponse) =>
-        this.erreur.set(e.status === 404 ? 'Praticien introuvable.' : (e.error?.erreur ?? 'Impossible de charger la fiche du praticien.')),
+      next: (m) => {
+        this.medecin.set(m);
+        this.seo.definir({
+          titre: `Dr ${m.nomComplet.replace(/^Dr\.?\s+/i, '')}, ${m.specialiteFr} à ${m.ville}`,
+          description: `Prenez rendez-vous avec ${m.nomComplet}, ${m.specialiteFr.toLowerCase()} à ${m.ville} (${m.wilayaFr}) : créneaux disponibles, avis des patients et liste d'attente sur Tabibi.`,
+          canonique: `/medecins/${m.id}`,
+        });
+      },
+      error: (e: HttpErrorResponse) => {
+        if (e.status === 404) {
+          this.erreur.set('Praticien introuvable.');
+          this.seo.introuvable('Praticien introuvable');
+        } else {
+          this.erreur.set(e.error?.erreur ?? 'Impossible de charger la fiche du praticien.');
+        }
+      },
     });
     this.chargerCreneaux();
   }

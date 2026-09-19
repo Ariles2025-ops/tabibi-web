@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { Besoin, DawiniService, DemandeBesoin, libelleReponses, libelleStatutBesoin } from './dawini.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Champs du formulaire de publication, vides. */
 function formulaireVide(): Required<DemandeBesoin> {
@@ -84,6 +85,7 @@ function formulaireVide(): Required<DemandeBesoin> {
   `,
 })
 export class MesDemandesComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(DawiniService);
 
@@ -99,6 +101,7 @@ export class MesDemandesComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Dawini');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);

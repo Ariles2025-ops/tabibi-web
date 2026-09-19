@@ -6,6 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { ListeOrdonnancesComponent } from '../ordonnances/liste-ordonnances.component';
 import { Ordonnance } from '../ordonnances/ordonnance.service';
 import { MedecinService } from './medecin.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Ordonnances emises par le medecin connecte (GET /api/medecin/ordonnances). */
 @Component({
@@ -28,6 +29,7 @@ import { MedecinService } from './medecin.service';
   `,
 })
 export class OrdonnancesRedigeesComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(MedecinService);
 
@@ -36,6 +38,7 @@ export class OrdonnancesRedigeesComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
+    this.seo.definirPrivee('Mes ordonnances rédigées');
     this.charge.set(true);
     this.service.ordonnancesRedigees().subscribe({
       next: (liste) => {

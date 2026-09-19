@@ -33,6 +33,7 @@ import { EspaceSecretaireComponent } from './secretaire/espace-secretaire.compon
 import { VerifierOrdonnanceComponent } from './ordonnances/verifier-ordonnance.component';
 import { MesTeleconsultationsComponent } from './teleconsultation/mes-teleconsultations.component';
 import { MoiComponent } from './moi/moi.component';
+import { PageIntrouvableComponent } from './page-introuvable/page-introuvable.component';
 import { ProfilComponent } from './moi/profil.component';
 
 export const routes: Routes = [
@@ -97,4 +98,6 @@ export const routes: Routes = [
   { path: 'moi', component: MoiComponent },
   // Mon profil (utilisateur connecte, tous roles : la page redirige vers la connexion).
   { path: 'moi/profil', component: ProfilComponent },
+  // Toute autre URL : page introuvable (statut 404 au rendu serveur, voir PageIntrouvableComponent).
+  { path: '**', component: PageIntrouvableComponent },
 ];

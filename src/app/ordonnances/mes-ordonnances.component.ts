@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../auth/auth.service';
 import { ListeOrdonnancesComponent } from './liste-ordonnances.component';
 import { Ordonnance, OrdonnanceService } from './ordonnance.service';
+import { SeoService } from '../seo/seo.service';
 
 @Component({
   selector: 'app-mes-ordonnances',
@@ -26,6 +27,7 @@ import { Ordonnance, OrdonnanceService } from './ordonnance.service';
   `,
 })
 export class MesOrdonnancesComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(OrdonnanceService);
 
@@ -36,6 +38,7 @@ export class MesOrdonnancesComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Mes ordonnances');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);

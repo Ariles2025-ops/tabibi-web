@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { SeoService } from '../seo/seo.service';
 import { AnnuaireService, Medecin } from './annuaire.service';
 
 @Component({
@@ -43,11 +44,20 @@ import { AnnuaireService, Medecin } from './annuaire.service';
 })
 export class AnnuaireComponent implements OnInit {
   private service = inject(AnnuaireService);
+  private seo = inject(SeoService);
   q = ''; specialite = ''; wilaya = '';
   resultats = signal<Medecin[]>([]);
   charge = signal(false);
 
-  ngOnInit() { this.rechercher(); }
+  ngOnInit() {
+    this.seo.definir({
+      titre: 'Trouver un médecin en Algérie',
+      description:
+        'Annuaire des praticiens Tabibi : recherchez un médecin par spécialité, wilaya ou nom et réservez un créneau de consultation en ligne.',
+      canonique: '/',
+    });
+    this.rechercher();
+  }
 
   rechercher() {
     this.charge.set(true);

@@ -77,6 +77,7 @@ lance node au premier plan. Le meme build sert donc en recette et en production.
 | `DOMAINE` | (aucun) | domaine public, celui du `.env` de `docker-compose.prod.yml` (tabibi-backend) : en derive les deux URL ci-dessus, avec les hotes `api.` et `auth.` du Caddyfile |
 | `PORT` | `80` dans l'image (`4000` hors image) | port d'ecoute du serveur node |
 | `TABIBI_SSR_DELAI_MS` | `10000` | au-dela, la page est envoyee sans rendu serveur (voir « Rendu cote serveur ») |
+| `DOMAINE` (bis) | (aucun) | sert aussi d'origine publique (`https://DOMAINE`) aux URL absolues de `robots.txt` et `sitemap.xml` ; sinon l'origine de la requete (`X-Forwarded-*`) |
 
 Les valeurs sont nettoyees (espaces, barre oblique finale) et echappees pour le JSON ; une valeur qui n'est pas une
 URL `http(s)://` est signalee dans le journal du conteneur (l'application ne joindrait alors ni l'API ni Keycloak).
@@ -85,8 +86,10 @@ URL `http(s)://` est signalee dans le journal du conteneur (l'application ne joi
 - fichiers du build (chemins avec extension) : `no-store` sur `index.csr.html` et `assets/config.json` (remplaces a
   chaque deploiement), un an et `immutable` sur les bundles a empreinte (`main-XXXXXXXX.js`, `styles-XXXXXXXX.css`),
   une heure sur le reste de `assets/` ; fichier introuvable → 404 (pas de page rendue pour un favicon absent) ;
+- `/robots.txt` et `/sitemap.xml` : generes (voir « Referencement (SEO) ») ;
 - toute autre URL : page rendue par Angular (`no-store`), ou page sans rendu (`index.csr.html`, l'application se rend
-  dans le navigateur comme avant) si le rendu echoue ou depasse `TABIBI_SSR_DELAI_MS` ;
+  dans le navigateur comme avant) si le rendu echoue ou depasse `TABIBI_SSR_DELAI_MS` ; statut 404 quand la page
+  rendue est introuvable (route `**`, praticien inconnu) ;
 - en-tetes de securite sur toutes les reponses : `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
   `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`
   (la teleconsultation s'ouvre dans un autre onglet, sur Jitsi) et une `Content-Security-Policy` compatible Angular et
@@ -165,17 +168,44 @@ Comment (Angular 18, `@angular/ssr`, `@angular/platform-server`, express) :
 
 Limites :
 - Angular 18 n'a pas de mode de rendu par route : toutes les URL passent par le serveur, y compris les pages privees,
-  qui rendent leur etat « non connecte » (sans donnee) ; une URL inconnue rend la coquille en 200 (pas de route `**`).
+  qui rendent leur etat « non connecte » (sans donnee, avec `robots noindex`) ; une URL inconnue rend la page
+  « Page introuvable » en 404 (route `**`).
 - Le serveur appelle l'API avec la meme URL publique que le navigateur (`TABIBI_API_URL`) : c'est ce qui permet le
   cache de transfert (cle = URL). L'hote `api.DOMAINE` doit donc etre joignable depuis le conteneur ; le rendu attend
   l'API, avec le secours `TABIBI_SSR_DELAI_MS`.
 - Les dates sont rendues avec le fuseau du serveur (UTC dans l'image) puis re-rendues par le navigateur dans le sien :
   l'hydratation ne compare pas le texte, aucune erreur, mais un court changement d'affichage est possible.
-- Pas encore de `<title>` ni de `<meta name="description">` par page (fiche du praticien) : a faire pour le SEO.
+- Sous un garde de role (`/medecin/...`, `/admin/...`, `/secretaire`, `/pharmacie`), aucun composant n'est rendu cote
+  serveur : la page garde le titre « Tabibi » sans `noindex` ; ces chemins sont exclus par `robots.txt`.
+
+## Referencement (SEO)
+- `SeoService` (`seo/seo.service.ts`, `Title` + `Meta` d'Angular) : `definir({ titre, description?, canonique?, privee? })`
+  pose `<title>` (suffixe « | Tabibi »), `<meta name="description">` (description par defaut sinon),
+  `<link rel="canonical">` (origine du document + chemin) et, pour une page privee, `<meta name="robots"
+  content="noindex, nofollow">` ; `definirPrivee(titre)` ; `introuvable(titre?)` ajoute le statut HTTP 404 au rendu
+  serveur via le jeton `REPONSE_SERVEUR` (`seo/reponse-serveur.ts`, objet `{ statut }` fourni par `server.ts` a chaque
+  rendu puis relu apres ; Angular 18 n'expose pas la reponse express, `@angular/ssr/tokens` n'existe qu'en 19).
+- Chaque composant de page appelle le service dans `ngOnInit` : annuaire « Trouver un médecin en Algérie »,
+  verification « Vérifier une ordonnance », fiche « Dr <nom>, <spécialité> à <ville> » avec description (« Fiche du
+  praticien » en attendant la reponse de l'API ; praticien inconnu → « Praticien introuvable », `noindex`, 404) ;
+  toutes les pages reservees (mes rendez-vous, espaces medecin, secretaire, pharmacie, administration, messagerie,
+  notifications, Dawini, avis, listes d'attente, teleconsultations, mon compte) sont `noindex`.
+- Route `**` → `PageIntrouvableComponent` (`page-introuvable/`) : « Page introuvable », liens vers l'annuaire et la
+  verification, 404 au rendu serveur.
+- `server.ts` : `GET /robots.txt` (genere : `Disallow` des espaces prives — `/moi`, `/mes-`, `/ordonnances/`,
+  `/medecin/` et `/medecin$` (les fiches `/medecins/...` restent permises), `/admin`, `/secretaire`, `/pharmacie`,
+  `/messagerie`, `/notifications`, `/dawini`, `/avis`, `/liste-attente`, `/teleconsultations` — et
+  `Sitemap: <origine>/sitemap.xml`) ; `GET /sitemap.xml` (`/`, `/verifier` puis `/medecins/<id>` pour chaque praticien
+  de `GET ${apiUrl}/api/medecins`, liste gardee une heure en memoire, delai de 5 s ; si l'API ne repond pas, pages
+  fixes seulement et nouvel essai a la demande suivante) ; les deux en `Cache-Control: public, max-age=3600`.
+  L'origine des URL absolues est `https://DOMAINE` si la variable est definie, sinon celle de la requete.
+- Verifie en SSR : `curl /` → `<title>Trouver un médecin en Algérie | Tabibi</title>`, description et canonique ;
+  `/medecins/m1` → « Dr Amina Belkacem, Généraliste à Alger | Tabibi » ; `/medecins/inconnu-xyz` et
+  `/page-inexistante` → statut 404, `noindex` ; `/mes-rendez-vous` → `noindex` ; `/robots.txt` et `/sitemap.xml`.
 
 ## Prochaines etapes
 - Nom du patient dans l'agenda et sur l'ordonnance (l'API n'expose que l'identifiant).
-- SEO : titre et description par page (fiche du praticien), route `**` (404) et `robots.txt`.
+- Tests de bout en bout (Playwright) sur les parcours publics.
 
 ## v0.2.0 — Annuaire (web)
 - Ecran d'accueil public : recherche de praticiens (specialite, wilaya, nom) via `GET /api/medecins`.

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { AvisAdmin, AvisService, libelleStatutAvis } from '../avis/avis.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Filtre par statut de la liste ; '' = tous. */
 const STATUTS_FILTRE = [
@@ -68,6 +69,7 @@ const STATUTS_FILTRE = [
   `,
 })
 export class ModerationAvisComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(AvisService);
 
@@ -82,6 +84,7 @@ export class ModerationAvisComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
+    this.seo.definirPrivee('Modération des avis');
     this.charger();
   }
 

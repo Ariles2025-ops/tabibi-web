@@ -6,6 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { libelleStatutTeleconsultation } from '../teleconsultation/statut-teleconsultation';
 import { Teleconsultation, TeleconsultationService, salleAccessible } from '../teleconsultation/teleconsultation.service';
 import { MedecinService } from './medecin.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Action de pilotage en cours sur une teleconsultation (libelle du bouton pendant l'appel). */
 type Action = 'demarrer' | 'terminer' | 'annuler';
@@ -64,6 +65,7 @@ type Action = 'demarrer' | 'terminer' | 'annuler';
   `,
 })
 export class TeleconsultationsMedecinComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(TeleconsultationService);
   private medecinService = inject(MedecinService);
@@ -78,6 +80,7 @@ export class TeleconsultationsMedecinComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
+    this.seo.definirPrivee('Téléconsultations');
     this.charger();
   }
 

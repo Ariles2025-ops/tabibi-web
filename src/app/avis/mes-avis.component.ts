@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { Avis, AvisService, libelleStatutAvis } from './avis.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Avis deposes par le patient connecte (GET /api/avis/mes), tous statuts, les plus recents d'abord. */
 @Component({
@@ -38,6 +39,7 @@ import { Avis, AvisService, libelleStatutAvis } from './avis.service';
   `,
 })
 export class MesAvisComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(AvisService);
   private annuaire = inject(AnnuaireService);
@@ -51,6 +53,7 @@ export class MesAvisComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Mes avis');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);

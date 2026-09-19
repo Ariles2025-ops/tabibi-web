@@ -8,6 +8,7 @@ import { abregerIdentifiant } from '../messagerie/messagerie.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
 import { DUREE_MAX_MINUTES, DUREE_MIN_MINUTES, Rattachement, SecretaireService } from './secretaire.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Creneau que la secretaire vient d'ouvrir (message de confirmation). */
 interface CreneauOuvert {
@@ -104,6 +105,7 @@ interface CreneauOuvert {
   `,
 })
 export class EspaceSecretaireComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(SecretaireService);
   private annuaire = inject(AnnuaireService);
@@ -135,6 +137,7 @@ export class EspaceSecretaireComponent implements OnInit {
   minDebut = formatDate(new Date(), "yyyy-MM-dd'T'HH:mm", this.locale);
 
   ngOnInit() {
+    this.seo.definirPrivee('Espace secrétaire');
     this.charge.set(true);
     this.service.mesMedecins().subscribe({
       next: (liste) => {

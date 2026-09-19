@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } from './dawini.service';
+import { SeoService } from '../seo/seo.service';
 
 /**
  * Reponses des pharmacies a l'une de mes demandes (GET /api/dawini/besoins/{id}/reponses, les plus anciennes
@@ -55,6 +56,7 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } fro
   `,
 })
 export class ReponsesDemandeComponent implements OnInit {
+  private seo = inject(SeoService);
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
   private service = inject(DawiniService);
@@ -71,6 +73,7 @@ export class ReponsesDemandeComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.seo.definirPrivee('Réponses des pharmacies');
     this.besoinId = this.route.snapshot.paramMap.get('id') ?? '';
     await this.auth.pret();
     const connecte = this.auth.estConnecte();

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { LigneOrdonnance, OrdonnanceService } from '../ordonnances/ordonnance.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Ligne en cours de saisie ; `cle` reste stable a l'ajout/suppression de lignes (noms de champs uniques). */
 interface LigneSaisie extends LigneOrdonnance {
@@ -70,6 +71,7 @@ interface LigneSaisie extends LigneOrdonnance {
   `,
 })
 export class NouvelleOrdonnanceComponent implements OnInit {
+  private seo = inject(SeoService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private auth = inject(AuthService);
@@ -84,6 +86,7 @@ export class NouvelleOrdonnanceComponent implements OnInit {
 
   /** Prerempli depuis l'agenda : /medecin/ordonnance/nouvelle?patientId=...&rendezVousId=... */
   ngOnInit() {
+    this.seo.definirPrivee('Nouvelle ordonnance');
     const params = this.route.snapshot.queryParamMap;
     this.patientId = params.get('patientId') ?? '';
     this.rendezVousId = params.get('rendezVousId') ?? '';

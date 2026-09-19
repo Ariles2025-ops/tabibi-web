@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/avis.service';
+import { SeoService } from '../seo/seo.service';
 
 /**
  * Avis publics recus par le medecin connecte (GET /api/medecins/{moi}/avis, ou « moi » est le sujet du jeton lu
@@ -43,6 +44,7 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
   `,
 })
 export class AvisMedecinComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   private service = inject(AvisService);
@@ -68,6 +70,7 @@ export class AvisMedecinComponent implements OnInit {
   });
 
   async ngOnInit() {
+    this.seo.definirPrivee('Avis des patients');
     const profil = await this.roleService.charger();
     this.moi = profil?.sujet ?? '';
     if (!this.moi) {

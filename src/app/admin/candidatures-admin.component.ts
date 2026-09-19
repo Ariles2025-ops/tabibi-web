@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { AdminService, Candidature, libelleStatutCandidature } from './admin.service';
+import { SeoService } from '../seo/seo.service';
 
 /** Filtre par statut de la liste ; '' = toutes. */
 const STATUTS_FILTRE = [
@@ -76,6 +77,7 @@ const STATUTS_FILTRE = [
   `,
 })
 export class CandidaturesAdminComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(AdminService);
 
@@ -92,6 +94,7 @@ export class CandidaturesAdminComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
+    this.seo.definirPrivee('Candidatures');
     this.charger();
   }
 

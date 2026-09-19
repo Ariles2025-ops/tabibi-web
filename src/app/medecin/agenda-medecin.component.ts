@@ -7,6 +7,7 @@ import { RendezVous } from '../rendezvous/rendezvous.service';
 import { libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
 import { TeleconsultationService } from '../teleconsultation/teleconsultation.service';
 import { MedecinService } from './medecin.service';
+import { SeoService } from '../seo/seo.service';
 
 /**
  * Agenda du medecin : ses rendez-vous, a marquer honores ou a annuler (creneau remis a disposition, patient
@@ -64,6 +65,7 @@ import { MedecinService } from './medecin.service';
   `,
 })
 export class AgendaMedecinComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(MedecinService);
   private teleconsultations = inject(TeleconsultationService);
@@ -79,6 +81,7 @@ export class AgendaMedecinComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
+    this.seo.definirPrivee('Agenda');
     this.charger();
   }
 

@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { AdminService, StatistiquesAdministration, libelleRappels } from './admin.service';
+import { SeoService } from '../seo/seo.service';
 
 /**
  * Tableau de bord de l'administrateur : nombre de candidatures par statut (GET /api/admin/statistiques) et
@@ -55,6 +56,7 @@ import { AdminService, StatistiquesAdministration, libelleRappels } from './admi
   `,
 })
 export class TableauDeBordAdminComponent implements OnInit {
+  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(AdminService);
 
@@ -67,6 +69,7 @@ export class TableauDeBordAdminComponent implements OnInit {
   erreurRappels = signal('');
 
   ngOnInit() {
+    this.seo.definirPrivee('Administration');
     this.charge.set(true);
     this.service.statistiques().subscribe({
       next: (s) => {

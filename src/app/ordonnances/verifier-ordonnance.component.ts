@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { SeoService } from '../seo/seo.service';
 import { OrdonnanceService, Verification } from './ordonnance.service';
 import { libelleStatutOrdonnance } from './statut-ordonnance';
 
@@ -37,6 +38,7 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
 export class VerifierOrdonnanceComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private service = inject(OrdonnanceService);
+  private seo = inject(SeoService);
 
   code = '';
   charge = signal(false);
@@ -45,6 +47,12 @@ export class VerifierOrdonnanceComponent implements OnInit {
 
   /** Un lien /verifier?code=... (depuis le detail d'une ordonnance) lance la verification directement. */
   ngOnInit() {
+    this.seo.definir({
+      titre: 'Vérifier une ordonnance',
+      description:
+        "Vérifiez l'authenticité d'une ordonnance Tabibi à partir du code de vérification imprimé dessus : date d'émission et statut.",
+      canonique: '/verifier',
+    });
     this.route.queryParamMap.subscribe((params) => {
       const code = params.get('code');
       if (code) {
