@@ -19,6 +19,8 @@ export class RoleService {
   /** Roles de l'utilisateur (ex. PATIENT, MEDECIN, ADMIN) ; vide si non connecte. */
   roles = computed(() => this.moi()?.roles ?? []);
   estMedecin = computed(() => this.roles().includes('MEDECIN'));
+  /** Vrai pour le role ADMIN du realm Keycloak (autorite ROLE_ADMIN cote API) : section « Administration ». */
+  estAdmin = computed(() => this.roles().includes('ADMIN'));
 
   /**
    * Charge le profil une seule fois (les appels suivants renvoient la meme promesse).

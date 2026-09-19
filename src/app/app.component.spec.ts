@@ -7,17 +7,19 @@ import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { NotificationService } from './notifications/notification.service';
 
-/** Test de fumee de la barre de navigation : liens publics, cloche des connectes, section du medecin. */
+/** Test de fumee de la barre de navigation : liens publics, cloche des connectes, sections du medecin et de l'administrateur. */
 describe('AppComponent', () => {
   let fixture: ComponentFixture<AppComponent>;
   let connecte: boolean;
   let estMedecin: ReturnType<typeof signal<boolean>>;
-  let roleService: { estMedecin: ReturnType<typeof signal<boolean>>; charger: jasmine.Spy };
+  let estAdmin: ReturnType<typeof signal<boolean>>;
+  let roleService: { estMedecin: ReturnType<typeof signal<boolean>>; estAdmin: ReturnType<typeof signal<boolean>>; charger: jasmine.Spy };
 
   beforeEach(() => {
     connecte = false;
     estMedecin = signal(false);
-    roleService = { estMedecin, charger: jasmine.createSpy('charger').and.resolveTo(null) };
+    estAdmin = signal(false);
+    roleService = { estMedecin, estAdmin, charger: jasmine.createSpy('charger').and.resolveTo(null) };
     const auth = { initialiser: () => Promise.resolve(), estConnecte: () => connecte };
     const notifications = { nombreNonLues: () => of(2), changements$: of() };
 
@@ -53,6 +55,7 @@ describe('AppComponent', () => {
     expect(texteNav()).toContain('Mon compte');
     expect(fixture.nativeElement.querySelector('app-cloche-notifications')).toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
+    expect(texteNav()).not.toContain('Administration');
     expect(roleService.charger).toHaveBeenCalledTimes(1);
   });
 
@@ -64,6 +67,7 @@ describe('AppComponent', () => {
     expect(texteNav()).toContain('Mes ordonnances');
     expect(texteNav()).toContain('Mes téléconsultations');
     expect(texteNav()).not.toContain('Espace médecin');
+    expect(texteNav()).not.toContain('Administration');
   });
 
   it('affiche la section « Espace médecin » pour le role MEDECIN', async () => {
@@ -75,5 +79,18 @@ describe('AppComponent', () => {
     expect(texteNav()).toContain('Agenda');
     expect(texteNav()).toContain('Disponibilités');
     expect(fixture.nativeElement.querySelector('a[href="/medecin/teleconsultations"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/medecin/candidature"]')).not.toBeNull();
+    expect(texteNav()).not.toContain('Administration');
+  });
+
+  it('affiche la section « Administration » pour le role ADMIN seulement', async () => {
+    connecte = true;
+    estAdmin.set(true);
+    await afficher();
+
+    expect(texteNav()).toContain('Administration');
+    expect(fixture.nativeElement.querySelector('a[href="/admin"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/admin/candidatures"]')).not.toBeNull();
+    expect(texteNav()).not.toContain('Espace médecin');
   });
 });

@@ -71,3 +71,35 @@ decrite dans le README et le journal de tabibi-backend.
   pas une fois terminee, 409 affiche et rechargement, etat vide, redirection, 403), page medecin (« Demarrer » desactive
   + mention, lien de salle et demarrage apres consentement, terminer, annuler avec confirmation, 409, etat vide), agenda
   (bouton sur les seuls CONFIRME, planification et confirmation, 409), barre de navigation (nouveaux liens).
+
+## v0.8.0 — Administration
+- `RoleService.estAdmin()` (role ADMIN du realm, autorite ROLE_ADMIN cote API) ; `adminGuard` sur `/admin/...`, calque
+  sur `medecinGuard` : non connecte → connexion Keycloak avec retour sur la page demandee ; connecte sans le role →
+  `router.parseUrl('/')`. Defense en profondeur : la garde n'est qu'un confort d'interface, l'API verrouille `/api/admin/**`.
+- `/admin` (`TableauDeBordAdminComponent`) : trois tuiles (libelle + valeur) pour `GET /api/admin/statistiques`
+  (candidatures en attente / validees / refusees), lien vers les candidatures ; 403 : « Cette page est reservee a
+  l'administrateur. ».
+- `/admin/candidatures` (`CandidaturesAdminComponent`) : filtre par statut (EN_ATTENTE par defaut, VALIDEE, REFUSEE,
+  toutes = sans parametre), fiche de chaque candidature (nom, specialite, ville et wilaya, numero d'ordre, telephone,
+  dates de depot et de traitement, motif de refus) ; « Valider » et « Refuser » avec champ de motif obligatoire (bouton
+  desactive tant qu'il est vide, controle aussi a l'envoi) ; message de confirmation puis rechargement ; 409 / 404 :
+  motif `{ erreur }` affiche et liste rechargee ; 400 : motif affiche.
+- `/medecin/candidature` (`CandidatureMedecinComponent`, sous `medecinGuard`) : `GET /api/medecin/candidature` (404 =
+  aucune → formulaire) ; statut affiche (En attente : « en cours d'examen » ; Validee : lien vers la fiche
+  `/medecins/{medecinId}` ; Refusee : motif et formulaire de nouveau depot prerempli) ; formulaire avec les huit champs,
+  validation cote client des obligatoires (nom complet, specialite, wilaya, numero d'ordre, comme le domaine backend),
+  champs nettoyes (trim) ; 201 : candidature affichee en attente ; 409 : motif affiche et candidature rechargee ;
+  400 : motif affiche ; 403 : « reservee aux medecins ».
+- `AdminService` (`candidatures(statut?)`, `valider`, `refuser(id, motif)`, `statistiques`), types `Candidature`,
+  `DemandeCandidature`, `StatistiquesAdministration`, `libelleStatutCandidature` (En attente, Validee, Refusee) ;
+  `MedecinService.deposerCandidature` et `maCandidature`.
+- Routes `/admin` et `/admin/candidatures` (adminGuard), `/medecin/candidature` (medecinGuard) ; section
+  « Administration » de la barre de navigation si `estAdmin()`, lien « Ma candidature » dans l'espace medecin.
+- Tests (41 specs ajoutees, 85 au total) : adminGuard (admin laisse passer, non connecte → connexion avec l'URL,
+  sans le role → UrlTree '/'), RoleService (estAdmin / estMedecin, profil lu une fois, non connecte, echec puis nouvel
+  essai), AdminService et MedecinService (candidature) avec `HttpTestingController` (URL, parametre statut, corps
+  `{ motif }`, 409 / 404 transmis, libelles), tableau de bord (trois compteurs, zeros, 403, 401), candidatures
+  (filtre par defaut, refusees avec motif sans bouton, toutes sans parametre, valider, refuser avec motif, motif vide
+  bloque, 409 recharge, 400 sans rechargement, etat vide, 403), candidature du medecin (formulaire si 404, validation
+  cote client, depot avec champs nettoyes, validee avec lien, refusee avec formulaire prerempli, 409 recharge, 400
+  garde le formulaire, 403), barre de navigation (section Administration pour ADMIN seulement).

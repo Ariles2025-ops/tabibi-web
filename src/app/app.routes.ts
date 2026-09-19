@@ -1,8 +1,12 @@
 import { Routes } from '@angular/router';
+import { CandidaturesAdminComponent } from './admin/candidatures-admin.component';
+import { TableauDeBordAdminComponent } from './admin/tableau-de-bord-admin.component';
 import { AnnuaireComponent } from './annuaire/annuaire.component';
+import { adminGuard } from './auth/admin.guard';
 import { medecinGuard } from './auth/medecin.guard';
 import { FicheMedecinComponent } from './fiche-medecin/fiche-medecin.component';
 import { AgendaMedecinComponent } from './medecin/agenda-medecin.component';
+import { CandidatureMedecinComponent } from './medecin/candidature-medecin.component';
 import { DisponibilitesComponent } from './medecin/disponibilites.component';
 import { NouvelleOrdonnanceComponent } from './medecin/nouvelle-ordonnance.component';
 import { OrdonnancesRedigeesComponent } from './medecin/ordonnances-redigees.component';
@@ -34,7 +38,17 @@ export const routes: Routes = [
       { path: 'ordonnances', component: OrdonnancesRedigeesComponent },
       { path: 'ordonnance/nouvelle', component: NouvelleOrdonnanceComponent },
       { path: 'teleconsultations', component: TeleconsultationsMedecinComponent },
+      { path: 'candidature', component: CandidatureMedecinComponent },
       { path: '', redirectTo: 'agenda', pathMatch: 'full' },
+    ],
+  },
+  {
+    // Administration : reserve au role ADMIN (adminGuard), sinon retour a l'accueil.
+    path: 'admin',
+    canActivate: [adminGuard],
+    children: [
+      { path: '', component: TableauDeBordAdminComponent, pathMatch: 'full' },
+      { path: 'candidatures', component: CandidaturesAdminComponent },
     ],
   },
   { path: 'moi', component: MoiComponent },

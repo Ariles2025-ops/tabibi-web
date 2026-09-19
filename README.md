@@ -108,3 +108,26 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
 - `TeleconsultationService` (`mes`, `parId`, `consentir`, `planifier`, `duMedecin`, `demarrer`, `terminer`, `annuler`),
   `salleAccessible()` ; libellés `libelleStatutTeleconsultation` (Planifiée, En cours, Terminée, Annulée).
 - Barre de navigation : « Mes téléconsultations » (utilisateurs connectés) et « Téléconsultations » dans l'espace médecin.
+
+## v0.8.0 — Administration
+- `RoleService.estAdmin()` (rôle ADMIN lu sur `/api/moi`) ; `adminGuard` (`canActivate` sur `/admin/...`, même modèle
+  que `medecinGuard`) : non connecté → connexion Keycloak puis retour sur la page demandée ; connecté sans le rôle
+  ADMIN → redirection vers l'accueil. L'autorisation réelle reste côté API (`/api/admin/**` verrouillé).
+- `/admin` : tableau de bord (`GET /api/admin/statistiques`) — trois compteurs : candidatures en attente, validées,
+  refusées — et lien vers l'examen des candidatures.
+- `/admin/candidatures` : candidatures des médecins (`GET /api/admin/candidatures?statut=`), filtre par statut
+  (En attente par défaut, Validées, Refusées, Toutes) ; pour une candidature en attente : bouton « Valider »
+  (`POST /api/admin/candidatures/{id}/valider`, le praticien est publié dans l'annuaire et prévenu) et champ
+  « Motif du refus » obligatoire + bouton « Refuser » (`POST .../refuser { motif }`) ; message de confirmation puis
+  rechargement ; 409 / 404 (déjà traitée) → motif `{ erreur }` affiché et liste rechargée ; 400 → motif affiché.
+- `/medecin/candidature` (sous `medecinGuard`) : dernière candidature du praticien (`GET /api/medecin/candidature`,
+  404 = aucune) avec son statut (En attente, Validée + lien vers la fiche, Refusée + motif) ; formulaire de dépôt
+  (`POST /api/medecin/candidature`) uniquement s'il n'y a aucune candidature ou si la dernière est refusée (prérempli
+  dans ce cas) : nom complet, numéro d'inscription à l'ordre, spécialité (code + libellé), wilaya (code + libellé),
+  ville, téléphone ; validation côté client des champs obligatoires (nom, spécialité, wilaya, numéro d'ordre) ;
+  409 (candidature déjà en attente ou validée) → motif affiché et candidature rechargée ; 400 → motif affiché.
+- `AdminService` (`candidatures`, `valider`, `refuser`, `statistiques`), types `Candidature`, `DemandeCandidature`,
+  `StatistiquesAdministration`, libellés `libelleStatutCandidature` ; `MedecinService` gagne `deposerCandidature`
+  et `maCandidature`.
+- Barre de navigation : section « Administration » (Tableau de bord, Candidatures) visible uniquement si `estAdmin()` ;
+  « Ma candidature » dans l'espace médecin.
