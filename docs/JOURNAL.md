@@ -103,3 +103,30 @@ decrite dans le README et le journal de tabibi-backend.
   bloque, 409 recharge, 400 sans rechargement, etat vide, 403), candidature du medecin (formulaire si 404, validation
   cote client, depot avec champs nettoyes, validee avec lien, refusee avec formulaire prerempli, 409 recharge, 400
   garde le formulaire, 403), barre de navigation (section Administration pour ADMIN seulement).
+
+## v0.9.0 — Messagerie
+- Reprise d'une ebauche non commitee (`MessagerieService` et `MesConversationsComponent`, coherents avec le
+  controleur backend) ; ajout du fil, de la fiche, des routes, de la barre de navigation et des specs.
+- `/messagerie` (`MesConversationsComponent`, PATIENT ou MEDECIN) : `GET /api/conversations`, tri par
+  `dernierMessageLe` decroissant, interlocuteur (nom du medecin lu dans l'annuaire quand `patientId` est mon sujet,
+  sinon « Patient » + huit premiers caracteres de l'identifiant), « Derniere activite le … », « n non lus » (classe
+  `.conversation-non-lue`), etat vide avec lien vers l'annuaire, 403 : « reservee aux patients et aux medecins »,
+  redirection vers la connexion si necessaire.
+- `/messagerie/:id` (`ConversationComponent`) : le sujet du jeton vient de `RoleService.charger()` (`/api/moi`) ;
+  la conversation est retrouvee dans `GET /api/conversations` (pas de lecture unitaire cote API) pour nommer
+  l'interlocuteur ; fil `GET /api/conversations/{id}/messages` (classes `.message-moi` a droite / `.message-autre`
+  a gauche, date, « lu » sur mes messages lus) ; textarea avec compteur « n / 2000 » (rouge au-dela), « Envoyer »
+  desactive si vide, trop long ou envoi en cours ; envoi (`{ contenu }` nettoye) puis rechargement et champ vide ;
+  400 : motif `{ erreur }` affiche, texte conserve ; 403 / 404 : message dedie sans champ de saisie ; relecture
+  toutes les 30 s (`timer` + `switchMap`, `catchError` → `EMPTY`, abonnement ferme a la destruction et relance
+  si l'identifiant de route change).
+- Fiche du praticien : « Ecrire au medecin » (`POST /api/conversations { medecinId }`) puis `router.navigate`
+  vers le fil ; 403 : « Vous devez avoir un rendez-vous avec ce medecin pour lui ecrire. » ; non connecte →
+  connexion avec retour sur la fiche.
+- Routes `/messagerie` et `/messagerie/:id` ; lien « Messagerie » (connectes) dans la barre de navigation.
+- Tests (22 specs ajoutees, 107 au total) : service avec `HttpTestingController` (URL, methode, corps
+  `{ medecinId }` / `{ contenu }`, 403 et 400 transmis, constante et abreviation), liste (tri et nom du medecin,
+  libelle « Patient … » pour le medecin sans appel a l'annuaire, etat vide, redirection, 403), fil en `fakeAsync`
+  (bulles selon l'auteur pour un patient puis pour un medecin, compteur et bouton, envoi puis rechargement,
+  vide / trop long refuses, 400 sans rechargement, relecture a 30 s avec erreur passagere ignoree et arret a la
+  destruction, 403 sans champ, redirection), fiche (bouton et navigation, 403, non connecte), barre de navigation.

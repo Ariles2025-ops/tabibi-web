@@ -51,6 +51,7 @@ describe('AppComponent', () => {
 
     expect(texteNav()).toContain('Accueil');
     expect(texteNav()).not.toContain('Mes téléconsultations');
+    expect(texteNav()).not.toContain('Messagerie');
     expect(texteNav()).toContain('Vérifier une ordonnance');
     expect(texteNav()).toContain('Mon compte');
     expect(fixture.nativeElement.querySelector('app-cloche-notifications')).toBeNull();
@@ -66,6 +67,7 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.querySelector('app-cloche-notifications')).not.toBeNull();
     expect(texteNav()).toContain('Mes ordonnances');
     expect(texteNav()).toContain('Mes téléconsultations');
+    expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).not.toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
     expect(texteNav()).not.toContain('Administration');
   });

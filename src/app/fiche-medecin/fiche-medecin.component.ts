@@ -1,10 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AnnuaireService, Creneau, Medecin } from '../annuaire/annuaire.service';
 import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { AuthService } from '../auth/auth.service';
+import { MessagerieService } from '../messagerie/messagerie.service';
 
 @Component({
   selector: 'app-fiche-medecin',
@@ -16,7 +17,13 @@ import { AuthService } from '../auth/auth.service';
 
       <ng-container *ngIf="medecin() as m">
         <h1 style="color:var(--vert);margin:0 0 4px">{{ m.nomComplet }}</h1>
-        <p style="color:#566b64;margin:0 0 24px">{{ m.specialiteFr }} · {{ m.ville }} ({{ m.wilayaFr }})</p>
+        <p style="color:#566b64;margin:0 0 16px">{{ m.specialiteFr }} · {{ m.ville }} ({{ m.wilayaFr }})</p>
+        <p style="margin:0 0 24px">
+          <button type="button" class="bouton-secondaire" (click)="ecrire()" [disabled]="ouvertureMessagerie()">
+            {{ ouvertureMessagerie() ? 'Ouverture…' : 'Écrire au médecin' }}
+          </button>
+        </p>
+        <p *ngIf="erreurMessagerie()" style="color:#b3261e;margin:-12px 0 24px">{{ erreurMessagerie() }}</p>
       </ng-container>
 
       <h2 style="font-size:1.1rem;margin:0 0 12px">Créneaux disponibles</h2>
@@ -50,6 +57,8 @@ export class FicheMedecinComponent implements OnInit {
   private annuaire = inject(AnnuaireService);
   private rendezVous = inject(RendezVousService);
   private auth = inject(AuthService);
+  private messagerie = inject(MessagerieService);
+  private router = inject(Router);
 
   private medecinId = '';
   medecin = signal<Medecin | null>(null);
@@ -60,6 +69,9 @@ export class FicheMedecinComponent implements OnInit {
   /** Dernier creneau reserve avec succes (message de confirmation). */
   reservation = signal<Creneau | null>(null);
   erreur = signal('');
+  /** Vrai pendant l'ouverture de la conversation avec le medecin. */
+  ouvertureMessagerie = signal(false);
+  erreurMessagerie = signal('');
 
   ngOnInit() {
     this.route.paramMap.subscribe((params) => this.charger(params.get('id') ?? ''));
@@ -71,6 +83,7 @@ export class FicheMedecinComponent implements OnInit {
     this.creneaux.set([]);
     this.reservation.set(null);
     this.erreur.set('');
+    this.erreurMessagerie.set('');
     this.annuaire.medecin(id).subscribe({
       next: (m) => this.medecin.set(m),
       error: (e: HttpErrorResponse) =>
@@ -122,6 +135,36 @@ export class FicheMedecinComponent implements OnInit {
           this.erreur.set('Seul un compte patient peut réserver un créneau.');
         } else {
           this.erreur.set(e.error?.erreur ?? 'La réservation a échoué, veuillez réessayer.');
+        }
+      },
+    });
+  }
+
+  /**
+   * Ouvre (ou retrouve) la conversation avec le medecin puis mene au fil ; reserve aux patients ayant deja un
+   * rendez-vous avec lui (403 sinon). Non connecte → page de connexion puis retour sur la fiche.
+   */
+  async ecrire() {
+    await this.auth.pret();
+    if (!this.auth.estConnecte()) {
+      this.auth.seConnecter();
+      return;
+    }
+    this.ouvertureMessagerie.set(true);
+    this.erreurMessagerie.set('');
+    this.messagerie.ouvrir(this.medecinId).subscribe({
+      next: (c) => {
+        this.ouvertureMessagerie.set(false);
+        this.router.navigate(['/messagerie', c.id]);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.ouvertureMessagerie.set(false);
+        if (e.status === 403) {
+          this.erreurMessagerie.set('Vous devez avoir un rendez-vous avec ce médecin pour lui écrire.');
+        } else if (e.status === 401) {
+          this.auth.seConnecter();
+        } else {
+          this.erreurMessagerie.set(e.error?.erreur ?? "L'ouverture de la conversation a échoué, veuillez réessayer.");
         }
       },
     });

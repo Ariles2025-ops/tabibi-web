@@ -131,3 +131,22 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
   et `maCandidature`.
 - Barre de navigation : section « Administration » (Tableau de bord, Candidatures) visible uniquement si `estAdmin()` ;
   « Ma candidature » dans l'espace médecin.
+
+## v0.9.0 — Messagerie
+- `/messagerie` : mes conversations (`GET /api/conversations`, rôle PATIENT ou MEDECIN), la plus récente activité
+  d'abord, avec l'interlocuteur (nom du médecin lu dans l'annuaire pour le patient ; « Patient » suivi d'un
+  identifiant abrégé pour le médecin), la date de dernière activité et « n non lus » (ligne mise en avant) ;
+  état vide avec lien vers l'annuaire. Redirige vers la connexion si l'utilisateur n'est pas connecté.
+- `/messagerie/:id` : fil de la conversation (`GET /api/conversations/{id}/messages`, du plus ancien au plus récent ;
+  la lecture marque lus les messages reçus) — mes messages en bulles à droite (identifiant du sujet lu sur `/api/moi`),
+  ceux de l'autre participant à gauche, date de chaque message, mention « lu » sur mes messages lus ; champ de
+  saisie avec compteur « n / 2000 », bouton « Envoyer » désactivé si le texte est vide ou dépasse 2000 caractères ;
+  `POST /api/conversations/{id}/messages { contenu }` puis rechargement du fil ; 400 → motif `{ erreur }` affiché
+  (le texte est conservé) ; 403 → « Cette conversation ne vous concerne pas. » ; 404 → « Conversation introuvable. ».
+  Le fil est relu toutes les 30 s tant que la page est ouverte (arrêt à la destruction du composant).
+- Fiche du praticien : bouton « Écrire au médecin » (`POST /api/conversations { medecinId }`, 201 créée ou 200
+  existante) puis navigation vers le fil ; 403 → « Vous devez avoir un rendez-vous avec ce médecin pour lui écrire. » ;
+  non connecté → connexion Keycloak puis retour sur la fiche.
+- `MessagerieService` (`ouvrir`, `mesConversations`, `messages`, `envoyer`), types `Conversation`, `Message`,
+  `LONGUEUR_MAX_MESSAGE`, `abregerIdentifiant`.
+- Barre de navigation : « Messagerie » (utilisateurs connectés).
