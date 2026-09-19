@@ -7,7 +7,7 @@
 # Construire : docker build -t tabibi-web .
 # Lancer : docker run --rm -p 8088:80 -e TABIBI_API_URL=http://localhost:8080 tabibi-web  (voir README, Deploiement)
 
-FROM node:20-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /build
 # Pas de question ni de collecte d'usage du CLI Angular dans une construction non interactive.
 ENV NG_CLI_ANALYTICS=false CI=true
@@ -18,7 +18,7 @@ COPY angular.json tsconfig.json tsconfig.app.json server.ts ./
 COPY src ./src
 RUN npm run build
 
-FROM node:20-alpine
+FROM node:25-alpine
 ENV NODE_ENV=production PORT=80
 WORKDIR /app
 # Le bundle serveur est autonome (Angular et express y sont inclus) : ni package.json ni node_modules ici.
