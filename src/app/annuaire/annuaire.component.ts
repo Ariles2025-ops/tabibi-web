@@ -33,7 +33,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
             <path d="M20 20l-3.2-3.2" stroke="var(--vert)" stroke-width="2" stroke-linecap="round"/>
           </svg>
           <input [(ngModel)]="recherche" name="q" [placeholder]="'accueil.recherchePlaceholder' | t"
-                 aria-label="{{ 'accueil.recherchePlaceholder' | t }}"
+                 [attr.aria-label]="'accueil.recherchePlaceholder' | t"
                  style="flex:1;min-width:0;border:0;outline:none;font:inherit;font-size:1.05rem;color:var(--texte);background:transparent">
           <button type="submit" class="bouton" style="border-radius:999px;padding:11px 22px">
             {{ 'annuaire.rechercher' | t }}
