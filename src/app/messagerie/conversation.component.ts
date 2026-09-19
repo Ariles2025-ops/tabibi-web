@@ -9,6 +9,9 @@ import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { Conversation, LONGUEUR_MAX_MESSAGE, Message, MessagerieService, abregerIdentifiant } from './messagerie.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { TraductionService } from '../i18n/traduction.service';
 
 /** Intervalle de relecture du fil tant que la page est ouverte. */
 const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
@@ -22,36 +25,36 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
 @Component({
   selector: 'app-conversation',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <p style="margin:0 0 16px"><a routerLink="/messagerie" style="color:var(--vert)">Retour à la messagerie</a></p>
-      <h1 style="color:var(--vert);margin:0 0 16px">{{ interlocuteur() ?? 'Conversation' }}</h1>
+      <p style="margin:0 0 16px"><a routerLink="/messagerie" style="color:var(--vert)">{{ 'conversation.retour' | t }}</a></p>
+      <h1 style="color:var(--vert);margin:0 0 16px">{{ interlocuteur() ?? ('conversation.titre' | t) }}</h1>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
+      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">Chargement…</p>
+        <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ol style="list-style:none;padding:0;margin:0 0 16px;display:grid;gap:8px">
           <li *ngFor="let m of messages()" [class.message-moi]="estDeMoi(m)" [class.message-autre]="!estDeMoi(m)">
             <p style="margin:0;white-space:pre-wrap">{{ m.contenu }}</p>
             <span style="display:block;margin:4px 0 0;color:#566b64;font-size:.85rem">
-              {{ m.envoyeLe | date:'d MMMM à HH:mm' }}<ng-container *ngIf="estDeMoi(m) && m.luLe"> · lu</ng-container>
+              {{ m.envoyeLe | dateLocale:'courtHeure' }}<ng-container *ngIf="estDeMoi(m) && m.luLe"> · {{ 'conversation.lu' | t }}</ng-container>
             </span>
           </li>
         </ol>
-        <p *ngIf="accessible() && messages().length === 0">Aucun message pour le moment.</p>
+        <p *ngIf="accessible() && messages().length === 0">{{ 'conversation.aucunMessage' | t }}</p>
 
         <form *ngIf="accessible()" (ngSubmit)="envoyer()" style="display:grid;gap:8px">
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Votre message
+            {{ 'conversation.votreMessage' | t }}
             <textarea class="champ" [(ngModel)]="contenu" name="contenu" rows="3" style="color:#10241F;font-size:1rem;resize:vertical"></textarea>
           </label>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <span [style.color]="tropLong() ? '#b3261e' : '#566b64'" style="font-size:.9rem">{{ contenu.length }} / {{ max }}</span>
-            <button type="submit" class="bouton" [disabled]="!peutEnvoyer()">{{ enCours() ? 'Envoi…' : 'Envoyer' }}</button>
+            <button type="submit" class="bouton" [disabled]="!peutEnvoyer()">{{ (enCours() ? 'commun.envoi' : 'conversation.envoyer') | t }}</button>
           </div>
         </form>
       </ng-container>
@@ -65,6 +68,7 @@ export class ConversationComponent implements OnInit, OnDestroy {
   private roleService = inject(RoleService);
   private service = inject(MessagerieService);
   private annuaire = inject(AnnuaireService);
+  private i18n = inject(TraductionService);
   private abonnementRoute: Subscription | null = null;
   private rafraichissement: Subscription | null = null;
 
@@ -91,12 +95,12 @@ export class ConversationComponent implements OnInit, OnDestroy {
   interlocuteur = computed(() => {
     const c = this.conversation();
     if (!c) return null;
-    if (this.moi() === c.patientId) return this.nomMedecin() ?? 'Médecin';
-    return `Patient ${abregerIdentifiant(c.patientId)}`;
+    if (this.moi() === c.patientId) return this.nomMedecin() ?? this.i18n.t('commun.medecin');
+    return this.i18n.t('commun.patient', { id: abregerIdentifiant(c.patientId) });
   });
 
   async ngOnInit() {
-    this.seo.definirPrivee('Conversation');
+    this.seo.definirPrivee('seo.conversation');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -147,11 +151,11 @@ export class ConversationComponent implements OnInit, OnDestroy {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette conversation ne vous concerne pas.');
+          this.erreur.set(this.i18n.t('conversation.neVousConcerne'));
         } else if (e.status === 404) {
-          this.erreur.set('Conversation introuvable.');
+          this.erreur.set(this.i18n.t('conversation.introuvable'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger la conversation.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('conversation.erreurChargement'));
         }
       },
     });
@@ -173,11 +177,11 @@ export class ConversationComponent implements OnInit, OnDestroy {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette conversation ne vous concerne pas.');
+          this.erreur.set(this.i18n.t('conversation.neVousConcerne'));
         } else if (e.status === 400) {
-          this.erreur.set(e.error?.erreur ?? `Le message est vide ou dépasse ${LONGUEUR_MAX_MESSAGE} caractères.`);
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('conversation.messageInvalide', { max: LONGUEUR_MAX_MESSAGE }));
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'envoi du message a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('conversation.envoiEchec'));
         }
       },
     });

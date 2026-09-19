@@ -1,19 +1,20 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, inject } from '@angular/core';
+import { Injectable, effect, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
+import { ClesTraduction, FR } from '../i18n/fr';
+import { TraductionService } from '../i18n/traduction.service';
 import { REPONSE_SERVEUR } from './reponse-serveur';
 
 /** Nom du site, en suffixe de chaque titre : « Trouver un médecin en Algérie | Tabibi ». */
 export const SUFFIXE_TITRE = 'Tabibi';
 
-/** Description par defaut, utilisee quand une page n'en donne pas (pages privees notamment). */
-export const DESCRIPTION_PAR_DEFAUT =
-  'Tabibi : prenez rendez-vous avec un médecin en Algérie, consultez les créneaux disponibles et vérifiez une ordonnance.';
+/** Description par defaut (francais), utilisee quand une page n'en donne pas ; traduite via `seo.description.defaut`. */
+export const DESCRIPTION_PAR_DEFAUT = FR['seo.description.defaut'];
 
 export interface DefinitionPage {
-  /** Titre de la page, sans le suffixe « | Tabibi » (ajoute ici). */
+  /** Titre de la page, sans le suffixe « | Tabibi » (ajoute ici) : un texte, ou une cle de traduction. */
   titre: string;
-  /** Contenu de `<meta name="description">` ; sinon la description par defaut. */
+  /** Contenu de `<meta name="description">` (texte ou cle de traduction) ; sinon la description par defaut. */
   description?: string;
   /**
    * Chemin canonique de la page (« /medecins/m1 ») : pose `<link rel="canonical">` avec l'origine du site
@@ -32,17 +33,50 @@ export interface DefinitionPage {
  * `ngOnInit` (Angular n'a pas de titre par route « riche » : la fiche du praticien depend de la reponse de l'API).
  * Fonctionne au rendu serveur (`Title` / `Meta` ecrivent dans le document rendu, d'ou le referencement) comme
  * dans le navigateur (mise a jour a chaque navigation).
+ *
+ * Langues : `titre` et `description` peuvent etre des cles de traduction (`ClesTraduction`), traduites dans la
+ * langue courante ; une definition peut aussi etre une fonction (titre construit avec des valeurs de l'API). La
+ * derniere definition est reappliquee a chaque changement de langue (effet sur le signal de langue).
  */
 @Injectable({ providedIn: 'root' })
 export class SeoService {
   private title = inject(Title);
   private meta = inject(Meta);
   private document = inject(DOCUMENT);
+  private i18n = inject(TraductionService);
   private reponse = inject(REPONSE_SERVEUR, { optional: true });
+  /** Derniere definition posee, reappliquee quand la langue change. */
+  private derniere: (() => DefinitionPage) | null = null;
 
-  definir(page: DefinitionPage): void {
-    this.title.setTitle(`${page.titre} | ${SUFFIXE_TITRE}`);
-    this.meta.updateTag({ name: 'description', content: page.description || DESCRIPTION_PAR_DEFAUT });
+  constructor() {
+    effect(() => {
+      this.i18n.langue();
+      if (this.derniere) this.appliquer(this.derniere());
+    });
+  }
+
+  definir(page: DefinitionPage | (() => DefinitionPage)): void {
+    this.derniere = typeof page === 'function' ? page : () => page;
+    this.appliquer(this.derniere());
+  }
+
+  /** Page privee : titre seul (texte ou cle de traduction), `noindex, nofollow`, pas de canonique. */
+  definirPrivee(titre: string | (() => string)): void {
+    this.definir(() => ({ titre: typeof titre === 'function' ? titre() : titre, privee: true }));
+  }
+
+  /**
+   * Page ou ressource introuvable : titre, `noindex` et, au rendu serveur, statut HTTP 404 (`REPONSE_SERVEUR`,
+   * fourni par server.ts ; sans effet dans le navigateur, ou la page est deja affichee).
+   */
+  introuvable(titre: string | (() => string) = 'seo.pageIntrouvable'): void {
+    this.definirPrivee(titre);
+    if (this.reponse) this.reponse.statut = 404;
+  }
+
+  private appliquer(page: DefinitionPage): void {
+    this.title.setTitle(`${this.texte(page.titre)} | ${SUFFIXE_TITRE}`);
+    this.meta.updateTag({ name: 'description', content: this.texte(page.description || 'seo.description.defaut') });
     if (page.privee) {
       this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
     } else {
@@ -51,18 +85,9 @@ export class SeoService {
     this.canonique(page.canonique);
   }
 
-  /** Page privee : titre seul, `noindex, nofollow`, pas de canonique. */
-  definirPrivee(titre: string): void {
-    this.definir({ titre, privee: true });
-  }
-
-  /**
-   * Page ou ressource introuvable : titre, `noindex` et, au rendu serveur, statut HTTP 404 (`REPONSE_SERVEUR`,
-   * fourni par server.ts ; sans effet dans le navigateur, ou la page est deja affichee).
-   */
-  introuvable(titre = 'Page introuvable'): void {
-    this.definirPrivee(titre);
-    if (this.reponse) this.reponse.statut = 404;
+  /** Une cle de traduction est traduite ; tout autre texte est repris tel quel. */
+  private texte(valeur: string): string {
+    return valeur in FR ? this.i18n.t(valeur as ClesTraduction) : valeur;
   }
 
   private canonique(chemin: string | undefined): void {

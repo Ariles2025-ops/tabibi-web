@@ -6,13 +6,18 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { AdminService, Candidature, libelleStatutCandidature } from './admin.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { ClesTraduction } from '../i18n/fr';
+import { TPipe } from '../i18n/t.pipe';
+import { Traducteur } from '../i18n/traducteur';
+import { TraductionService } from '../i18n/traduction.service';
 
-/** Filtre par statut de la liste ; '' = toutes. */
-const STATUTS_FILTRE = [
-  { valeur: 'EN_ATTENTE', libelle: 'En attente' },
-  { valeur: 'VALIDEE', libelle: 'Validées' },
-  { valeur: 'REFUSEE', libelle: 'Refusées' },
-  { valeur: '', libelle: 'Toutes' },
+/** Filtre par statut de la liste ; '' = toutes. Le libelle est une cle de traduction. */
+const STATUTS_FILTRE: ReadonlyArray<{ valeur: string; libelle: ClesTraduction }> = [
+  { valeur: 'EN_ATTENTE', libelle: 'candidatures.filtreEnAttente' },
+  { valeur: 'VALIDEE', libelle: 'candidatures.filtreValidees' },
+  { valeur: 'REFUSEE', libelle: 'candidatures.filtreRefusees' },
+  { valeur: '', libelle: 'candidatures.filtreToutes' },
 ];
 
 /**
@@ -22,20 +27,20 @@ const STATUTS_FILTRE = [
 @Component({
   selector: 'app-candidatures-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
-        <h1 style="color:var(--vert);margin:0">Candidatures</h1>
+        <h1 style="color:var(--vert);margin:0">{{ 'candidatures.titre' | t }}</h1>
         <label style="display:flex;align-items:center;gap:8px;color:#566b64;font-size:.9rem">
-          Statut
+          {{ 'commun.statut' | t }}
           <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:#10241F;font-size:1rem">
-            <option *ngFor="let s of statuts" [value]="s.valeur">{{ s.libelle }}</option>
+            <option *ngFor="let s of statuts" [value]="s.valeur">{{ s.libelle | t }}</option>
           </select>
         </label>
       </div>
 
-      <p *ngIf="charge()">Chargement…</p>
+      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
       <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
@@ -46,33 +51,33 @@ const STATUTS_FILTRE = [
               <strong>{{ c.nomComplet }}</strong>
               <span style="color:#566b64"> · {{ libelleStatut(c.statut) }}</span><br>
               <span style="color:#566b64">
-                {{ c.specialiteFr || c.specialiteSlug }} · {{ c.ville || 'Ville non précisée' }} ({{ c.wilayaFr || c.wilayaCode }})
-                · N° d'ordre {{ c.numeroOrdre }}<ng-container *ngIf="c.telephone"> · {{ c.telephone }}</ng-container>
+                {{ c.specialiteFr || c.specialiteSlug }} · {{ c.ville || ('candidature.villeNonPrecisee' | t) }} ({{ c.wilayaFr || c.wilayaCode }})
+                · {{ 'candidature.numeroOrdre' | t:{ numero: c.numeroOrdre } }}<ng-container *ngIf="c.telephone"> · {{ c.telephone }}</ng-container>
               </span><br>
               <span style="color:#566b64;font-size:.9rem">
-                Déposée le {{ c.deposeeLe | date:'d MMMM yyyy à HH:mm' }}<ng-container *ngIf="c.traiteeLe"> · traitée le {{ c.traiteeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container>
+                {{ 'candidature.deposeeLe' | t:{ date: (c.deposeeLe | dateLocale:'dateHeure') } }}<ng-container *ngIf="c.traiteeLe as traitee"> · {{ 'candidature.traiteeLe' | t:{ date: (traitee | dateLocale:'dateHeure') } }}</ng-container>
               </span>
-              <p *ngIf="c.motifRefus" style="margin:6px 0 0;color:#b3261e">Motif du refus : {{ c.motifRefus }}</p>
+              <p *ngIf="c.motifRefus as motif" style="margin:6px 0 0;color:#b3261e">{{ 'candidatures.motifRefus' | t:{ motif } }}</p>
             </div>
             <button *ngIf="c.statut === 'EN_ATTENTE'" type="button" class="bouton" (click)="valider(c)" [disabled]="enCours() !== null">
-              {{ enCours() === c.id ? 'Enregistrement…' : 'Valider' }}
+              {{ (enCours() === c.id ? 'commun.enregistrement' : 'candidatures.valider') | t }}
             </button>
           </div>
 
           <form *ngIf="c.statut === 'EN_ATTENTE'" (ngSubmit)="refuser(c)"
                 style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 0">
-            <input class="champ" [(ngModel)]="motifs[c.id]" [name]="'motif-' + c.id" placeholder="Motif du refus (obligatoire)"
+            <input class="champ" [(ngModel)]="motifs[c.id]" [name]="'motif-' + c.id" [placeholder]="'candidatures.motifPlaceholder' | t"
                    required style="flex:1;min-width:220px;color:#10241F;font-size:1rem">
             <button type="submit" [disabled]="enCours() !== null || !motifRenseigne(c)"
                     style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
-              Refuser
+              {{ 'candidatures.refuser' | t }}
             </button>
           </form>
         </li>
       </ul>
-      <p *ngIf="!charge() && !erreur() && candidatures().length === 0">Aucune candidature pour ce filtre.</p>
+      <p *ngIf="!charge() && !erreur() && candidatures().length === 0">{{ 'candidatures.aucune' | t }}</p>
 
-      <p style="margin:24px 0 0"><a routerLink="/admin" style="color:var(--vert)">Retour au tableau de bord</a></p>
+      <p style="margin:24px 0 0"><a routerLink="/admin" style="color:var(--vert)">{{ 'candidatures.retourTableau' | t }}</a></p>
     </main>
   `,
 })
@@ -80,6 +85,9 @@ export class CandidaturesAdminComponent implements OnInit {
   private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(AdminService);
+  private i18n = inject(TraductionService);
+  /** Traducteur de la langue courante, passe aux fonctions de libelles du service. */
+  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
 
   statuts = STATUTS_FILTRE;
   /** Statut filtre ('' = toutes) ; les candidatures en attente d'abord. */
@@ -94,7 +102,7 @@ export class CandidaturesAdminComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
-    this.seo.definirPrivee('Candidatures');
+    this.seo.definirPrivee('seo.candidatures');
     this.charger();
   }
 
@@ -118,25 +126,25 @@ export class CandidaturesAdminComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set("Cette page est réservée à l'administrateur.");
+          this.erreur.set(this.i18n.t('commun.reserveAdmin'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger les candidatures.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('candidatures.erreurChargement'));
         }
       },
     });
   }
 
   valider(c: Candidature) {
-    this.traiter(c, this.service.valider(c.id), `Candidature de ${c.nomComplet} validée : le praticien figure désormais dans l'annuaire.`);
+    this.traiter(c, this.service.valider(c.id), this.i18n.t('candidatures.validee', { nom: c.nomComplet }));
   }
 
   refuser(c: Candidature) {
     const motif = (this.motifs[c.id] ?? '').trim();
     if (!motif) {
-      this.erreur.set('Indiquez le motif du refus.');
+      this.erreur.set(this.i18n.t('candidatures.indiquerMotif'));
       return;
     }
-    this.traiter(c, this.service.refuser(c.id, motif), `Candidature de ${c.nomComplet} refusée ; le praticien est prévenu du motif.`);
+    this.traiter(c, this.service.refuser(c.id, motif), this.i18n.t('candidatures.refusee', { nom: c.nomComplet }));
   }
 
   motifRenseigne(c: Candidature): boolean {
@@ -144,7 +152,7 @@ export class CandidaturesAdminComponent implements OnInit {
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutCandidature(statut);
+    return libelleStatutCandidature(statut, this.traduire);
   }
 
   /** Applique une decision puis recharge la liste ; 409 / 404 (deja traitee, disparue) affichent le motif et rechargent. */
@@ -164,9 +172,9 @@ export class CandidaturesAdminComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 409 || e.status === 404) {
-          this.charger(e.error?.erreur ?? 'Cette candidature a déjà été traitée.');
+          this.charger(e.error?.erreur ?? this.i18n.t('candidatures.dejaTraitee'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Le traitement de la candidature a échoué, veuillez réessayer.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('candidatures.traitementEchec'));
         }
       },
     });

@@ -5,6 +5,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { TraductionService } from '../i18n/traduction.service';
 import { Ordonnance, OrdonnanceService } from './ordonnance.service';
 import { libelleStatutOrdonnance } from './statut-ordonnance';
 import { SeoService } from '../seo/seo.service';
@@ -12,34 +15,34 @@ import { SeoService } from '../seo/seo.service';
 @Component({
   selector: 'app-ordonnance-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <p class="sans-impression" style="margin:0 0 16px">
-        <a *ngIf="!estMedecin()" routerLink="/mes-ordonnances" style="color:var(--vert)">Retour à mes ordonnances</a>
-        <a *ngIf="estMedecin()" routerLink="/medecin/ordonnances" style="color:var(--vert)">Retour à mes ordonnances rédigées</a>
+        <a *ngIf="!estMedecin()" routerLink="/mes-ordonnances" style="color:var(--vert)">{{ 'ordonnance.retourMes' | t }}</a>
+        <a *ngIf="estMedecin()" routerLink="/medecin/ordonnances" style="color:var(--vert)">{{ 'ordonnance.retourRedigees' | t }}</a>
       </p>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
-      <p *ngIf="charge()">Chargement…</p>
+      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
+      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
       <article *ngIf="ordonnance() as o">
         <header style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div>
-            <h1 style="color:var(--vert);margin:0 0 4px">Ordonnance</h1>
+            <h1 style="color:var(--vert);margin:0 0 4px">{{ 'ordonnance.titre' | t }}</h1>
             <p style="color:#566b64;margin:0">
-              Émise le {{ o.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }} · {{ libelleStatut(o.statut) }}
+              {{ 'ordonnance.emiseLe' | t:{ date: (o.emiseLe | dateLocale:'jourDateHeure') } }} · {{ libelleStatut(o.statut) }}
             </p>
             <p style="color:#566b64;margin:4px 0 0">
-              Praticien : {{ medecin()?.nomComplet ?? o.medecinId }}<br>
-              Patient : {{ o.patientId }}
+              {{ 'commun.praticien' | t:{ nom: medecin()?.nomComplet ?? o.medecinId } }}<br>
+              {{ 'commun.patientId' | t:{ id: o.patientId } }}
             </p>
           </div>
           <div class="sans-impression" style="display:flex;gap:8px;flex-wrap:wrap">
-            <button type="button" class="bouton" (click)="imprimer()">Imprimer</button>
+            <button type="button" class="bouton" (click)="imprimer()">{{ 'ordonnance.imprimer' | t }}</button>
             <button type="button" class="bouton-secondaire" (click)="telechargerPdf()" [disabled]="pdfEnCours()">
-              {{ pdfEnCours() ? 'Préparation du PDF…' : 'Télécharger le PDF' }}
+              {{ (pdfEnCours() ? 'ordonnance.pdfEnCours' : 'ordonnance.telechargerPdf') | t }}
             </button>
           </div>
         </header>
@@ -48,9 +51,9 @@ import { SeoService } from '../seo/seo.service';
         <table style="width:100%;border-collapse:collapse;margin:24px 0">
           <thead>
             <tr style="text-align:left;color:#566b64">
-              <th style="padding:8px;border-bottom:2px solid #e4e9e7">Médicament</th>
-              <th style="padding:8px;border-bottom:2px solid #e4e9e7">Posologie</th>
-              <th style="padding:8px;border-bottom:2px solid #e4e9e7">Durée</th>
+              <th style="padding:8px;border-bottom:2px solid #e4e9e7">{{ 'ordonnance.medicament' | t }}</th>
+              <th style="padding:8px;border-bottom:2px solid #e4e9e7">{{ 'ordonnance.posologie' | t }}</th>
+              <th style="padding:8px;border-bottom:2px solid #e4e9e7">{{ 'ordonnance.duree' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -63,13 +66,13 @@ import { SeoService } from '../seo/seo.service';
         </table>
 
         <section style="border:2px dashed var(--vert);border-radius:12px;padding:16px;text-align:center">
-          <p style="margin:0 0 4px;color:#566b64">Code de vérification</p>
+          <p style="margin:0 0 4px;color:#566b64">{{ 'ordonnance.codeVerification' | t }}</p>
           <p style="margin:0;font-size:2.2rem;font-weight:700;letter-spacing:.15em;font-family:ui-monospace,monospace;color:var(--vert)">
             {{ o.codeVerification }}
           </p>
           <p style="margin:8px 0 0;color:#566b64;font-size:.9rem">
-            Authenticité vérifiable sur Tabibi, page
-            <a routerLink="/verifier" [queryParams]="{ code: o.codeVerification }" style="color:var(--vert)">Vérifier une ordonnance</a>.
+            {{ 'ordonnance.authenticite' | t }}
+            <a routerLink="/verifier" [queryParams]="{ code: o.codeVerification }" style="color:var(--vert)">{{ 'nav.verifierOrdonnance' | t }}</a>.
           </p>
         </section>
       </article>
@@ -84,6 +87,7 @@ export class OrdonnanceDetailComponent implements OnInit {
   private annuaire = inject(AnnuaireService);
   private roleService = inject(RoleService);
   private document = inject(DOCUMENT);
+  private i18n = inject(TraductionService);
   private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
 
   /** null tant que l'etat de connexion n'est pas connu. */
@@ -101,7 +105,7 @@ export class OrdonnanceDetailComponent implements OnInit {
   erreurPdf = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('Ordonnance');
+    this.seo.definirPrivee('seo.ordonnance');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -133,7 +137,7 @@ export class OrdonnanceDetailComponent implements OnInit {
       },
       error: async (e: HttpErrorResponse) => {
         this.pdfEnCours.set(false);
-        this.erreurPdf.set((await motifErreurBlob(e)) ?? 'Impossible de générer le PDF de cette ordonnance.');
+        this.erreurPdf.set((await motifErreurBlob(e)) ?? this.i18n.t('ordonnance.pdfEchec'));
       },
     });
   }
@@ -154,7 +158,7 @@ export class OrdonnanceDetailComponent implements OnInit {
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutOrdonnance(statut);
+    return libelleStatutOrdonnance(statut, this.i18n.t.bind(this.i18n));
   }
 
   private charger(id: string) {
@@ -173,11 +177,11 @@ export class OrdonnanceDetailComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set("Vous n'avez pas accès à cette ordonnance.");
+          this.erreur.set(this.i18n.t('ordonnance.acces'));
         } else if (e.status === 404) {
-          this.erreur.set('Ordonnance introuvable.');
+          this.erreur.set(this.i18n.t('ordonnance.introuvable'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "Impossible de charger l'ordonnance.");
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('ordonnance.erreurChargement'));
         }
       },
     });

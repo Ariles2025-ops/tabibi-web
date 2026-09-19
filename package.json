@@ -1,11 +1,12 @@
 {
   "name": "tabibi-web",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "description": "Front web Tabibi (Angular 18) — connexion Keycloak + API Tabibi",
   "scripts": {
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
+    "verif:i18n": "node outils/verifier-i18n.mjs",
     "serve:ssr": "node dist/tabibi-web/server/server.mjs",
     "e2e": "ng build && playwright test"
   },

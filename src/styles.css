@@ -34,3 +34,20 @@ button:disabled { opacity:.6; cursor:default; }
   body { color:#000; }
   main { max-width:none !important; margin:0 !important; padding:0 !important; }
 }
+
+/* Selecteur de langue de la barre de navigation (Français / العربية / English) : trois boutons discrets, celui
+   de la langue courante souligne. `pousser-fin` remplace un margin-left : en arabe (dir=rtl), l'element doit
+   etre pousse vers la gauche, d'ou la propriete logique. */
+.pousser-fin { margin-inline-start: auto; }
+.selecteur-langue { display:inline-flex; gap:8px; align-items:center; }
+.selecteur-langue button { background:none; border:0; padding:2px 4px; color:#cfe7e0; font:inherit; font-size:.9rem; cursor:pointer; }
+.selecteur-langue button.actif { color:#fff; font-weight:600; text-decoration:underline; text-underline-offset:4px; }
+
+/* Ecriture de droite a gauche (arabe) : le sens du document est pose sur <html> par TraductionService. Les
+   listes, les bulles de messagerie et les retraits sont symetriques ; les styles en ligne des composants
+   utilisent surtout flex et grid, qui suivent deja le sens du document. */
+[dir='rtl'] .message-moi { justify-self:start; }
+[dir='rtl'] .message-autre { justify-self:end; }
+[dir='rtl'] ol, [dir='rtl'] ul { padding-inline-start:0; padding-inline-end:0; }
+[dir='rtl'] .liste-numerotee { padding-inline-start:0; padding-inline-end:24px; }
+[dir='rtl'] code { direction:ltr; unicode-bidi:embed; display:inline-block; }

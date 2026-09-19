@@ -2,34 +2,35 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TPipe } from '../i18n/t.pipe';
 import { SeoService } from '../seo/seo.service';
 import { AnnuaireService, Medecin } from './annuaire.service';
 
 @Component({
   selector: 'app-annuaire',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TPipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0">Trouver un praticien</h1>
+      <h1 style="color:var(--vert);margin:0">{{ 'annuaire.titre' | t }}</h1>
 
       <form (ngSubmit)="rechercher()" style="display:flex;gap:8px;flex-wrap:wrap;margin:20px 0">
-        <input [(ngModel)]="q" name="q" placeholder="Nom du medecin"
+        <input [(ngModel)]="q" name="q" [placeholder]="'annuaire.nom' | t"
                style="flex:1;min-width:160px;padding:10px;border:1px solid #ddd;border-radius:8px">
         <select [(ngModel)]="specialite" name="specialite" style="padding:10px;border:1px solid #ddd;border-radius:8px">
-          <option value="">Toute specialite</option>
-          <option value="generaliste">Generaliste</option>
-          <option value="cardiologue">Cardiologue</option>
-          <option value="dermatologue">Dermatologue</option>
-          <option value="pediatre">Pediatre</option>
+          <option value="">{{ 'annuaire.touteSpecialite' | t }}</option>
+          <option value="generaliste">{{ 'specialite.generaliste' | t }}</option>
+          <option value="cardiologue">{{ 'specialite.cardiologue' | t }}</option>
+          <option value="dermatologue">{{ 'specialite.dermatologue' | t }}</option>
+          <option value="pediatre">{{ 'specialite.pediatre' | t }}</option>
         </select>
-        <input [(ngModel)]="wilaya" name="wilaya" placeholder="Wilaya (code)"
+        <input [(ngModel)]="wilaya" name="wilaya" [placeholder]="'annuaire.wilaya' | t"
                style="width:120px;padding:10px;border:1px solid #ddd;border-radius:8px">
         <button type="submit"
-                style="padding:10px 16px;background:var(--vert);color:#fff;border:0;border-radius:8px">Rechercher</button>
+                style="padding:10px 16px;background:var(--vert);color:#fff;border:0;border-radius:8px">{{ 'annuaire.rechercher' | t }}</button>
       </form>
 
-      <p *ngIf="charge()">Recherche…</p>
+      <p *ngIf="charge()">{{ 'annuaire.recherche' | t }}</p>
       <ul style="list-style:none;padding:0;display:grid;gap:10px">
         <li *ngFor="let m of resultats()" style="border:1px solid #e4e9e7;border-radius:12px">
           <a [routerLink]="['/medecins', m.id]" style="display:block;padding:14px;color:inherit;text-decoration:none">
@@ -38,7 +39,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
           </a>
         </li>
       </ul>
-      <p *ngIf="!charge() && resultats().length === 0">Aucun praticien trouve.</p>
+      <p *ngIf="!charge() && resultats().length === 0">{{ 'annuaire.aucun' | t }}</p>
     </main>
   `,
 })
@@ -50,12 +51,7 @@ export class AnnuaireComponent implements OnInit {
   charge = signal(false);
 
   ngOnInit() {
-    this.seo.definir({
-      titre: 'Trouver un médecin en Algérie',
-      description:
-        'Annuaire des praticiens Tabibi : recherchez un médecin par spécialité, wilaya ou nom et réservez un créneau de consultation en ligne.',
-      canonique: '/',
-    });
+    this.seo.definir({ titre: 'seo.annuaire.titre', description: 'seo.annuaire.description', canonique: '/' });
     this.rechercher();
   }
 

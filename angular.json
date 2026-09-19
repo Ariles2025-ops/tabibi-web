@@ -41,7 +41,8 @@
             "tsConfig": "tsconfig.spec.json",
             "karmaConfig": "karma.conf.js",
             "assets": ["src/assets"],
-            "styles": ["src/styles.css"]
+            "styles": ["src/styles.css"],
+            "main": "src/test.ts"
           }
         }
       }

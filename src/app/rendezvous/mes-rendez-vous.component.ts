@@ -5,6 +5,9 @@ import { RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { AvisService } from '../avis/avis.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { TraductionService } from '../i18n/traduction.service';
 import { RendezVous, RendezVousService } from './rendezvous.service';
 import { libelleStatutRendezVous } from './statut-rendez-vous';
 import { SeoService } from '../seo/seo.service';
@@ -12,35 +15,35 @@ import { SeoService } from '../seo/seo.service';
 @Component({
   selector: 'app-mes-rendez-vous',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 16px">Mes rendez-vous</h1>
+      <h1 style="color:var(--vert);margin:0 0 16px">{{ 'rendezVous.titre' | t }}</h1>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
+      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">Chargement…</p>
+        <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let r of rendezVous()"
               style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
-              <strong>{{ r.debut | date:'EEEE d MMMM à HH:mm' }}</strong><br>
-              <a [routerLink]="['/medecins', r.medecinId]" style="color:var(--vert)">{{ noms()[r.medecinId] ?? 'Voir le praticien' }}</a>
+              <strong>{{ r.debut | dateLocale:'jourHeure' }}</strong><br>
+              <a [routerLink]="['/medecins', r.medecinId]" style="color:var(--vert)">{{ noms()[r.medecinId] ?? ('commun.voirPraticien' | t) }}</a>
               <span style="color:#566b64"> · {{ libelleStatut(r.statut) }}</span>
             </div>
             <button *ngIf="peutAnnuler(r)" (click)="annuler(r)" [disabled]="enCours() !== null"
                     style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px">
-              {{ enCours() === r.id ? 'Annulation…' : 'Annuler' }}
+              {{ (enCours() === r.id ? 'commun.annulation' : 'commun.annuler') | t }}
             </button>
-            <a *ngIf="r.statut === 'HONORE' && !avisDonne(r)" class="bouton-secondaire" [routerLink]="['/avis/nouveau', r.id]">Donner mon avis</a>
-            <span *ngIf="r.statut === 'HONORE' && avisDonne(r)" style="color:#566b64">Avis donné</span>
+            <a *ngIf="r.statut === 'HONORE' && !avisDonne(r)" class="bouton-secondaire" [routerLink]="['/avis/nouveau', r.id]">{{ 'rendezVous.donnerAvis' | t }}</a>
+            <span *ngIf="r.statut === 'HONORE' && avisDonne(r)" style="color:#566b64">{{ 'rendezVous.avisDonne' | t }}</span>
           </li>
         </ul>
         <p *ngIf="!charge() && !erreur() && rendezVous().length === 0">
-          Aucun rendez-vous pour le moment. <a routerLink="/" style="color:var(--vert)">Trouver un praticien</a>
+          {{ 'rendezVous.aucun' | t }} <a routerLink="/" style="color:var(--vert)">{{ 'annuaire.titre' | t }}</a>
         </p>
       </ng-container>
     </main>
@@ -52,6 +55,7 @@ export class MesRendezVousComponent implements OnInit {
   private service = inject(RendezVousService);
   private annuaire = inject(AnnuaireService);
   private avis = inject(AvisService);
+  private i18n = inject(TraductionService);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -66,7 +70,7 @@ export class MesRendezVousComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('Mes rendez-vous');
+    this.seo.definirPrivee('seo.mesRendezVous');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -92,16 +96,16 @@ export class MesRendezVousComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux patients.');
+          this.erreur.set(this.i18n.t('commun.reservePatients'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos rendez-vous.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('rendezVous.erreurChargement'));
         }
       },
     });
   }
 
   annuler(rdv: RendezVous) {
-    if (!confirm('Annuler ce rendez-vous ?')) return;
+    if (!confirm(this.i18n.t('rendezVous.confirmerAnnulation'))) return;
     this.enCours.set(rdv.id);
     this.erreur.set('');
     this.service.annuler(rdv.id).subscribe({
@@ -111,7 +115,7 @@ export class MesRendezVousComponent implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
-        this.erreur.set(e.error?.erreur ?? "L'annulation a échoué, veuillez réessayer.");
+        this.erreur.set(e.error?.erreur ?? this.i18n.t('rendezVous.annulationEchec'));
       },
     });
   }
@@ -122,7 +126,7 @@ export class MesRendezVousComponent implements OnInit {
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutRendezVous(statut);
+    return libelleStatutRendezVous(statut, this.i18n.t.bind(this.i18n));
   }
 
   /** Vrai si un avis a deja ete depose sur ce rendez-vous (« Avis donné » a la place du bouton). */

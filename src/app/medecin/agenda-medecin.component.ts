@@ -8,6 +8,10 @@ import { libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
 import { TeleconsultationService } from '../teleconsultation/teleconsultation.service';
 import { MedecinService } from './medecin.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { Traducteur } from '../i18n/traducteur';
+import { TraductionService } from '../i18n/traduction.service';
 
 /**
  * Agenda du medecin : ses rendez-vous, a marquer honores ou a annuler (creneau remis a disposition, patient
@@ -16,50 +20,50 @@ import { SeoService } from '../seo/seo.service';
 @Component({
   selector: 'app-agenda-medecin',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 16px">Agenda</h1>
+      <h1 style="color:var(--vert);margin:0 0 16px">{{ 'agenda.titre' | t }}</h1>
 
-      <p *ngIf="charge()">Chargement…</p>
+      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
       <p *ngIf="teleconsultationProposee() as r" style="color:var(--vert)">
-        Téléconsultation proposée au patient pour le rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }}.
-        <a routerLink="/medecin/teleconsultations" style="color:var(--vert)">Voir mes téléconsultations</a>
+        {{ 'agenda.teleconsultationProposee' | t:{ date: (r.debut | dateLocale:'jourHeure') } }}
+        <a routerLink="/medecin/teleconsultations" style="color:var(--vert)">{{ 'agenda.voirMesTeleconsultations' | t }}</a>
       </p>
       <p *ngIf="annule() as r" style="color:var(--vert)">
-        Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }} annulé : le créneau est de nouveau proposé et le patient est prévenu.
+        {{ 'agenda.annule' | t:{ date: (r.debut | dateLocale:'jourHeure') } }}
       </p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let r of rendezVous()"
             style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div>
-            <strong>{{ r.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
+            <strong>{{ r.debut | dateLocale:'jourHeure' }}</strong>
             <span style="color:#566b64"> · {{ libelleStatut(r.statut) }}</span><br>
-            <span style="color:#566b64">Patient : {{ r.patientId }}</span>
+            <span style="color:#566b64">{{ 'commun.patientId' | t:{ id: r.patientId } }}</span>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button *ngIf="r.statut === 'CONFIRME'" type="button" class="bouton" (click)="honorer(r)"
                     [disabled]="enCours() !== null">
-              {{ enCours() === r.id ? 'Enregistrement…' : 'Marquer honoré' }}
+              {{ (enCours() === r.id ? 'commun.enregistrement' : 'agenda.marquerHonore') | t }}
             </button>
             <button *ngIf="r.statut === 'CONFIRME'" type="button" class="bouton-secondaire" (click)="proposerTeleconsultation(r)"
                     [disabled]="enCours() !== null">
-              {{ enCours() === r.id ? 'Envoi…' : 'Proposer une téléconsultation' }}
+              {{ (enCours() === r.id ? 'commun.envoi' : 'agenda.proposerTeleconsultation') | t }}
             </button>
             <button *ngIf="r.statut === 'CONFIRME'" type="button" (click)="annuler(r)" [disabled]="enCours() !== null"
                     style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
-              {{ enCours() === r.id ? 'Annulation…' : 'Annuler' }}
+              {{ (enCours() === r.id ? 'commun.annulation' : 'commun.annuler') | t }}
             </button>
             <a *ngIf="r.statut !== 'ANNULE'" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
-               [queryParams]="{ patientId: r.patientId, rendezVousId: r.id }">Rédiger une ordonnance</a>
+               [queryParams]="{ patientId: r.patientId, rendezVousId: r.id }">{{ 'agenda.redigerOrdonnance' | t }}</a>
           </div>
         </li>
       </ul>
       <p *ngIf="!charge() && !erreur() && rendezVous().length === 0">
-        Aucun rendez-vous pour le moment.
-        <a routerLink="/medecin/disponibilites" style="color:var(--vert)">Ouvrir des créneaux</a>
+        {{ 'agenda.aucun' | t }}
+        <a routerLink="/medecin/disponibilites" style="color:var(--vert)">{{ 'commun.ouvrirCreneaux' | t }}</a>
       </p>
     </main>
   `,
@@ -69,6 +73,9 @@ export class AgendaMedecinComponent implements OnInit {
   private auth = inject(AuthService);
   private service = inject(MedecinService);
   private teleconsultations = inject(TeleconsultationService);
+  private i18n = inject(TraductionService);
+  /** Traducteur de la langue courante, passe aux fonctions de libelles de statut. */
+  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
 
   rendezVous = signal<RendezVous[]>([]);
   charge = signal(false);
@@ -81,7 +88,7 @@ export class AgendaMedecinComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
-    this.seo.definirPrivee('Agenda');
+    this.seo.definirPrivee('seo.agenda');
     this.charger();
   }
 
@@ -99,9 +106,9 @@ export class AgendaMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux médecins.');
+          this.erreur.set(this.i18n.t('commun.reserveMedecins'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "Impossible de charger l'agenda.");
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('agenda.erreurChargement'));
         }
       },
     });
@@ -119,7 +126,7 @@ export class AgendaMedecinComponent implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
-        this.erreur.set(e.error?.erreur ?? 'La mise à jour du rendez-vous a échoué, veuillez réessayer.');
+        this.erreur.set(e.error?.erreur ?? this.i18n.t('agenda.majEchec'));
       },
     });
   }
@@ -129,7 +136,7 @@ export class AgendaMedecinComponent implements OnInit {
    * par l'API (409 s'il n'est plus confirme : motif affiche et agenda recharge).
    */
   annuler(rdv: RendezVous) {
-    if (!confirm('Annuler ce rendez-vous ? Le patient sera prévenu et le créneau de nouveau proposé.')) return;
+    if (!confirm(this.i18n.t('agenda.confirmerAnnulation'))) return;
     this.enCours.set(rdv.id);
     this.erreur.set('');
     this.teleconsultationProposee.set(null);
@@ -143,11 +150,11 @@ export class AgendaMedecinComponent implements OnInit {
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
         if (e.status === 409) {
-          this.charger(e.error?.erreur ?? "Ce rendez-vous n'est plus confirmé.");
+          this.charger(e.error?.erreur ?? this.i18n.t('agenda.plusConfirme'));
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'annulation a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('agenda.annulationEchec'));
         }
       },
     });
@@ -167,17 +174,17 @@ export class AgendaMedecinComponent implements OnInit {
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
         if (e.status === 409) {
-          this.erreur.set(e.error?.erreur ?? 'Une téléconsultation est déjà proposée sur ce rendez-vous.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('agenda.teleconsultationDeja'));
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreur.set(e.error?.erreur ?? 'La proposition de téléconsultation a échoué, veuillez réessayer.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('agenda.propositionEchec'));
         }
       },
     });
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutRendezVous(statut);
+    return libelleStatutRendezVous(statut, this.traduire);
   }
 }

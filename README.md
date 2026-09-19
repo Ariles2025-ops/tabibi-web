@@ -53,6 +53,9 @@ npx ng test --watch=false --browsers=ChromeHeadlessCI          # idem sans bac a
 CHROME_BIN=/chemin/vers/chrome npx ng test --watch=false --browsers=ChromeHeadlessCI   # Chrome hors du PATH
 ```
 Le lanceur `ChromeHeadlessCI` (`ChromeHeadless` + `--no-sandbox --disable-gpu`) est defini dans `karma.conf.js`.
+`src/test.ts` (option `main` de la cible `test`) initialise l'environnement de test : donnees de locale fr / ar-DZ / en
+et langue d'interface fixee a `fr` pour toutes les specs (le navigateur d'integration continue annonce `en-US`).
+`npm run verif:i18n` verifie qu'aucun libelle francais litteral ne reste dans un template.
 L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, `ng build` et `ng test` headless
 (job `build-test`, sur chaque pull request et push) ; `package-lock.json` est versionne pour la reproductibilite.
 Le journal des versions est dans `docs/JOURNAL.md`.
@@ -235,9 +238,43 @@ Limites :
   `/medecins/m1` → « Dr Amina Belkacem, Généraliste à Alger | Tabibi » ; `/medecins/inconnu-xyz` et
   `/page-inexistante` → statut 404, `noindex` ; `/mes-rendez-vous` → `noindex` ; `/robots.txt` et `/sitemap.xml`.
 
+## Langues (francais, arabe, anglais)
+L'interface est traduite **a l'execution** : un seul build sert les trois langues, rien n'est reconstruit par langue
+et aucun rechargement n'est necessaire pour changer.
+- `i18n/traduction.service.ts` : signal `langue` (`fr` | `ar` | `en`), `t(cle, params?)` (interpolation `{nom}`),
+  `locale()` (locale Angular des dates : `fr`, `ar-DZ`, `en`), `dir()` (`rtl` en arabe). A chaque changement, le
+  service pose `lang` et `dir` sur `<html>`, dans le navigateur comme au rendu serveur.
+- Dictionnaires `i18n/fr.ts` (reference, ses cles definissent le type `ClesTraduction`), `i18n/ar.ts`, `i18n/en.ts` :
+  les trois portent exactement les memes cles — le compilateur le verifie (`Record<ClesTraduction, string>`) et un
+  test le verifie aussi (cles, libelles non vides, memes parametres d'interpolation).
+- Choix initial : le choix memorise (`localStorage`, cle `tabibi.langue`, lu en try/catch) ; sinon, au rendu serveur,
+  l'en-tete `Accept-Language` de la requete (jeton `LANGUE_SERVEUR` fourni par `server.ts`, `Vary: Accept-Language`
+  sur les pages rendues) ; sinon `navigator.language` (`ar-*` → arabe, `en-*` → anglais, sinon francais).
+- Selecteur dans la barre de navigation (**Français / العربية / English**) : le choix y est memorise. Apres connexion,
+  la langue du profil (`GET /api/moi/profil`) initialise l'interface **si** l'utilisateur n'a pas choisi lui-meme
+  (`choisieManuellement()`) ; une langue de profil non prise en charge (`kab`) laisse la langue detectee.
+- Dans les templates : pipe standalone `t` (`{{ 'nav.annuaire' | t }}`, `{{ 'commun.minutes' | t:{ n: 30 } }}`) et
+  pipe `dateLocale` (`{{ iso | dateLocale:'jourHeure' }}`, formats nommes `jourDateHeure`, `jourHeure`, `dateHeure`,
+  `date`, `courtHeure`, eux-memes traduits). Les deux sont **impurs** : ils suivent le signal de langue. Dans le code,
+  `TraductionService.t(...)` ; les fonctions de libelles partagees (statuts, compteurs : `libelleStatutRendezVous`,
+  `libelleRappels`, `formaterMoyenne`, `formaterPrix`, `libelleReponses`, `validerProfil`…) prennent un `Traducteur`
+  en dernier parametre, avec le francais par defaut.
+- Ce qui n'est **pas** traduit : les donnees de l'API (nom du praticien, commentaire d'un avis, medicament) et les
+  messages d'erreur `{ erreur }` renvoyes par le backend, affiches tels quels.
+- Ecriture de droite a gauche : `styles.css` adapte les marges (proprietes logiques `margin-inline-start`,
+  `padding-inline-start`) et inverse les bulles de la messagerie sous `[dir='rtl']` ; les identifiants et codes
+  restent en `direction: ltr`.
+- Referencement : les titres et descriptions passent par les cles `seo.*` ; `SeoService` reapplique la derniere
+  definition a chaque changement de langue, et le serveur rend `<html lang="ar" dir="rtl">` avec le titre arabe quand
+  le navigateur demande l'arabe.
+- Controle : `npm run verif:i18n` (`outils/verifier-i18n.mjs`) echoue si un libelle francais litteral (lettre
+  accentuee hors interpolation) reste dans le template d'un composant.
+
 ## Prochaines etapes
 - Nom du patient dans l'agenda et sur l'ordonnance (l'API n'expose que l'identifiant).
 - Tests de bout en bout des parcours connectes (Keycloak de test ou jeton de developpement accepte par l'API).
+- Traduction des messages d'erreur du backend (ils arrivent en francais dans `{ erreur }`) et langue kabyle (`kab`),
+  proposee dans le profil mais pas encore dans l'interface.
 
 ## v0.2.0 — Annuaire (web)
 - Ecran d'accueil public : recherche de praticiens (specialite, wilaya, nom) via `GET /api/medecins`.
@@ -521,3 +558,11 @@ Limites :
   image Docker `node:20-alpine` executant `server.mjs` sur le port 80 sous l'utilisateur `node` (nginx retire).
 - `ng serve` : `buildTarget` manquant dans `angular.json` (npm start echouait), corrige.
 - Voir les sections « Rendu cote serveur (SSR) » et « Deploiement ».
+
+## v0.20.0 a v0.22.0
+- Voir `docs/JOURNAL.md` (referencement, tests de bout en bout Playwright, ordonnance en PDF).
+
+## v0.23.0 — Interface en francais, arabe et anglais (RTL)
+- Traduction a l'execution des ecrans patient, medecin, secretaire, pharmacie et administration ; selecteur de langue
+  dans la barre de navigation ; arabe de droite a gauche (`dir="rtl"`), au rendu serveur comme dans le navigateur.
+- Voir la section « Langues (francais, arabe, anglais) » ci-dessus.

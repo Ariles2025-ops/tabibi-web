@@ -6,6 +6,10 @@ import { AuthService } from '../auth/auth.service';
 import { Rattachement, estUuid } from '../secretaire/secretaire.service';
 import { MedecinService } from './medecin.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { Traducteur } from '../i18n/traducteur';
+import { TraductionService } from '../i18n/traduction.service';
 
 /**
  * Secretaires du cabinet (role MEDECIN) : rattachements en cours (GET /api/medecin/secretaires), ajout par
@@ -15,30 +19,27 @@ import { SeoService } from '../seo/seo.service';
 @Component({
   selector: 'app-secretaires',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Mes secrétaires</h1>
-      <p style="color:#566b64;margin:0 0 20px">
-        Une secrétaire rattachée à votre cabinet consulte votre agenda, ouvre des créneaux et marque vos rendez-vous
-        honorés ou annulés depuis son espace. Elle est prévenue de son rattachement et de son retrait.
-      </p>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'secretaires.titre' | t }}</h1>
+      <p style="color:#566b64;margin:0 0 20px">{{ 'secretaires.intro' | t }}</p>
 
       <form (ngSubmit)="rattacher()" style="display:grid;gap:12px;margin:0 0 28px">
         <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-          Identifiant du compte de votre secrétaire (visible dans Mon compte)
+          {{ 'secretaires.identifiant' | t }}
           <input class="champ" [(ngModel)]="secretaireId" name="secretaireId" required
-                 placeholder="Ex. 55555555-5555-5555-5555-555555555555" style="color:#10241F;font-size:1rem;font-family:monospace">
+                 [placeholder]="'secretaires.identifiantPlaceholder' | t" style="color:#10241F;font-size:1rem;font-family:monospace">
         </label>
         <p *ngIf="succes()" style="color:var(--vert);margin:0">{{ succes() }}</p>
         <p *ngIf="erreurFormulaire()" style="color:#b3261e;margin:0">{{ erreurFormulaire() }}</p>
         <div>
-          <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? 'Rattachement…' : 'Rattacher cette secrétaire' }}</button>
+          <button type="submit" class="bouton" [disabled]="enCours()">{{ (enCours() ? 'secretaires.rattachement' : 'secretaires.rattacher') | t }}</button>
         </div>
       </form>
 
-      <h2 style="font-size:1.1rem;margin:0 0 12px">Secrétaires rattachées</h2>
-      <p *ngIf="charge()">Chargement…</p>
+      <h2 style="font-size:1.1rem;margin:0 0 12px">{{ 'secretaires.rattachees' | t }}</h2>
+      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
@@ -46,15 +47,15 @@ import { SeoService } from '../seo/seo.service';
             style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div>
             <code style="font-size:.95rem">{{ r.secretaireId }}</code><br>
-            <span style="color:#566b64">Rattachée le {{ r.creeLe | date:'d MMMM yyyy à HH:mm' }}</span>
+            <span style="color:#566b64">{{ 'secretaires.rattacheeLe' | t:{ date: (r.creeLe | dateLocale:'dateHeure') } }}</span>
           </div>
           <button type="button" (click)="retirer(r)" [disabled]="retraitEnCours() !== null"
                   style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
-            {{ retraitEnCours() === r.id ? 'Retrait…' : 'Retirer' }}
+            {{ (retraitEnCours() === r.id ? 'commun.retrait' : 'commun.retirer') | t }}
           </button>
         </li>
       </ul>
-      <p *ngIf="!charge() && !erreur() && rattachements().length === 0">Aucune secrétaire rattachée pour le moment.</p>
+      <p *ngIf="!charge() && !erreur() && rattachements().length === 0">{{ 'secretaires.aucune' | t }}</p>
     </main>
   `,
 })
@@ -62,6 +63,7 @@ export class SecretairesComponent implements OnInit {
   private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(MedecinService);
+  private i18n = inject(TraductionService);
 
   secretaireId = '';
   rattachements = signal<Rattachement[]>([]);
@@ -75,7 +77,7 @@ export class SecretairesComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
-    this.seo.definirPrivee('Mes secrétaires');
+    this.seo.definirPrivee('seo.mesSecretaires');
     this.charger();
   }
 
@@ -92,9 +94,9 @@ export class SecretairesComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux médecins.');
+          this.erreur.set(this.i18n.t('commun.reserveMedecins'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos secrétaires.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('secretaires.erreurChargement'));
         }
       },
     });
@@ -104,7 +106,7 @@ export class SecretairesComponent implements OnInit {
     const secretaireId = this.secretaireId.trim().toLowerCase();
     this.succes.set('');
     if (!estUuid(secretaireId)) {
-      this.erreurFormulaire.set("Indiquez l'identifiant du compte de votre secrétaire (36 caractères, visible dans Mon compte).");
+      this.erreurFormulaire.set(this.i18n.t('secretaires.identifiantInvalide'));
       return;
     }
     this.erreurFormulaire.set('');
@@ -113,36 +115,36 @@ export class SecretairesComponent implements OnInit {
       next: () => {
         this.enCours.set(false);
         this.secretaireId = '';
-        this.succes.set('Secrétaire rattachée : elle est prévenue et accède à votre agenda.');
+        this.succes.set(this.i18n.t('secretaires.rattachee'));
         this.charger();
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
         if (e.status === 409) {
-          this.erreurFormulaire.set(e.error?.erreur ?? 'Cette secrétaire est déjà rattachée à votre cabinet.');
+          this.erreurFormulaire.set(e.error?.erreur ?? this.i18n.t('secretaires.dejaRattachee'));
           this.charger();
         } else if (e.status === 400) {
-          this.erreurFormulaire.set(e.error?.erreur ?? "L'identifiant est invalide.");
+          this.erreurFormulaire.set(e.error?.erreur ?? this.i18n.t('secretaires.identifiantRefuse'));
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreurFormulaire.set('Seul un compte médecin peut rattacher une secrétaire.');
+          this.erreurFormulaire.set(this.i18n.t('secretaires.seulMedecin'));
         } else {
-          this.erreurFormulaire.set(e.error?.erreur ?? 'Le rattachement a échoué, veuillez réessayer.');
+          this.erreurFormulaire.set(e.error?.erreur ?? this.i18n.t('secretaires.rattachementEchec'));
         }
       },
     });
   }
 
   retirer(rattachement: Rattachement) {
-    if (!confirm('Retirer cette secrétaire de votre cabinet ?')) return;
+    if (!confirm(this.i18n.t('secretaires.confirmerRetrait'))) return;
     this.retraitEnCours.set(rattachement.id);
     this.erreur.set('');
     this.succes.set('');
     this.service.retirerSecretaire(rattachement.id).subscribe({
       next: () => {
         this.retraitEnCours.set(null);
-        this.succes.set('Secrétaire retirée : elle est prévenue.');
+        this.succes.set(this.i18n.t('secretaires.retiree'));
         this.charger();
       },
       error: (e: HttpErrorResponse) => {
@@ -153,7 +155,7 @@ export class SecretairesComponent implements OnInit {
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Le retrait a échoué, veuillez réessayer.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('secretaires.retraitEchec'));
         }
       },
     });

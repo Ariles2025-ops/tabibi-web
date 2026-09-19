@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CONFIGURATION_PAR_DEFAUT, ConfigurationApplication, configurationDepuisEnvironnement } from './src/app/config/config.service';
+import { LANGUE_SERVEUR } from './src/app/i18n/langue-serveur';
 import { REPONSE_SERVEUR, ReponseServeur } from './src/app/seo/reponse-serveur';
 import bootstrap from './src/main.server';
 
@@ -191,6 +192,8 @@ export function app(): express.Express {
   server.get('**', (req: Request, res: Response) => {
     const { protocol, originalUrl, baseUrl, headers } = req;
     res.set('Cache-Control', 'no-store');
+    // La page rendue depend de la langue demandee (libelles, `<html lang dir>`) : les caches intermediaires le savent.
+    res.set('Vary', 'Accept-Language');
     let repondu = false;
     const secours = (motif: string, detail?: unknown) => {
       if (repondu) return;
@@ -213,6 +216,8 @@ export function app(): express.Express {
         providers: [
           { provide: APP_BASE_HREF, useValue: baseUrl },
           { provide: REPONSE_SERVEUR, useValue: reponse },
+          // Langue de la page rendue : celle que le navigateur demande (`<html lang dir>` et libelles traduits).
+          { provide: LANGUE_SERVEUR, useValue: headers['accept-language'] ?? '' },
         ],
       })
       .then((html) => {

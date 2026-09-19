@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ConfigService } from '../config/config.service';
+import { ClesTraduction } from '../i18n/fr';
+import { Traducteur, traduireFr } from '../i18n/traducteur';
 
 /** Candidature d'un medecin a figurer dans l'annuaire, telle que renvoyee par l'API (au medecin comme a l'administrateur). */
 export interface Candidature {
@@ -43,21 +45,23 @@ export interface StatistiquesAdministration {
   candidaturesRefusees: number;
 }
 
-/** Libelles francais des statuts de candidature connus ; un statut inconnu est affiche tel quel. */
-const LIBELLES_STATUT_CANDIDATURE: Partial<Record<string, string>> = {
-  EN_ATTENTE: 'En attente',
-  VALIDEE: 'Validée',
-  REFUSEE: 'Refusée',
+/** Cles de traduction des statuts de candidature connus ; un statut inconnu est affiche tel quel. */
+const CLES_STATUT_CANDIDATURE: Partial<Record<string, ClesTraduction>> = {
+  EN_ATTENTE: 'statut.candidature.EN_ATTENTE',
+  VALIDEE: 'statut.candidature.VALIDEE',
+  REFUSEE: 'statut.candidature.REFUSEE',
 };
 
-export function libelleStatutCandidature(statut: string | null | undefined): string {
+/** Libelle du statut dans la langue de `t` (francais par defaut). */
+export function libelleStatutCandidature(statut: string | null | undefined, t: Traducteur = traduireFr): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_CANDIDATURE[statut] ?? statut;
+  const cle = CLES_STATUT_CANDIDATURE[statut];
+  return cle ? t(cle) : statut;
 }
 
-/** « 0 rappel envoyé », « 1 rappel envoyé », « 3 rappels envoyés ». */
-export function libelleRappels(nombre: number): string {
-  return `${nombre} ${nombre > 1 ? 'rappels envoyés' : 'rappel envoyé'}`;
+/** « 0 rappel envoyé », « 1 rappel envoyé », « 3 rappels envoyés », dans la langue de `t`. */
+export function libelleRappels(nombre: number, t: Traducteur = traduireFr): string {
+  return t(nombre > 1 ? 'admin.rappelsPlusieurs' : 'admin.rappelUn', { n: nombre });
 }
 
 /** Corps des compteurs de l'API : { "nombre": n }. */

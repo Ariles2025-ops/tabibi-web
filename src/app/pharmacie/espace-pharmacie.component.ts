@@ -5,6 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../auth/auth.service';
 import { Besoin, DawiniService, DemandeReponse, libelleReponses } from '../dawini/dawini.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { Traducteur } from '../i18n/traducteur';
+import { TraductionService } from '../i18n/traduction.service';
 
 /** Cle localStorage du nom de la pharmacie (confort : prerempli d'une visite a l'autre, jamais indispensable). */
 const CLE_NOM_PHARMACIE = 'tabibi.pharmacie.nom';
@@ -31,21 +35,18 @@ function formulaireVide(): FormulaireReponse {
 @Component({
   selector: 'app-espace-pharmacie',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Espace pharmacie</h1>
-      <p style="color:#566b64;margin:0 0 20px">
-        Demandes de médicaments publiées par les patients de votre wilaya. Répondez en indiquant la disponibilité,
-        le prix et vos précisions : le patient est prévenu, sans que son identité vous soit communiquée.
-      </p>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'pharmacie.titre' | t }}</h1>
+      <p style="color:#566b64;margin:0 0 20px">{{ 'pharmacie.intro' | t }}</p>
 
       <form (ngSubmit)="chercher()" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:0 0 20px">
         <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-          Wilaya (code) *
-          <input class="champ" [(ngModel)]="wilayaCode" name="wilayaCode" required placeholder="Ex. 16" style="width:120px;color:#10241F;font-size:1rem">
+          {{ 'pharmacie.wilaya' | t }}
+          <input class="champ" [(ngModel)]="wilayaCode" name="wilayaCode" required [placeholder]="'pharmacie.wilayaPlaceholder' | t" style="width:120px;color:#10241F;font-size:1rem">
         </label>
-        <button type="submit" class="bouton" [disabled]="charge()">{{ charge() ? 'Recherche…' : 'Afficher les demandes' }}</button>
+        <button type="submit" class="bouton" [disabled]="charge()">{{ (charge() ? 'pharmacie.recherche' : 'pharmacie.afficher') | t }}</button>
       </form>
 
       <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
@@ -55,47 +56,47 @@ function formulaireVide(): FormulaireReponse {
         <li *ngFor="let b of besoins()" style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
           <strong>{{ b.medicament }}</strong>
           <span style="color:#566b64">
-            · Wilaya {{ b.wilayaCode }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
-            · publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }} · {{ libelleReponses(b.nombreReponses) }}
+            · {{ 'dawini.wilayaLigne' | t:{ code: b.wilayaCode } }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
+            · {{ 'dawini.publieeLe' | t:{ date: (b.publieLe | dateLocale:'courtHeure') } }} · {{ libelleReponses(b.nombreReponses) }}
           </span>
           <p *ngIf="b.precision" style="margin:6px 0 0">{{ b.precision }}</p>
 
-          <p *ngIf="repondus().has(b.id)" style="margin:10px 0 0;color:var(--vert)">Vous avez répondu à cette demande.</p>
+          <p *ngIf="repondus().has(b.id)" style="margin:10px 0 0;color:var(--vert)">{{ 'pharmacie.dejaRepondu' | t }}</p>
 
           <form *ngIf="!repondus().has(b.id) && formulaires[b.id] as f" (ngSubmit)="repondre(b)"
                 style="display:grid;gap:10px;margin:12px 0 0;padding:12px;border:1px solid #e4e9e7;border-radius:8px;background:#f8faf9">
             <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              Nom de la pharmacie *
-              <input class="champ" [(ngModel)]="nomPharmacie" [name]="'nom-' + b.id" required placeholder="Ex. Pharmacie El Amel" style="color:#10241F;font-size:1rem">
+              {{ 'pharmacie.nom' | t }}
+              <input class="champ" [(ngModel)]="nomPharmacie" [name]="'nom-' + b.id" required [placeholder]="'pharmacie.nomPlaceholder' | t" style="color:#10241F;font-size:1rem">
             </label>
             <fieldset style="border:0;padding:0;margin:0;display:flex;gap:16px;align-items:center;flex-wrap:wrap;color:#566b64;font-size:.9rem">
-              <legend style="padding:0;margin:0 0 4px">Médicament disponible *</legend>
+              <legend style="padding:0;margin:0 0 4px">{{ 'pharmacie.disponibilite' | t }}</legend>
               <label style="display:flex;gap:6px;align-items:center;color:#10241F;font-size:1rem">
-                <input type="radio" [name]="'disponible-' + b.id" [value]="true" [(ngModel)]="f.disponible"> Oui
+                <input type="radio" [name]="'disponible-' + b.id" [value]="true" [(ngModel)]="f.disponible"> {{ 'commun.oui' | t }}
               </label>
               <label style="display:flex;gap:6px;align-items:center;color:#10241F;font-size:1rem">
-                <input type="radio" [name]="'disponible-' + b.id" [value]="false" [(ngModel)]="f.disponible"> Non
+                <input type="radio" [name]="'disponible-' + b.id" [value]="false" [(ngModel)]="f.disponible"> {{ 'commun.non' | t }}
               </label>
             </fieldset>
             <div style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
               <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-                Prix (DA)
-                <input class="champ" type="number" min="0" step="1" [(ngModel)]="f.prixDa" [name]="'prix-' + b.id" placeholder="Ex. 850" style="color:#10241F;font-size:1rem">
+                {{ 'pharmacie.prix' | t }}
+                <input class="champ" type="number" min="0" step="1" [(ngModel)]="f.prixDa" [name]="'prix-' + b.id" [placeholder]="'pharmacie.prixPlaceholder' | t" style="color:#10241F;font-size:1rem">
               </label>
               <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-                Commentaire
-                <input class="champ" [(ngModel)]="f.commentaire" [name]="'commentaire-' + b.id" placeholder="Ex. Disponible jusqu'à 19 h" style="color:#10241F;font-size:1rem">
+                {{ 'pharmacie.commentaire' | t }}
+                <input class="champ" [(ngModel)]="f.commentaire" [name]="'commentaire-' + b.id" [placeholder]="'pharmacie.commentairePlaceholder' | t" style="color:#10241F;font-size:1rem">
               </label>
             </div>
             <div>
               <button type="submit" class="bouton" [disabled]="enCours() !== null">
-                {{ enCours() === b.id ? 'Envoi…' : 'Répondre' }}
+                {{ (enCours() === b.id ? 'commun.envoi' : 'pharmacie.repondre') | t }}
               </button>
             </div>
           </form>
         </li>
       </ul>
-      <p *ngIf="recherchee() && !charge() && !erreur() && besoins().length === 0">Aucune demande ouverte dans cette wilaya.</p>
+      <p *ngIf="recherchee() && !charge() && !erreur() && besoins().length === 0">{{ 'pharmacie.aucune' | t }}</p>
     </main>
   `,
 })
@@ -103,6 +104,9 @@ export class EspacePharmacieComponent implements OnInit {
   private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(DawiniService);
+  private i18n = inject(TraductionService);
+  /** Traducteur de la langue courante, passe aux fonctions de libelles du service. */
+  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
 
   wilayaCode = '';
   /** Nom de la pharmacie, commun a toutes les reponses, relu depuis localStorage s'il a deja ete saisi. */
@@ -121,7 +125,7 @@ export class EspacePharmacieComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
-    this.seo.definirPrivee('Espace pharmacie');
+    this.seo.definirPrivee('seo.espacePharmacie');
     this.nomPharmacie = lireNomMemorise();
   }
 
@@ -129,7 +133,7 @@ export class EspacePharmacieComponent implements OnInit {
     const wilaya = this.wilayaCode.trim();
     this.succes.set('');
     if (!wilaya) {
-      this.erreur.set('Indiquez le code de votre wilaya.');
+      this.erreur.set(this.i18n.t('pharmacie.indiquerWilaya'));
       return;
     }
     this.charger(wilaya);
@@ -153,9 +157,9 @@ export class EspacePharmacieComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux pharmacies.');
+          this.erreur.set(this.i18n.t('commun.reservePharmacies'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger les demandes.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('pharmacie.erreurChargement'));
         }
       },
     });
@@ -169,15 +173,15 @@ export class EspacePharmacieComponent implements OnInit {
     const commentaire = f.commentaire.trim();
     this.succes.set('');
     if (!nomPharmacie) {
-      this.erreur.set('Indiquez le nom de votre pharmacie.');
+      this.erreur.set(this.i18n.t('pharmacie.indiquerNom'));
       return;
     }
     if (f.disponible === null) {
-      this.erreur.set('Indiquez si le médicament est disponible.');
+      this.erreur.set(this.i18n.t('pharmacie.indiquerDisponibilite'));
       return;
     }
     if (prixDa !== null && (!Number.isInteger(prixDa) || prixDa < 0)) {
-      this.erreur.set('Indiquez un prix en dinars valide (nombre entier positif ou nul).');
+      this.erreur.set(this.i18n.t('pharmacie.prixInvalide'));
       return;
     }
     const demande: DemandeReponse = { nomPharmacie, disponible: f.disponible, prixDa, commentaire: commentaire || null };
@@ -188,7 +192,7 @@ export class EspacePharmacieComponent implements OnInit {
         this.enCours.set(null);
         memoriserNom(nomPharmacie);
         this.repondus.update((ids) => new Set(ids).add(b.id));
-        this.succes.set(`Réponse envoyée pour « ${b.medicament} » : le patient est prévenu.`);
+        this.succes.set(this.i18n.t('pharmacie.reponseEnvoyee', { medicament: b.medicament }));
         this.charger(b.wilayaCode);
       },
       error: (e: HttpErrorResponse) => {
@@ -196,21 +200,21 @@ export class EspacePharmacieComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Seul un compte pharmacie peut répondre à une demande.');
+          this.erreur.set(this.i18n.t('pharmacie.seulPharmacie'));
         } else if (e.status === 409 || e.status === 404) {
           // Demande cloturee entre-temps ou deja repondue : motif affiche et liste rechargee.
-          this.charger(b.wilayaCode, e.error?.erreur ?? "Cette demande n'accepte plus de réponse.");
+          this.charger(b.wilayaCode, e.error?.erreur ?? this.i18n.t('pharmacie.plusDeReponse'));
         } else if (e.status === 400) {
-          this.erreur.set(e.error?.erreur ?? 'La réponse est incomplète.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('pharmacie.incomplete'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'envoi de la réponse a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('pharmacie.envoiEchec'));
         }
       },
     });
   }
 
   libelleReponses(nombre: number): string {
-    return libelleReponses(nombre);
+    return libelleReponses(nombre, this.traduire);
   }
 }
 

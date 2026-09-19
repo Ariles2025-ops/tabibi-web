@@ -597,3 +597,75 @@ decrite dans le README et le journal de tabibi-backend.
   `ordonnance-TBB-2026-0001.pdf`, lien retire, `revokeObjectURL` apres 10 s (horloge Jasmine) —, motif `{ erreur }`
   d'un Blob JSON, message generique, `motifErreurBlob`, 404, 403, redirection vers la connexion, titre et noindex).
 - README : v0.4.0 (bouton PDF), « Prochaines etapes ». `package.json` 0.22.0.
+
+
+## v0.23.0 — Interface en francais, arabe et anglais (RTL)
+- Choix : traduction **a l'execution**, pas de build par langue (`localize` d'Angular en produirait trois et ferait
+  dependre l'URL de la langue). Un dictionnaire par langue, un signal de langue, deux pipes impurs : le meme bundle
+  sert les trois langues et le changement est immediat, sans rechargement. Le profil de l'utilisateur porte deja une
+  langue cote API (`fr`, `ar`, `kab`, `en`) : elle initialise l'interface apres connexion.
+- `i18n/traduction.service.ts` : `Langue = 'fr' | 'ar' | 'en'`, signal `langue` (lecture seule), `t(cle, params?)`
+  (interpolation `{nom}`, repli sur le francais puis sur la cle), `locale()` (`fr`, `ar-DZ`, `en`), `dir()`
+  (`rtl` en arabe), `choisieManuellement()`, `changer(langue, memoriser = true)`. A chaque changement, `lang` et
+  `dir` sont poses sur `<html>` (navigateur et rendu serveur). Choix initial : `localStorage('tabibi.langue')` en
+  try/catch, sinon le jeton `LANGUE_SERVEUR` (`i18n/langue-serveur.ts`, valeur de l'en-tete `Accept-Language`
+  fournie par `server.ts` a chaque rendu, meme modele que `REPONSE_SERVEUR`), sinon `navigator.language`
+  (`langueDepuisCode` : `ar-*` → ar, `en-*` → en, sinon fr), sinon le francais. `langueDepuisAcceptLanguage` trie
+  les candidats par `q` et ignore `q=0`.
+- Dictionnaires `i18n/fr.ts` (reference : `export const FR = {...} as const`, d'ou `type ClesTraduction`),
+  `i18n/ar.ts` et `i18n/en.ts` (`Record<ClesTraduction, string>` : une cle manquante casse la compilation).
+  ~430 cles par langue, prefixees par espace (`nav.`, `commun.`, une page par prefixe, `statut.`, `seo.`, `format.`).
+- Pipes standalone impurs (`i18n/t.pipe.ts`, `i18n/date-locale.pipe.ts`) : `{{ 'nav.accueil' | t }}`,
+  `{{ 'commun.minutes' | t:{ n: 30 } }}`, `{{ iso | dateLocale:'jourHeure' }}`. Impurs parce qu'un pipe pur n'est pas
+  reevalue au changement de langue (sa cle ne change pas) ; le cout est une lecture de dictionnaire par cycle.
+  `dateLocale` prend un format nomme traduit (`jourDateHeure`, `jourHeure`, `dateHeure`, `date`, `courtHeure` — le
+  mot « à » n'a de sens ni en anglais ni en arabe) ou un motif Angular brut, avec la locale de la langue courante ;
+  `registerLocaleData` pour `fr`, `ar-DZ` et `en` dans `app.config.ts`. `LOCALE_ID` reste `fr` (locale de repli).
+- `i18n/traducteur.ts` : type `Traducteur`, `interpoler`, `traduireFr` (francais sans service). Les fonctions de
+  libelles partagees prennent un `Traducteur` en dernier parametre, francais par defaut : `libelleStatutRendezVous`,
+  `libelleStatutOrdonnance`, `libelleStatutTeleconsultation`, `libelleStatutCandidature`, `libelleStatutAvis`,
+  `libelleStatutBesoin`, `libelleRappels`, `libelleReponses`, `formaterMoyenne` (separateur decimal traduit),
+  `formaterPrix` (« 850 DA » / « 850 دج »), `validerProfil`. Leurs specs existantes restent inchangees.
+- Ecrans migres (tous les libelles des templates, y compris placeholders, `aria-label`, `title` et `confirm()`) :
+  barre de navigation et selecteur de langue, annuaire, fiche du praticien, mes rendez-vous, mes ordonnances, detail
+  et verification d'une ordonnance, page introuvable, mon compte, mon profil, mes notifications, messagerie (liste et
+  fil), avis (depot, mes avis, synthese publique), Dawini (mes demandes, reponses), listes d'attente (patient et
+  medecin), mes teleconsultations (dont le texte de consentement), espace medecin (agenda, disponibilites,
+  candidature, ordonnances redigees, nouvelle ordonnance, secretaires, teleconsultations, avis recus), espace
+  secretaire, espace pharmacie, administration (tableau de bord, candidatures, moderation des avis).
+  Les donnees de l'API et les messages `{ erreur }` du backend restent tels quels.
+- Selecteur de langue (`app.component.ts`) : trois boutons **Français / العربية / English** (`aria-pressed`, `lang`
+  sur chaque bouton), le choix est memorise. Apres l'initialisation OIDC, si l'utilisateur est connecte et n'a pas
+  choisi lui-meme, `GET /api/moi/profil` initialise la langue (`changer(langue, false)`, donc sans memoriser) ;
+  404 (profil jamais renseigne), API indisponible ou langue non prise en charge (`kab`) : la langue detectee reste.
+- `SeoService` : `titre` et `description` acceptent une cle de traduction (ou une definition sous forme de fonction,
+  pour la fiche du praticien construite avec les valeurs de l'API) ; un effet sur le signal de langue reapplique la
+  derniere definition, donc `<title>` et `<meta name="description">` suivent la langue.
+- `styles.css` : `.selecteur-langue`, `.pousser-fin` (`margin-inline-start`, correct dans les deux sens) et un bloc
+  `[dir='rtl']` (bulles de messagerie inversees, retraits des listes en proprietes logiques, identifiants et codes
+  forces en `direction: ltr`).
+- `server.ts` : `{ provide: LANGUE_SERVEUR, useValue: headers['accept-language'] ?? '' }` dans les providers du rendu,
+  et `Vary: Accept-Language` sur les pages rendues (elles sont deja `no-store`, mais les caches intermediaires le savent).
+- `src/test.ts` (nouveau, option `main` de la cible `test` d'`angular.json` ; `tsconfig.spec.json` le liste dans
+  `files`) : `initTestEnvironment`, `registerLocaleData` des trois locales, nettoyage de `localStorage` et
+  `LANGUE_SERVEUR = 'fr'` fourni a chaque spec. Sans cela, le Chrome d'integration continue annonce `en-US` et toutes
+  les specs existantes basculeraient en anglais (`--lang=fr` sur le lanceur Karma est sans effet sur ce Chromium).
+- Tests (30 specs ajoutees, 331 au total) : `traduction.service.spec.ts` (dictionnaires — memes cles, aucun libelle
+  vide, memes parametres d'interpolation —, `interpoler`, `traduireFr`, `langueDepuisCode`,
+  `langueDepuisAcceptLanguage`, langue initiale et memorisation, `dir`/`lang` poses sur le document, initialisation
+  depuis le profil sans memorisation, repli d'une cle absente), `t.pipe.spec.ts` (composant hote : traduction,
+  interpolation, cle absente, rafraichissement au changement de langue, `dateLocale` par langue et motif brut),
+  `rendu-arabe.spec.ts` (annuaire rendu en arabe : libelles arabes, `dir=rtl`, titre et description traduits, retour
+  au francais), `app.component.spec.ts` (selecteur affiche, bascule en arabe avec `dir=rtl`, langue du profil
+  appliquee apres connexion, profil non consulte sans connexion ; `ProfilService` factice).
+- e2e `e2e/langue.spec.ts` (3 tests) : bascule de l'annuaire en arabe (titre « البحث عن طبيب », `dir=rtl`, titre de
+  page arabe, donnees de l'API inchangees), memorisation du choix a travers la navigation et apres rechargement,
+  rendu serveur selon `Accept-Language` (`ar` → `<html lang="ar" dir="rtl">`, `en`, `kab` → francais, `Vary`).
+- `outils/verifier-i18n.mjs` (`npm run verif:i18n`) : echoue si le template d'un composant contient encore une lettre
+  accentuee hors interpolation. Passe sur les 37 templates ; seul « Tabibi » (nom du produit) reste en dur.
+- `package.json` 0.23.0 ; README : section « Langues (francais, arabe, anglais) », « Tester », « Prochaines etapes ».
+- Verifie : `ng build` sans erreur ; `ng test` **331 specs SUCCESS** (301 avant, toutes vertes en francais) ;
+  `npm run e2e` **19 passed** (16 avant) ; SSR (`node dist/tabibi-web/server/server.mjs` + `curl`) :
+  `Accept-Language: ar-DZ` → `<html lang="ar" dir="rtl">` et `<title>البحث عن طبيب في الجزائر | Tabibi</title>`,
+  `fr-FR` → `<html lang="fr" dir="ltr">`, `en-GB` → `<html lang="en" dir="ltr">`, en-tete absent → francais ;
+  serveur arrete apres verification.

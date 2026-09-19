@@ -6,6 +6,10 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { Besoin, DawiniService, DemandeBesoin, libelleReponses, libelleStatutBesoin } from './dawini.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { Traducteur } from '../i18n/traducteur';
+import { TraductionService } from '../i18n/traduction.service';
 
 /** Champs du formulaire de publication, vides. */
 function formulaireVide(): Required<DemandeBesoin> {
@@ -20,47 +24,44 @@ function formulaireVide(): Required<DemandeBesoin> {
 @Component({
   selector: 'app-mes-demandes',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Dawini</h1>
-      <p style="color:#566b64;margin:0 0 20px">
-        Vous cherchez un médicament ? Publiez votre demande : les pharmacies de votre wilaya y répondent
-        (disponibilité, prix), sans connaître votre identité.
-      </p>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'dawini.titre' | t }}</h1>
+      <p style="color:#566b64;margin:0 0 20px">{{ 'dawini.intro' | t }}</p>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
+      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
         <form (ngSubmit)="publier()" style="display:grid;gap:12px;margin:0 0 28px">
           <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
             <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              Médicament *
-              <input class="champ" [(ngModel)]="demande.medicament" name="medicament" required placeholder="Ex. Amoxicilline 1 g" style="color:#10241F;font-size:1rem">
+              {{ 'dawini.medicament' | t }}
+              <input class="champ" [(ngModel)]="demande.medicament" name="medicament" required [placeholder]="'dawini.medicamentPlaceholder' | t" style="color:#10241F;font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              Wilaya (code) *
-              <input class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required placeholder="Ex. 16" style="color:#10241F;font-size:1rem">
+              {{ 'dawini.wilaya' | t }}
+              <input class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required [placeholder]="'dawini.wilayaPlaceholder' | t" style="color:#10241F;font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              Commune
-              <input class="champ" [(ngModel)]="demande.commune" name="commune" placeholder="Ex. Bab Ezzouar" style="color:#10241F;font-size:1rem">
+              {{ 'dawini.commune' | t }}
+              <input class="champ" [(ngModel)]="demande.commune" name="commune" [placeholder]="'dawini.communePlaceholder' | t" style="color:#10241F;font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              Précision (dosage, forme, urgence)
-              <input class="champ" [(ngModel)]="demande.precision" name="precision" placeholder="Ex. Boîte de 14 comprimés" style="color:#10241F;font-size:1rem">
+              {{ 'dawini.precision' | t }}
+              <input class="champ" [(ngModel)]="demande.precision" name="precision" [placeholder]="'dawini.precisionPlaceholder' | t" style="color:#10241F;font-size:1rem">
             </label>
           </div>
-          <p style="color:#566b64;font-size:.9rem;margin:0">* Champs obligatoires.</p>
+          <p style="color:#566b64;font-size:.9rem;margin:0">{{ 'commun.champsObligatoires' | t }}</p>
           <p *ngIf="succes()" style="color:var(--vert);margin:0">{{ succes() }}</p>
           <p *ngIf="erreurFormulaire()" style="color:#b3261e;margin:0">{{ erreurFormulaire() }}</p>
           <div>
-            <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? 'Publication…' : 'Publier ma demande' }}</button>
+            <button type="submit" class="bouton" [disabled]="enCours()">{{ (enCours() ? 'dawini.publication' : 'dawini.publier') | t }}</button>
           </div>
         </form>
 
-        <h2 style="font-size:1.1rem;margin:0 0 12px">Mes demandes</h2>
-        <p *ngIf="charge()">Chargement…</p>
+        <h2 style="font-size:1.1rem;margin:0 0 12px">{{ 'dawini.mesDemandes' | t }}</h2>
+        <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
@@ -71,15 +72,15 @@ function formulaireVide(): Required<DemandeBesoin> {
                 <strong>{{ b.medicament }}</strong>
                 <span style="color:#566b64"> · {{ libelleStatut(b.statut) }}</span><br>
                 <span style="color:#566b64">
-                  Wilaya {{ b.wilayaCode }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
-                  · publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}
+                  {{ 'dawini.wilayaLigne' | t:{ code: b.wilayaCode } }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
+                  · {{ 'dawini.publieeLe' | t:{ date: (b.publieLe | dateLocale:'courtHeure') } }}
                 </span>
               </span>
               <span style="color:var(--vert);font-weight:600">{{ libelleReponses(b.nombreReponses) }}</span>
             </a>
           </li>
         </ul>
-        <p *ngIf="!charge() && !erreur() && besoins().length === 0">Aucune demande pour le moment.</p>
+        <p *ngIf="!charge() && !erreur() && besoins().length === 0">{{ 'dawini.aucune' | t }}</p>
       </ng-container>
     </main>
   `,
@@ -88,6 +89,9 @@ export class MesDemandesComponent implements OnInit {
   private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(DawiniService);
+  private i18n = inject(TraductionService);
+  /** Traducteur de la langue courante, passe aux fonctions de libelles du service. */
+  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -101,7 +105,7 @@ export class MesDemandesComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('Dawini');
+    this.seo.definirPrivee('seo.dawini');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -126,9 +130,9 @@ export class MesDemandesComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux patients.');
+          this.erreur.set(this.i18n.t('commun.reservePatients'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos demandes.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('dawini.erreurChargement'));
         }
       },
     });
@@ -141,7 +145,7 @@ export class MesDemandesComponent implements OnInit {
     const precision = this.demande.precision.trim();
     this.succes.set('');
     if (!medicament || !wilayaCode) {
-      this.erreurFormulaire.set('Indiquez le médicament recherché et le code de votre wilaya.');
+      this.erreurFormulaire.set(this.i18n.t('dawini.champsRequis'));
       return;
     }
     const demande: DemandeBesoin = { medicament, wilayaCode };
@@ -153,7 +157,7 @@ export class MesDemandesComponent implements OnInit {
       next: () => {
         this.enCours.set(false);
         this.demande = formulaireVide();
-        this.succes.set('Demande publiée : les pharmacies de votre wilaya peuvent y répondre.');
+        this.succes.set(this.i18n.t('dawini.publiee'));
         this.charger();
       },
       error: (e: HttpErrorResponse) => {
@@ -161,21 +165,21 @@ export class MesDemandesComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreurFormulaire.set('Seul un compte patient peut publier une demande.');
+          this.erreurFormulaire.set(this.i18n.t('dawini.seulPatient'));
         } else if (e.status === 400) {
-          this.erreurFormulaire.set(e.error?.erreur ?? 'La demande est incomplète.');
+          this.erreurFormulaire.set(e.error?.erreur ?? this.i18n.t('dawini.incomplete'));
         } else {
-          this.erreurFormulaire.set(e.error?.erreur ?? 'La publication a échoué, veuillez réessayer.');
+          this.erreurFormulaire.set(e.error?.erreur ?? this.i18n.t('dawini.publicationEchec'));
         }
       },
     });
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutBesoin(statut);
+    return libelleStatutBesoin(statut, this.traduire);
   }
 
   libelleReponses(nombre: number): string {
-    return libelleReponses(nombre);
+    return libelleReponses(nombre, this.traduire);
   }
 }

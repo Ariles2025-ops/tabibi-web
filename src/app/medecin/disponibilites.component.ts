@@ -1,4 +1,4 @@
-import { Component, LOCALE_ID, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,9 @@ import { AuthService } from '../auth/auth.service';
 import { DUREE_MAX_MINUTES, DUREE_MIN_MINUTES } from '../secretaire/secretaire.service';
 import { MedecinService } from './medecin.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { TraductionService } from '../i18n/traduction.service';
 
 /** Creneau que le medecin vient d'ouvrir (message de confirmation). */
 interface CreneauOuvert {
@@ -18,35 +21,33 @@ interface CreneauOuvert {
 @Component({
   selector: 'app-disponibilites',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Disponibilités</h1>
-      <p style="color:#566b64;margin:0 0 20px">
-        Ouvrez un créneau de consultation : les patients pourront le réserver depuis votre fiche.
-      </p>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'disponibilites.titre' | t }}</h1>
+      <p style="color:#566b64;margin:0 0 20px">{{ 'disponibilites.intro' | t }}</p>
 
       <form (ngSubmit)="ouvrir()" #f="ngForm" style="display:grid;gap:12px;max-width:360px">
         <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-          Date et heure
+          {{ 'disponibilites.dateHeure' | t }}
           <input class="champ" type="datetime-local" [(ngModel)]="debut" name="debut" required [min]="minDebut"
                  style="color:#10241F;font-size:1rem">
         </label>
         <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-          Durée (minutes, de {{ dureeMin }} à {{ dureeMax }})
+          {{ 'disponibilites.duree' | t:{ min: dureeMin, max: dureeMax } }}
           <input class="champ" type="number" [(ngModel)]="dureeMinutes" name="dureeMinutes" required [min]="dureeMin" [max]="dureeMax" step="5"
                  style="color:#10241F;font-size:1rem">
         </label>
         <div>
           <button type="submit" class="bouton" [disabled]="f.invalid || enCours()">
-            {{ enCours() ? 'Ouverture…' : 'Ouvrir le créneau' }}
+            {{ (enCours() ? 'disponibilites.ouverture' : 'disponibilites.ouvrir') | t }}
           </button>
         </div>
       </form>
 
       <p *ngIf="succes() as c" style="color:var(--vert)">
-        Créneau ouvert le {{ c.debut | date:'EEEE d MMMM à HH:mm' }} ({{ c.dureeMinutes }} min).
-        <a routerLink="/medecin/agenda" style="color:var(--vert)">Voir l'agenda</a>
+        {{ 'disponibilites.creneauOuvert' | t:{ date: (c.debut | dateLocale:'jourHeure'), duree: c.dureeMinutes } }}
+        <a routerLink="/medecin/agenda" style="color:var(--vert)">{{ 'disponibilites.voirAgenda' | t }}</a>
       </p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
     </main>
@@ -56,10 +57,10 @@ export class DisponibilitesComponent implements OnInit {
   private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(MedecinService);
-  private locale = inject(LOCALE_ID);
+  private i18n = inject(TraductionService);
 
   ngOnInit() {
-    this.seo.definirPrivee('Disponibilités');
+    this.seo.definirPrivee('seo.disponibilites');
   }
 
   /** Valeur du champ datetime-local : heure locale sans fuseau (« 2026-09-21T09:30 »). */
@@ -69,7 +70,7 @@ export class DisponibilitesComponent implements OnInit {
   dureeMin = DUREE_MIN_MINUTES;
   dureeMax = DUREE_MAX_MINUTES;
   /** Borne basse du selecteur : maintenant, au format attendu par datetime-local. */
-  minDebut = formatDate(new Date(), "yyyy-MM-dd'T'HH:mm", this.locale);
+  minDebut = formatDate(new Date(), "yyyy-MM-dd'T'HH:mm", this.i18n.locale());
   enCours = signal(false);
   succes = signal<CreneauOuvert | null>(null);
   erreur = signal('');
@@ -81,15 +82,15 @@ export class DisponibilitesComponent implements OnInit {
     this.succes.set(null);
     this.erreur.set('');
     if (!this.debut || Number.isNaN(debut.getTime())) {
-      this.erreur.set('Indiquez une date et une heure valides.');
+      this.erreur.set(this.i18n.t('disponibilites.dateInvalide'));
       return;
     }
     if (debut.getTime() <= Date.now()) {
-      this.erreur.set('Le créneau doit commencer dans le futur.');
+      this.erreur.set(this.i18n.t('disponibilites.futur'));
       return;
     }
     if (!Number.isInteger(dureeMinutes) || dureeMinutes < DUREE_MIN_MINUTES || dureeMinutes > DUREE_MAX_MINUTES) {
-      this.erreur.set(`Indiquez une durée entre ${DUREE_MIN_MINUTES} et ${DUREE_MAX_MINUTES} minutes.`);
+      this.erreur.set(this.i18n.t('disponibilites.dureeInvalide', { min: DUREE_MIN_MINUTES, max: DUREE_MAX_MINUTES }));
       return;
     }
     const debutIso = debut.toISOString();
@@ -104,11 +105,11 @@ export class DisponibilitesComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Seul un compte médecin peut ouvrir un créneau.');
+          this.erreur.set(this.i18n.t('disponibilites.seulMedecin'));
         } else if (e.status === 409) {
-          this.erreur.set(e.error?.erreur ?? 'Un créneau existe déjà sur cet horaire.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('disponibilites.creneauExiste'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'ouverture du créneau a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('disponibilites.ouvertureEchec'));
         }
       },
     });

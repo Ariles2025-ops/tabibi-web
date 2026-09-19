@@ -7,6 +7,10 @@ import { Candidature, DemandeCandidature, libelleStatutCandidature } from '../ad
 import { AuthService } from '../auth/auth.service';
 import { MedecinService } from './medecin.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { Traducteur } from '../i18n/traducteur';
+import { TraductionService } from '../i18n/traduction.service';
 
 /** Champs du formulaire, vides ou prerempli depuis une candidature refusee. */
 function formulaireVide(): DemandeCandidature {
@@ -20,15 +24,13 @@ function formulaireVide(): DemandeCandidature {
 @Component({
   selector: 'app-candidature-medecin',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Ma candidature</h1>
-      <p style="color:#566b64;margin:0 0 20px">
-        Pour figurer dans l'annuaire Tabibi, déposez votre candidature : elle est examinée par un administrateur.
-      </p>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'candidature.titre' | t }}</h1>
+      <p style="color:#566b64;margin:0 0 20px">{{ 'candidature.intro' | t }}</p>
 
-      <p *ngIf="charge()">Chargement…</p>
+      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
       <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
@@ -36,64 +38,64 @@ function formulaireVide(): DemandeCandidature {
         <strong>{{ c.nomComplet }}</strong>
         <span style="color:#566b64"> · {{ libelleStatut(c.statut) }}</span><br>
         <span style="color:#566b64">
-          {{ c.specialiteFr || c.specialiteSlug }} · {{ c.ville || 'Ville non précisée' }} ({{ c.wilayaFr || c.wilayaCode }})
-          · N° d'ordre {{ c.numeroOrdre }}<ng-container *ngIf="c.telephone"> · {{ c.telephone }}</ng-container>
+          {{ c.specialiteFr || c.specialiteSlug }} · {{ c.ville || ('candidature.villeNonPrecisee' | t) }} ({{ c.wilayaFr || c.wilayaCode }})
+          · {{ 'candidature.numeroOrdre' | t:{ numero: c.numeroOrdre } }}<ng-container *ngIf="c.telephone"> · {{ c.telephone }}</ng-container>
         </span><br>
         <span style="color:#566b64;font-size:.9rem">
-          Déposée le {{ c.deposeeLe | date:'d MMMM yyyy à HH:mm' }}<ng-container *ngIf="c.traiteeLe"> · traitée le {{ c.traiteeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container>
+          {{ 'candidature.deposeeLe' | t:{ date: (c.deposeeLe | dateLocale:'dateHeure') } }}<ng-container *ngIf="c.traiteeLe as traitee"> · {{ 'candidature.traiteeLe' | t:{ date: (traitee | dateLocale:'dateHeure') } }}</ng-container>
         </span>
-        <p *ngIf="c.statut === 'EN_ATTENTE'" style="margin:10px 0 0">Votre candidature est en cours d'examen.</p>
+        <p *ngIf="c.statut === 'EN_ATTENTE'" style="margin:10px 0 0">{{ 'candidature.enExamen' | t }}</p>
         <p *ngIf="c.statut === 'VALIDEE'" style="margin:10px 0 0;color:var(--vert)">
-          Votre candidature a été validée : vous figurez dans l'annuaire.
-          <a [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">Voir ma fiche</a>
+          {{ 'candidature.validee' | t }}
+          <a [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">{{ 'candidature.voirMaFiche' | t }}</a>
         </p>
         <p *ngIf="c.statut === 'REFUSEE'" style="margin:10px 0 0;color:#b3261e">
-          Votre candidature a été refusée<ng-container *ngIf="c.motifRefus"> · Motif : {{ c.motifRefus }}</ng-container>.
-          Vous pouvez en déposer une nouvelle ci-dessous.
+          {{ 'candidature.refusee' | t }}<ng-container *ngIf="c.motifRefus as motif"> · {{ 'candidature.motif' | t:{ motif } }}</ng-container>.
+          {{ 'candidature.deposerNouvelle' | t }}
         </p>
       </section>
 
       <form *ngIf="formulaireVisible()" (ngSubmit)="deposer()" #f="ngForm" style="display:grid;gap:12px">
-        <h2 *ngIf="candidature()" style="font-size:1.1rem;margin:0">Nouvelle candidature</h2>
+        <h2 *ngIf="candidature()" style="font-size:1.1rem;margin:0">{{ 'candidature.nouvelle' | t }}</h2>
         <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Nom complet *
-            <input class="champ" [(ngModel)]="demande.nomComplet" name="nomComplet" required placeholder="Ex. Dr Amina Belkacem" style="color:#10241F;font-size:1rem">
+            {{ 'candidature.nomComplet' | t }}
+            <input class="champ" [(ngModel)]="demande.nomComplet" name="nomComplet" required [placeholder]="'candidature.nomPlaceholder' | t" style="color:#10241F;font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Numéro d'inscription à l'ordre *
+            {{ 'candidature.numeroOrdreLabel' | t }}
             <input class="champ" [(ngModel)]="demande.numeroOrdre" name="numeroOrdre" required style="color:#10241F;font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Spécialité (code) *
+            {{ 'candidature.specialiteCode' | t }}
             <input class="champ" [(ngModel)]="demande.specialiteSlug" name="specialiteSlug" required
-                   placeholder="Ex. generaliste, cardiologue, dermatologue, pediatre" style="color:#10241F;font-size:1rem">
+                   [placeholder]="'candidature.specialiteCodePlaceholder' | t" style="color:#10241F;font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Spécialité (libellé affiché)
-            <input class="champ" [(ngModel)]="demande.specialiteFr" name="specialiteFr" placeholder="Ex. Cardiologue" style="color:#10241F;font-size:1rem">
+            {{ 'candidature.specialiteLibelle' | t }}
+            <input class="champ" [(ngModel)]="demande.specialiteFr" name="specialiteFr" [placeholder]="'candidature.specialiteLibellePlaceholder' | t" style="color:#10241F;font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Wilaya (code) *
-            <input class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required placeholder="Ex. 16" style="color:#10241F;font-size:1rem">
+            {{ 'candidature.wilayaCode' | t }}
+            <input class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required [placeholder]="'candidature.wilayaCodePlaceholder' | t" style="color:#10241F;font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Wilaya (libellé affiché)
-            <input class="champ" [(ngModel)]="demande.wilayaFr" name="wilayaFr" placeholder="Ex. Alger" style="color:#10241F;font-size:1rem">
+            {{ 'candidature.wilayaLibelle' | t }}
+            <input class="champ" [(ngModel)]="demande.wilayaFr" name="wilayaFr" [placeholder]="'candidature.wilayaLibellePlaceholder' | t" style="color:#10241F;font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Ville
+            {{ 'candidature.ville' | t }}
             <input class="champ" [(ngModel)]="demande.ville" name="ville" style="color:#10241F;font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Téléphone
-            <input class="champ" [(ngModel)]="demande.telephone" name="telephone" type="tel" placeholder="Ex. 0550 00 00 00" style="color:#10241F;font-size:1rem">
+            {{ 'candidature.telephone' | t }}
+            <input class="champ" [(ngModel)]="demande.telephone" name="telephone" type="tel" [placeholder]="'candidature.telephonePlaceholder' | t" style="color:#10241F;font-size:1rem">
           </label>
         </div>
-        <p style="color:#566b64;font-size:.9rem;margin:0">* Champs obligatoires.</p>
+        <p style="color:#566b64;font-size:.9rem;margin:0">{{ 'commun.champsObligatoires' | t }}</p>
         <div>
           <button type="submit" class="bouton" [disabled]="enCours()">
-            {{ enCours() ? 'Envoi…' : 'Déposer ma candidature' }}
+            {{ (enCours() ? 'commun.envoi' : 'candidature.deposer') | t }}
           </button>
         </div>
       </form>
@@ -104,6 +106,9 @@ export class CandidatureMedecinComponent implements OnInit {
   private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(MedecinService);
+  private i18n = inject(TraductionService);
+  /** Traducteur de la langue courante, passe aux fonctions de libelles de statut. */
+  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
 
   /** Derniere candidature deposee ; null s'il n'y en a aucune. */
   candidature = signal<Candidature | null>(null);
@@ -116,7 +121,7 @@ export class CandidatureMedecinComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
-    this.seo.definirPrivee('Ma candidature');
+    this.seo.definirPrivee('seo.maCandidature');
     this.charger();
   }
 
@@ -137,9 +142,9 @@ export class CandidatureMedecinComponent implements OnInit {
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux médecins.');
+          this.erreur.set(this.i18n.t('commun.reserveMedecins'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger votre candidature.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('candidature.erreurChargement'));
         }
       },
     });
@@ -158,7 +163,7 @@ export class CandidatureMedecinComponent implements OnInit {
     };
     this.succes.set('');
     if (!demande.nomComplet || !demande.specialiteSlug || !demande.wilayaCode || !demande.numeroOrdre) {
-      this.erreur.set("Renseignez le nom complet, la spécialité, la wilaya et le numéro d'inscription à l'ordre.");
+      this.erreur.set(this.i18n.t('candidature.champsRequis'));
       return;
     }
     this.erreur.set('');
@@ -167,29 +172,29 @@ export class CandidatureMedecinComponent implements OnInit {
       next: (c) => {
         this.enCours.set(false);
         this.afficher(c);
-        this.succes.set('Candidature déposée : elle sera examinée par un administrateur.');
+        this.succes.set(this.i18n.t('candidature.deposee'));
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Seul un compte médecin peut déposer une candidature.');
+          this.erreur.set(this.i18n.t('candidature.seulMedecin'));
         } else if (e.status === 409) {
           // Une candidature est deja en attente ou validee : on l'affiche avec le motif renvoye.
-          this.erreur.set(e.error?.erreur ?? 'Une candidature est déjà en attente ou validée.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('candidature.dejaEnAttente'));
           this.service.maCandidature().subscribe({ next: (c) => this.afficher(c), error: () => undefined });
         } else if (e.status === 400) {
-          this.erreur.set(e.error?.erreur ?? 'La candidature est incomplète.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('candidature.incomplete'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Le dépôt de la candidature a échoué, veuillez réessayer.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('candidature.depotEchec'));
         }
       },
     });
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutCandidature(statut);
+    return libelleStatutCandidature(statut, this.traduire);
   }
 
   /** Affiche la candidature ; le formulaire (prerempli) n'est propose que si elle a ete refusee. */

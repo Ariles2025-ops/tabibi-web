@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TPipe } from '../i18n/t.pipe';
 import { SeoService } from '../seo/seo.service';
 
 /**
@@ -10,16 +11,16 @@ import { SeoService } from '../seo/seo.service';
 @Component({
   selector: 'app-page-introuvable',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TPipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Page introuvable</h1>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'introuvable.titre' | t }}</h1>
       <p style="color:#566b64;margin:0 0 20px">
-        L'adresse demandée n'existe pas ou n'existe plus. Vérifiez le lien ou revenez à l'annuaire des praticiens.
+        {{ 'introuvable.texte' | t }}
       </p>
       <p style="display:flex;gap:8px;flex-wrap:wrap">
-        <a class="bouton" routerLink="/">Trouver un médecin</a>
-        <a class="bouton-secondaire" routerLink="/verifier">Vérifier une ordonnance</a>
+        <a class="bouton" routerLink="/">{{ 'introuvable.trouver' | t }}</a>
+        <a class="bouton-secondaire" routerLink="/verifier">{{ 'nav.verifierOrdonnance' | t }}</a>
       </p>
     </main>
   `,

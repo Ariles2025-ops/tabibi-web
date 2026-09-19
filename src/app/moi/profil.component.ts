@@ -5,6 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { Traducteur } from '../i18n/traducteur';
+import { TraductionService } from '../i18n/traduction.service';
 import {
   ANNEE_NAISSANCE_MIN,
   DemandeProfil,
@@ -32,58 +36,56 @@ function formulaireVide(): DemandeProfil {
 @Component({
   selector: 'app-profil',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:640px;margin:32px auto;padding:0 16px">
-      <p style="margin:0 0 16px"><a routerLink="/moi" style="color:var(--vert)">Retour à mon compte</a></p>
-      <h1 style="color:var(--vert);margin:0 0 8px">Mon profil</h1>
-      <p style="color:#566b64;margin:0 0 20px">
-        Ces informations servent aux praticiens et aux rappels de rendez-vous. Seul le nom complet est obligatoire.
-      </p>
+      <p style="margin:0 0 16px"><a routerLink="/moi" style="color:var(--vert)">{{ 'profil.retourCompte' | t }}</a></p>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'profil.titre' | t }}</h1>
+      <p style="color:#566b64;margin:0 0 20px">{{ 'profil.intro' | t }}</p>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
+      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">Chargement…</p>
+        <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
         <p *ngIf="erreurChargement()" style="color:#b3261e">{{ erreurChargement() }}</p>
 
         <form *ngIf="!charge() && !erreurChargement()" (ngSubmit)="enregistrer()" style="display:grid;gap:12px">
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Nom complet *
+            {{ 'profil.nomComplet' | t }}
             <input class="champ" [(ngModel)]="formulaire.nomComplet" name="nomComplet" required [maxlength]="longueurMaxNom"
-                   placeholder="Ex. Amina Belkacem" style="color:#10241F;font-size:1rem">
+                   [placeholder]="'profil.nomPlaceholder' | t" style="color:#10241F;font-size:1rem">
           </label>
           <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
             <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              Téléphone
-              <input class="champ" [(ngModel)]="formulaire.telephone" name="telephone" type="tel" placeholder="Ex. 0550 12 34 56"
+              {{ 'profil.telephone' | t }}
+              <input class="champ" [(ngModel)]="formulaire.telephone" name="telephone" type="tel" [placeholder]="'profil.telephonePlaceholder' | t"
                      style="color:#10241F;font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              Date de naissance
+              {{ 'profil.dateNaissance' | t }}
               <input class="champ" [(ngModel)]="formulaire.dateNaissance" name="dateNaissance" type="date" [max]="hier" [min]="dateMin"
                      style="color:#10241F;font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              Wilaya (code)
-              <input class="champ" [(ngModel)]="formulaire.wilayaCode" name="wilayaCode" [maxlength]="longueurMaxWilaya" placeholder="Ex. 16"
+              {{ 'profil.wilaya' | t }}
+              <input class="champ" [(ngModel)]="formulaire.wilayaCode" name="wilayaCode" [maxlength]="longueurMaxWilaya" [placeholder]="'profil.wilayaPlaceholder' | t"
                      style="color:#10241F;font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              Langue
+              {{ 'profil.langue' | t }}
               <select class="champ" [(ngModel)]="formulaire.langue" name="langue" style="color:#10241F;font-size:1rem">
                 <option *ngFor="let l of langues" [value]="l.code">{{ l.libelle }}</option>
               </select>
             </label>
           </div>
-          <p style="color:#566b64;font-size:.9rem;margin:0">* Champ obligatoire.</p>
+          <p style="color:#566b64;font-size:.9rem;margin:0">{{ 'commun.champObligatoire' | t }}</p>
           <p *ngIf="succes()" style="color:var(--vert);margin:0">{{ succes() }}</p>
           <p *ngIf="erreur()" style="color:#b3261e;margin:0">{{ erreur() }}</p>
           <div>
-            <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? 'Enregistrement…' : 'Enregistrer' }}</button>
+            <button type="submit" class="bouton" [disabled]="enCours()">{{ (enCours() ? 'commun.enregistrement' : 'profil.enregistrer') | t }}</button>
           </div>
           <p *ngIf="profil() as p" style="color:#566b64;font-size:.9rem;margin:0">
-            Dernière mise à jour le {{ p.misAJourLe | date:'d MMMM yyyy à HH:mm' }}.
+            {{ 'profil.derniereMaj' | t:{ date: (p.misAJourLe | dateLocale:'dateHeure') } }}
           </p>
         </form>
       </ng-container>
@@ -94,6 +96,9 @@ export class ProfilComponent implements OnInit {
   private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(ProfilService);
+  private i18n = inject(TraductionService);
+  /** Traducteur de la langue courante, passe a la validation du formulaire. */
+  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -114,7 +119,7 @@ export class ProfilComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('Mon profil');
+    this.seo.definirPrivee('seo.monProfil');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -142,7 +147,7 @@ export class ProfilComponent implements OnInit {
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreurChargement.set(e.error?.erreur ?? 'Impossible de charger votre profil.');
+          this.erreurChargement.set(e.error?.erreur ?? this.i18n.t('profil.erreurChargement'));
         }
       },
     });
@@ -151,7 +156,7 @@ export class ProfilComponent implements OnInit {
   enregistrer() {
     const demande = nettoyerProfil(this.formulaire);
     this.succes.set('');
-    const motif = validerProfil(demande);
+    const motif = validerProfil(demande, new Date(), this.traduire);
     if (motif) {
       this.erreur.set(motif);
       return;
@@ -162,16 +167,16 @@ export class ProfilComponent implements OnInit {
       next: (p) => {
         this.enCours.set(false);
         this.afficher(p);
-        this.succes.set('Profil enregistré.');
+        this.succes.set(this.i18n.t('profil.enregistre'));
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 400) {
-          this.erreur.set(e.error?.erreur ?? 'Le profil est invalide.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('profil.invalide'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'enregistrement du profil a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('profil.echec'));
         }
       },
     });

@@ -6,6 +6,9 @@ import { AnnuaireService, Creneau, Medecin } from '../annuaire/annuaire.service'
 import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { AuthService } from '../auth/auth.service';
 import { SyntheseAvisComponent } from '../avis/synthese-avis.component';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { TraductionService } from '../i18n/traduction.service';
 import { ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { MessagerieService } from '../messagerie/messagerie.service';
 import { SeoService } from '../seo/seo.service';
@@ -13,59 +16,59 @@ import { SeoService } from '../seo/seo.service';
 @Component({
   selector: 'app-fiche-medecin',
   standalone: true,
-  imports: [CommonModule, RouterLink, SyntheseAvisComponent],
+  imports: [CommonModule, RouterLink, SyntheseAvisComponent, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <p style="margin:0 0 16px"><a routerLink="/" style="color:var(--vert)">Retour à l'annuaire</a></p>
+      <p style="margin:0 0 16px"><a routerLink="/" style="color:var(--vert)">{{ 'fiche.retourAnnuaire' | t }}</a></p>
 
       <ng-container *ngIf="medecin() as m">
         <h1 style="color:var(--vert);margin:0 0 4px">{{ m.nomComplet }}</h1>
         <p style="color:#566b64;margin:0 0 16px">{{ m.specialiteFr }} · {{ m.ville }} ({{ m.wilayaFr }})</p>
         <p style="margin:0 0 24px">
           <button type="button" class="bouton-secondaire" (click)="ecrire()" [disabled]="ouvertureMessagerie()">
-            {{ ouvertureMessagerie() ? 'Ouverture…' : 'Écrire au médecin' }}
+            {{ (ouvertureMessagerie() ? 'fiche.ouverture' : 'fiche.ecrire') | t }}
           </button>
         </p>
         <p *ngIf="erreurMessagerie()" style="color:#b3261e;margin:-12px 0 24px">{{ erreurMessagerie() }}</p>
       </ng-container>
 
-      <h2 style="font-size:1.1rem;margin:0 0 12px">Créneaux disponibles</h2>
+      <h2 style="font-size:1.1rem;margin:0 0 12px">{{ 'fiche.creneaux' | t }}</h2>
 
       <p *ngIf="reservation() as r" style="color:var(--vert)">
-        Rendez-vous réservé le {{ r.debut | date:'EEEE d MMMM à HH:mm' }}.
-        <a routerLink="/mes-rendez-vous" style="color:var(--vert)">Voir mes rendez-vous</a>
+        {{ 'fiche.reserve' | t:{ date: (r.debut | dateLocale:'jourHeure') } }}
+        <a routerLink="/mes-rendez-vous" style="color:var(--vert)">{{ 'fiche.voirMesRendezVous' | t }}</a>
       </p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
-      <p *ngIf="charge()">Chargement…</p>
+      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let c of creneaux()"
             style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <span>
-            <strong>{{ c.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
-            <span style="color:#566b64">({{ c.dureeMinutes }} min)</span>
+            <strong>{{ c.debut | dateLocale:'jourHeure' }}</strong>
+            <span style="color:#566b64">({{ 'commun.minutes' | t:{ n: c.dureeMinutes } }})</span>
           </span>
           <button (click)="reserver(c)" [disabled]="enCours() !== null"
                   style="padding:10px 16px;background:var(--vert);color:#fff;border:0;border-radius:8px">
-            {{ enCours() === c.id ? 'Réservation…' : 'Réserver' }}
+            {{ (enCours() === c.id ? 'fiche.reservation' : 'fiche.reserver') | t }}
           </button>
         </li>
       </ul>
-      <p *ngIf="!charge() && !erreur() && creneaux().length === 0">Aucun créneau disponible pour le moment.</p>
+      <p *ngIf="!charge() && !erreur() && creneaux().length === 0">{{ 'fiche.aucunCreneau' | t }}</p>
 
       <section *ngIf="!charge()" [style.margin]="creneaux().length === 0 ? '8px 0 0' : '24px 0 0'"
                style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;background:#f8faf9">
-        <h2 style="font-size:1.05rem;margin:0 0 6px">Liste d'attente</h2>
+        <h2 style="font-size:1.05rem;margin:0 0 6px">{{ 'fiche.listeAttente' | t }}</h2>
         <p style="color:#566b64;margin:0 0 12px">
-          {{ creneaux().length === 0 ? 'Aucun créneau ne vous est proposé ?' : 'Aucun créneau ne vous convient ?' }}
-          Inscrivez-vous sur la liste d'attente de ce praticien. Vous serez notifié dès qu'un créneau se libère.
+          {{ (creneaux().length === 0 ? 'fiche.aucunPropose' : 'fiche.aucunConvient') | t }}
+          {{ 'fiche.inscrivezVous' | t }}
         </p>
         <p *ngIf="inscription()" style="color:var(--vert);margin:0">
           {{ inscription() }}
-          <a routerLink="/liste-attente" style="color:var(--vert)">Voir mes listes d'attente</a>
+          <a routerLink="/liste-attente" style="color:var(--vert)">{{ 'fiche.voirMesListes' | t }}</a>
         </p>
         <button *ngIf="!inscription()" type="button" class="bouton-secondaire" (click)="inscrire()" [disabled]="inscriptionEnCours()">
-          {{ inscriptionEnCours() ? 'Inscription…' : "M'inscrire sur la liste d'attente" }}
+          {{ (inscriptionEnCours() ? 'fiche.inscription' : 'fiche.mInscrire') | t }}
         </button>
         <p *ngIf="erreurInscription()" style="color:#b3261e;margin:12px 0 0">{{ erreurInscription() }}</p>
       </section>
@@ -85,6 +88,7 @@ export class FicheMedecinComponent implements OnInit {
   private listeAttente = inject(ListeAttenteService);
   private router = inject(Router);
   private seo = inject(SeoService);
+  private i18n = inject(TraductionService);
 
   private medecinId = '';
   medecin = signal<Medecin | null>(null);
@@ -116,22 +120,30 @@ export class FicheMedecinComponent implements OnInit {
     this.erreurMessagerie.set('');
     this.inscription.set('');
     this.erreurInscription.set('');
-    this.seo.definir({ titre: 'Fiche du praticien', canonique: `/medecins/${id}` });
+    this.seo.definir({ titre: 'seo.fiche.attente', canonique: `/medecins/${id}` });
     this.annuaire.medecin(id).subscribe({
       next: (m) => {
         this.medecin.set(m);
-        this.seo.definir({
-          titre: `Dr ${m.nomComplet.replace(/^Dr\.?\s+/i, '')}, ${m.specialiteFr} à ${m.ville}`,
-          description: `Prenez rendez-vous avec ${m.nomComplet}, ${m.specialiteFr.toLowerCase()} à ${m.ville} (${m.wilayaFr}) : créneaux disponibles, avis des patients et liste d'attente sur Tabibi.`,
+        const params = {
+          nom: m.nomComplet,
+          nomSansDr: m.nomComplet.replace(/^Dr\.?\s+/i, ''),
+          specialite: m.specialiteFr,
+          specialiteMinuscule: m.specialiteFr.toLowerCase(),
+          ville: m.ville,
+          wilaya: m.wilayaFr,
+        };
+        this.seo.definir(() => ({
+          titre: this.i18n.t('seo.fiche.titre', params),
+          description: this.i18n.t('seo.fiche.description', params),
           canonique: `/medecins/${m.id}`,
-        });
+        }));
       },
       error: (e: HttpErrorResponse) => {
         if (e.status === 404) {
-          this.erreur.set('Praticien introuvable.');
-          this.seo.introuvable('Praticien introuvable');
+          this.erreur.set(this.i18n.t('fiche.introuvable'));
+          this.seo.introuvable('seo.fiche.introuvable');
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger la fiche du praticien.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('fiche.erreurChargement'));
         }
       },
     });
@@ -149,7 +161,7 @@ export class FicheMedecinComponent implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.creneaux.set([]);
-        this.erreur.set(e.error?.erreur ?? 'Impossible de charger les créneaux.');
+        this.erreur.set(e.error?.erreur ?? this.i18n.t('fiche.erreurCreneaux'));
         this.charge.set(false);
       },
     });
@@ -173,14 +185,14 @@ export class FicheMedecinComponent implements OnInit {
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
         if (e.status === 409) {
-          this.erreur.set("Ce créneau vient d'être pris.");
+          this.erreur.set(this.i18n.t('fiche.creneauPris'));
           this.chargerCreneaux();
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Seul un compte patient peut réserver un créneau.');
+          this.erreur.set(this.i18n.t('fiche.reservePatient'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'La réservation a échoué, veuillez réessayer.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('fiche.reservationEchec'));
         }
       },
     });
@@ -206,11 +218,11 @@ export class FicheMedecinComponent implements OnInit {
       error: (e: HttpErrorResponse) => {
         this.ouvertureMessagerie.set(false);
         if (e.status === 403) {
-          this.erreurMessagerie.set('Vous devez avoir un rendez-vous avec ce médecin pour lui écrire.');
+          this.erreurMessagerie.set(this.i18n.t('fiche.messagerieRendezVous'));
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreurMessagerie.set(e.error?.erreur ?? "L'ouverture de la conversation a échoué, veuillez réessayer.");
+          this.erreurMessagerie.set(e.error?.erreur ?? this.i18n.t('fiche.messagerieEchec'));
         }
       },
     });
@@ -231,20 +243,20 @@ export class FicheMedecinComponent implements OnInit {
     this.listeAttente.inscrire(this.medecinId).subscribe({
       next: () => {
         this.inscriptionEnCours.set(false);
-        this.inscription.set("Vous êtes inscrit sur la liste d'attente de ce praticien.");
+        this.inscription.set(this.i18n.t('fiche.inscrit'));
       },
       error: (e: HttpErrorResponse) => {
         this.inscriptionEnCours.set(false);
         if (e.status === 409) {
-          this.inscription.set('Vous êtes déjà inscrit sur cette liste.');
+          this.inscription.set(this.i18n.t('fiche.dejaInscrit'));
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreurInscription.set("Seul un compte patient peut s'inscrire sur une liste d'attente.");
+          this.erreurInscription.set(this.i18n.t('fiche.inscriptionPatient'));
         } else if (e.status === 404) {
-          this.erreurInscription.set('Praticien introuvable.');
+          this.erreurInscription.set(this.i18n.t('fiche.introuvable'));
         } else {
-          this.erreurInscription.set(e.error?.erreur ?? "L'inscription a échoué, veuillez réessayer.");
+          this.erreurInscription.set(e.error?.erreur ?? this.i18n.t('fiche.inscriptionEchec'));
         }
       },
     });

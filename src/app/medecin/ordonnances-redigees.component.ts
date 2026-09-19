@@ -7,24 +7,26 @@ import { ListeOrdonnancesComponent } from '../ordonnances/liste-ordonnances.comp
 import { Ordonnance } from '../ordonnances/ordonnance.service';
 import { MedecinService } from './medecin.service';
 import { SeoService } from '../seo/seo.service';
+import { TPipe } from '../i18n/t.pipe';
+import { TraductionService } from '../i18n/traduction.service';
 
 /** Ordonnances emises par le medecin connecte (GET /api/medecin/ordonnances). */
 @Component({
   selector: 'app-ordonnances-redigees',
   standalone: true,
-  imports: [CommonModule, RouterLink, ListeOrdonnancesComponent],
+  imports: [CommonModule, RouterLink, ListeOrdonnancesComponent, TPipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
-        <h1 style="color:var(--vert);margin:0">Mes ordonnances rédigées</h1>
-        <a class="bouton" routerLink="/medecin/ordonnance/nouvelle">Rédiger une ordonnance</a>
+        <h1 style="color:var(--vert);margin:0">{{ 'ordonnancesRedigees.titre' | t }}</h1>
+        <a class="bouton" routerLink="/medecin/ordonnance/nouvelle">{{ 'agenda.redigerOrdonnance' | t }}</a>
       </div>
 
-      <p *ngIf="charge()">Chargement…</p>
+      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
       <app-liste-ordonnances [ordonnances]="ordonnances()" [afficherPatient]="true" />
-      <p *ngIf="!charge() && !erreur() && ordonnances().length === 0">Aucune ordonnance rédigée pour le moment.</p>
+      <p *ngIf="!charge() && !erreur() && ordonnances().length === 0">{{ 'ordonnancesRedigees.aucune' | t }}</p>
     </main>
   `,
 })
@@ -32,13 +34,14 @@ export class OrdonnancesRedigeesComponent implements OnInit {
   private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(MedecinService);
+  private i18n = inject(TraductionService);
 
   ordonnances = signal<Ordonnance[]>([]);
   charge = signal(false);
   erreur = signal('');
 
   ngOnInit() {
-    this.seo.definirPrivee('Mes ordonnances rédigées');
+    this.seo.definirPrivee('seo.ordonnancesRedigees');
     this.charge.set(true);
     this.service.ordonnancesRedigees().subscribe({
       next: (liste) => {
@@ -51,9 +54,9 @@ export class OrdonnancesRedigeesComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux médecins.');
+          this.erreur.set(this.i18n.t('commun.reserveMedecins'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos ordonnances.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('ordonnances.erreurChargement'));
         }
       },
     });

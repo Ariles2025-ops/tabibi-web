@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
+import { TPipe } from '../i18n/t.pipe';
+import { TraductionService } from '../i18n/traduction.service';
 import { SeoService } from '../seo/seo.service';
 
 /**
@@ -12,26 +14,26 @@ import { SeoService } from '../seo/seo.service';
 @Component({
   selector: 'app-moi',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TPipe],
   template: `
     <main style="max-width:640px;margin:40px auto;padding:0 16px">
-      <h1 style="color:var(--vert)">Mon compte</h1>
-      <button *ngIf="!connecte()" type="button" class="bouton" (click)="seConnecter()">Se connecter</button>
+      <h1 style="color:var(--vert)">{{ 'moi.titre' | t }}</h1>
+      <button *ngIf="!connecte()" type="button" class="bouton" (click)="seConnecter()">{{ 'moi.seConnecter' | t }}</button>
       <div *ngIf="connecte()">
-        <p>Connecté en tant que <b>{{ moi()?.nom }}</b></p>
-        <p>Rôles : {{ moi()?.roles?.join(', ') }}</p>
+        <p>{{ 'moi.connecteEnTantQue' | t }} <b>{{ moi()?.nom }}</b></p>
+        <p>{{ 'moi.roles' | t:{ roles: moi()?.roles?.join(', ') } }}</p>
         <p *ngIf="moi()?.sujet as sujet" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span>Identifiant du compte : <code style="font-size:.95rem">{{ sujet }}</code></span>
-          <button type="button" class="bouton-secondaire" style="padding:6px 12px" (click)="copier(sujet)">Copier</button>
-          <span *ngIf="copie()" style="color:var(--vert)">Identifiant copié.</span>
+          <span>{{ 'moi.identifiant' | t }} <code style="font-size:.95rem">{{ sujet }}</code></span>
+          <button type="button" class="bouton-secondaire" style="padding:6px 12px" (click)="copier(sujet)">{{ 'moi.copier' | t }}</button>
+          <span *ngIf="copie()" style="color:var(--vert)">{{ 'moi.copie' | t }}</span>
           <span *ngIf="erreurCopie()" style="color:#b3261e">{{ erreurCopie() }}</span>
         </p>
         <p style="color:#566b64;font-size:.9rem">
-          Une secrétaire communique cet identifiant au médecin qui la rattache à son cabinet.
+          {{ 'moi.identifiantSecretaire' | t }}
         </p>
         <p style="display:flex;gap:8px;flex-wrap:wrap">
-          <a class="bouton" routerLink="/moi/profil">Mon profil</a>
-          <button type="button" class="bouton-secondaire" (click)="seDeconnecter()">Se déconnecter</button>
+          <a class="bouton" routerLink="/moi/profil">{{ 'moi.monProfil' | t }}</a>
+          <button type="button" class="bouton-secondaire" (click)="seDeconnecter()">{{ 'moi.seDeconnecter' | t }}</button>
         </p>
       </div>
     </main>
@@ -41,6 +43,7 @@ export class MoiComponent implements OnInit {
   private seo = inject(SeoService);
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
+  private i18n = inject(TraductionService);
   connecte = signal(false);
   /** Profil /api/moi, lu depuis le cache de RoleService (une seule requete par chargement de page). */
   moi = this.roleService.moi;
@@ -49,7 +52,7 @@ export class MoiComponent implements OnInit {
   erreurCopie = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('Mon compte');
+    this.seo.definirPrivee('seo.monCompte');
     await this.auth.pret();
     if (this.auth.estConnecte()) {
       this.connecte.set(true);
@@ -68,7 +71,7 @@ export class MoiComponent implements OnInit {
       await navigator.clipboard.writeText(sujet);
       this.copie.set(true);
     } catch {
-      this.erreurCopie.set("Copie impossible : sélectionnez l'identifiant et copiez-le.");
+      this.erreurCopie.set(this.i18n.t('moi.copieImpossible'));
     }
   }
 }

@@ -5,6 +5,10 @@ import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/avis.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { Traducteur } from '../i18n/traducteur';
+import { TraductionService } from '../i18n/traduction.service';
 
 /**
  * Avis publics recus par le medecin connecte (GET /api/medecins/{moi}/avis, ou « moi » est le sujet du jeton lu
@@ -14,15 +18,13 @@ import { SeoService } from '../seo/seo.service';
 @Component({
   selector: 'app-avis-medecin',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Avis des patients</h1>
-      <p style="color:#566b64;margin:0 0 16px">
-        Avis publiés sur votre fiche, anonymes. Un avis signalé est retiré de la vue publique et examiné par un administrateur.
-      </p>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'avis.desPatients' | t }}</h1>
+      <p style="color:#566b64;margin:0 0 16px">{{ 'avis.introMedecin' | t }}</p>
 
-      <p *ngIf="charge()">Chargement…</p>
+      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
       <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
       <p *ngIf="synthese()" style="margin:0 0 12px"><strong>{{ libelle() }}</strong></p>
@@ -31,12 +33,12 @@ import { SeoService } from '../seo/seo.service';
         <li *ngFor="let a of avis()"
             style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div>
-            <strong>{{ a.note }} / 5</strong>
-            <span style="color:#566b64"> · {{ a.deposeLe | date:'d MMMM yyyy' }}</span>
+            <strong>{{ 'avis.sur5' | t:{ note: a.note } }}</strong>
+            <span style="color:#566b64"> · {{ a.deposeLe | dateLocale:'date' }}</span>
             <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
           </div>
           <button type="button" class="bouton-secondaire" (click)="signaler(a)" [disabled]="enCours() !== null">
-            {{ enCours() === a.id ? 'Signalement…' : 'Signaler' }}
+            {{ (enCours() === a.id ? 'avis.signalement' : 'avis.signaler') | t }}
           </button>
         </li>
       </ul>
@@ -48,6 +50,9 @@ export class AvisMedecinComponent implements OnInit {
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   private service = inject(AvisService);
+  private i18n = inject(TraductionService);
+  /** Traducteur de la langue courante, passe aux fonctions de libelles du service. */
+  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
 
   /** Identifiant du medecin connecte (sujet du jeton) ; vide tant qu'il est inconnu. */
   private moi = '';
@@ -60,7 +65,7 @@ export class AvisMedecinComponent implements OnInit {
 
   libelle = computed(() => {
     const s = this.synthese();
-    return s ? formaterMoyenne(s.moyenne, s.nombre) : '';
+    return s ? formaterMoyenne(s.moyenne, s.nombre, this.traduire) : '';
   });
 
   /** Avis publies, les plus recents d'abord. */
@@ -70,11 +75,11 @@ export class AvisMedecinComponent implements OnInit {
   });
 
   async ngOnInit() {
-    this.seo.definirPrivee('Avis des patients');
+    this.seo.definirPrivee('seo.avisPatients');
     const profil = await this.roleService.charger();
     this.moi = profil?.sujet ?? '';
     if (!this.moi) {
-      this.erreur.set('Impossible de lire votre profil, veuillez réessayer.');
+      this.erreur.set(this.i18n.t('avis.profilIllisible'));
       return;
     }
     this.charger();
@@ -94,7 +99,7 @@ export class AvisMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos avis.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('avis.erreurMes'));
         }
       },
     });
@@ -107,7 +112,7 @@ export class AvisMedecinComponent implements OnInit {
     this.service.signaler(a.id).subscribe({
       next: () => {
         this.enCours.set(null);
-        this.succes.set("Avis signalé : il est retiré de votre fiche en attendant la décision de l'administrateur.");
+        this.succes.set(this.i18n.t('avis.signale'));
         this.charger();
       },
       error: (e: HttpErrorResponse) => {
@@ -115,11 +120,11 @@ export class AvisMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cet avis ne vous concerne pas.');
+          this.erreur.set(this.i18n.t('avis.neVousConcerne'));
         } else if (e.status === 409 || e.status === 404) {
-          this.charger(e.error?.erreur ?? 'Cet avis a déjà été signalé.');
+          this.charger(e.error?.erreur ?? this.i18n.t('avis.dejaSignale'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "Le signalement a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('avis.signalementEchec'));
         }
       },
     });

@@ -1,12 +1,17 @@
-/** Libelles francais des statuts de teleconsultation connus ; un statut inconnu est affiche tel quel. */
-const LIBELLES_STATUT_TELECONSULTATION: Partial<Record<string, string>> = {
-  PLANIFIEE: 'Planifiée',
-  EN_COURS: 'En cours',
-  TERMINEE: 'Terminée',
-  ANNULEE: 'Annulée',
+import { ClesTraduction } from '../i18n/fr';
+import { Traducteur, traduireFr } from '../i18n/traducteur';
+
+/** Cles de traduction des statuts de teleconsultation connus ; un statut inconnu est affiche tel quel. */
+const CLES_STATUT_TELECONSULTATION: Partial<Record<string, ClesTraduction>> = {
+  PLANIFIEE: 'statut.teleconsultation.PLANIFIEE',
+  EN_COURS: 'statut.teleconsultation.EN_COURS',
+  TERMINEE: 'statut.teleconsultation.TERMINEE',
+  ANNULEE: 'statut.teleconsultation.ANNULEE',
 };
 
-export function libelleStatutTeleconsultation(statut: string | null | undefined): string {
+/** Libelle du statut dans la langue de `t` (francais par defaut). */
+export function libelleStatutTeleconsultation(statut: string | null | undefined, t: Traducteur = traduireFr): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_TELECONSULTATION[statut] ?? statut;
+  const cle = CLES_STATUT_TELECONSULTATION[statut];
+  return cle ? t(cle) : statut;
 }

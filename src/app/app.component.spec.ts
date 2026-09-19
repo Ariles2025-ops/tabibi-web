@@ -1,13 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AppComponent } from './app.component';
 import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
+import { TraductionService } from './i18n/traduction.service';
+import { ProfilService } from './moi/profil.service';
 import { NotificationService } from './notifications/notification.service';
 
-/** Test de fumee de la barre de navigation : liens publics, cloche des connectes, sections du medecin, de la pharmacie, de la secretaire et de l'administrateur. */
+/**
+ * Test de fumee de la barre de navigation : liens publics, cloche des connectes, sections du medecin, de la
+ * pharmacie, de la secretaire et de l'administrateur, et selecteur de langue (le francais par defaut, l'arabe
+ * apres un clic, avec `dir=rtl` sur le document).
+ */
 describe('AppComponent', () => {
   let fixture: ComponentFixture<AppComponent>;
   let connecte: boolean;
@@ -15,6 +21,7 @@ describe('AppComponent', () => {
   let estAdmin: ReturnType<typeof signal<boolean>>;
   let estPharmacie: ReturnType<typeof signal<boolean>>;
   let estSecretaire: ReturnType<typeof signal<boolean>>;
+  let profil: { monProfil: jasmine.Spy };
   let roleService: {
     estMedecin: ReturnType<typeof signal<boolean>>;
     estAdmin: ReturnType<typeof signal<boolean>>;
@@ -32,6 +39,8 @@ describe('AppComponent', () => {
     roleService = { estMedecin, estAdmin, estPharmacie, estSecretaire, charger: jasmine.createSpy('charger').and.resolveTo(null) };
     const auth = { initialiser: () => Promise.resolve(), estConnecte: () => connecte };
     const notifications = { nombreNonLues: () => of(2), changements$: of() };
+    // Le profil porte la langue de l'utilisateur ; ici il n'a jamais ete renseigne (404 cote API).
+    profil = { monProfil: jasmine.createSpy('monProfil').and.returnValue(throwError(() => new Error('404'))) };
 
     TestBed.configureTestingModule({
       imports: [AppComponent],
@@ -40,6 +49,7 @@ describe('AppComponent', () => {
         { provide: AuthService, useValue: auth },
         { provide: RoleService, useValue: roleService },
         { provide: NotificationService, useValue: notifications },
+        { provide: ProfilService, useValue: profil },
       ],
     });
     fixture = TestBed.createComponent(AppComponent);
@@ -140,5 +150,49 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.querySelector('a[href="/secretaire"]')).not.toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
     expect(texteNav()).not.toContain('Administration');
+  });
+  afterEach(() => {
+    // Le document est partage entre les specs (Karma) : on remet l'interface en francais.
+    TestBed.inject(TraductionService).changer('fr');
+  });
+
+  /** Bouton du selecteur de langue portant ce code (`lang` de l'element). */
+  function boutonLangue(code: string): HTMLButtonElement {
+    return fixture.nativeElement.querySelector(`.selecteur-langue button[lang="${code}"]`);
+  }
+
+  it('propose le selecteur de langue et bascule l interface en arabe (dir rtl)', async () => {
+    await afficher();
+
+    expect(texteNav()).toContain('Français');
+    expect(texteNav()).toContain('العربية');
+    expect(texteNav()).toContain('English');
+    expect(texteNav()).toContain('Accueil');
+
+    boutonLangue('ar').click();
+    fixture.detectChanges();
+
+    expect(texteNav()).toContain('الرئيسية');
+    expect(texteNav()).not.toContain('Accueil');
+    expect(document.documentElement.getAttribute('lang')).toBe('ar');
+    expect(document.documentElement.getAttribute('dir')).toBe('rtl');
+  });
+
+  it('la langue du profil initialise l interface apres connexion', async () => {
+    connecte = true;
+    profil.monProfil.and.returnValue(of({ langue: 'en' }));
+    await afficher();
+    fixture.detectChanges();
+
+    expect(profil.monProfil).toHaveBeenCalledTimes(1);
+    expect(texteNav()).toContain('Home');
+    expect(document.documentElement.getAttribute('dir')).toBe('ltr');
+  });
+
+  it('le profil n est pas consulte sans connexion', async () => {
+    await afficher();
+
+    expect(profil.monProfil).not.toHaveBeenCalled();
+    expect(texteNav()).toContain('Accueil');
   });
 });

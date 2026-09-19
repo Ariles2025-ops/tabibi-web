@@ -6,6 +6,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { LigneOrdonnance, OrdonnanceService } from '../ordonnances/ordonnance.service';
 import { SeoService } from '../seo/seo.service';
+import { TPipe } from '../i18n/t.pipe';
+import { TraductionService } from '../i18n/traduction.service';
 
 /** Ligne en cours de saisie ; `cle` reste stable a l'ajout/suppression de lignes (noms de champs uniques). */
 interface LigneSaisie extends LigneOrdonnance {
@@ -16,54 +18,54 @@ interface LigneSaisie extends LigneOrdonnance {
 @Component({
   selector: 'app-nouvelle-ordonnance',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TPipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <p style="margin:0 0 16px"><a routerLink="/medecin/agenda" style="color:var(--vert)">Retour à l'agenda</a></p>
-      <h1 style="color:var(--vert);margin:0 0 16px">Nouvelle ordonnance</h1>
+      <p style="margin:0 0 16px"><a routerLink="/medecin/agenda" style="color:var(--vert)">{{ 'nouvelleOrdonnance.retourAgenda' | t }}</a></p>
+      <h1 style="color:var(--vert);margin:0 0 16px">{{ 'nouvelleOrdonnance.titre' | t }}</h1>
 
       <form (ngSubmit)="emettre()" #f="ngForm" style="display:grid;gap:16px">
         <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Identifiant du patient
+            {{ 'nouvelleOrdonnance.patientId' | t }}
             <input class="champ" [(ngModel)]="patientId" name="patientId" required style="color:#10241F;font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Rendez-vous lié (facultatif)
+            {{ 'nouvelleOrdonnance.rendezVousLie' | t }}
             <input class="champ" [(ngModel)]="rendezVousId" name="rendezVousId" style="color:#10241F;font-size:1rem">
           </label>
         </div>
 
-        <h2 style="font-size:1.1rem;margin:8px 0 0">Prescription</h2>
+        <h2 style="font-size:1.1rem;margin:8px 0 0">{{ 'nouvelleOrdonnance.prescription' | t }}</h2>
         <div *ngFor="let l of lignes; let i = index; trackBy: parCle"
              style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;border:1px solid #e4e9e7;border-radius:12px;padding:12px">
           <label style="flex:2;min-width:160px;display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Médicament
+            {{ 'ordonnance.medicament' | t }}
             <input class="champ" [(ngModel)]="l.medicament" [name]="'medicament-' + l.cle" required
-                   placeholder="Ex. Paracétamol 1 g" style="color:#10241F;font-size:1rem">
+                   [placeholder]="'nouvelleOrdonnance.medicamentPlaceholder' | t" style="color:#10241F;font-size:1rem">
           </label>
           <label style="flex:2;min-width:160px;display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Posologie
+            {{ 'ordonnance.posologie' | t }}
             <input class="champ" [(ngModel)]="l.posologie" [name]="'posologie-' + l.cle" required
-                   placeholder="Ex. 1 comprimé matin et soir" style="color:#10241F;font-size:1rem">
+                   [placeholder]="'nouvelleOrdonnance.posologiePlaceholder' | t" style="color:#10241F;font-size:1rem">
           </label>
           <label style="flex:1;min-width:120px;display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            Durée
+            {{ 'ordonnance.duree' | t }}
             <input class="champ" [(ngModel)]="l.duree" [name]="'duree-' + l.cle" required
-                   placeholder="Ex. 7 jours" style="color:#10241F;font-size:1rem">
+                   [placeholder]="'nouvelleOrdonnance.dureePlaceholder' | t" style="color:#10241F;font-size:1rem">
           </label>
           <button type="button" class="bouton-secondaire" (click)="supprimerLigne(i)" [disabled]="lignes.length === 1">
-            Supprimer
+            {{ 'nouvelleOrdonnance.supprimer' | t }}
           </button>
         </div>
         <div>
-          <button type="button" class="bouton-secondaire" (click)="ajouterLigne()">Ajouter une ligne</button>
+          <button type="button" class="bouton-secondaire" (click)="ajouterLigne()">{{ 'nouvelleOrdonnance.ajouterLigne' | t }}</button>
         </div>
 
         <p *ngIf="erreur()" style="color:#b3261e;margin:0">{{ erreur() }}</p>
         <div>
           <button type="submit" class="bouton" [disabled]="f.invalid || enCours()">
-            {{ enCours() ? 'Émission…' : "Émettre l'ordonnance" }}
+            {{ (enCours() ? 'nouvelleOrdonnance.emission' : 'nouvelleOrdonnance.emettre') | t }}
           </button>
         </div>
       </form>
@@ -76,6 +78,7 @@ export class NouvelleOrdonnanceComponent implements OnInit {
   private router = inject(Router);
   private auth = inject(AuthService);
   private service = inject(OrdonnanceService);
+  private i18n = inject(TraductionService);
   private prochaineCle = 0;
 
   patientId = '';
@@ -86,7 +89,7 @@ export class NouvelleOrdonnanceComponent implements OnInit {
 
   /** Prerempli depuis l'agenda : /medecin/ordonnance/nouvelle?patientId=...&rendezVousId=... */
   ngOnInit() {
-    this.seo.definirPrivee('Nouvelle ordonnance');
+    this.seo.definirPrivee('seo.nouvelleOrdonnance');
     const params = this.route.snapshot.queryParamMap;
     this.patientId = params.get('patientId') ?? '';
     this.rendezVousId = params.get('rendezVousId') ?? '';
@@ -115,7 +118,7 @@ export class NouvelleOrdonnanceComponent implements OnInit {
       duree: l.duree.trim(),
     }));
     if (!patientId || lignes.some((l) => !l.medicament || !l.posologie || !l.duree)) {
-      this.erreur.set("Renseignez l'identifiant du patient et chaque ligne de la prescription.");
+      this.erreur.set(this.i18n.t('nouvelleOrdonnance.champsRequis'));
       return;
     }
     this.enCours.set(true);
@@ -127,11 +130,11 @@ export class NouvelleOrdonnanceComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Seul un compte médecin peut émettre une ordonnance.');
+          this.erreur.set(this.i18n.t('nouvelleOrdonnance.seulMedecin'));
         } else if (e.status === 404) {
-          this.erreur.set('Patient ou rendez-vous introuvable.');
+          this.erreur.set(this.i18n.t('nouvelleOrdonnance.introuvable'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'émission de l'ordonnance a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('nouvelleOrdonnance.emissionEchec'));
         }
       },
     });

@@ -4,26 +4,29 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../auth/auth.service';
 import { Notification, NotificationService } from './notification.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { TraductionService } from '../i18n/traduction.service';
 
 /** Boite de reception de l'utilisateur connecte (GET /api/notifications/mes), avec marquage lu. */
 @Component({
   selector: 'app-mes-notifications',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
-        <h1 style="color:var(--vert);margin:0">Mes notifications</h1>
+        <h1 style="color:var(--vert);margin:0">{{ 'notifications.titre' | t }}</h1>
         <button *ngIf="connecte()" type="button" class="bouton-secondaire" (click)="toutMarquerLu()"
                 [disabled]="nombreNonLues() === 0 || enCours() !== null">
-          {{ enCours() === 'toutes' ? 'Enregistrement…' : 'Tout marquer comme lu' }}
+          {{ (enCours() === 'toutes' ? 'commun.enregistrement' : 'notifications.toutMarquerLu') | t }}
         </button>
       </div>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
+      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">Chargement…</p>
+        <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
@@ -31,16 +34,16 @@ import { SeoService } from '../seo/seo.service';
               style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <strong>{{ n.sujet }}</strong>
-              <span style="color:#566b64"> · {{ n.creeLe | date:'EEEE d MMMM yyyy à HH:mm' }}</span><br>
+              <span style="color:#566b64"> · {{ n.creeLe | dateLocale:'jourDateHeure' }}</span><br>
               <span>{{ n.message }}</span>
             </div>
             <button *ngIf="!n.lue" type="button" class="bouton-secondaire" (click)="marquerLue(n)"
                     [disabled]="enCours() !== null">
-              {{ enCours() === n.id ? 'Enregistrement…' : 'Marquer comme lue' }}
+              {{ (enCours() === n.id ? 'commun.enregistrement' : 'notifications.marquerLue') | t }}
             </button>
           </li>
         </ul>
-        <p *ngIf="!charge() && !erreur() && notifications().length === 0">Aucune notification pour le moment.</p>
+        <p *ngIf="!charge() && !erreur() && notifications().length === 0">{{ 'notifications.aucune' | t }}</p>
       </ng-container>
     </main>
   `,
@@ -49,6 +52,7 @@ export class MesNotificationsComponent implements OnInit {
   private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(NotificationService);
+  private i18n = inject(TraductionService);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -60,7 +64,7 @@ export class MesNotificationsComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('Mes notifications');
+    this.seo.definirPrivee('seo.mesNotifications');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -85,7 +89,7 @@ export class MesNotificationsComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos notifications.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('notifications.erreurChargement'));
         }
       },
     });
@@ -101,7 +105,7 @@ export class MesNotificationsComponent implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
-        this.erreur.set(e.error?.erreur ?? 'Le marquage de la notification a échoué, veuillez réessayer.');
+        this.erreur.set(e.error?.erreur ?? this.i18n.t('notifications.marquageEchec'));
       },
     });
   }
@@ -116,7 +120,7 @@ export class MesNotificationsComponent implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
-        this.erreur.set(e.error?.erreur ?? 'Le marquage des notifications a échoué, veuillez réessayer.');
+        this.erreur.set(e.error?.erreur ?? this.i18n.t('notifications.marquageEchecToutes'));
       },
     });
   }

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
+import { Traducteur, traduireFr } from '../i18n/traducteur';
 
 /** Profil de l'utilisateur connecte, quel que soit son role (GET / PUT /api/moi/profil). */
 export interface Profil {
@@ -79,31 +80,32 @@ export function nettoyerProfil(saisie: DemandeProfil): DemandeProfil {
 
 /**
  * Validation cote client d'une demande deja nettoyee, coherente avec le backend (400 sinon) : renvoie le premier
- * motif en francais, ou null si tout est correct. `aujourdHui` est la date locale (injectable pour les tests).
+ * motif dans la langue de `t` (francais par defaut), ou null si tout est correct. `aujourdHui` est la date locale
+ * (injectable pour les tests).
  */
-export function validerProfil(demande: DemandeProfil, aujourdHui: Date = new Date()): string | null {
+export function validerProfil(demande: DemandeProfil, aujourdHui: Date = new Date(), t: Traducteur = traduireFr): string | null {
   if (demande.nomComplet.length < LONGUEUR_MIN_NOM || demande.nomComplet.length > LONGUEUR_MAX_NOM) {
-    return `Le nom complet doit compter de ${LONGUEUR_MIN_NOM} à ${LONGUEUR_MAX_NOM} caractères.`;
+    return t('profil.nomLongueur', { min: LONGUEUR_MIN_NOM, max: LONGUEUR_MAX_NOM });
   }
   if (demande.telephone !== null && !TELEPHONE.test(demande.telephone)) {
-    return 'Le téléphone doit être un numéro algérien de 9 à 10 chiffres commençant par 0 (ex. 0550123456).';
+    return t('profil.telephoneInvalide');
   }
   if (demande.dateNaissance !== null) {
     if (!DATE_ISO.test(demande.dateNaissance) || Number.isNaN(Date.parse(demande.dateNaissance))) {
-      return 'Indiquez une date de naissance valide.';
+      return t('profil.dateInvalide');
     }
     if (demande.dateNaissance >= dateLocaleIso(aujourdHui)) {
-      return 'La date de naissance doit être dans le passé.';
+      return t('profil.datePassee');
     }
     if (Number(demande.dateNaissance.slice(0, 4)) <= ANNEE_NAISSANCE_MIN) {
-      return `La date de naissance doit être postérieure à ${ANNEE_NAISSANCE_MIN}.`;
+      return t('profil.dateApres', { annee: ANNEE_NAISSANCE_MIN });
     }
   }
   if (demande.wilayaCode !== null && demande.wilayaCode.length > LONGUEUR_MAX_WILAYA) {
-    return `Le code de wilaya ne peut pas dépasser ${LONGUEUR_MAX_WILAYA} caractères.`;
+    return t('profil.wilayaTropLongue', { max: LONGUEUR_MAX_WILAYA });
   }
   if (!LANGUES.some((l) => l.code === demande.langue)) {
-    return `La langue doit être l'une de : ${LANGUES.map((l) => l.code).join(', ')}.`;
+    return t('profil.langueInvalide', { langues: LANGUES.map((l) => l.code).join(', ') });
   }
   return null;
 }

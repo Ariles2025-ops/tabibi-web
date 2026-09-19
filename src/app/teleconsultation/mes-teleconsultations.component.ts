@@ -8,6 +8,10 @@ import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { libelleStatutTeleconsultation } from './statut-teleconsultation';
 import { Teleconsultation, TeleconsultationService, salleAccessible } from './teleconsultation.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { Traducteur } from '../i18n/traducteur';
+import { TraductionService } from '../i18n/traduction.service';
 
 /**
  * Teleconsultations du patient connecte (GET /api/teleconsultations/mes). Le lien de la salle video n'est
@@ -17,48 +21,43 @@ import { SeoService } from '../seo/seo.service';
 @Component({
   selector: 'app-mes-teleconsultations',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 16px">Mes téléconsultations</h1>
+      <h1 style="color:var(--vert);margin:0 0 16px">{{ 'teleconsultation.titre' | t }}</h1>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
+      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">Chargement…</p>
+        <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let t of teleconsultations()" style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
               <div>
-                <strong *ngIf="datesRendezVous()[t.rendezVousId] as debut">Rendez-vous du {{ debut | date:'EEEE d MMMM à HH:mm' }}</strong>
-                <strong *ngIf="!datesRendezVous()[t.rendezVousId]">Téléconsultation proposée le {{ t.creeLe | date:'EEEE d MMMM à HH:mm' }}</strong>
+                <strong *ngIf="datesRendezVous()[t.rendezVousId] as debut">{{ 'teleconsultation.rendezVousDu' | t:{ date: (debut | dateLocale:'jourHeure') } }}</strong>
+                <strong *ngIf="!datesRendezVous()[t.rendezVousId]">{{ 'teleconsultation.proposeeLe' | t:{ date: (t.creeLe | dateLocale:'jourHeure') } }}</strong>
                 <br>
-                <a [routerLink]="['/medecins', t.medecinId]" style="color:var(--vert)">{{ noms()[t.medecinId] ?? 'Voir le praticien' }}</a>
+                <a [routerLink]="['/medecins', t.medecinId]" style="color:var(--vert)">{{ noms()[t.medecinId] ?? ('commun.voirPraticien' | t) }}</a>
                 <span style="color:#566b64"> · {{ libelleStatut(t.statut) }}</span>
-                <span *ngIf="t.consentementPatientLe" style="color:#566b64"> · consentement donné le {{ t.consentementPatientLe | date:'d MMMM à HH:mm' }}</span>
+                <span *ngIf="t.consentementPatientLe as consentement" style="color:#566b64"> · {{ 'teleconsultation.consentementDonneLe' | t:{ date: (consentement | dateLocale:'courtHeure') } }}</span>
               </div>
               <a *ngIf="salleAccessible(t)" class="bouton" [href]="t.lienSalle" target="_blank" rel="noopener">
-                Rejoindre la téléconsultation
+                {{ 'teleconsultation.rejoindre' | t }}
               </a>
             </div>
 
             <section *ngIf="consentementAttendu(t)"
                      style="margin:12px 0 0;padding:12px;border:1px solid var(--vert);border-radius:8px;background:#f3faf7">
-              <p style="margin:0 0 10px">
-                En rejoignant cette téléconsultation, vous acceptez qu'elle se déroule en vidéo via un service tiers
-                (Jitsi Meet). Aucun enregistrement n'est réalisé par Tabibi.
-              </p>
+              <p style="margin:0 0 10px">{{ 'teleconsultation.consentementTexte' | t }}</p>
               <button type="button" class="bouton" (click)="consentir(t)" [disabled]="enCours() !== null">
-                {{ enCours() === t.id ? 'Enregistrement…' : 'Je donne mon consentement' }}
+                {{ (enCours() === t.id ? 'commun.enregistrement' : 'teleconsultation.jeConsens') | t }}
               </button>
             </section>
           </li>
         </ul>
-        <p *ngIf="!charge() && !erreur() && teleconsultations().length === 0">
-          Aucune téléconsultation pour le moment. Votre praticien peut vous en proposer une sur un rendez-vous confirmé.
-        </p>
+        <p *ngIf="!charge() && !erreur() && teleconsultations().length === 0">{{ 'teleconsultation.aucune' | t }}</p>
       </ng-container>
     </main>
   `,
@@ -69,6 +68,9 @@ export class MesTeleconsultationsComponent implements OnInit {
   private service = inject(TeleconsultationService);
   private rendezVousService = inject(RendezVousService);
   private annuaire = inject(AnnuaireService);
+  private i18n = inject(TraductionService);
+  /** Traducteur de la langue courante, passe aux fonctions de libelles de statut. */
+  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -83,7 +85,7 @@ export class MesTeleconsultationsComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('Mes téléconsultations');
+    this.seo.definirPrivee('seo.mesTeleconsultations');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -111,9 +113,9 @@ export class MesTeleconsultationsComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux patients.');
+          this.erreur.set(this.i18n.t('commun.reservePatients'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos téléconsultations.');
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('teleconsultation.erreurChargement'));
         }
       },
     });
@@ -131,9 +133,9 @@ export class MesTeleconsultationsComponent implements OnInit {
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
         if (e.status === 409) {
-          this.charger(e.error?.erreur ?? "Cette téléconsultation n'accepte plus de consentement.");
+          this.charger(e.error?.erreur ?? this.i18n.t('teleconsultation.plusDeConsentement'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'enregistrement du consentement a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('teleconsultation.consentementEchec'));
         }
       },
     });
@@ -149,7 +151,7 @@ export class MesTeleconsultationsComponent implements OnInit {
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutTeleconsultation(statut);
+    return libelleStatutTeleconsultation(statut, this.traduire);
   }
 
   /** Recupere (une seule fois par praticien) le nom des medecins des teleconsultations. */

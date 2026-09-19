@@ -6,6 +6,9 @@ import { AuthService } from '../auth/auth.service';
 import { InscriptionAttente, ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { abregerIdentifiant } from '../messagerie/messagerie.service';
 import { SeoService } from '../seo/seo.service';
+import { DateLocalePipe } from '../i18n/date-locale.pipe';
+import { TPipe } from '../i18n/t.pipe';
+import { TraductionService } from '../i18n/traduction.service';
 
 /**
  * Liste d'attente du medecin (GET /api/medecin/liste-attente) : patients inscrits, du plus ancien au plus recent,
@@ -15,27 +18,24 @@ import { SeoService } from '../seo/seo.service';
 @Component({
   selector: 'app-liste-attente-medecin',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TPipe, DateLocalePipe],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Liste d'attente</h1>
-      <p style="color:#566b64;margin:0 0 20px">
-        Patients qui attendent un créneau chez vous, du plus ancien au plus récent. Ils sont prévenus dès que vous
-        ouvrez un créneau ou qu'un rendez-vous est annulé.
-      </p>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'listeAttenteMedecin.titre' | t }}</h1>
+      <p style="color:#566b64;margin:0 0 20px">{{ 'listeAttenteMedecin.intro' | t }}</p>
 
-      <p *ngIf="charge()">Chargement…</p>
+      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
-      <ol style="padding:0 0 0 24px;margin:0;display:grid;gap:10px">
+      <ol class="liste-numerotee" style="padding-inline-start:24px;margin:0;display:grid;gap:10px">
         <li *ngFor="let i of inscriptions()" style="padding:4px 0">
-          <strong>Patient {{ abreger(i.patientId) }}</strong>
-          <span style="color:#566b64"> · inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
+          <strong>{{ 'commun.patient' | t:{ id: abreger(i.patientId) } }}</strong>
+          <span style="color:#566b64"> · {{ 'listeAttenteMedecin.inscritLe' | t:{ date: (i.inscritLe | dateLocale:'dateHeure') } }}</span>
         </li>
       </ol>
       <p *ngIf="!charge() && !erreur() && inscriptions().length === 0">
-        Aucun patient en liste d'attente pour le moment.
-        <a routerLink="/medecin/disponibilites" style="color:var(--vert)">Ouvrir des créneaux</a>
+        {{ 'listeAttenteMedecin.aucun' | t }}
+        <a routerLink="/medecin/disponibilites" style="color:var(--vert)">{{ 'commun.ouvrirCreneaux' | t }}</a>
       </p>
     </main>
   `,
@@ -44,13 +44,14 @@ export class ListeAttenteMedecinComponent implements OnInit {
   private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(ListeAttenteService);
+  private i18n = inject(TraductionService);
 
   inscriptions = signal<InscriptionAttente[]>([]);
   charge = signal(false);
   erreur = signal('');
 
   ngOnInit() {
-    this.seo.definirPrivee("Liste d'attente");
+    this.seo.definirPrivee('seo.listeAttente');
     this.charge.set(true);
     this.service.duMedecin().subscribe({
       next: (liste) => {
@@ -62,9 +63,9 @@ export class ListeAttenteMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux médecins.');
+          this.erreur.set(this.i18n.t('commun.reserveMedecins'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "Impossible de charger la liste d'attente.");
+          this.erreur.set(e.error?.erreur ?? this.i18n.t('listeAttenteMedecin.erreurChargement'));
         }
       },
     });
