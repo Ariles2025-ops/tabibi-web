@@ -97,13 +97,6 @@ export class JournalRequetes {
     }
   }
 
-  /** Le dernier appel correspondant (apres l'avoir attendu). */
-  async attendreDernier(motif: string | RegExp, methode = 'GET', delaiMs = 10_000): Promise<RequeteCapturee> {
-    await this.attendre(motif, methode, delaiMs);
-    const trouvees = this.filtrer(motif, methode);
-    return trouvees[trouvees.length - 1];
-  }
-
   vider(): void {
     this.toutes.length = 0;
   }

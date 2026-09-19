@@ -5,6 +5,9 @@ import { Creneau } from '../annuaire/annuaire.service';
 import { ConfigService } from '../config/config.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 
+// Bornes et validation : module pur (`./secretaire.formats`), reexporte pour les imports existants.
+export { DUREE_MAX_MINUTES, DUREE_MIN_MINUTES, estUuid } from './secretaire.formats';
+
 /** Rattachement d'une secretaire au cabinet d'un medecin, tel que renvoye par l'API (au medecin comme a la secretaire). */
 export interface Rattachement {
   id: string;
@@ -13,17 +16,6 @@ export interface Rattachement {
   secretaireId: string;
   /** Date de rattachement au format ISO 8601. */
   creeLe: string;
-}
-
-/** Bornes de la duree d'un creneau, celles du backend (CreneauService). */
-export const DUREE_MIN_MINUTES = 5;
-export const DUREE_MAX_MINUTES = 120;
-
-/** Un UUID Keycloak (sujet du jeton), sans espaces ni accolades ; la casse est indifferente. */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function estUuid(valeur: string): boolean {
-  return UUID.test(valeur);
 }
 
 /**

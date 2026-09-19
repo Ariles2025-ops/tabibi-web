@@ -3,8 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
 
-/** Longueur maximale d'un message, identique a la regle du domaine backend (400 au-dela). */
-export const LONGUEUR_MAX_MESSAGE = 2000;
+// Bornes et abreviations : module pur (`./messagerie.formats`), reexporte pour les imports existants.
+export { LONGUEUR_MAX_MESSAGE, abregerIdentifiant } from './messagerie.formats';
 
 /**
  * Conversation entre un patient et un medecin (une seule par couple), vue par l'utilisateur connecte :
@@ -28,11 +28,6 @@ export interface Message {
   contenu: string;
   envoyeLe: string;
   luLe: string | null;
-}
-
-/** Identifiant abrege d'un utilisateur (huit premiers caracteres), pour designer un patient sans afficher tout l'UUID. */
-export function abregerIdentifiant(id: string): string {
-  return id.length > 8 ? id.slice(0, 8) : id;
 }
 
 /**

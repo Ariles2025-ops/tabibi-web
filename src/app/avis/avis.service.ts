@@ -2,13 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
-import { ClesTraduction } from '../i18n/fr';
-import { Traducteur, traduireFr } from '../i18n/traducteur';
 
-/** Bornes de la note et du commentaire, identiques aux regles du domaine backend (400 au-dela). */
-export const NOTE_MIN = 1;
-export const NOTE_MAX = 5;
-export const LONGUEUR_MAX_COMMENTAIRE = 500;
+// Bornes et libelles : module pur (`./avis.formats`), reexporte pour les imports existants.
+export { LONGUEUR_MAX_COMMENTAIRE, NOTE_MAX, NOTE_MIN, formaterMoyenne, libelleStatutAvis } from './avis.formats';
 
 /** Avis tel que le voient son patient (GET /api/avis/mes) et le medecin qui le signale : sans patientId. */
 export interface Avis {
@@ -44,29 +40,6 @@ export interface SyntheseAvis {
 /** Vue complete d'un avis pour l'administrateur (GET /api/admin/avis). */
 export interface AvisAdmin extends Avis {
   patientId: string;
-}
-
-/** Cles de traduction des statuts d'avis connus ; un statut inconnu est affiche tel quel. */
-const CLES_STATUT_AVIS: Partial<Record<string, ClesTraduction>> = {
-  PUBLIE: 'statut.avis.PUBLIE',
-  SIGNALE: 'statut.avis.SIGNALE',
-  MASQUE: 'statut.avis.MASQUE',
-};
-
-/** Libelle du statut dans la langue de `t` (francais par defaut). */
-export function libelleStatutAvis(statut: string | null | undefined, t: Traducteur = traduireFr): string {
-  if (!statut) return '';
-  const cle = CLES_STATUT_AVIS[statut];
-  return cle ? t(cle) : statut;
-}
-
-/**
- * « 4,5 / 5 (12 avis) » (virgule decimale en francais, point ailleurs), ou « Aucun avis pour le moment », dans la
- * langue de `t`.
- */
-export function formaterMoyenne(moyenne: number | null, nombre: number, t: Traducteur = traduireFr): string {
-  if (moyenne === null || nombre === 0) return t('avis.aucun');
-  return t('avis.moyenne', { moyenne: moyenne.toFixed(1).replace('.', t('format.decimale')), nombre });
 }
 
 /**

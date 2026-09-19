@@ -2,3 +2,4 @@
 export * from './ouvrir';
 export * from './connexion';
 export * from './reseau';
+export * from './dialogues';
