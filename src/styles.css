@@ -1,51 +1,123 @@
-:root { --vert:#0F7560; }
-body { font-family: system-ui, sans-serif; margin: 0; color:#10241F; }
-nav a { color:#fff; text-decoration:none; }
-nav a.actif { text-decoration:underline; text-underline-offset:4px; }
-button:disabled { opacity:.6; cursor:default; }
+/* =========================================================================
+   Charte Tabibi — reprise de l'app deployee (tabibi.doctor)
+   Vert emeraude #0E5F46 + or #D4A437, Plus Jakarta Sans (titres) + Inter (texte).
+   ========================================================================= */
+:root {
+  /* Marque */
+  --vert:        #0E5F46;   /* couleur principale */
+  --vert-fonce:  #0a4536;
+  --vert-clair:  #e7f3ef;
+  --vert-tres-clair:#f3faf7;
+  --or:          #D4A437;   /* accent dore */
+  --or-clair:    #fef3c7;
+  --or-texte:    #7D5E18;
 
-/* Champs et boutons des formulaires. */
-.champ { padding:10px; border:1px solid #ddd; border-radius:8px; font:inherit; box-sizing:border-box; }
-.bouton { padding:10px 16px; background:var(--vert); color:#fff; border:0; border-radius:8px; font:inherit; cursor:pointer; text-decoration:none; display:inline-block; }
-.bouton-secondaire { padding:10px 16px; background:#fff; color:var(--vert); border:1px solid var(--vert); border-radius:8px; font:inherit; cursor:pointer; text-decoration:none; display:inline-block; }
+  /* Neutres (fond slate clair) */
+  --bg:      #f8fafc;
+  --bg2:     #f1f5f9;
+  --surface: #ffffff;
+  --bord:    #e2e8f0;
+  --bord-fort:#cbd5e1;
+  --texte:   #10241F;
+  --texte-doux:#566b64;
 
-/* Notifications : une non lue ressort (fond teinte, sujet en vert), une lue est attenuee. */
-.notification-non-lue { background:#f3faf7; }
+  /* Formes */
+  --rayon:   14px;
+  --rayon-lg:20px;
+  --ombre:   0 1px 2px rgba(16,36,31,.04), 0 8px 24px rgba(16,36,31,.06);
+  --ombre-forte:0 10px 30px rgba(16,36,31,.12);
+
+  --police-titre:'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --police-texte:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--police-texte);
+  margin: 0;
+  color: var(--texte);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.55;
+}
+
+h1, h2, h3, h4 { font-family: var(--police-titre); color: var(--texte); line-height: 1.15; letter-spacing:-.01em; }
+h1 { font-weight: 800; }
+h2, h3 { font-weight: 700; }
+
+a { color: var(--vert); }
+
+/* Navigation (barre du haut) : liens clairs sur fond vert */
+nav a { color:#eaf4f0; text-decoration:none; font-weight:500; }
+nav a:hover { color:#fff; }
+nav a.actif { color:#fff; text-decoration:underline; text-underline-offset:5px; text-decoration-thickness:2px; }
+
+button:disabled { opacity:.55; cursor:default; }
+
+/* Champs de formulaire */
+.champ {
+  padding:11px 13px; border:1px solid var(--bord-fort); border-radius:10px;
+  font:inherit; color:var(--texte); background:var(--surface); box-sizing:border-box;
+  transition:border-color .15s, box-shadow .15s;
+}
+.champ:focus { outline:none; border-color:var(--vert); box-shadow:0 0 0 3px var(--vert-clair); }
+.champ::placeholder { color:#94a3b8; }
+
+/* Boutons */
+.bouton, .bouton-secondaire {
+  padding:11px 20px; border-radius:10px; font:inherit; font-weight:600; cursor:pointer;
+  text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  transition:transform .05s ease, filter .15s, background .15s;
+}
+.bouton { background:var(--vert); color:#fff; border:0; box-shadow:0 1px 2px rgba(14,95,70,.25); }
+.bouton:hover { filter:brightness(1.07); }
+.bouton:active { transform:translateY(1px); }
+.bouton-secondaire { background:var(--surface); color:var(--vert); border:1.5px solid var(--vert); }
+.bouton-secondaire:hover { background:var(--vert-clair); }
+
+/* Carte generique (surface blanche arrondie) */
+.carte {
+  background:var(--surface); border:1px solid var(--bord); border-radius:var(--rayon);
+  box-shadow:var(--ombre); padding:20px;
+}
+
+/* Notifications */
+.notification-non-lue { background:var(--vert-tres-clair); }
 .notification-non-lue strong { color:var(--vert); }
-.notification-lue { color:#566b64; }
+.notification-lue { color:var(--texte-doux); }
 
-/* Messagerie : une conversation avec des messages non lus ressort ; dans le fil, mes messages sont a droite
-   (fond vert clair), ceux de l'autre participant a gauche. */
-.conversation-non-lue { background:#f3faf7; }
+/* Messagerie */
+.conversation-non-lue { background:var(--vert-tres-clair); }
 .conversation-non-lue strong { color:var(--vert); }
 .message-moi, .message-autre { max-width:80%; padding:10px 12px; border-radius:12px; }
-.message-moi { justify-self:end; background:#e3f3ee; }
+.message-moi { justify-self:end; background:var(--vert-clair); }
 .message-autre { justify-self:start; background:#f1f3f2; }
 
-/* Avis : note de 1 a 5 par boutons radio stylises (le bouton natif est masque, l'etiquette fait office de bouton). */
-.note { position:relative; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--vert); border-radius:8px; color:var(--vert); font-weight:600; cursor:pointer; }
+/* Avis : note 1 a 5 */
+.note { position:relative; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--vert); border-radius:10px; color:var(--vert); font-weight:600; cursor:pointer; }
 .note input { position:absolute; opacity:0; width:0; height:0; margin:0; }
-.note:focus-within { outline:2px solid #10241F; outline-offset:2px; }
+.note:focus-within { outline:2px solid var(--texte); outline-offset:2px; }
 .note-choisie { background:var(--vert); color:#fff; }
 
-/* Impression (ordonnance) : seul le contenu de la page est imprime. */
+/* Badge dore (pilule) facultatif */
+.badge-or { display:inline-flex; align-items:center; gap:8px; background:var(--or-clair); color:var(--or-texte); font-weight:600; padding:7px 14px; border-radius:999px; font-size:.9rem; }
+.badge-or::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--or); }
+
+/* Impression (ordonnance) */
 @media print {
   nav, .sans-impression { display:none !important; }
-  body { color:#000; }
+  body { color:#000; background:#fff; }
   main { max-width:none !important; margin:0 !important; padding:0 !important; }
 }
 
-/* Selecteur de langue de la barre de navigation (Français / العربية / English) : trois boutons discrets, celui
-   de la langue courante souligne. `pousser-fin` remplace un margin-left : en arabe (dir=rtl), l'element doit
-   etre pousse vers la gauche, d'ou la propriete logique. */
+/* Selecteur de langue (pilules) */
 .pousser-fin { margin-inline-start: auto; }
-.selecteur-langue { display:inline-flex; gap:8px; align-items:center; }
-.selecteur-langue button { background:none; border:0; padding:2px 4px; color:#cfe7e0; font:inherit; font-size:.9rem; cursor:pointer; }
-.selecteur-langue button.actif { color:#fff; font-weight:600; text-decoration:underline; text-underline-offset:4px; }
+.selecteur-langue { display:inline-flex; gap:4px; align-items:center; background:rgba(255,255,255,.12); border-radius:999px; padding:3px; }
+.selecteur-langue button { background:none; border:0; padding:4px 10px; border-radius:999px; color:#cfe7e0; font:inherit; font-size:.85rem; cursor:pointer; font-weight:600; }
+.selecteur-langue button.actif { color:var(--vert); background:#fff; }
 
-/* Ecriture de droite a gauche (arabe) : le sens du document est pose sur <html> par TraductionService. Les
-   listes, les bulles de messagerie et les retraits sont symetriques ; les styles en ligne des composants
-   utilisent surtout flex et grid, qui suivent deja le sens du document. */
+/* Ecriture de droite a gauche (arabe) */
 [dir='rtl'] .message-moi { justify-self:start; }
 [dir='rtl'] .message-autre { justify-self:end; }
 [dir='rtl'] ol, [dir='rtl'] ul { padding-inline-start:0; padding-inline-end:0; }
