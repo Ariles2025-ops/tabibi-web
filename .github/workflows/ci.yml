@@ -8,7 +8,9 @@ permissions:
   contents: read
 
 jobs:
-  build-test:
+  # Un seul outil de test : Playwright. Le projet « logique » s'execute dans node (modules TypeScript purs), le
+  # projet « navigateur » dans Chromium, sur le build de production servi par server.ts face a l'API simulee.
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,26 +20,14 @@ jobs:
           cache: npm
       - name: Dependances (package-lock.json)
         run: npm ci
-      - name: Build
-        run: npx ng build
-      - name: Tests unitaires (Chrome headless, sans bac a sable)
-        run: npx ng test --watch=false --browsers=ChromeHeadlessCI
-
-  # Tests de bout en bout : build de production servi par server.ts (SSR) face a l'API simulee, Chromium de Playwright.
-  e2e:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - name: Dependances (package-lock.json)
-        run: npm ci
+      - name: Outillage de test (Playwright seul, aucune spec sous src/)
+        run: npm run verif:tests
       - name: Navigateur Playwright (Chromium et ses dependances systeme)
         run: npx playwright install --with-deps chromium
-      - name: Tests de bout en bout (ng build, API simulee + serveur SSR, Playwright)
-        run: npm run e2e
+      - name: Build
+        run: npm run build
+      - name: Tests (Playwright : projets logique et navigateur)
+        run: npx playwright test
       - name: Rapport Playwright (en cas d'echec)
         if: failure()
         uses: actions/upload-artifact@v4
@@ -48,11 +38,11 @@ jobs:
             test-results/
           retention-days: 7
 
-  # Image de production publiee sur GHCR : seulement sur la branche principale, une fois build-test vert.
+  # Image de production publiee sur GHCR : seulement sur la branche principale, une fois les tests verts.
   # Nom attendu par docker-compose.prod.yml de tabibi-backend : ghcr.io/<org>/tabibi-web (tags latest et sha-<commit>).
   image:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [build-test, e2e]
+    needs: [test]
     runs-on: ubuntu-latest
     permissions:
       contents: read

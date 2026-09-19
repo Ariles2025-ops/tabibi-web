@@ -2,9 +2,8 @@ node_modules/
 dist/
 .angular/
 out-tsc/
-coverage/
 .DS_Store
-# Tests de bout en bout (Playwright)
+# Tests (Playwright)
 test-results/
 playwright-report/
 blob-report/

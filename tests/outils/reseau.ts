@@ -1,10 +1,9 @@
 import { Page, Request, Route } from '@playwright/test';
 
 /**
- * Simulation et observation des appels a l'API depuis le navigateur. Remplace ce que les specs Karma faisaient
- * avec `HttpTestingController` (verifier l'URL, la methode et le corps envoyes) et avec des services factices
- * (repondre 200, 400, 403, 404 ou 409) : ici la vraie application appelle la vraie couche HTTP, et
- * `page.route` intercepte l'appel avant le reseau.
+ * Simulation et observation des appels a l'API depuis le navigateur : verifier l'URL, la methode et le corps
+ * envoyes, et repondre 200, 400, 403, 404 ou 409 sans service factice. La vraie application appelle la vraie
+ * couche HTTP, et `page.route` intercepte l'appel avant le reseau.
  */
 
 /** Reponse fabriquee : statut (200 par defaut), corps serialise en JSON, en-tetes supplementaires. */

@@ -7,9 +7,9 @@ import { createServer, IncomingMessage, Server, ServerResponse } from 'node:http
  *
  * Connexion simulee : Keycloak n'est pas la. Le serveur tient aussi lieu d'issuer OIDC (`/realms/tabibi`) : il
  * sert le document de decouverte et une page « Connexion simulée » a l'adresse d'autorisation, ce qui permet de
- * verifier qu'une page privee envoie bien le visiteur vers la page de connexion. Aucun jeton n'est delivre :
- * angular-oauth2-oidc n'accepte pas un jeton fabrique sans issuer valide, les parcours connectes ne sont donc pas
- * testes ici (ils le sont par les specs Karma avec des services factices).
+ * verifier qu'une page privee envoie bien le visiteur vers la page de connexion. Aucun jeton n'est delivre ici :
+ * les parcours connectes passent par `tests/outils/connexion.ts`, qui pose un jeton dans le stockage de session
+ * avant le chargement de la page (`AuthService.estConnecte()` ne lit rien d'autre).
  *
  * Lancement direct (node 22+, ou via Playwright qui transpile le TypeScript) : `node e2e/api-simulee.ts [port]`.
  */

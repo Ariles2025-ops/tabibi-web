@@ -669,3 +669,48 @@ decrite dans le README et le journal de tabibi-backend.
   `Accept-Language: ar-DZ` → `<html lang="ar" dir="rtl">` et `<title>البحث عن طبيب في الجزائر | Tabibi</title>`,
   `fr-FR` → `<html lang="fr" dir="ltr">`, `en-GB` → `<html lang="en" dir="ltr">`, en-tete absent → francais ;
   serveur arrete apres verification.
+
+## v0.24.0 — Playwright, outil de test unique
+- **Un seul outil de test dans le depot.** Les 59 fichiers `*.spec.ts` Karma / Jasmine (331 specs) sont remplaces par
+  296 tests Playwright ; plus aucun `*.spec.ts` sous `src/`.
+- `playwright.config.ts` porte **deux projets** : `logique` (`tests/logique`, aucun navigateur, 39 tests) et
+  `navigateur` (`tests/navigateur` et `tests/parcours`, Chromium, 257 tests dont les 19 parcours de bout en bout).
+  Playwright transpile le TypeScript et l'execute dans node : seuls les modules sans import Angular (publies en ESM)
+  entrent dans `logique` ; tout le reste est verifie dans l'application reelle, a l'ecran ou sur la requete envoyee.
+- `tests/outils/` : `ouvrir` (attend l'hydratation), `connecter` (**connexion simulee sans Keycloak** : le stockage
+  de session recoit `access_token`, `expires_at`, `granted_scopes` et `id_token_claims_obj` avant le chargement de la
+  page, et `GET /api/moi` est stubbe pour les roles), `stub` (reponses 200 / 400 / 403 / 404 / 409 avec les en-tetes
+  CORS qu'exige l'origine distincte de l'API simulee), `requetes` (journal methode / URL / parametres / corps /
+  en-tetes, en remplacement de `HttpTestingController`), `accepterConfirmations` et `refuserConfirmations`
+  (Playwright refuse les `confirm()` par defaut).
+- `e2e/` devient `tests/parcours/` ; l'API simulee et le global setup passent a `tests/`.
+- **Fonctions pures extraites** pour le projet `logique` (refactoring ; chaque service reexporte son module, aucun
+  import existant ne change) : `i18n/langues.ts`, `config/config.formats.ts` (dont `normaliserConfiguration`, ancien
+  `appliquer` du service), `auth/auth.config.ts` (import de type seulement, l'origine du site est passee en
+  parametre), `admin/admin.formats.ts`, `avis/avis.formats.ts`, `dawini/dawini.formats.ts`,
+  `messagerie/messagerie.formats.ts`, `moi/profil.formats.ts`, `secretaire/secretaire.formats.ts`,
+  `teleconsultation/teleconsultation.formats.ts`. Les modules `statut-*.ts` etaient deja purs.
+- Deux pieges documentes dans le README : le **cache de transfert** (les `GET` du rendu serveur ne repassent pas par
+  le reseau ; une page publique se teste en l'atteignant par un clic, donc en navigation cote client) et les
+  liaisons **`[name]`** calculees (posees en propriete et non en attribut : reperer le champ par son libelle).
+  Les minuteries (fil de discussion 30 s, compteur de notifications 60 s) sont avancees avec `page.clock`.
+- Retires : `karma.conf.js`, `src/test.ts`, `tsconfig.spec.json`, la cible `test` d'`angular.json` et les
+  devDependencies `karma*`, `jasmine-core`, `@types/jasmine`. `npm test` lance `playwright test` ; `npm run test:ui`
+  ouvre le mode interactif ; `npm run test:logique` et `npm run test:navigateur` ciblent un projet.
+  Le nom `karma` subsiste dans `package-lock.json` comme **dependance de pair optionnelle** de
+  `@angular-devkit/build-angular` (avec `karma-source-map-support`, sa dependance) : elle n'est pas declaree par ce
+  depot. Les entrees de versions anterieures de ce journal et du README citent Karma au passe : c'est l'historique.
+- `outils/verifier-tests.mjs` (`npm run verif:tests`) : echoue s'il reste un `*.spec.ts` sous `src/` ou une
+  dependance karma / jasmine dans `package.json`.
+- CI (`.github/workflows/ci.yml`) : **un seul job de test** (`npm ci`, `npm run verif:tests`,
+  `npx playwright install --with-deps chromium`, `npm run build`, `npx playwright test`, rapport HTML joint en cas
+  d'echec) ; le job `image` en depend. `.gitignore` et `.dockerignore` mis a jour (`coverage/` retire, `e2e/` devient
+  `tests/`).
+- Une seule assertion des anciennes specs n'a pas d'equivalent observable : le message « Indiquez une durée entre 5
+  et 120 minutes. » (disponibilites du medecin et espace secretaire). Les bornes du champ et les validateurs Angular
+  bloquent la soumission avant que le composant ne revalide ; la garantie fonctionnelle (aucun appel hors bornes) est
+  bien verifiee. `TeleconsultationService.parId` n'est appele par aucun ecran : sa spec disparait sans perte.
+- `package.json` 0.24.0 ; README : section « Tester » entierement reecrite (deux projets, aides, regle de
+  conversion, pieges, liste des fichiers de test).
+- Verifie : `npx ng build` sans erreur ; `CHROME_BIN=... npx playwright test` **296 passed** (logique 39,
+  navigateur 257) ; `npm run verif:tests` et `npm run verif:i18n` verts ; aucun `*.spec.ts` sous `src/`.

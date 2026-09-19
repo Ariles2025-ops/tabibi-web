@@ -44,53 +44,90 @@ Le build est le meme partout : l'application lit **`assets/config.json`** au dem
   avec les memes valeurs par defaut.
 
 ## Tester
-Tests unitaires Karma / Jasmine (`*.spec.ts` a cote de chaque fichier ; services avec `HttpTestingController`,
-composants avec un service factice) :
-```bash
-npx ng test                                                    # Chrome, mode veille
-npx ng test --watch=false --browsers=ChromeHeadless            # une passe, Chrome headless
-npx ng test --watch=false --browsers=ChromeHeadlessCI          # idem sans bac a sable (CI, conteneur, execution en root)
-CHROME_BIN=/chemin/vers/chrome npx ng test --watch=false --browsers=ChromeHeadlessCI   # Chrome hors du PATH
-```
-Le lanceur `ChromeHeadlessCI` (`ChromeHeadless` + `--no-sandbox --disable-gpu`) est defini dans `karma.conf.js`.
-`src/test.ts` (option `main` de la cible `test`) initialise l'environnement de test : donnees de locale fr / ar-DZ / en
-et langue d'interface fixee a `fr` pour toutes les specs (le navigateur d'integration continue annonce `en-US`).
-`npm run verif:i18n` verifie qu'aucun libelle francais litteral ne reste dans un template.
-L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, `ng build` et `ng test` headless
-(job `build-test`, sur chaque pull request et push) ; `package-lock.json` est versionne pour la reproductibilite.
-Le journal des versions est dans `docs/JOURNAL.md`.
+**Un seul outil de test dans tout le depot : Playwright.** Aucun `*.spec.ts` ne subsiste sous `src/` ; tous les
+tests vivent dans `tests/`, et `playwright.config.ts` porte deux projets.
 
-### Tests de bout en bout (Playwright)
-Parcours publics dans un vrai navigateur, sur le build de production servi par `server.ts` (rendu cote serveur) face a
-une **API simulee** (`tests/api-simulee.ts`, petit serveur http node : deux praticiens, creneaux, avis, reservation
-201, `/api/moi`, notifications, verification d'ordonnance — code valide `TBB-2026-0001`) qui tient aussi lieu
-d'**issuer OIDC simule** (document de decouverte et page « Connexion simulée » : aucun jeton n'est delivre, les
-parcours connectes ne sont pas testes ici mais par les specs Karma avec des services factices).
+| Projet | Dossier | Execution | Ce qu'on y met |
+| --- | --- | --- | --- |
+| `logique` | `tests/logique/` | node, aucun navigateur | modules TypeScript **sans import Angular** : dictionnaires i18n, fonctions pures de formatage, de validation et de bornes (`*.formats.ts`) |
+| `navigateur` | `tests/navigateur/` et `tests/parcours/` | Chromium | tout le reste : composants, appels HTTP, gardes de role, SEO, i18n rendue, parcours de bout en bout |
+
+Playwright transpile le TypeScript et l'execute dans node : un module qui importe `@angular/core` (ou tout paquet
+Angular, publie en ESM) ne s'y charge pas. Avant de mettre un module dans `logique`, verifier ses imports
+(`grep -n "^import" <fichier>`) ; sinon, il se teste dans le navigateur.
+
 ```bash
-npm run e2e                                   # ng build, puis Playwright : API simulee (4301) + serveur SSR (4300)
-CHROME_BIN=/chemin/vers/chrome npm run e2e    # Chrome deja installe (poste, conteneur) au lieu du Chromium de Playwright
-npx playwright install chromium               # sinon, une fois : le Chromium de Playwright (--with-deps en CI)
-npx playwright test tests/parcours/recherche.spec.ts     # un seul fichier (build deja fait)
-npx playwright show-report                    # rapport HTML (CI : joint au workflow en cas d'echec)
+npm run build && npm test          # le build de production, puis les deux projets
+npm test                           # les tests seuls (le build de dist/ doit exister)
+npm run test:logique               # les modules purs, en quelques secondes, sans navigateur
+npm run test:navigateur            # Chromium seulement
+npm run test:ui                    # mode interactif : rejouer un test pas a pas, inspecter le DOM
+npx playwright test tests/navigateur/avis.spec.ts   # un seul fichier
+npx playwright show-report         # rapport HTML (CI : joint au workflow en cas d'echec)
+npx playwright show-trace test-results/<dossier>/trace.zip   # trace d'un echec (DOM, reseau, console)
+CHROME_BIN=/chemin/vers/chrome npm test              # Chrome deja installe, au lieu du Chromium de Playwright
+npx playwright install chromium                      # sinon, une fois (--with-deps en CI)
+npm run verif:tests                # echoue s'il reste une spec sous src/ ou une dependance karma / jasmine
+npm run verif:i18n                 # aucun libelle francais litteral dans un template
 ```
-- `playwright.config.ts` : `webServer` = `node dist/tabibi-web/server/server.mjs` (`PORT=4300`,
-  `TABIBI_API_URL=http://localhost:4301`, `TABIBI_KEYCLOAK_ISSUER=http://localhost:4301/realms/tabibi`, pret sur
-  `/assets/config.json`) ; `globalSetup` (`tests/global-setup.ts`) reecrit `dist/tabibi-web/browser/assets/config.json`
-  vers la meme API (comme `docker/entrypoint.sh` au deploiement : sinon le navigateur viserait `localhost:8080` apres
-  l'hydratation) et demarre l'API simulee (arretee a la fin) ; navigateur `Desktop Chrome`, `fr-FR`,
-  `Africa/Algiers`, trace conservee en cas d'echec ; `executablePath` = `CHROME_BIN` si la variable est definie.
-- `tests/outils/` : `ouvrir(page, url)` attend l'hydratation (`app-root` sans attribut `ngh`) avant toute
-  interaction, sinon une saisie faite sur le HTML du serveur est perdue.
-- `tests/parcours/recherche.spec.ts` : praticiens affiches au chargement, filtre par specialite, recherche par nom, fiche
-  (creneaux disponibles, « 4,5 / 5 (2 avis) », dernier avis, liste d'attente, messagerie), fiche sans avis,
-  « Réserver » sans connexion → page de connexion de l'issuer simule (`client_id`, `redirect_uri`, `state`).
-- `tests/parcours/verification.spec.ts` : code valide (« Ordonnance authentique, émise le … (Émise). »), code inconnu
-  (« Code inconnu. »), lien `/verifier?code=…` rendu par le serveur.
-- `tests/parcours/navigation.spec.ts` : URL inconnue → 404 et « Page introuvable », praticien inconnu → 404, `robots.txt`,
-  `sitemap.xml`, titres / descriptions / canoniques rendus par le serveur, titre mis a jour en navigation cote client,
-  page privee `noindex` puis redirection vers la connexion, « Mon compte » → « Se connecter ».
-- CI : job `e2e` (`npx playwright install --with-deps chromium`, `npm run e2e`, rapport joint en cas d'echec) ; le job
-  `image` attend `build-test` et `e2e`. `test-results/` et `playwright-report/` sont ignores par git et Docker.
+
+### Comment un test navigateur est ecrit
+Le build de production est servi par `server.ts` (rendu cote serveur, port 4300) face a une **API simulee**
+(`tests/api-simulee.ts`, petit serveur http node : deux praticiens, creneaux, avis, reservation 201, `/api/moi`,
+notifications, verification d'ordonnance — code valide `TBB-2026-0001`) qui tient aussi lieu d'**issuer OIDC simule**
+(document de decouverte et page « Connexion simulée »). `playwright.config.ts` declare le `webServer` ;
+`globalSetup` (`tests/global-setup.ts`) reecrit `dist/tabibi-web/browser/assets/config.json` vers cette API (comme
+`docker/entrypoint.sh` au deploiement) et demarre l'API simulee, arretee a la fin.
+
+Les aides de `tests/outils/` remplacent ce que faisaient `TestBed` et `HttpTestingController` :
+- `ouvrir(page, url)` : navigue et attend l'hydratation (`app-root` sans attribut `ngh`) avant toute interaction,
+  sinon une saisie faite sur le HTML du serveur est perdue.
+- `connecter(page, { sujet, roles })` : **connexion simulee, sans Keycloak reel**. `AuthService.estConnecte()` se
+  reduit a `OAuthService.hasValidAccessToken()`, qui lit le stockage de session : un `access_token` quelconque et un
+  `expires_at` futur suffisent a rendre l'application connectee. Les roles ne viennent pas du jeton mais de
+  `GET /api/moi`, stubbe par l'aide. A appeler avant `ouvrir`.
+- `stub(page, motif, reponse)` : repond a la place de l'API (200, 400, 403, 404, 409...), avec les en-tetes CORS
+  qu'exige l'origine distincte de l'API simulee. Le dernier stub pose l'emporte : un test peut preciser un cas
+  particulier apres un stub general.
+- `requetes(page)` : journal des appels `/api/...` (methode, URL, parametres, corps, en-tetes) — c'est ainsi qu'on
+  verifie « le service appelle la bonne URL avec le bon corps ». `attendre(motif, methode)` patiente jusqu'a l'appel.
+- `accepterConfirmations(page)` / `refuserConfirmations(page)` : plusieurs actions destructrices passent par
+  `confirm()`, que Playwright refuse par defaut.
+
+Regle de conversion : chaque assertion doit avoir son equivalent **observable** a l'ecran ou dans la requete envoyee.
+« 409 → message X » devient : stub 409, clic, `await expect(page.getByText('...')).toBeVisible()` ; « le service POST
+`/api/avis` avec `{ note }` » devient : capture de la requete et `expect(corps.note).toBe(4)` ; « la garde renvoie a
+l'accueil » devient : connexion avec un role insuffisant, navigation, `await expect(page).toHaveURL('/')`.
+
+Deux pieges a connaitre :
+- **Cache de transfert.** Les appels `GET` faits pendant le rendu serveur sont transmis au navigateur, qui ne les
+  rejoue pas : sur une page publique, le premier chargement n'est pas interceptable. Pour tester une page publique
+  avec des donnees choisies, l'atteindre par un clic depuis une autre page (navigation cote client) — voir
+  `tests/navigateur/fiche-medecin.spec.ts`. Les pages privees ne sont pas concernees : le serveur les rend
+  « non connecte » et n'appelle donc pas l'API.
+- **Liaisons `[name]`.** Un nom calcule (`[name]="'nom-' + id"`) est pose en propriete, pas en attribut : le
+  selecteur CSS `input[name=...]` ne le trouve pas. Reperer le champ par son libelle (`getByLabel`).
+
+Les minuteries (relecture du fil toutes les 30 s, du compteur de notifications toutes les 60 s) sont avancees avec
+`page.clock`, sans attendre reellement.
+
+### Fichiers de test
+- `tests/logique/` : `i18n.spec.ts` (dictionnaires : memes cles, aucun libelle vide, memes parametres
+  d'interpolation ; `interpoler`, `traduireFr`, `langueDepuisCode`, `langueDepuisAcceptLanguage`),
+  `config.spec.ts` (`normaliserConfiguration`, `configurationDepuisEnvironnement`), `auth-config.spec.ts`,
+  `libelles.spec.ts` (statuts, moyennes, prix, accords, bornes, `estUuid`, `salleAccessible`), `profil.spec.ts`
+  (`nettoyerProfil`, `validerProfil`, `dateLocaleIso`, `libelleLangue`).
+- `tests/navigateur/` : un fichier par domaine (annuaire, fiche du praticien, rendez-vous, ordonnances, avis,
+  messagerie, notifications, teleconsultation, dawini, listes d'attente, moi, profil, medecin, secretaire, admin),
+  plus `barre-navigation`, `gardes`, `authentification`, `config`, `seo`, `i18n` et `page-introuvable`.
+- `tests/parcours/` : les parcours publics de bout en bout (recherche, verification d'ordonnance, navigation et SEO,
+  langues), qui ne stubbent rien et parlent a l'API simulee.
+
+L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, `npm run verif:tests`,
+`npx playwright install --with-deps chromium`, `npm run build` et `npx playwright test` ; le rapport HTML est joint
+au workflow en cas d'echec, et le job `image` attend ce job. `test-results/` et `playwright-report/` sont ignores par
+git et Docker. `package-lock.json` est versionne pour la reproductibilite. Le journal des versions est dans
+`docs/JOURNAL.md`.
 
 ## Deploiement
 
@@ -333,9 +370,9 @@ et aucun rechargement n'est necessaire pour changer.
   « Tout marquer comme lu » (`POST /api/notifications/toutes-lues`) ; état vide « Aucune notification pour le
   moment. ». Redirige vers la connexion si l'utilisateur n'est pas connecté.
 - `NotificationService` (`mesNotifications`, `nombreNonLues`, `marquerLue`, `toutMarquerLu`, flux `changements$`).
-- Infrastructure de test : Karma / Jasmine (`tsconfig.spec.json`, cible `test` d'`angular.json`, `karma.conf.js`
-  avec le lanceur `ChromeHeadlessCI`), specs du service, des deux composants et test de fumée d'`AppComponent` ;
-  workflow GitHub Actions.
+- Infrastructure de test de l'époque (Karma / Jasmine, `karma.conf.js`, cible `test` d'`angular.json`) : specs du
+  service, des deux composants et test de fumée d'`AppComponent` ; workflow GitHub Actions.
+  **Retirée en v0.24.0** : tous les tests sont passés à Playwright, voir la section « Tester ».
 
 ## v0.7.0 — Téléconsultation
 - `/teleconsultations` : téléconsultations du patient (`GET /api/teleconsultations/mes`, rôle PATIENT), les plus
