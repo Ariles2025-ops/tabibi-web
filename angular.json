@@ -24,12 +24,15 @@
               "scripts": true,
               "fonts": true,
               "styles": { "minify": true, "inlineCritical": false }
-            }
+            },
+            "server": "src/main.server.ts",
+            "ssr": { "entry": "server.ts" },
+            "prerender": false
           }
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
-          "options": { "port": 4200 }
+          "options": { "buildTarget": "tabibi-web:build", "port": 4200 }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",

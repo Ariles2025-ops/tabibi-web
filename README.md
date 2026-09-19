@@ -13,7 +13,8 @@ Front web Tabibi — **Angular 18** (composants standalone), connexion **Keycloa
 ## Lancer
 ```bash
 npm install
-npm start          # http://localhost:4200
+npm start                          # http://localhost:4200 (ng serve, rendu cote serveur compris)
+npm run build && npm run serve:ssr # http://localhost:4000 : le build de production servi par server.ts (SSR)
 # necessite l'API (tabibi-backend) + Keycloak (docker compose up) en marche
 ```
 
@@ -38,6 +39,9 @@ Le build est le meme partout : l'application lit **`assets/config.json`** au dem
   `npx ng build --base-href /tabibi/`.
 - Avec l'image Docker (section « Deploiement »), ce fichier est ecrit au demarrage du conteneur a partir des variables
   d'environnement `TABIBI_API_URL`, `TABIBI_KEYCLOAK_ISSUER` et `TABIBI_KEYCLOAK_CLIENT_ID`.
+- Cote serveur (rendu SSR, `server.ts`), le fichier n'est pas lu : `app.config.server.ts` fournit `CONFIGURATION_SERVEUR`
+  a partir des memes variables d'environnement (`configurationDepuisEnvironnement`, `DOMAINE` derive `api.` / `auth.`),
+  avec les memes valeurs par defaut.
 
 ## Tester
 Tests unitaires Karma / Jasmine (`*.spec.ts` a cote de chaque fichier ; services avec `HttpTestingController`,
@@ -56,42 +60,45 @@ Le journal des versions est dans `docs/JOURNAL.md`.
 ## Deploiement
 
 ### Image Docker (`Dockerfile`)
-Image multi-etapes : `node:20-alpine` construit le bundle (`npm ci`, `npm run build`, empreintes dans les noms de
-fichiers : `outputHashing: all`), puis `nginx:1.27-alpine` sert `dist/tabibi-web/browser` sur le **port 80**.
-La configuration n'est pas figee dans l'image : au demarrage du conteneur, `docker/entrypoint.sh` (POSIX sh)
-ecrit `assets/config.json` et genere la configuration nginx a partir de l'environnement, puis lance nginx au premier
-plan. Le meme build sert donc en recette et en production.
+Image multi-etapes : `node:20-alpine` construit les bundles navigateur et serveur (`npm ci`, `npm run build`,
+empreintes dans les noms de fichiers : `outputHashing: all`), puis `node:20-alpine` execute
+`node dist/tabibi-web/server/server.mjs` (express + moteur de rendu Angular, bundle autonome : pas de `node_modules`
+dans l'image) sur le **port 80**, sous l'utilisateur `node` (capacite `cap_net_bind_service` posee sur le binaire
+node ; Docker >= 20.10 ouvre de toute facon les ports < 1024 aux processus non root du conteneur).
+La configuration n'est pas figee dans l'image : au demarrage du conteneur, `docker/entrypoint.sh` (POSIX sh) ecrit
+`assets/config.json` pour le navigateur et exporte les memes variables pour le serveur de rendu (`process.env`), puis
+lance node au premier plan. Le meme build sert donc en recette et en production.
 
 | Variable | Defaut | Role |
 |---|---|---|
-| `TABIBI_API_URL` | `https://api.$DOMAINE` si `DOMAINE` est defini, sinon `http://localhost:8080` | origine de l'API (`apiUrl`) |
+| `TABIBI_API_URL` | `https://api.$DOMAINE` si `DOMAINE` est defini, sinon `http://localhost:8080` | origine de l'API (`apiUrl`), pour le navigateur et pour le rendu serveur |
 | `TABIBI_KEYCLOAK_ISSUER` | `https://auth.$DOMAINE/realms/tabibi` si `DOMAINE` est defini, sinon `http://localhost:8081/realms/tabibi` | issuer OIDC (`keycloakIssuer`) |
 | `TABIBI_KEYCLOAK_CLIENT_ID` | `tabibi-web` | client public OIDC (`keycloakClientId`) |
 | `DOMAINE` | (aucun) | domaine public, celui du `.env` de `docker-compose.prod.yml` (tabibi-backend) : en derive les deux URL ci-dessus, avec les hotes `api.` et `auth.` du Caddyfile |
+| `PORT` | `80` dans l'image (`4000` hors image) | port d'ecoute du serveur node |
+| `TABIBI_SSR_DELAI_MS` | `10000` | au-dela, la page est envoyee sans rendu serveur (voir « Rendu cote serveur ») |
 
 Les valeurs sont nettoyees (espaces, barre oblique finale) et echappees pour le JSON ; une valeur qui n'est pas une
 URL `http(s)://` est signalee dans le journal du conteneur (l'application ne joindrait alors ni l'API ni Keycloak).
 
-`nginx/default.conf.template` (gabarit, `envsubst` limite a `${TABIBI_CSP_CONNECT_SRC}` : les `$variables` nginx
-restent intactes) :
-- `try_files $uri $uri/ /index.html` : une route Angular rechargee (`/medecins/42`) renvoie `index.html` ;
-- cache : `no-store` sur `index.html` et `assets/config.json` (remplaces a chaque deploiement), un an et `immutable`
-  sur les bundles a empreinte (`main-XXXXXXXX.js`, `styles-XXXXXXXX.css`), une heure sur le reste de `assets/` ;
-- `gzip on` ; `server_tokens off` ;
+`server.ts` (express) :
+- fichiers du build (chemins avec extension) : `no-store` sur `index.csr.html` et `assets/config.json` (remplaces a
+  chaque deploiement), un an et `immutable` sur les bundles a empreinte (`main-XXXXXXXX.js`, `styles-XXXXXXXX.css`),
+  une heure sur le reste de `assets/` ; fichier introuvable → 404 (pas de page rendue pour un favicon absent) ;
+- toute autre URL : page rendue par Angular (`no-store`), ou page sans rendu (`index.csr.html`, l'application se rend
+  dans le navigateur comme avant) si le rendu echoue ou depasse `TABIBI_SSR_DELAI_MS` ;
 - en-tetes de securite sur toutes les reponses : `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
   `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`
   (la teleconsultation s'ouvre dans un autre onglet, sur Jitsi) et une `Content-Security-Policy` compatible Angular et
   Keycloak : `default-src 'self'; connect-src 'self' <origine de l'API> <origine de Keycloak>; frame-ancestors 'none';
   img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; object-src 'none';
-  form-action 'self'`. Les origines de `connect-src` sont calculees a l'execution a partir des variables ci-dessus.
-  Pour que `script-src 'self'` tienne, le build n'inline plus le CSS critique dans `index.html`
-  (`optimization.styles.inlineCritical: false`) : cette optimisation ajoutait un `onload` inline sur la feuille de style.
-- `HEALTHCHECK` : `wget` sur `/` toutes les 30 s.
-
-Utilisateur : le processus maitre de nginx reste root, pour ecouter sur le port 80 attendu par le reverse proxy
-(`reverse_proxy web:80` dans le Caddyfile de tabibi-backend) ; les processus de travail, qui servent les requetes,
-tournent sous l'utilisateur `nginx` (directive `user` de l'image officielle). La variante `nginx-unprivileged`
-ecoute sur 8080 et imposerait de modifier le Caddyfile ; ce choix est documente plutot que force.
+  form-action 'self'`, les origines etant calculees au demarrage a partir des variables ci-dessus. Pour que
+  `script-src 'self'` tienne, le CSS critique n'est inline ni au build (`optimization.styles.inlineCritical: false`)
+  ni au rendu (`inlineCriticalCss: false`) : cette optimisation ajoute un `onload` inline sur la feuille de style ;
+  l'etat de transfert (`<script id="ng-state" type="application/json">`) n'est pas un script executable ;
+- `X-Powered-By` retire, `trust proxy` (schema et adresse du client lus dans `X-Forwarded-*` poses par Caddy) ;
+  pas de compression dans node : Caddy compresse (`encode gzip`) ;
+- `HEALTHCHECK` : `wget` sur `/assets/config.json` toutes les 30 s (fichier statique : ni rendu ni appel a l'API).
 
 ```bash
 docker build -t tabibi-web .
@@ -100,12 +107,15 @@ docker run --rm -p 8088:80 -e TABIBI_API_URL=http://localhost:8080 \
   -e TABIBI_KEYCLOAK_ISSUER=http://localhost:8081/realms/tabibi tabibi-web
 curl -sI http://localhost:8088/ | grep -i "content-security-policy\|cache-control"
 curl -s http://localhost:8088/assets/config.json
+curl -s http://localhost:8088/ | grep -o "Trouver un praticien"     # page rendue par le serveur
 ```
 Le realm de developpement n'autorise que l'origine `http://localhost:4200` (redirections du client `tabibi-web`,
 `TABIBI_CORS_ORIGINES` de l'API) : pour se connecter depuis le conteneur sans toucher au realm, publier sur ce port
 (`-p 4200:80`, `ng serve` arrete), sinon ajouter `http://localhost:8088/*` au client et `http://localhost:8088` aux
-origines CORS de l'API. Le contexte de construction est reduit par `.dockerignore` (`node_modules`, `dist`,
-`.angular`, `coverage`, `.git`, documentation).
+origines CORS de l'API. Depuis le conteneur, `localhost:8080` designe le conteneur lui-meme : pour le rendu serveur
+en local, donner l'adresse de l'hote (`http://host.docker.internal:8080` sur Docker Desktop, ou l'IP de la machine),
+la meme pour le navigateur puisque `TABIBI_API_URL` sert aux deux. Le contexte de construction est reduit par
+`.dockerignore` (`node_modules`, `dist`, `.angular`, `coverage`, `.git`, documentation).
 
 ### Publication sur GHCR (CI)
 L'image officielle est publiee sur GitHub Container Registry par la CI (job `image` de `.github/workflows/ci.yml`) a
@@ -125,9 +135,47 @@ trois variables `TABIBI_*` explicites ; sans rien, l'image retombe sur les valeu
 Le client `tabibi-web` du realm de production (genere par `infra/keycloak/realm-production.py`) autorise deja
 `https://DOMAINE/*`.
 
+## Rendu cote serveur (SSR)
+Pourquoi : les pages publiques (annuaire `/`, fiches `/medecins/:id`, verification `/verifier`) sont rendues en HTML
+complet par le serveur, donc lisibles par les moteurs de recherche et affichees avant l'execution du JavaScript ;
+sans cela, le HTML ne contenait que `<app-root></app-root>`.
+
+Comment (Angular 18, `@angular/ssr`, `@angular/platform-server`, express) :
+- `src/main.server.ts` et `src/app/app.config.server.ts` (`provideServerRendering()` + `CONFIGURATION_SERVEUR` lue dans
+  `process.env`) ; `server.ts` (voir « Deploiement ») ; `angular.json` : `server`, `ssr.entry`, `prerender: false`
+  (un prerendu a la construction appellerait l'API pendant `docker build` et figerait un annuaire vide) ;
+  `ng build` produit `dist/tabibi-web/browser/` (dont `index.csr.html`, page sans rendu) et
+  `dist/tabibi-web/server/server.mjs` ; `npm run serve:ssr` le lance (port `PORT`, 4000 par defaut) ; `ng serve` rend
+  aussi cote serveur en developpement.
+- `provideClientHydration()` dans `app.config.ts` : le navigateur reutilise le DOM rendu au lieu de le reconstruire,
+  et les reponses `GET` obtenues pendant le rendu (annuaire, fiche, creneaux, avis) sont transmises dans
+  `<script id="ng-state">` : le navigateur ne les redemande pas (cache de transfert HTTP). `withFetch()` sur
+  `HttpClient`.
+- Garde-fous : `AuthService` ne configure pas l'OIDC hors du navigateur (`isPlatformBrowser`), `estConnecte()` y est
+  toujours faux, `seConnecter()` / `seDeconnecter()` sans effet ; les pages reservees rendent donc leur etat
+  « Se connecter » ou « Redirection vers la page de connexion… » sans erreur, et les gardes de role
+  (`/medecin`, `/admin`, ...) laissent la sortie vide, le navigateur rejouant la redirection apres l'hydratation ;
+  `ConfigService` prend `CONFIGURATION_SERVEUR` au lieu de lire `assets/config.json` (chemin relatif sans sens hors du
+  navigateur) ; la cloche de notifications ne lance pas sa minuterie cote serveur (elle empecherait le rendu de se
+  terminer) ; l'espace pharmacie tolere l'absence de `localStorage`.
+- Verifie : `ng build` puis `PORT=4100 node dist/tabibi-web/server/server.mjs` ; `curl -s http://localhost:4100/`
+  contient « Trouver un praticien », le formulaire et, face a une API, les praticiens avec leurs liens ; hydratation
+  controlee dans Chromium headless (aucune erreur `NG05xx`, aucune violation CSP, aucune requete API du navigateur
+  sur une page rendue, navigation cote client sans rechargement).
+
+Limites :
+- Angular 18 n'a pas de mode de rendu par route : toutes les URL passent par le serveur, y compris les pages privees,
+  qui rendent leur etat « non connecte » (sans donnee) ; une URL inconnue rend la coquille en 200 (pas de route `**`).
+- Le serveur appelle l'API avec la meme URL publique que le navigateur (`TABIBI_API_URL`) : c'est ce qui permet le
+  cache de transfert (cle = URL). L'hote `api.DOMAINE` doit donc etre joignable depuis le conteneur ; le rendu attend
+  l'API, avec le secours `TABIBI_SSR_DELAI_MS`.
+- Les dates sont rendues avec le fuseau du serveur (UTC dans l'image) puis re-rendues par le navigateur dans le sien :
+  l'hydratation ne compare pas le texte, aucune erreur, mais un court changement d'affichage est possible.
+- Pas encore de `<title>` ni de `<meta name="description">` par page (fiche du praticien) : a faire pour le SEO.
+
 ## Prochaines etapes
 - Nom du patient dans l'agenda et sur l'ordonnance (l'API n'expose que l'identifiant).
-- SSR (Angular Universal) pour les pages publiques / SEO.
+- SEO : titre et description par page (fiche du praticien), route `**` (404) et `robots.txt`.
 
 ## v0.2.0 — Annuaire (web)
 - Ecran d'accueil public : recherche de praticiens (specialite, wilaya, nom) via `GET /api/medecins`.
@@ -400,3 +448,11 @@ Le client `tabibi-web` du realm de production (genere par `infra/keycloak/realm-
   `Dockerfile` et publie `ghcr.io/<org>/tabibi-web` avec les tags `latest` et `sha-<commit>` (`docker/login-action`
   avec `GITHUB_TOKEN`, `docker/metadata-action`, `docker/build-push-action`, cache GitHub Actions).
 - `.github/dependabot.yml` (npm, GitHub Actions, Docker, hebdomadaire) ; badge CI dans ce README.
+
+## v0.19.0 — Rendu cote serveur (SSR)
+- `@angular/ssr` 18, `server.ts` (express : fichiers statiques, rendu Angular avec secours sans rendu, en-tetes de
+  securite et CSP), `main.server.ts`, `app.config.server.ts` ; `provideClientHydration()` et `withFetch()` ;
+  garde-fous serveur (`AuthService`, `ConfigService` avec `CONFIGURATION_SERVEUR`, cloche, espace pharmacie) ;
+  image Docker `node:20-alpine` executant `server.mjs` sur le port 80 sous l'utilisateur `node` (nginx retire).
+- `ng serve` : `buildTarget` manquant dans `angular.json` (npm start echouait), corrige.
+- Voir les sections « Rendu cote serveur (SSR) » et « Deploiement ».

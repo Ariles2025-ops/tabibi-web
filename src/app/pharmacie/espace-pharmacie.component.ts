@@ -211,10 +211,13 @@ export class EspacePharmacieComponent implements OnInit {
   }
 }
 
-/** Nom memorise, ou chaine vide si le stockage est indisponible (navigation privee, stockage bloque). */
+/**
+ * Nom memorise, ou chaine vide si le stockage est indisponible (navigation privee, stockage bloque, rendu cote
+ * serveur ou localStorage n'existe pas).
+ */
 function lireNomMemorise(): string {
   try {
-    return localStorage.getItem(CLE_NOM_PHARMACIE) ?? '';
+    return typeof localStorage === 'undefined' ? '' : (localStorage.getItem(CLE_NOM_PHARMACIE) ?? '');
   } catch {
     return '';
   }
@@ -223,7 +226,7 @@ function lireNomMemorise(): string {
 /** Memorise le nom pour la prochaine visite ; un stockage indisponible n'empeche rien. */
 function memoriserNom(nom: string): void {
   try {
-    localStorage.setItem(CLE_NOM_PHARMACIE, nom);
+    if (typeof localStorage !== 'undefined') localStorage.setItem(CLE_NOM_PHARMACIE, nom);
   } catch {
     // Stockage indisponible : le nom sera simplement a ressaisir.
   }

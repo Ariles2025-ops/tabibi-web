@@ -1,8 +1,9 @@
 import { APP_INITIALIZER, ApplicationConfig, LOCALE_ID, inject, provideZoneChangeDetection } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
+import { provideClientHydration } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { routes } from './app.routes';
 import { authInterceptor } from './auth/auth.interceptor';
@@ -25,8 +26,13 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideOAuthClient(),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    // fetch plutot que XMLHttpRequest : recommande des que l'application est aussi rendue cote serveur.
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     { provide: APP_INITIALIZER, useFactory: chargerConfiguration, multi: true },
     { provide: LOCALE_ID, useValue: 'fr' },
+    // Hydratation du HTML rendu par le serveur (SSR) : le DOM est reutilise au lieu d'etre reconstruit, et les
+    // reponses GET obtenues pendant le rendu sont transmises au navigateur (cache de transfert HTTP), qui ne les
+    // redemande pas. Sans SSR (ng serve, tests), sans effet.
+    provideClientHydration(),
   ],
 };

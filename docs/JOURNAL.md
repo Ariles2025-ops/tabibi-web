@@ -402,3 +402,70 @@ decrite dans le README et le journal de tabibi-backend.
   `WEB_TAG=sha-xxxxxxx` dans le `.env` du backend), mention du job dans « Tester ».
 - Tests : inchanges (264 specs) ; les fichiers YAML ont ete valides (chargement PyYAML), le workflow n'a pas ete
   execute ici.
+
+## v0.19.0 — Rendu cote serveur (SSR) des pages publiques
+- Pourquoi : le HTML servi ne contenait que `<app-root></app-root>` ; l'annuaire et les fiches des praticiens
+  n'etaient pas lisibles par les moteurs de recherche. `ng add @angular/ssr@18` (`@angular/ssr` 18.2.21,
+  `@angular/platform-server` 18.2.14, `express` 4, `@types/express`, `@types/node`), puis adaptation.
+- `angular.json` : `server: src/main.server.ts`, `ssr.entry: server.ts`, `prerender: false` (le schematic met `true` :
+  un prerendu a la construction appellerait l'API pendant `docker build`, figerait un annuaire vide dans
+  `browser/index.html` et prerendrait aussi les pages privees) ; `serve.buildTarget` ajoute (`ng serve` echouait deja
+  avant : « must have required property 'buildTarget' ») ; `tsconfig.app.json` : `types: ["node"]`, fichiers
+  `main.server.ts` et `server.ts`. `package.json` : script `serve:ssr`.
+- `src/main.server.ts` (`bootstrapApplication(AppComponent, config, context)`), `src/app/app.config.server.ts`
+  (`provideServerRendering()` + `CONFIGURATION_SERVEUR` = `configurationDepuisEnvironnement(process.env)`).
+- `app.config.ts` : `provideClientHydration()` (hydratation + cache de transfert HTTP des GET rendus, transmis dans
+  `<script id="ng-state" type="application/json">`, non executable donc compatible CSP) ; `withFetch()`.
+- `ConfigService` : jeton `CONFIGURATION_SERVEUR` (optionnel) : s'il est fourni, `charger()` l'applique sans HTTP
+  (`appliquer()` factorise le nettoyage) ; `configurationDepuisEnvironnement(env)` lit `TABIBI_API_URL`,
+  `TABIBI_KEYCLOAK_ISSUER`, `TABIBI_KEYCLOAK_CLIENT_ID`, sinon derive `https://api.DOMAINE` et
+  `https://auth.DOMAINE/realms/tabibi` de `DOMAINE`, sinon laisse les valeurs par defaut s'appliquer.
+- `AuthService` : `navigateur = isPlatformBrowser(PLATFORM_ID)` ; cote serveur `initialiser()` resout sans configurer
+  l'OIDC (`creerAuthConfig` lit `window.location.origin`, `loadDiscoveryDocumentAndTryLogin` appellerait Keycloak et
+  `sessionStorage`), `estConnecte()` est faux, `seConnecter()` (`initCodeFlow` → `location.href`) et
+  `seDeconnecter()` sont sans effet. Consequence verifiee : `/moi` rend « Mon compte / Se connecter »,
+  `/mes-rendez-vous`, `/notifications`, `/messagerie/:id` rendent « Redirection vers la page de connexion… », les
+  gardes (`/medecin/agenda`, `/admin`) renvoient `false` et laissent la sortie vide, sans erreur serveur ; le
+  navigateur rejoue tout apres l'hydratation. `RoleService` n'a rien a proteger : il passe par `auth.pret()` /
+  `estConnecte()`. `OAuthService` lui-meme se construit sans `window` (`MemoryStorage`, verifie dans la lib 17.0.2).
+- `ClocheNotificationsComponent` : `ngOnInit` sans effet hors navigateur (une minuterie `timer(0, 60 s)` garderait
+  la zone instable et le rendu n'aboutirait jamais ; la cloche n'est de toute facon rendue que connecte). La relecture
+  de `ConversationComponent` n'est lancee qu'une fois connecte, donc jamais cote serveur. `EspacePharmacieComponent` :
+  `typeof localStorage` verifie avant lecture / ecriture (le try/catch suffisait, la verification est explicite).
+- Gabarits audites pour l'hydratation (le navigateur reconstruit un HTML invalide, ce que l'hydratation ne tolere
+  pas) : aucun bloc dans `<p>`, aucun `<table>` sans `<tbody>`, aucun `<a>` dans `<a>` (script sur les 40 gabarits).
+- `server.ts` : `entetesSecurite(config)` (nosniff, DENY, Referrer-Policy, Permissions-Policy `camera=(),
+  microphone=(), geolocation=()`, CSP avec `connect-src 'self'` + origines de l'API et de Keycloak via `new URL().origin`),
+  posees par un middleware sur toutes les reponses ; `x-powered-by` desactive ; `trust proxy` ; `express.static` sur
+  `*.*` avec `Cache-Control` par fichier (`no-store` pour `.html` et `assets/config.json`, `max-age=3600` pour
+  `assets/`, un an `immutable` pour les bundles a empreinte), 404 texte si le fichier n'existe pas ; `**` :
+  `CommonEngine.render` avec `inlineCriticalCss: false` (sinon le moteur reinjecte un `onload` inline bloque par
+  `script-src 'self'`), `Cache-Control: no-store`, secours `index.csr.html` en cas d'erreur ou apres
+  `TABIBI_SSR_DELAI_MS` (10 s ; verifie a 0,8 s face a une API repondant en 3 s : page sans rendu en 0,8 s, rendu
+  tardif ignore), `PORT` (4000). Le bundle `server.mjs` est autonome (seuls `fs`, `path`, `url` sont importes).
+- Dockerfile : etape `node:20-alpine` (npm ci, `ng build` avec `server.ts`), puis `node:20-alpine` executant
+  `node dist/tabibi-web/server/server.mjs` (`ENV PORT=80 NODE_ENV=production`), utilisateur `node`
+  (`setcap cap_net_bind_service=+ep /usr/local/bin/node`, libcap installe puis retire), `HEALTHCHECK` sur
+  `/assets/config.json` (fichier statique : ni rendu ni appel a l'API toutes les 30 s), `ENTRYPOINT /app/entrypoint.sh`.
+  nginx et `nginx/default.conf.template` retires : un seul processus sert les fichiers et rend les pages, la CSP
+  vient d'express. `docker/entrypoint.sh` : memes calculs qu'avant (variables, `DOMAINE`, nettoyage, echappement),
+  ecrit `dist/tabibi-web/browser/assets/config.json`, exporte `TABIBI_*` pour le serveur, `exec node`. Verifie dans
+  un bac a sable (chemins remplaces) avec le vrai bundle : `config.json` ecrit et servi, CSP calculee, annuaire rendu.
+- Verification de bout en bout (pas de daemon Docker) : `ng build` → `dist/tabibi-web/server/server.mjs` ;
+  `PORT=4100 node dist/tabibi-web/server/server.mjs` ; `curl /` : « Trouver un praticien », formulaire,
+  `ng-server-context="ssr"`, `ng-state` ; face a une API factice (`GET /api/medecins`, `/medecins/{id}`,
+  `/creneaux`, `/avis`) : praticiens rendus avec leurs liens `/medecins/m1`, fiche avec creneaux et avis ;
+  `/moi`, `/verifier`, `/mes-rendez-vous`, `/medecin/agenda`, `/admin`, `/messagerie/x1`, `/notifications` : 200
+  sans erreur serveur ; en-tetes et caches controles ; Chromium headless (puppeteer-core) sur `/`, `/medecins/m1`,
+  `/moi`, `/verifier` : aucune erreur `NG05xx`, aucune violation CSP, `ngh` retires apres hydratation, aucune
+  requete API du navigateur sur une page rendue (cache de transfert), clic vers une fiche sans rechargement.
+  `/annuaire` n'existe pas (l'annuaire est `/`) : une URL inconnue rend la coquille en 200 avec `NG04002` dans le
+  journal, comme dans le navigateur (pas de route `**`).
+- README : « Lancer » (`serve:ssr`), « Configuration » (serveur), « Deploiement » reecrit (image node, variables
+  `PORT` et `TABIBI_SSR_DELAI_MS`, `server.ts`, note `host.docker.internal` pour le rendu serveur en local),
+  section « Rendu cote serveur (SSR) » (pourquoi, comment, verification, limites), « Prochaines etapes » (titre et
+  description par page, route `**`, `robots.txt`).
+- Tests (7 specs ajoutees, 271 au total) : `ConfigService` avec `CONFIGURATION_SERVEUR` (aucune requete HTTP,
+  nettoyage, defaut du client), `configurationDepuisEnvironnement` (variables explicites, derivation de `DOMAINE`,
+  rien), `AuthService` (navigateur : configuration OIDC, discovery, `initCodeFlow` ; serveur : rien, jamais connecte),
+  cloche cote serveur (ni lecture ni minuterie).

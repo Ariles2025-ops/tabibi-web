@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, InjectionToken, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
@@ -23,14 +23,23 @@ export const CONFIGURATION_PAR_DEFAUT: ConfigurationApplication = {
 };
 
 /**
+ * Configuration fournie par le serveur de rendu (SSR) a la place de `assets/config.json` : `app.config.server.ts`
+ * la lit dans les variables d'environnement du processus node (`configurationDepuisEnvironnement`). Absente dans
+ * le navigateur, ou le fichier est charge par HTTP.
+ */
+export const CONFIGURATION_SERVEUR = new InjectionToken<Partial<ConfigurationApplication>>('CONFIGURATION_SERVEUR');
+
+/**
  * Configuration chargee a l'execution, avant le demarrage de l'application (APP_INITIALIZER dans app.config.ts) :
  * le meme build sert en dev, en recette et en production, seul `assets/config.json` change. Si le fichier est
  * absent ou illisible, les valeurs localhost s'appliquent avec un avertissement dans la console ; un champ
- * manquant ou vide est complete par sa valeur par defaut.
+ * manquant ou vide est complete par sa valeur par defaut. Cote serveur (SSR), `CONFIGURATION_SERVEUR` remplace
+ * le fichier : un chemin relatif n'aurait pas de sens hors du navigateur.
  */
 @Injectable({ providedIn: 'root' })
 export class ConfigService {
   private http = inject(HttpClient);
+  private serveur = inject(CONFIGURATION_SERVEUR, { optional: true });
   private configuration: ConfigurationApplication = { ...CONFIGURATION_PAR_DEFAUT };
   private chargement: Promise<void> | null = null;
 
@@ -49,21 +58,40 @@ export class ConfigService {
   /** Charge le fichier une seule fois (les appels suivants renvoient la meme promesse) ; ne rejette jamais. */
   charger(): Promise<void> {
     if (!this.chargement) {
-      this.chargement = firstValueFrom(this.http.get<Partial<ConfigurationApplication>>(CHEMIN_CONFIGURATION))
-        .then((lue) => {
-          this.configuration = {
-            apiUrl: sansBarreFinale(valeur(lue?.apiUrl, CONFIGURATION_PAR_DEFAUT.apiUrl)),
-            keycloakIssuer: sansBarreFinale(valeur(lue?.keycloakIssuer, CONFIGURATION_PAR_DEFAUT.keycloakIssuer)),
-            keycloakClientId: valeur(lue?.keycloakClientId, CONFIGURATION_PAR_DEFAUT.keycloakClientId),
-          };
-        })
-        .catch((e) => {
-          console.warn(`Configuration ${CHEMIN_CONFIGURATION} absente ou illisible : valeurs localhost par defaut.`, e);
-          this.configuration = { ...CONFIGURATION_PAR_DEFAUT };
-        });
+      this.chargement = this.serveur
+        ? Promise.resolve(this.appliquer(this.serveur))
+        : firstValueFrom(this.http.get<Partial<ConfigurationApplication>>(CHEMIN_CONFIGURATION))
+            .then((lue) => this.appliquer(lue))
+            .catch((e) => {
+              console.warn(`Configuration ${CHEMIN_CONFIGURATION} absente ou illisible : valeurs localhost par defaut.`, e);
+              this.configuration = { ...CONFIGURATION_PAR_DEFAUT };
+            });
     }
     return this.chargement;
   }
+
+  private appliquer(lue: Partial<ConfigurationApplication> | null | undefined): void {
+    this.configuration = {
+      apiUrl: sansBarreFinale(valeur(lue?.apiUrl, CONFIGURATION_PAR_DEFAUT.apiUrl)),
+      keycloakIssuer: sansBarreFinale(valeur(lue?.keycloakIssuer, CONFIGURATION_PAR_DEFAUT.keycloakIssuer)),
+      keycloakClientId: valeur(lue?.keycloakClientId, CONFIGURATION_PAR_DEFAUT.keycloakClientId),
+    };
+  }
+}
+
+/**
+ * Configuration lue dans les variables d'environnement du serveur de rendu : les memes que celles de l'image Docker
+ * (`TABIBI_API_URL`, `TABIBI_KEYCLOAK_ISSUER`, `TABIBI_KEYCLOAK_CLIENT_ID`) ; sans elles, `DOMAINE` (le `.env` de
+ * docker-compose.prod.yml) donne `https://api.DOMAINE` et `https://auth.DOMAINE/realms/tabibi` ; sinon un champ
+ * absent est complete par sa valeur par defaut a l'application (`charger()`).
+ */
+export function configurationDepuisEnvironnement(env: Record<string, string | undefined>): Partial<ConfigurationApplication> {
+  const domaine = env['DOMAINE']?.trim();
+  return {
+    apiUrl: env['TABIBI_API_URL'] || (domaine ? `https://api.${domaine}` : undefined),
+    keycloakIssuer: env['TABIBI_KEYCLOAK_ISSUER'] || (domaine ? `https://auth.${domaine}/realms/tabibi` : undefined),
+    keycloakClientId: env['TABIBI_KEYCLOAK_CLIENT_ID'],
+  };
 }
 
 /** La valeur lue si c'est une chaine non vide (espaces retires), sinon la valeur par defaut. */

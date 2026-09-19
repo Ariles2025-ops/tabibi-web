@@ -1,16 +1,15 @@
 #!/bin/sh
-# Point d'entree de l'image tabibi-web (POSIX sh, busybox) :
-#   1. ecrit /usr/share/nginx/html/assets/config.json (lu par ConfigService au demarrage de l'application) a partir
-#      de TABIBI_API_URL, TABIBI_KEYCLOAK_ISSUER et TABIBI_KEYCLOAK_CLIENT_ID ;
-#   2. genere /etc/nginx/conf.d/default.conf depuis le gabarit nginx (envsubst limite a ${TABIBI_CSP_CONNECT_SRC}) ;
-#   3. lance nginx au premier plan.
-# Sans variable : valeurs derivees de DOMAINE si docker-compose.prod.yml (tabibi-backend) le transmet
-# (https://api.DOMAINE et https://auth.DOMAINE/realms/tabibi, comme le Caddyfile), sinon celles du poste de dev.
+# Point d'entree de l'image tabibi-web (POSIX sh, busybox, utilisateur node) :
+#   1. calcule la configuration (API, Keycloak) : TABIBI_API_URL, TABIBI_KEYCLOAK_ISSUER et TABIBI_KEYCLOAK_CLIENT_ID
+#      si elles sont fournies, sinon derivees de DOMAINE (docker-compose.prod.yml de tabibi-backend : https://api.DOMAINE
+#      et https://auth.DOMAINE/realms/tabibi, comme le Caddyfile), sinon celles du poste de developpement ;
+#   2. ecrit dist/tabibi-web/browser/assets/config.json, lu par le navigateur au demarrage (ConfigService) ;
+#   3. exporte les memes variables pour le serveur de rendu (server.ts les lit dans process.env : configuration cote
+#      serveur et en-tetes de securite), puis lance node au premier plan.
 set -eu
 
-RACINE_WEB=/usr/share/nginx/html
-GABARIT_NGINX=/etc/nginx/tabibi/default.conf.template
-CONF_NGINX=/etc/nginx/conf.d/default.conf
+RACINE_WEB=/app/dist/tabibi-web/browser
+SERVEUR=/app/dist/tabibi-web/server/server.mjs
 
 if [ -n "${DOMAINE:-}" ]; then
   api_defaut="https://api.${DOMAINE}"
@@ -29,7 +28,7 @@ api_url=$(nettoyer "${TABIBI_API_URL:-$api_defaut}")
 keycloak_issuer=$(nettoyer "${TABIBI_KEYCLOAK_ISSUER:-$issuer_defaut}")
 keycloak_client_id=$(printf '%s' "${TABIBI_KEYCLOAK_CLIENT_ID:-tabibi-web}" | tr -d '\r\n')
 
-# Origine (schema://hote[:port]) d'une URL, pour la directive connect-src de la CSP ; vide si ce n'est pas une URL.
+# Origine (schema://hote[:port]) d'une URL ; vide si ce n'est pas une URL http(s).
 origine() {
   printf '%s' "$1" | sed -n -E 's#^(https?://[^/[:space:]]+).*$#\1#p'
 }
@@ -54,10 +53,6 @@ cat > "$RACINE_WEB/assets/config.json" <<EOF
 }
 EOF
 
-# connect-src de la CSP : la page elle-meme, l'API et Keycloak (discovery, jetons). Les doublons sont sans effet.
-TABIBI_CSP_CONNECT_SRC="'self' $(origine "$api_url") $(origine "$keycloak_issuer")"
-export TABIBI_CSP_CONNECT_SRC
-envsubst '${TABIBI_CSP_CONNECT_SRC}' < "$GABARIT_NGINX" > "$CONF_NGINX"
-
-echo "tabibi-web : API $api_url, Keycloak $keycloak_issuer (client $keycloak_client_id)"
-exec nginx -g 'daemon off;'
+export TABIBI_API_URL="$api_url" TABIBI_KEYCLOAK_ISSUER="$keycloak_issuer" TABIBI_KEYCLOAK_CLIENT_ID="$keycloak_client_id"
+echo "tabibi-web : API $api_url, Keycloak $keycloak_issuer (client $keycloak_client_id), port ${PORT:-4000}"
+exec node "$SERVEUR"

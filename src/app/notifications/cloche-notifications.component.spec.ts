@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { PLATFORM_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { ClocheNotificationsComponent } from './cloche-notifications.component';
@@ -104,6 +105,27 @@ describe('ClocheNotificationsComponent', () => {
     tick(60_000);
     fixture.detectChanges();
     expect(lien().textContent?.trim()).toBe('Notifications (3)');
+
+    fixture.destroy();
+  }));
+
+  it('cote serveur (SSR), ne lance ni lecture ni minuterie : le rendu peut se terminer', fakeAsync(() => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [ClocheNotificationsComponent],
+      providers: [
+        { provide: NotificationService, useValue: service },
+        { provide: PLATFORM_ID, useValue: 'server' },
+        provideRouter([{ path: 'notifications', children: [] }]),
+      ],
+    });
+    fixture = TestBed.createComponent(ClocheNotificationsComponent);
+    fixture.detectChanges();
+    tick(120_000);
+    fixture.detectChanges();
+
+    expect(service.nombreNonLues).not.toHaveBeenCalled();
+    expect(lien().textContent?.trim()).toBe('Notifications');
 
     fixture.destroy();
   }));

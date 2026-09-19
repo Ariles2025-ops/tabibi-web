@@ -1,7 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { CHEMIN_CONFIGURATION, CONFIGURATION_PAR_DEFAUT, ConfigService } from './config.service';
+import {
+  CHEMIN_CONFIGURATION,
+  CONFIGURATION_PAR_DEFAUT,
+  CONFIGURATION_SERVEUR,
+  ConfigService,
+  configurationDepuisEnvironnement,
+} from './config.service';
 
 describe('ConfigService', () => {
   let service: ConfigService;
@@ -70,5 +76,58 @@ describe('ConfigService', () => {
     expect(second).toBe(premier);
     expect(service.apiUrl).toBe('https://api.tabibi.dz');
     http.expectNone(CHEMIN_CONFIGURATION);
+  });
+
+  describe('cote serveur (CONFIGURATION_SERVEUR fournie par app.config.server.ts)', () => {
+    it('prend la configuration fournie sans lire assets/config.json', async () => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          { provide: CONFIGURATION_SERVEUR, useValue: { apiUrl: 'https://api.tabibi.dz/', keycloakIssuer: 'https://auth.tabibi.dz/realms/tabibi' } },
+        ],
+      });
+      service = TestBed.inject(ConfigService);
+      http = TestBed.inject(HttpTestingController);
+
+      await service.charger();
+
+      http.expectNone(CHEMIN_CONFIGURATION);
+      expect(service.apiUrl).toBe('https://api.tabibi.dz');
+      expect(service.keycloakIssuer).toBe('https://auth.tabibi.dz/realms/tabibi');
+      expect(service.keycloakClientId).toBe(CONFIGURATION_PAR_DEFAUT.keycloakClientId);
+    });
+  });
+});
+
+describe('configurationDepuisEnvironnement', () => {
+  it('lit TABIBI_API_URL, TABIBI_KEYCLOAK_ISSUER et TABIBI_KEYCLOAK_CLIENT_ID', () => {
+    expect(configurationDepuisEnvironnement({
+      TABIBI_API_URL: 'https://api.recette.tabibi.dz',
+      TABIBI_KEYCLOAK_ISSUER: 'https://auth.recette.tabibi.dz/realms/tabibi',
+      TABIBI_KEYCLOAK_CLIENT_ID: 'tabibi-recette',
+      DOMAINE: 'ignore.example',
+    })).toEqual({
+      apiUrl: 'https://api.recette.tabibi.dz',
+      keycloakIssuer: 'https://auth.recette.tabibi.dz/realms/tabibi',
+      keycloakClientId: 'tabibi-recette',
+    });
+  });
+
+  it('derive api. et auth. de DOMAINE (docker-compose.prod.yml du backend) quand les variables manquent', () => {
+    expect(configurationDepuisEnvironnement({ DOMAINE: ' tabibi.example ' })).toEqual({
+      apiUrl: 'https://api.tabibi.example',
+      keycloakIssuer: 'https://auth.tabibi.example/realms/tabibi',
+      keycloakClientId: undefined,
+    });
+  });
+
+  it('ne fournit rien sans variable (les valeurs par defaut s appliquent au chargement)', () => {
+    expect(configurationDepuisEnvironnement({ TABIBI_API_URL: '' })).toEqual({
+      apiUrl: undefined,
+      keycloakIssuer: undefined,
+      keycloakClientId: undefined,
+    });
   });
 });

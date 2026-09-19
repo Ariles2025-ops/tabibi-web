@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { EMPTY, Subject, Subscription, catchError, merge, switchMap, timer } from 'rxjs';
 import { NotificationService } from './notification.service';
@@ -11,6 +11,7 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 60_000;
  * Cloche de la barre de navigation (utilisateur connecte) : lien « Notifications » avec le nombre de
  * non lues entre parentheses. Le compteur est relu toutes les 60 s, a chaque clic et apres chaque
  * marquage lu (NotificationService.changements$) ; l'abonnement est ferme a la destruction du composant.
+ * Cote serveur (SSR), aucune minuterie n'est lancee : elle empecherait le rendu de se terminer.
  */
 @Component({
   selector: 'app-cloche-notifications',
@@ -25,6 +26,7 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 60_000;
 })
 export class ClocheNotificationsComponent implements OnInit, OnDestroy {
   private service = inject(NotificationService);
+  private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
   /** Demandes de rafraichissement immediat (clic), en plus du tic periodique. */
   private demandes = new Subject<void>();
   private abonnement: Subscription | null = null;
@@ -32,6 +34,7 @@ export class ClocheNotificationsComponent implements OnInit, OnDestroy {
   nonLues = signal(0);
 
   ngOnInit() {
+    if (!this.navigateur) return;
     this.abonnement = merge(timer(0, INTERVALLE_RAFRAICHISSEMENT_MS), this.demandes, this.service.changements$)
       .pipe(
         // Une erreur (API indisponible, jeton expire) laisse le dernier compteur connu sans casser le flux.

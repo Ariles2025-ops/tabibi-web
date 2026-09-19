@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { ConfigService } from '../config/config.service';
@@ -7,12 +8,17 @@ import { creerAuthConfig } from './auth.config';
 /**
  * Fin wrapper d'OAuthService (Keycloak) : initialisation unique de l'OIDC
  * et etat de connexion, partages par toutes les pages.
+ *
+ * Cote serveur (rendu SSR), il n'y a ni session ni jeton : l'OIDC n'est pas configure (window, sessionStorage
+ * et la redirection vers Keycloak n'existent pas), l'utilisateur est toujours « non connecte » et les demandes
+ * de connexion ou de deconnexion sont sans effet ; le navigateur les rejoue apres l'hydratation.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private oauth = inject(OAuthService);
   private router = inject(Router);
   private config = inject(ConfigService);
+  private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
   private initialisation: Promise<void> | null = null;
 
   /**
@@ -23,14 +29,16 @@ export class AuthService {
    */
   initialiser(): Promise<void> {
     if (!this.initialisation) {
-      this.initialisation = this.config
-        .charger()
-        .then(() => {
-          this.oauth.configure(creerAuthConfig(this.config));
-          return this.oauth.loadDiscoveryDocumentAndTryLogin();
-        })
-        .then(() => this.revenirApresConnexion())
-        .catch((e) => console.error('Initialisation OIDC impossible', e));
+      this.initialisation = !this.navigateur
+        ? Promise.resolve()
+        : this.config
+            .charger()
+            .then(() => {
+              this.oauth.configure(creerAuthConfig(this.config));
+              return this.oauth.loadDiscoveryDocumentAndTryLogin();
+            })
+            .then(() => this.revenirApresConnexion())
+            .catch((e) => console.error('Initialisation OIDC impossible', e));
     }
     return this.initialisation;
   }
@@ -41,7 +49,7 @@ export class AuthService {
   }
 
   estConnecte(): boolean {
-    return this.oauth.hasValidAccessToken();
+    return this.navigateur && this.oauth.hasValidAccessToken();
   }
 
   /**
@@ -49,11 +57,13 @@ export class AuthService {
    * revient sur `retour` (la page courante par defaut), transmis via le `state` OIDC.
    */
   async seConnecter(retour: string = this.router.url): Promise<void> {
+    if (!this.navigateur) return;
     await this.initialiser();
     this.oauth.initCodeFlow(retour);
   }
 
   seDeconnecter(): void {
+    if (!this.navigateur) return;
     this.oauth.logOut();
   }
 
