@@ -94,3 +94,118 @@ test.describe('Appels API du profil', () => {
     expect(journal.contient('/api/moi/profil', 'PUT')).toBe(false);
   });
 });
+
+test.describe('Écran de mon profil', () => {
+  test('profil jamais renseigne (404) : formulaire vide, langue Français, les quatre langues proposees', async ({ page }) => {
+    await connecter(page);
+    await stub(page, '**/api/moi/profil', { statut: 404, corps: { erreur: 'Profil non renseigne.' } });
+
+    await ouvrir(page, '/moi/profil');
+
+    await expect(page.getByLabel(FR['profil.nomComplet'])).toHaveValue('');
+    await expect(page.getByLabel(FR['profil.telephone'])).toHaveValue('');
+    await expect(page.getByLabel(FR['profil.dateNaissance'])).toHaveValue('');
+    await expect(page.getByLabel(FR['profil.wilaya'])).toHaveValue('');
+    const langue = page.locator('select[name="langue"]');
+    await expect(langue).toHaveValue('fr');
+    await expect(langue.locator('option')).toHaveText(['Français', 'العربية', 'Taqbaylit', 'English']);
+    await expect(page.getByText('Profil non renseigne.')).toHaveCount(0);
+    await expect(page.getByText(/Dernière mise à jour/)).toHaveCount(0);
+  });
+
+  test('profil enregistre : formulaire prerempli et date de derniere mise a jour', async ({ page }) => {
+    await connecter(page);
+    // Langue kab : elle est proposee par le profil mais pas par l'interface, qui reste donc en francais
+    // (la bascule de l'interface depuis le profil est verifiee dans barre-navigation.spec.ts).
+    await stub(page, '**/api/moi/profil', { corps: { ...PROFIL, langue: 'kab' } });
+
+    await ouvrir(page, '/moi/profil');
+
+    await expect(page.getByLabel(FR['profil.nomComplet'])).toHaveValue('Amina Belkacem');
+    await expect(page.getByLabel(FR['profil.telephone'])).toHaveValue('0550123456');
+    await expect(page.getByLabel(FR['profil.dateNaissance'])).toHaveValue('1990-05-12');
+    await expect(page.getByLabel(FR['profil.wilaya'])).toHaveValue('16');
+    await expect(page.locator('select[name="langue"]')).toHaveValue('kab');
+    await expect(page.getByText(/Dernière mise à jour le 18 septembre 2026/)).toBeVisible();
+  });
+
+  test('validation cote client : nom trop court puis telephone mal forme, sans appeler l API', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page);
+    await stub(page, '**/api/moi/profil', { corps: PROFIL });
+
+    await ouvrir(page, '/moi/profil');
+    await page.getByLabel(FR['profil.nomComplet']).fill('A');
+    await page.getByRole('button', { name: FR['profil.enregistrer'] }).click();
+    await expect(page.getByText('Le nom complet doit compter de 2 à 120 caractères.')).toBeVisible();
+
+    await page.getByLabel(FR['profil.nomComplet']).fill('Amina Belkacem');
+    await page.getByLabel(FR['profil.telephone']).fill('550123456');
+    await page.getByRole('button', { name: FR['profil.enregistrer'] }).click();
+    await expect(page.getByText(/Le téléphone doit être un numéro algérien/)).toBeVisible();
+
+    expect(journal.contient('/api/moi/profil', 'PUT')).toBe(false);
+  });
+
+  test('facultatifs vides envoyes null, puis confirmation « Profil enregistré. »', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page);
+    await stub(page, '**/api/moi/profil', (requete) =>
+      requete.method() === 'PUT'
+        ? { corps: { ...PROFIL, telephone: null, dateNaissance: null, wilayaCode: null, langue: 'kab' } }
+        : { statut: 404, corps: { erreur: 'Profil non renseigne.' } },
+    );
+
+    await ouvrir(page, '/moi/profil');
+    await page.getByLabel(FR['profil.nomComplet']).fill('Amina Belkacem');
+    await page.locator('select[name="langue"]').selectOption('kab');
+    await page.getByRole('button', { name: FR['profil.enregistrer'] }).click();
+
+    const envoi = await journal.attendre('/api/moi/profil', 'PUT');
+    expect(envoi.corps).toEqual({
+      nomComplet: 'Amina Belkacem',
+      telephone: null,
+      dateNaissance: null,
+      wilayaCode: null,
+      langue: 'kab',
+    });
+    await expect(page.getByText(FR['profil.enregistre'])).toBeVisible();
+    await expect(page.getByText(/Dernière mise à jour le 18 septembre 2026/)).toBeVisible();
+    await expect(page.locator('select[name="langue"]')).toHaveValue('kab');
+  });
+
+  test('400 de l API : le motif est affiche et la saisie est gardee', async ({ page }) => {
+    await connecter(page);
+    await stub(page, '**/api/moi/profil', (requete) =>
+      requete.method() === 'PUT'
+        ? { statut: 400, corps: { erreur: 'La date de naissance doit etre dans le passe.' } }
+        : { corps: PROFIL },
+    );
+
+    await ouvrir(page, '/moi/profil');
+    await page.getByRole('button', { name: FR['profil.enregistrer'] }).click();
+
+    await expect(page.getByText('La date de naissance doit etre dans le passe.')).toBeVisible();
+    await expect(page.getByText(FR['profil.enregistre'])).toHaveCount(0);
+    await expect(page.getByLabel(FR['profil.nomComplet'])).toHaveValue('Amina Belkacem');
+  });
+
+  test('erreur de chargement autre que 404 : motif affiche et aucun formulaire', async ({ page }) => {
+    await connecter(page);
+    await stub(page, '**/api/moi/profil', { statut: 500, corps: { erreur: 'Service indisponible.' } });
+
+    await ouvrir(page, '/moi/profil');
+
+    await expect(page.getByText('Service indisponible.')).toBeVisible();
+    await expect(page.locator('form')).toHaveCount(0);
+  });
+
+  test('non connecte : redirection vers la connexion, sans lire le profil', async ({ page }) => {
+    const journal = requetes(page);
+
+    await page.goto('/moi/profil');
+
+    await page.waitForURL((url) => url.href.includes('/protocol/openid-connect/auth'));
+    expect(journal.contient('/api/moi/profil')).toBe(false);
+  });
+});

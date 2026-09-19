@@ -17,7 +17,7 @@ test.describe('Page introuvable', () => {
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
   });
 
-  test('un lien mort atteint depuis une autre page affiche la meme page, sans rechargement', async ({ page }) => {
+  test('un lien mort atteint depuis une autre page affiche la meme page introuvable', async ({ page }) => {
     await ouvrir(page, '/');
     await page.evaluate(() => {
       const lien = document.createElement('a');

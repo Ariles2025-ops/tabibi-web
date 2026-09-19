@@ -55,3 +55,61 @@ test.describe('Appels API des listes d attente', () => {
     await expect(page.getByText(FR['listeAttente.aucune'])).toBeVisible();
   });
 });
+
+test.describe('Écran de mes listes d attente', () => {
+  const ANCIENNE = { id: 'i2', patientId: 'p1', medecinId: 'm2', inscritLe: '2026-09-10T10:00:00Z' };
+
+  test('liste mes inscriptions, les plus anciennes d abord, avec le praticien et la date', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/liste-attente/mes', { corps: [INSCRIPTION, ANCIENNE] });
+    await stub(page, '**/api/medecins/m1', { corps: { id: 'm1', nomComplet: 'Dr Amina Belkacem' } });
+    await stub(page, '**/api/medecins/m2', { corps: { id: 'm2', nomComplet: 'Dr Karim Haddad' } });
+
+    await ouvrir(page, '/liste-attente');
+
+    const lignes = page.locator('main li');
+    await expect(lignes).toHaveCount(2);
+    await expect(lignes.nth(0).locator('a[href="/medecins/m2"]')).toHaveText('Dr Karim Haddad');
+    await expect(lignes.nth(0)).toContainText('Inscrit le 10 septembre 2026');
+    await expect(lignes.nth(1).locator('a[href="/medecins/m1"]')).toHaveText('Dr Amina Belkacem');
+    await expect(lignes.nth(1).getByRole('button', { name: FR['listeAttente.meRetirer'] })).toBeVisible();
+    expect(journal.filtrer(/\/api\/medecins\/m\d$/).length).toBe(2);
+  });
+
+  test('un retrait en echec garde la ligne et affiche le motif de l API', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/liste-attente/mes', { corps: [INSCRIPTION, ANCIENNE] });
+    await stub(page, '**/api/medecins/m1', { corps: { id: 'm1', nomComplet: 'Dr Amina Belkacem' } });
+    await stub(page, '**/api/medecins/m2', { corps: { id: 'm2', nomComplet: 'Dr Karim Haddad' } });
+    await stub(page, '**/api/liste-attente/i2/retirer', {
+      statut: 403,
+      corps: { erreur: 'Cette inscription est a un autre patient.' },
+    });
+
+    await ouvrir(page, '/liste-attente');
+    await page.locator('main li').nth(0).getByRole('button', { name: FR['listeAttente.meRetirer'] }).click();
+
+    await expect(page.getByText('Cette inscription est a un autre patient.')).toBeVisible();
+    await expect(page.locator('main li')).toHaveCount(2);
+  });
+
+  test('403 : « Cette page est réservée aux patients. » et aucune ligne', async ({ page }) => {
+    await connecter(page, { roles: ['MEDECIN'] });
+    await stub(page, '**/api/liste-attente/mes', { statut: 403, corps: { erreur: 'Acces refuse.' } });
+
+    await ouvrir(page, '/liste-attente');
+
+    await expect(page.getByText(FR['commun.reservePatients'])).toBeVisible();
+    await expect(page.locator('main li')).toHaveCount(0);
+  });
+
+  test('non connecte : redirection vers la connexion, sans lire mes inscriptions', async ({ page }) => {
+    const journal = requetes(page);
+
+    await page.goto('/liste-attente');
+
+    await page.waitForURL((url) => url.href.includes('/protocol/openid-connect/auth'));
+    expect(journal.contient('/api/liste-attente/mes')).toBe(false);
+  });
+});

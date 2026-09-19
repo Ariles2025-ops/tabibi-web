@@ -136,3 +136,110 @@ test.describe('Appels API des ordonnances', () => {
     expect(appel.chemin).toBe('/api/medecin/ordonnances');
   });
 });
+
+test.describe('Écran du detail d une ordonnance', () => {
+  test.beforeEach(async ({ page }) => {
+    await stub(page, '**/api/medecins/m1', { corps: { id: 'm1', nomComplet: 'Dr Amina Belkacem' } });
+  });
+
+  test('affiche le praticien, le patient, les lignes, le code et les boutons Imprimer et PDF', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/ordonnances/o1', { corps: ORDONNANCE });
+
+    await ouvrir(page, '/ordonnances/o1');
+
+    await expect(page.getByText('Dr Amina Belkacem')).toBeVisible();
+    await expect(page.getByText(/Patient : p1/)).toBeVisible();
+    await expect(page.getByText('Amoxicilline 1 g')).toBeVisible();
+    await expect(page.getByText(CODE_ORDONNANCE_VALIDE).first()).toBeVisible();
+    await expect(page.getByText(/18 septembre 2026/)).toBeVisible();
+    await expect(page.getByRole('button', { name: FR['ordonnance.imprimer'] })).toBeVisible();
+    await expect(page.getByRole('button', { name: FR['ordonnance.telechargerPdf'] })).toBeEnabled();
+    await expect(page.locator('main a[href="/mes-ordonnances"]')).toHaveCount(1);
+  });
+
+  test('un medecin revient vers ses ordonnances redigees', async ({ page }) => {
+    await connecter(page, { sujet: 'm1', roles: ['MEDECIN'] });
+    await stub(page, '**/api/ordonnances/o1', { corps: ORDONNANCE });
+
+    await ouvrir(page, '/ordonnances/o1');
+
+    await expect(page.locator('main a[href="/medecin/ordonnances"]')).toHaveCount(1);
+    await expect(page.locator('main a[href="/mes-ordonnances"]')).toHaveCount(0);
+  });
+
+  test('PDF en echec : le motif { erreur } du corps binaire est lu et affiche', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/ordonnances/o1', { corps: ORDONNANCE });
+    await page.route('**/api/ordonnances/o1/pdf', (route) =>
+      route.fulfill({
+        status: 409,
+        contentType: 'application/json; charset=utf-8',
+        headers: { 'access-control-allow-origin': '*' },
+        body: JSON.stringify({ erreur: 'Ordonnance annulée : pas de PDF.' }),
+      }),
+    );
+
+    await ouvrir(page, '/ordonnances/o1');
+    await page.getByRole('button', { name: FR['ordonnance.telechargerPdf'] }).click();
+
+    await expect(page.getByText('Ordonnance annulée : pas de PDF.')).toBeVisible();
+    await expect(page.getByRole('button', { name: FR['ordonnance.telechargerPdf'] })).toBeEnabled();
+  });
+
+  test('PDF en echec sans motif lisible : message generique', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/ordonnances/o1', { corps: ORDONNANCE });
+    await page.route('**/api/ordonnances/o1/pdf', (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: 'text/plain; charset=utf-8',
+        headers: { 'access-control-allow-origin': '*' },
+        body: 'pas du json',
+      }),
+    );
+
+    await ouvrir(page, '/ordonnances/o1');
+    await page.getByRole('button', { name: FR['ordonnance.telechargerPdf'] }).click();
+
+    await expect(page.getByText(FR['ordonnance.pdfEchec'])).toBeVisible();
+  });
+
+  test('403 : « Vous n avez pas accès à cette ordonnance. » et aucun bouton PDF', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/ordonnances/o1', { statut: 403, corps: { erreur: 'Acces refuse.' } });
+
+    await ouvrir(page, '/ordonnances/o1');
+
+    await expect(page.getByText(FR['ordonnance.acces'])).toBeVisible();
+    await expect(page.getByRole('button', { name: FR['ordonnance.telechargerPdf'] })).toHaveCount(0);
+  });
+
+  test('page privee : titre « Ordonnance | Tabibi » et robots noindex', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/ordonnances/o1', { corps: ORDONNANCE });
+
+    await ouvrir(page, '/ordonnances/o1');
+
+    await expect(page).toHaveTitle(`${FR['ordonnance.titre']} | Tabibi`);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
+  });
+
+  test('non connecte : redirection vers la connexion, sans lire l ordonnance', async ({ page }) => {
+    const journal = requetes(page);
+
+    await page.goto('/ordonnances/o1');
+
+    await page.waitForURL((url) => url.href.includes('/protocol/openid-connect/auth'));
+    expect(journal.contient('/api/ordonnances/o1')).toBe(false);
+  });
+
+  test('aucune ordonnance : message dedie sur « Mes ordonnances »', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/ordonnances/mes', { corps: [] });
+
+    await ouvrir(page, '/mes-ordonnances');
+
+    await expect(page.getByText(FR['ordonnances.aucune'])).toBeVisible();
+  });
+});

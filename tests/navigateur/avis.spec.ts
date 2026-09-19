@@ -134,3 +134,121 @@ test.describe('Appels API des avis', () => {
     expect(retablir.corps).toBeNull();
   });
 });
+
+test.describe('Écran de depot d un avis', () => {
+  const HONORE = { id: 'r1', patientId: 'p1', medecinId: 'm1', debut: '2026-09-01T09:00:00Z', statut: 'HONORE', creneauId: 'c1' };
+
+  test.beforeEach(async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/rendezvous/mes', { corps: [HONORE] });
+    await stub(page, '**/api/medecins/m1', { corps: { id: 'm1', nomComplet: 'Dr Amina Belkacem' } });
+  });
+
+  test('rappelle le rendez-vous et le praticien, propose cinq notes sans emoji et un commentaire borne a 500', async ({ page }) => {
+    await stub(page, '**/api/avis', { statut: 201, corps: AVIS });
+
+    await ouvrir(page, '/avis/nouveau/r1');
+
+    await expect(page.getByText(/Rendez-vous du/)).toBeVisible();
+    await expect(page.getByText(/1 septembre/)).toBeVisible();
+    await expect(page.getByText(/avec Dr Amina Belkacem/)).toBeVisible();
+    const notes = page.locator('label.note');
+    await expect(notes).toHaveCount(5);
+    await expect(notes).toHaveText(['1', '2', '3', '4', '5']);
+    await expect(notes.nth(2)).toHaveAttribute('aria-label', FR['avis.noteAria'].replace('{n}', '3'));
+    await expect(page.getByText(FR['avis.choisirNote'], { exact: true })).toBeVisible();
+    await expect(page.getByText('0 / 500')).toBeVisible();
+  });
+
+  test('refuse un envoi sans note, sans rien demander a l API', async ({ page }) => {
+    const journal = requetes(page);
+    await stub(page, '**/api/avis', { statut: 201, corps: AVIS });
+
+    await ouvrir(page, '/avis/nouveau/r1');
+    await page.getByRole('button', { name: FR['avis.envoyer'] }).click();
+
+    await expect(page.getByText(FR['avis.noteObligatoire'])).toBeVisible();
+    expect(journal.contient('/api/avis', 'POST')).toBe(false);
+  });
+
+  test('marque la note choisie, nettoie le commentaire et remplace le formulaire par la confirmation', async ({ page }) => {
+    const journal = requetes(page);
+    await stub(page, '**/api/avis', { statut: 201, corps: AVIS });
+
+    await ouvrir(page, '/avis/nouveau/r1');
+    await page.getByLabel(FR['avis.noteAria'].replace('{n}', '4')).click();
+
+    await expect(page.locator('.note-choisie')).toHaveCount(1);
+    await expect(page.getByText('4 / 5')).toBeVisible();
+
+    await page.locator('textarea[name="commentaire"]').fill('  Très bon accueil.  ');
+    await page.getByRole('button', { name: FR['avis.envoyer'] }).click();
+
+    const envoi = await journal.attendre('/api/avis', 'POST');
+    expect(envoi.corps).toEqual({ rendezVousId: 'r1', note: 4, commentaire: 'Très bon accueil.' });
+    await expect(page.getByText(FR['avis.merci'])).toBeVisible();
+    await expect(page.locator('main a[href="/mes-avis"]')).toHaveCount(1);
+    await expect(page.locator('form')).toHaveCount(0);
+  });
+
+  test('400 : le motif de l API est affiche et le formulaire reste', async ({ page }) => {
+    await stub(page, '**/api/avis', { statut: 400, corps: { erreur: 'La note doit etre comprise entre 1 et 5.' } });
+
+    await ouvrir(page, '/avis/nouveau/r1');
+    await page.getByLabel(FR['avis.noteAria'].replace('{n}', '2')).click();
+    await page.getByRole('button', { name: FR['avis.envoyer'] }).click();
+
+    await expect(page.getByText('La note doit etre comprise entre 1 et 5.')).toBeVisible();
+    await expect(page.locator('form')).toHaveCount(1);
+  });
+});
+
+test.describe('Écran de mes avis', () => {
+  test('liste mes avis, les plus recents d abord, avec note, statut, date, praticien et commentaire', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/avis/mes', {
+      corps: [
+        { ...AVIS, id: 'a1', note: 5, commentaire: 'Très bon accueil.', statut: 'PUBLIE', deposeLe: '2026-09-10T10:00:00Z' },
+        { ...AVIS, id: 'a2', note: 2, commentaire: null, statut: 'MASQUE', deposeLe: '2026-09-18T10:00:00Z' },
+      ],
+    });
+    await stub(page, '**/api/medecins/m1', { corps: { id: 'm1', nomComplet: 'Dr Amina Belkacem' } });
+
+    await ouvrir(page, '/mes-avis');
+
+    const lignes = page.locator('main li');
+    await expect(lignes).toHaveCount(2);
+    await expect(lignes.nth(0)).toContainText('2 / 5');
+    await expect(lignes.nth(0)).toContainText('Masqué');
+    await expect(lignes.nth(0)).toContainText('18 septembre 2026');
+    await expect(lignes.nth(0)).toContainText('Dr Amina Belkacem');
+    await expect(lignes.nth(1)).toContainText('5 / 5');
+    await expect(lignes.nth(1)).toContainText('Publié');
+    await expect(lignes.nth(1)).toContainText('Très bon accueil.');
+    // Le nom du praticien n'est lu qu'une fois, meme pour deux avis du meme medecin.
+    expect(journal.filtrer(/\/api\/medecins\/m1$/).length).toBe(1);
+  });
+
+  test('aucun avis : message et lien vers mes rendez-vous ; 403 : page reservee aux patients', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/avis/mes', { corps: [] });
+
+    await ouvrir(page, '/mes-avis');
+    await expect(page.getByText(FR['avis.aucunMien'])).toBeVisible();
+    await expect(page.locator('main a[href="/mes-rendez-vous"]')).toHaveCount(1);
+
+    await stub(page, '**/api/avis/mes', { statut: 403, corps: { erreur: 'Acces refuse.' } });
+    await ouvrir(page, '/mes-avis');
+    await expect(page.getByText(FR['commun.reservePatients'])).toBeVisible();
+  });
+
+  test('non connecte : redirection vers la page de connexion, sans lire mes avis', async ({ page }) => {
+    const journal = requetes(page);
+
+    await page.goto('/mes-avis');
+    await page.waitForURL((url) => url.href.includes('/protocol/openid-connect/auth'));
+
+    expect(journal.contient('/api/avis/mes')).toBe(false);
+  });
+});

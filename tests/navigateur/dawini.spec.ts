@@ -131,3 +131,158 @@ test.describe('Appels API de Dawini', () => {
     await expect(page.getByText('Cette pharmacie a deja repondu a ce besoin.')).toBeVisible();
   });
 });
+
+test.describe('Écran de mes demandes', () => {
+  const CLOTURE = {
+    ...BESOIN,
+    id: 'b2',
+    medicament: 'Insuline',
+    statut: 'CLOTURE',
+    publieLe: '2026-09-10T10:00:00Z',
+    clotureLe: '2026-09-12T10:00:00Z',
+    nombreReponses: 1,
+  };
+
+  test('liste mes demandes, les plus recentes d abord, avec statut et nombre de reponses', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/dawini/besoins/mes', { corps: [CLOTURE, { ...BESOIN, nombreReponses: 3 }] });
+
+    await ouvrir(page, '/dawini');
+
+    const lignes = page.locator('main li');
+    await expect(lignes).toHaveCount(2);
+    await expect(lignes.nth(0)).toContainText('Amoxicilline 1 g');
+    await expect(lignes.nth(0)).toContainText('Ouverte');
+    await expect(lignes.nth(0)).toContainText('Wilaya 16 · Bab Ezzouar');
+    await expect(lignes.nth(0)).toContainText('3 réponses');
+    await expect(lignes.nth(0).locator('a')).toHaveAttribute('href', '/dawini/b1');
+    await expect(lignes.nth(1)).toContainText('Insuline');
+    await expect(lignes.nth(1)).toContainText('Clôturée');
+    await expect(lignes.nth(1)).toContainText('1 réponse');
+  });
+
+  test('refuse cote client une demande sans medicament ou sans wilaya', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/dawini/besoins/mes', { corps: [] });
+
+    await ouvrir(page, '/dawini');
+    await page.getByRole('button', { name: FR['dawini.publier'] }).click();
+
+    await expect(page.getByText(FR['dawini.champsRequis'])).toBeVisible();
+    expect(journal.contient(/\/api\/dawini\/besoins$/, 'POST')).toBe(false);
+  });
+
+  test('publication reussie : confirmation, formulaire vide et liste rechargee', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/dawini/besoins/mes', { corps: [] });
+    await stub(page, '**/api/dawini/besoins', { statut: 201, corps: BESOIN });
+
+    await ouvrir(page, '/dawini');
+    await journal.attendre('/api/dawini/besoins/mes');
+    await page.locator('input[name="medicament"]').fill(' Amoxicilline 1 g ');
+    await page.locator('input[name="wilayaCode"]').fill(' 16 ');
+    await page.locator('input[name="commune"]').fill('Bab Ezzouar');
+    await page.getByRole('button', { name: FR['dawini.publier'] }).click();
+
+    const envoi = await journal.attendre(/\/api\/dawini\/besoins$/, 'POST');
+    // Champs nettoyes, facultatif vide omis.
+    expect(envoi.corps).toEqual({ medicament: 'Amoxicilline 1 g', wilayaCode: '16', commune: 'Bab Ezzouar' });
+    await expect(page.getByText(FR['dawini.publiee'])).toBeVisible();
+    await expect(page.locator('input[name="medicament"]')).toHaveValue('');
+    await expect.poll(() => journal.filtrer('/api/dawini/besoins/mes').length).toBe(2);
+  });
+
+  test('400 a la publication : le motif est affiche et la liste n est pas rechargee', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/dawini/besoins/mes', { corps: [] });
+    await stub(page, '**/api/dawini/besoins', {
+      statut: 400,
+      corps: { erreur: 'Le code de wilaya ne peut pas depasser 4 caracteres.' },
+    });
+
+    await ouvrir(page, '/dawini');
+    await journal.attendre('/api/dawini/besoins/mes');
+    await page.locator('input[name="medicament"]').fill('Amoxicilline 1 g');
+    await page.locator('input[name="wilayaCode"]').fill('16000');
+    await page.getByRole('button', { name: FR['dawini.publier'] }).click();
+
+    await expect(page.getByText('Le code de wilaya ne peut pas depasser 4 caracteres.')).toBeVisible();
+    expect(journal.filtrer('/api/dawini/besoins/mes').length).toBe(1);
+  });
+
+  test('aucune demande : message dedie', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/dawini/besoins/mes', { corps: [] });
+
+    await ouvrir(page, '/dawini');
+
+    await expect(page.getByText(FR['dawini.aucune'])).toBeVisible();
+  });
+
+  test('non connecte : redirection vers la connexion, sans lire mes demandes', async ({ page }) => {
+    const journal = requetes(page);
+
+    await page.goto('/dawini');
+
+    await page.waitForURL((url) => url.href.includes('/protocol/openid-connect/auth'));
+    expect(journal.contient('/api/dawini/besoins/mes')).toBe(false);
+  });
+});
+
+test.describe('Écran des reponses a une demande', () => {
+  const INDISPONIBLE = {
+    ...REPONSE,
+    id: 'rp2',
+    nomPharmacie: 'Pharmacie du Centre',
+    disponible: false,
+    prixDa: null,
+    commentaire: null,
+    repondueLe: '2026-09-17T11:00:00Z',
+  };
+
+  test('affiche la demande et ses reponses, les plus anciennes d abord', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/dawini/besoins/mes', { corps: [BESOIN] });
+    await stub(page, '**/api/dawini/besoins/b1/reponses', { corps: [{ ...REPONSE, prixDa: 1250 }, INDISPONIBLE] });
+
+    await ouvrir(page, '/dawini/b1');
+
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Amoxicilline 1 g');
+    await expect(page.getByText('Ouverte · Wilaya 16 · Bab Ezzouar')).toBeVisible();
+    await expect(page.getByText('Boîte de 14 comprimés')).toBeVisible();
+    const lignes = page.locator('main li');
+    await expect(lignes).toHaveCount(2);
+    await expect(lignes.nth(0)).toContainText('Pharmacie du Centre');
+    await expect(lignes.nth(0)).toContainText(FR['demande.indisponible']);
+    await expect(lignes.nth(0)).not.toContainText('DA');
+    await expect(lignes.nth(1)).toContainText('Pharmacie El Amel');
+    await expect(lignes.nth(1)).toContainText(FR['demande.disponible']);
+    await expect(lignes.nth(1)).toContainText('1 250 DA');
+    await expect(lignes.nth(1)).toContainText('Disponible jusqu à 19 h.');
+    await expect(page.getByRole('button', { name: FR['demande.cloturer'] })).toBeVisible();
+  });
+
+  test('une demande deja cloturee ne propose pas la cloture et signale l absence de reponse', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/dawini/besoins/mes', { corps: [{ ...BESOIN, statut: 'CLOTURE', clotureLe: '2026-09-19T10:00:00Z' }] });
+    await stub(page, '**/api/dawini/besoins/b1/reponses', { corps: [] });
+
+    await ouvrir(page, '/dawini/b1');
+
+    await expect(page.getByRole('button', { name: FR['demande.cloturer'] })).toHaveCount(0);
+    await expect(page.getByText(FR['demande.aucuneReponse'])).toBeVisible();
+  });
+
+  test('403 : « Cette demande ne vous appartient pas. »', async ({ page }) => {
+    await connecter(page, { roles: ['PATIENT'] });
+    await stub(page, '**/api/dawini/besoins/mes', { corps: [BESOIN] });
+    await stub(page, '**/api/dawini/besoins/b1/reponses', { statut: 403, corps: { erreur: 'Acces refuse.' } });
+
+    await ouvrir(page, '/dawini/b1');
+
+    await expect(page.getByText(FR['demande.nAppartientPas'])).toBeVisible();
+  });
+});
