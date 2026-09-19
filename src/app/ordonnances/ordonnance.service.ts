@@ -60,6 +60,14 @@ export class OrdonnanceService {
     return this.http.get<Ordonnance>(`${this.base}/api/ordonnances/${id}`);
   }
 
+  /**
+   * Version imprimable (PDF) d'une ordonnance : `GET /api/ordonnances/{id}/pdf` (PATIENT ou MEDECIN, le Bearer est
+   * ajoute par l'intercepteur), reponse `application/pdf` recue telle quelle (`responseType: 'blob'`).
+   */
+  pdf(id: string): Observable<Blob> {
+    return this.http.get(`${this.base}/api/ordonnances/${id}/pdf`, { responseType: 'blob' });
+  }
+
   /** Verification d'un code, sans connexion (l'intercepteur joint le JWT s'il existe, l'API n'en a pas besoin). */
   verifier(code: string): Observable<Verification> {
     return this.http.get<Verification>(`${this.base}/api/ordonnances/verifier/${encodeURIComponent(code)}`);

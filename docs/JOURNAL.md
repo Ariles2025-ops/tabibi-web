@@ -578,3 +578,22 @@ decrite dans le README et le journal de tabibi-backend.
   16 passed (trois passes consecutives, puis `--workers=3`) ; aucun serveur node restant apres la fin (webServer et
   API simulee arretes par Playwright).
 
+
+## v0.22.0 — Ordonnance imprimable (PDF)
+- Pourquoi : le backend expose `GET /api/ordonnances/{id}/pdf` (`application/pdf`, `Content-Disposition: inline`,
+  roles PATIENT ou MEDECIN) ; jusqu'ici la page de detail ne proposait que `window.print()`.
+- `OrdonnanceService.pdf(id)` : `GET ${apiUrl}/api/ordonnances/${id}/pdf` avec `responseType: 'blob'` (le Bearer est
+  ajoute par l'intercepteur comme pour tout appel `/api/`), renvoie le `Blob` recu.
+- `/ordonnances/:id` (patient et medecin) : bouton « Télécharger le PDF » a cote de « Imprimer » (« Préparation du
+  PDF… » et bouton desactive pendant l'appel) : le blob recu est propose au telechargement sous le nom
+  `ordonnance-<code>.pdf` par un lien `<a download>` temporaire (`URL.createObjectURL`, clic programme, lien retire,
+  `URL.revokeObjectURL` 10 s plus tard : un revoke immediat peut annuler le telechargement sur certains navigateurs) ;
+  en cas d'echec, motif `{ erreur }` de l'API (le corps d'une erreur recue en `responseType: 'blob'` est un Blob JSON,
+  lu par `motifErreurBlob`) ou « Impossible de générer le PDF de cette ordonnance. ». Garde SSR : `isPlatformBrowser`
+  (ni Blob ni URL objet cote serveur ; la page y rend de toute facon l'etat « non connecte »).
+- Tests (15 specs ajoutees, 301 au total) : `OrdonnanceService` (nouveau spec : `mes`, `parId`, `pdf` — URL et
+  `responseType` blob —, `verifier` avec code encode, `emettre`) ; `OrdonnanceDetailComponent` (nouveau spec :
+  affichage, retour patient / medecin, telechargement — `createObjectURL` avec le blob, lien `download`
+  `ordonnance-TBB-2026-0001.pdf`, lien retire, `revokeObjectURL` apres 10 s (horloge Jasmine) —, motif `{ erreur }`
+  d'un Blob JSON, message generique, `motifErreurBlob`, 404, 403, redirection vers la connexion, titre et noindex).
+- README : v0.4.0 (bouton PDF), « Prochaines etapes ». `package.json` 0.22.0.

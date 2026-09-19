@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
@@ -36,8 +36,14 @@ import { SeoService } from '../seo/seo.service';
               Patient : {{ o.patientId }}
             </p>
           </div>
-          <button type="button" class="bouton sans-impression" (click)="imprimer()">Imprimer</button>
+          <div class="sans-impression" style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="bouton" (click)="imprimer()">Imprimer</button>
+            <button type="button" class="bouton-secondaire" (click)="telechargerPdf()" [disabled]="pdfEnCours()">
+              {{ pdfEnCours() ? 'Préparation du PDF…' : 'Télécharger le PDF' }}
+            </button>
+          </div>
         </header>
+        <p *ngIf="erreurPdf()" class="sans-impression" style="color:#b3261e">{{ erreurPdf() }}</p>
 
         <table style="width:100%;border-collapse:collapse;margin:24px 0">
           <thead>
@@ -77,6 +83,8 @@ export class OrdonnanceDetailComponent implements OnInit {
   private service = inject(OrdonnanceService);
   private annuaire = inject(AnnuaireService);
   private roleService = inject(RoleService);
+  private document = inject(DOCUMENT);
+  private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -87,6 +95,10 @@ export class OrdonnanceDetailComponent implements OnInit {
   medecin = signal<Medecin | null>(null);
   charge = signal(false);
   erreur = signal('');
+  /** Vrai pendant le telechargement du PDF (bouton desactive). */
+  pdfEnCours = signal(false);
+  /** Motif d'echec du PDF : `{ erreur }` de l'API, sinon un message generique. */
+  erreurPdf = signal('');
 
   async ngOnInit() {
     this.seo.definirPrivee('Ordonnance');
@@ -102,6 +114,43 @@ export class OrdonnanceDetailComponent implements OnInit {
 
   imprimer() {
     window.print();
+  }
+
+  /**
+   * Version PDF de l'ordonnance (`GET /api/ordonnances/{id}/pdf`, avec le jeton) : le fichier recu est propose au
+   * telechargement sous le nom `ordonnance-<code>.pdf` par un lien temporaire (URL objet liberee ensuite).
+   * Navigateur seulement : ni Blob ni URL objet au rendu serveur, et le bouton n'y est de toute facon pas actif.
+   */
+  telechargerPdf() {
+    const o = this.ordonnance();
+    if (!o || !this.navigateur || this.pdfEnCours()) return;
+    this.erreurPdf.set('');
+    this.pdfEnCours.set(true);
+    this.service.pdf(o.id).subscribe({
+      next: (pdf) => {
+        this.pdfEnCours.set(false);
+        this.ouvrirPdf(pdf, `ordonnance-${o.codeVerification}.pdf`);
+      },
+      error: async (e: HttpErrorResponse) => {
+        this.pdfEnCours.set(false);
+        this.erreurPdf.set((await motifErreurBlob(e)) ?? 'Impossible de générer le PDF de cette ordonnance.');
+      },
+    });
+  }
+
+  /** Declenche le telechargement du blob via un lien `download`, puis libere l'URL objet. */
+  private ouvrirPdf(pdf: Blob, nomFichier: string) {
+    const url = URL.createObjectURL(pdf);
+    const lien = this.document.createElement('a');
+    lien.href = url;
+    lien.download = nomFichier;
+    lien.rel = 'noopener';
+    this.document.body.appendChild(lien);
+    lien.click();
+    lien.remove();
+    // Le navigateur a pris le fichier ; l'URL objet est liberee un peu apres (un revoke immediat peut annuler
+    // le telechargement sur certains navigateurs).
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
   }
 
   libelleStatut(statut: string): string {
@@ -140,5 +189,23 @@ export class OrdonnanceDetailComponent implements OnInit {
       next: (m) => this.medecin.set(m),
       error: () => this.medecin.set(null),
     });
+  }
+}
+
+/**
+ * Motif `{ erreur }` d'une reponse d'erreur recue en `responseType: 'blob'` : le corps est alors un Blob (JSON de
+ * l'API) ou, selon le navigateur, deja un objet ; `null` si le corps n'en contient pas.
+ */
+export async function motifErreurBlob(e: HttpErrorResponse): Promise<string | null> {
+  const corps: unknown = e.error;
+  try {
+    if (corps instanceof Blob) {
+      const json = JSON.parse(await corps.text()) as { erreur?: unknown };
+      return typeof json.erreur === 'string' && json.erreur ? json.erreur : null;
+    }
+    const erreur = (corps as { erreur?: unknown } | null)?.erreur;
+    return typeof erreur === 'string' && erreur ? erreur : null;
+  } catch {
+    return null;
   }
 }

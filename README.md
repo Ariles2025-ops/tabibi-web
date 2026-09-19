@@ -259,7 +259,10 @@ Limites :
   vérification et statut, les plus récentes d'abord ; chaque ligne mène au détail. Redirige vers la connexion si besoin.
 - `/ordonnances/:id` : détail (`GET /api/ordonnances/{id}`) — praticien (nom lu dans l'annuaire), patient, lignes
   (médicament, posologie, durée), code de vérification affiché en grand et bouton « Imprimer » (`window.print()` ;
-  la barre de navigation et les boutons sont masqués à l'impression).
+  la barre de navigation et les boutons sont masqués à l'impression). Depuis la v0.22.0, bouton « Télécharger le
+  PDF » : `OrdonnanceService.pdf(id)` (`GET /api/ordonnances/{id}/pdf`, `responseType: 'blob'`, PATIENT ou MEDECIN)
+  puis lien de téléchargement `ordonnance-<code>.pdf` (URL objet libérée ensuite) ; en cas d'échec, motif
+  `{ erreur }` de l'API ou « Impossible de générer le PDF de cette ordonnance. » ; navigateur seulement (garde SSR).
 - `/verifier` : page publique — saisie d'un code (`GET /api/ordonnances/verifier/{code}`) → « Ordonnance authentique,
   émise le … » ou « Code inconnu ». Accepte `?code=…` (lien depuis le détail d'une ordonnance).
 - `OrdonnanceService` (`mes`, `parId`, `verifier`, `emettre`) ; composant `app-liste-ordonnances` partagé.
