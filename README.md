@@ -297,3 +297,10 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
   `secretaires`, `rattacherSecretaire`, `retirerSecretaire`.
 - Barre de navigation : « Mes secrétaires » (espace médecin) et section « Espace secrétaire » (Agenda du cabinet),
   visible uniquement si `estSecretaire()`.
+
+## v0.16.0 — Rappels de rendez-vous (administration)
+- `/admin` : section « Rappels de rendez-vous » — bouton « Exécuter les rappels maintenant »
+  (`POST /api/admin/rappels/executer`, rôle ADMIN) : envoie tout de suite les rappels des rendez-vous confirmés des
+  24 prochaines heures (un seul rappel par rendez-vous, comme le planificateur horaire du backend) et affiche
+  « n rappel(s) envoyé(s) » (« 0 rappel envoyé », « 3 rappels envoyés ») ; erreur → motif `{ erreur }` affiché.
+- `AdminService.executerRappels()` (lit `{ nombre }`), `libelleRappels`.

@@ -12,7 +12,8 @@ describe('TableauDeBordAdminComponent', () => {
   let auth: { seConnecter: jasmine.Spy };
 
   beforeEach(() => {
-    service = jasmine.createSpyObj<AdminService>('AdminService', ['statistiques']);
+    service = jasmine.createSpyObj<AdminService>('AdminService', ['statistiques', 'executerRappels']);
+    service.statistiques.and.returnValue(of({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1 }));
     auth = { seConnecter: jasmine.createSpy('seConnecter') };
     TestBed.configureTestingModule({
       imports: [TableauDeBordAdminComponent],
@@ -27,6 +28,11 @@ describe('TableauDeBordAdminComponent', () => {
 
   function texte(): string {
     return fixture.nativeElement.textContent;
+  }
+
+  function boutonRappels(): HTMLButtonElement | undefined {
+    const boutons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
+    return boutons.find((b) => b.textContent?.includes('Exécuter les rappels maintenant'));
   }
 
   it('affiche les trois compteurs et le lien vers les candidatures', () => {
@@ -65,5 +71,34 @@ describe('TableauDeBordAdminComponent', () => {
     fixture.detectChanges();
 
     expect(auth.seConnecter).toHaveBeenCalled();
+  });
+
+  it('execute les rappels a la demande et affiche le nombre envoye, accorde', () => {
+    service.executerRappels.and.returnValues(of(3), of(0));
+    fixture.detectChanges();
+
+    expect(texte()).toContain('Rappels de rendez-vous');
+    boutonRappels()!.click();
+    fixture.detectChanges();
+    expect(service.executerRappels).toHaveBeenCalledTimes(1);
+    expect(texte()).toContain('3 rappels envoyés');
+
+    boutonRappels()!.click();
+    fixture.detectChanges();
+    expect(texte()).toContain('0 rappel envoyé');
+    expect(texte()).not.toContain('3 rappels envoyés');
+    expect(boutonRappels()!.disabled).toBeFalse();
+  });
+
+  it('affiche le { erreur } si l envoi des rappels echoue, sans toucher aux compteurs', () => {
+    service.executerRappels.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500, error: { erreur: 'Envoi impossible.' } })));
+    fixture.detectChanges();
+
+    boutonRappels()!.click();
+    fixture.detectChanges();
+
+    expect(texte()).toContain('Envoi impossible.');
+    expect(texte()).not.toContain('envoyé');
+    expect(fixture.nativeElement.querySelectorAll('li').length).toBe(3);
   });
 });

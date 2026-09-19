@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ConfigService } from '../config/config.service';
 
 /** Candidature d'un medecin a figurer dans l'annuaire, telle que renvoyee par l'API (au medecin comme a l'administrateur). */
@@ -55,9 +55,20 @@ export function libelleStatutCandidature(statut: string | null | undefined): str
   return LIBELLES_STATUT_CANDIDATURE[statut] ?? statut;
 }
 
+/** « 0 rappel envoyé », « 1 rappel envoyé », « 3 rappels envoyés ». */
+export function libelleRappels(nombre: number): string {
+  return `${nombre} ${nombre > 1 ? 'rappels envoyés' : 'rappel envoyé'}`;
+}
+
+/** Corps des compteurs de l'API : { "nombre": n }. */
+interface Nombre {
+  nombre: number;
+}
+
 /**
- * Administration (role ADMIN, /api/admin/** verrouille cote API) : examen des candidatures de medecins et
- * statistiques. Le depot et la consultation de sa candidature par le medecin sont dans MedecinService.
+ * Administration (role ADMIN, /api/admin/** verrouille cote API) : examen des candidatures de medecins,
+ * statistiques et declenchement manuel des rappels de rendez-vous. Le depot et la consultation de sa candidature
+ * par le medecin sont dans MedecinService.
  */
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -88,5 +99,13 @@ export class AdminService {
 
   statistiques(): Observable<StatistiquesAdministration> {
     return this.http.get<StatistiquesAdministration>(`${this.base}/api/admin/statistiques`);
+  }
+
+  /**
+   * Envoie maintenant les rappels des rendez-vous confirmes des 24 prochaines heures (un seul rappel par rendez-vous,
+   * le planificateur horaire fait de meme) ; renvoie le nombre de rappels envoyes.
+   */
+  executerRappels(): Observable<number> {
+    return this.http.post<Nombre>(`${this.base}/api/admin/rappels/executer`, null).pipe(map((r) => r.nombre));
   }
 }

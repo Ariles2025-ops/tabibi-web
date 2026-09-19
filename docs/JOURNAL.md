@@ -328,3 +328,16 @@ decrite dans le README et le journal de tabibi-backend.
   duree hors bornes refusee et 400, sans rattachement et 403 d'agenda, 403 / 401 de la page), Mon compte
   (identifiant et copie confirmee, presse-papiers refuse, non connecte), barre de navigation (section pour
   SECRETAIRE seulement, lien « Mes secretaires »).
+
+## v0.16.0 — Rappels de rendez-vous (administration)
+- `AdminService.executerRappels()` : `POST /api/admin/rappels/executer` sans corps, lit `{ nombre }` (`map`) ;
+  `libelleRappels` accorde le resultat (« 0 rappel envoye », « 1 rappel envoye », « 3 rappels envoyes »).
+- `/admin` (`TableauDeBordAdminComponent`) : section « Rappels de rendez-vous » sous les compteurs, avec
+  l'explication (rappel la veille de chaque rendez-vous confirme, envoi automatique toutes les heures, un seul
+  rappel par rendez-vous : relancer a la main ne cree pas de doublon) et le bouton « Executer les rappels
+  maintenant » (desactive pendant l'envoi) ; resultat en vert, remplace a chaque execution ; 403 → « Cette action
+  est reservee a l'administrateur. » ; autre erreur → motif `{ erreur }` ; 401 → connexion. Les compteurs ne sont
+  pas relus (les rappels ne les modifient pas).
+- Tests (4 specs ajoutees, 260 au total) : service avec `HttpTestingController` (URL, POST sans corps, lecture de
+  `{ nombre }`), `libelleRappels`, tableau de bord (execution puis « 3 rappels envoyes », seconde execution
+  « 0 rappel envoye » qui remplace le premier resultat, echec avec motif et compteurs conserves).

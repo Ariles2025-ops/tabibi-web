@@ -3,9 +3,12 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
-import { AdminService, StatistiquesAdministration } from './admin.service';
+import { AdminService, StatistiquesAdministration, libelleRappels } from './admin.service';
 
-/** Tableau de bord de l'administrateur : nombre de candidatures par statut (GET /api/admin/statistiques). */
+/**
+ * Tableau de bord de l'administrateur : nombre de candidatures par statut (GET /api/admin/statistiques) et
+ * declenchement manuel des rappels de rendez-vous (POST /api/admin/rappels/executer).
+ */
 @Component({
   selector: 'app-tableau-de-bord-admin',
   standalone: true,
@@ -35,6 +38,19 @@ import { AdminService, StatistiquesAdministration } from './admin.service';
       <p style="margin:24px 0 0">
         <a class="bouton" routerLink="/admin/candidatures">Examiner les candidatures</a>
       </p>
+
+      <section style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;margin:32px 0 0">
+        <h2 style="font-size:1.1rem;margin:0 0 6px">Rappels de rendez-vous</h2>
+        <p style="color:#566b64;margin:0 0 12px">
+          Les patients reçoivent un rappel la veille de chaque rendez-vous confirmé (envoi automatique toutes les
+          heures, un seul rappel par rendez-vous). Lancez l'envoi maintenant pour vérifier ou rattraper une exécution.
+        </p>
+        <button type="button" class="bouton-secondaire" (click)="executerRappels()" [disabled]="rappelsEnCours()">
+          {{ rappelsEnCours() ? 'Envoi…' : 'Exécuter les rappels maintenant' }}
+        </button>
+        <p *ngIf="rappels()" style="color:var(--vert);margin:12px 0 0">{{ rappels() }}</p>
+        <p *ngIf="erreurRappels()" style="color:#b3261e;margin:12px 0 0">{{ erreurRappels() }}</p>
+      </section>
     </main>
   `,
 })
@@ -45,6 +61,10 @@ export class TableauDeBordAdminComponent implements OnInit {
   statistiques = signal<StatistiquesAdministration | null>(null);
   charge = signal(false);
   erreur = signal('');
+  rappelsEnCours = signal(false);
+  /** Resultat du dernier envoi manuel (« 3 rappels envoyés ») ; vide tant qu'aucun n'a ete lance. */
+  rappels = signal('');
+  erreurRappels = signal('');
 
   ngOnInit() {
     this.charge.set(true);
@@ -61,6 +81,29 @@ export class TableauDeBordAdminComponent implements OnInit {
           this.erreur.set("Cette page est réservée à l'administrateur.");
         } else {
           this.erreur.set(e.error?.erreur ?? 'Impossible de charger les statistiques.');
+        }
+      },
+    });
+  }
+
+  /** Envoie maintenant les rappels des rendez-vous confirmes des 24 prochaines heures et affiche leur nombre. */
+  executerRappels() {
+    this.rappelsEnCours.set(true);
+    this.rappels.set('');
+    this.erreurRappels.set('');
+    this.service.executerRappels().subscribe({
+      next: (nombre) => {
+        this.rappelsEnCours.set(false);
+        this.rappels.set(libelleRappels(nombre));
+      },
+      error: (e: HttpErrorResponse) => {
+        this.rappelsEnCours.set(false);
+        if (e.status === 401) {
+          this.auth.seConnecter();
+        } else if (e.status === 403) {
+          this.erreurRappels.set("Cette action est réservée à l'administrateur.");
+        } else {
+          this.erreurRappels.set(e.error?.erreur ?? "L'envoi des rappels a échoué, veuillez réessayer.");
         }
       },
     });

@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { AdminService, Candidature, StatistiquesAdministration, libelleStatutCandidature } from './admin.service';
+import { AdminService, Candidature, StatistiquesAdministration, libelleRappels, libelleStatutCandidature } from './admin.service';
 
 const BASE = 'http://localhost:8080';
 
@@ -91,6 +91,18 @@ describe('AdminService', () => {
     expect(recu).toEqual({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1 });
   });
 
+  it('execute les rappels par POST /api/admin/rappels/executer sans corps et renvoie le nombre', () => {
+    let recu: number | undefined;
+    service.executerRappels().subscribe((n) => (recu = n));
+
+    const requete = http.expectOne(`${BASE}/api/admin/rappels/executer`);
+    expect(requete.request.method).toBe('POST');
+    expect(requete.request.body).toBeNull();
+    requete.flush({ nombre: 3 });
+
+    expect(recu).toBe(3);
+  });
+
   it('transmet le { erreur } d un 409 (candidature deja traitee)', () => {
     let statut = 0;
     let message = '';
@@ -115,6 +127,14 @@ describe('AdminService', () => {
       expect(libelleStatutCandidature('REFUSEE')).toBe('Refusée');
       expect(libelleStatutCandidature('ARCHIVEE')).toBe('ARCHIVEE');
       expect(libelleStatutCandidature(null)).toBe('');
+    });
+  });
+
+  describe('libelleRappels', () => {
+    it('accorde le nombre de rappels envoyes', () => {
+      expect(libelleRappels(0)).toBe('0 rappel envoyé');
+      expect(libelleRappels(1)).toBe('1 rappel envoyé');
+      expect(libelleRappels(3)).toBe('3 rappels envoyés');
     });
   });
 });
