@@ -45,6 +45,18 @@ describe('RoleService', () => {
     expect(service.estAdmin()).toBeFalse();
   });
 
+  it('reconnait le role PHARMACIE (estPharmacie), ni medecin ni administrateur', async () => {
+    moiService.moi.and.returnValue(of(profil(['PHARMACIE'])));
+    const service = TestBed.inject(RoleService);
+
+    expect(service.estPharmacie()).toBeFalse();
+    await service.charger();
+
+    expect(service.estPharmacie()).toBeTrue();
+    expect(service.estMedecin()).toBeFalse();
+    expect(service.estAdmin()).toBeFalse();
+  });
+
   it('ne lit le profil qu une seule fois', async () => {
     moiService.moi.and.returnValue(of(profil(['PATIENT'])));
     const service = TestBed.inject(RoleService);

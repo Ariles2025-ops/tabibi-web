@@ -169,3 +169,39 @@ decrite dans le README et le journal de tabibi-backend.
   medecin (lecture avec mon identifiant, signalement et rechargement, 409, aucun avis, profil illisible), moderation
   (filtre par defaut, boutons selon le statut, tous sans parametre, masquer, retablir, 409, etat vide, 403), barre de
   navigation.
+
+## v0.11.0 — Dawini
+- `RoleService.estPharmacie()` (role PHARMACIE du realm, autorite ROLE_PHARMACIE cote API) ; `pharmacieGuard` sur
+  `/pharmacie`, calque sur `medecinGuard` (non connecte → connexion avec retour ; sans le role → `router.parseUrl('/')`).
+- `DawiniService` : `publier`, `mesBesoins`, `cloturer`, `reponses`, `besoinsOuverts(wilaya)` (parametre `wilaya`),
+  `repondre` ; `libelleStatutBesoin` (Ouverte, Cloturee), `formaterPrix` (« 850 DA », « 1 250 DA », milliers separes
+  par une espace, chaine vide sans prix), `libelleReponses` (« 0 reponse », « 1 reponse », « 3 reponses »).
+- `/dawini` (`MesDemandesComponent`, PATIENT) : formulaire (medicament et code de wilaya obligatoires, controles cote
+  client ; l'annuaire ne porte aucune liste de wilayas dans le code, le code est donc saisi comme sur l'ecran de
+  recherche ; commune et precision facultatives, omises du corps si vides, champs nettoyes) ; 201 : confirmation,
+  formulaire vide et rechargement ; 400 : motif `{ erreur }` ; puis « Mes demandes » triees par `publieLe`
+  decroissant avec statut, « n reponses » et lien vers `/dawini/:id` ; 403 : « reservee aux patients » ; redirection
+  si non connecte.
+- `/dawini/:id` (`ReponsesDemandeComponent`) : identifiant lu dans `route.snapshot.paramMap` ; la demande est retrouvee
+  dans `GET /api/dawini/besoins/mes` (pas de lecture unitaire cote API), erreur ignoree ; reponses triees par
+  `repondueLe` croissant (pharmacie, Disponible en vert / Indisponible en rouge, prix formate, commentaire, date) ;
+  « Cloturer la demande » si OUVERT, la vue renvoyee remplace la demande ; 409 : motif affiche et demande rechargee ;
+  403 / 404 : messages dedies ; etat vide « Aucune reponse pour le moment. ».
+- `/pharmacie` (`EspacePharmacieComponent`, sous `pharmacieGuard`) : wilaya obligatoire (controle cote client, 400 de
+  l'API affiche), demandes ouvertes triees par date decroissante, un formulaire par demande (`formulaires[id]`, cree a
+  la lecture) : nom de la pharmacie commun a toutes les reponses, prerempli depuis `localStorage`
+  (`tabibi.pharmacie.nom`, lecture et ecriture dans try/catch : navigation privee ou stockage bloque n'empechent
+  rien), disponible oui / non par boutons radio (valeur booleenne), prix (`<input type="number">`, entier positif ou
+  nul, `null` si vide), commentaire (`null` si vide) ; 201 : nom memorise, mention « Vous avez repondu a cette
+  demande. » a la place du formulaire, confirmation et rechargement ; 409 / 404 : motif affiche et liste rechargee ;
+  400 : motif ; 403 : « reservee aux pharmacies » ; etat vide apres recherche seulement.
+- Routes `/dawini`, `/dawini/:id`, `/pharmacie` (pharmacieGuard) ; lien « Dawini » (connectes) et section
+  « Espace pharmacie » (Demandes de medicaments) si `estPharmacie()` dans la barre de navigation.
+- Tests (30 specs ajoutees, 175 au total) : RoleService (estPharmacie), pharmacieGuard (laisse passer, connexion avec
+  l'URL, UrlTree '/'), service avec `HttpTestingController` (URL, methode, corps, parametre wilaya, patientId null,
+  409 transmis) et formatage (prix, statut, accord des reponses), mes demandes (tri et libelles, refus sans medicament,
+  publication avec champs nettoyes et facultatifs omis puis rechargement, 400 sans rechargement, etat vide et
+  redirection), reponses (affichage et tri, cloture puis bouton retire, 409 rechargee, deja cloturee sans bouton et
+  etat vide, 403 et redirection), espace pharmacie (wilaya obligatoire puis liste et formulaires, refus sans nom ou sans
+  disponibilite, reponse envoyee avec nom memorise et formulaire remplace, nom prerempli et indisponibilite sans
+  prix, 409 rechargee, 400 de la recherche et etat vide), barre de navigation (section pour PHARMACIE seulement).

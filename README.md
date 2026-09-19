@@ -180,3 +180,33 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
   `LONGUEUR_MAX_COMMENTAIRE`.
 - Barre de navigation : « Mes avis » (utilisateurs connectés), « Avis des patients » (espace médecin),
   « Modération des avis » (administration).
+
+## v0.11.0 — Dawini
+- `RoleService.estPharmacie()` (rôle PHARMACIE lu sur `/api/moi`) ; `pharmacieGuard` (`canActivate` sur `/pharmacie`, même
+  modèle que `medecinGuard`) : non connecté → connexion Keycloak puis retour sur la page demandée ; connecté sans le
+  rôle → redirection vers l'accueil. L'autorisation réelle reste côté API.
+- `/dawini` : demandes de médicaments du patient — formulaire de publication (`POST /api/dawini/besoins
+  { medicament, wilayaCode, commune, precision }`) : médicament et code de wilaya obligatoires (contrôle côté client :
+  « Indiquez le médicament recherché et le code de votre wilaya. » ; l'annuaire n'ayant pas de liste de wilayas, le
+  code est saisi), commune et précision facultatives ; confirmation puis rechargement ; 400 → motif `{ erreur }`.
+  Puis « Mes demandes » (`GET /api/dawini/besoins/mes`), les plus récentes d'abord : médicament, statut (Ouverte,
+  Clôturée), wilaya, commune, date, « n réponses » ; chaque demande mène à ses réponses. Redirige vers la connexion
+  si l'utilisateur n'est pas connecté.
+- `/dawini/:id` : réponses des pharmacies (`GET /api/dawini/besoins/{id}/reponses`, les plus anciennes d'abord) —
+  pharmacie, Disponible / Indisponible, prix « 850 DA » (« 1 250 DA »), commentaire, date ; la demande (retrouvée
+  dans mes demandes) est rappelée avec son statut ; bouton « Clôturer la demande » si elle est OUVERT
+  (`POST /api/dawini/besoins/{id}/cloturer`), confirmation ; 409 (déjà clôturée) → motif affiché et demande
+  rechargée ; 403 → « Cette demande ne vous appartient pas. » ; 404 → « Demande introuvable. ».
+- `/pharmacie` (sous `pharmacieGuard`) : espace pharmacie — code de wilaya (obligatoire) puis demandes ouvertes de la
+  wilaya (`GET /api/dawini/besoins?wilaya=`, sans identité de patient), les plus récentes d'abord ; pour chaque demande,
+  un formulaire de réponse (`POST /api/dawini/besoins/{id}/reponses { nomPharmacie, disponible, prixDa, commentaire }`) :
+  nom de la pharmacie (obligatoire, mémorisé dans `localStorage` — clé `tabibi.pharmacie.nom` — pour être prérempli
+  à la visite suivante, lecture et écriture protégées par try/catch), disponible oui / non (obligatoire), prix en DA
+  (entier positif ou nul) et commentaire facultatifs ; confirmation « Réponse envoyée pour « … » : le patient est
+  prévenu. », le formulaire est remplacé par « Vous avez répondu à cette demande. » et la liste rechargée ; 409 / 404
+  (demande clôturée ou déjà répondue) → motif `{ erreur }` affiché et liste rechargée ; 400 → motif affiché ;
+  403 → « Cette page est réservée aux pharmacies. ».
+- `DawiniService` (`publier`, `mesBesoins`, `cloturer`, `reponses`, `besoinsOuverts`, `repondre`), types `Besoin`,
+  `DemandeBesoin`, `Reponse`, `DemandeReponse`, `libelleStatutBesoin`, `formaterPrix`, `libelleReponses`.
+- Barre de navigation : « Dawini » (utilisateurs connectés) et section « Espace pharmacie » (Demandes de médicaments)
+  visible uniquement si `estPharmacie()`.

@@ -7,19 +7,26 @@ import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { NotificationService } from './notifications/notification.service';
 
-/** Test de fumee de la barre de navigation : liens publics, cloche des connectes, sections du medecin et de l'administrateur. */
+/** Test de fumee de la barre de navigation : liens publics, cloche des connectes, sections du medecin, de la pharmacie et de l'administrateur. */
 describe('AppComponent', () => {
   let fixture: ComponentFixture<AppComponent>;
   let connecte: boolean;
   let estMedecin: ReturnType<typeof signal<boolean>>;
   let estAdmin: ReturnType<typeof signal<boolean>>;
-  let roleService: { estMedecin: ReturnType<typeof signal<boolean>>; estAdmin: ReturnType<typeof signal<boolean>>; charger: jasmine.Spy };
+  let estPharmacie: ReturnType<typeof signal<boolean>>;
+  let roleService: {
+    estMedecin: ReturnType<typeof signal<boolean>>;
+    estAdmin: ReturnType<typeof signal<boolean>>;
+    estPharmacie: ReturnType<typeof signal<boolean>>;
+    charger: jasmine.Spy;
+  };
 
   beforeEach(() => {
     connecte = false;
     estMedecin = signal(false);
     estAdmin = signal(false);
-    roleService = { estMedecin, estAdmin, charger: jasmine.createSpy('charger').and.resolveTo(null) };
+    estPharmacie = signal(false);
+    roleService = { estMedecin, estAdmin, estPharmacie, charger: jasmine.createSpy('charger').and.resolveTo(null) };
     const auth = { initialiser: () => Promise.resolve(), estConnecte: () => connecte };
     const notifications = { nombreNonLues: () => of(2), changements$: of() };
 
@@ -53,10 +60,12 @@ describe('AppComponent', () => {
     expect(texteNav()).not.toContain('Mes téléconsultations');
     expect(texteNav()).not.toContain('Messagerie');
     expect(texteNav()).not.toContain('Mes avis');
+    expect(texteNav()).not.toContain('Dawini');
     expect(texteNav()).toContain('Vérifier une ordonnance');
     expect(texteNav()).toContain('Mon compte');
     expect(fixture.nativeElement.querySelector('app-cloche-notifications')).toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
+    expect(texteNav()).not.toContain('Espace pharmacie');
     expect(texteNav()).not.toContain('Administration');
     expect(roleService.charger).toHaveBeenCalledTimes(1);
   });
@@ -70,7 +79,9 @@ describe('AppComponent', () => {
     expect(texteNav()).toContain('Mes téléconsultations');
     expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/mes-avis"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/dawini"]')).not.toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
+    expect(texteNav()).not.toContain('Espace pharmacie');
     expect(texteNav()).not.toContain('Administration');
   });
 
@@ -98,5 +109,16 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.querySelector('a[href="/admin/candidatures"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/admin/avis"]')).not.toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
+  });
+
+  it('affiche la section « Espace pharmacie » pour le role PHARMACIE seulement', async () => {
+    connecte = true;
+    estPharmacie.set(true);
+    await afficher();
+
+    expect(texteNav()).toContain('Espace pharmacie');
+    expect(fixture.nativeElement.querySelector('a[href="/pharmacie"]')).not.toBeNull();
+    expect(texteNav()).not.toContain('Espace médecin');
+    expect(texteNav()).not.toContain('Administration');
   });
 });

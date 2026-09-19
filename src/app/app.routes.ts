@@ -5,8 +5,11 @@ import { TableauDeBordAdminComponent } from './admin/tableau-de-bord-admin.compo
 import { AnnuaireComponent } from './annuaire/annuaire.component';
 import { adminGuard } from './auth/admin.guard';
 import { medecinGuard } from './auth/medecin.guard';
+import { pharmacieGuard } from './auth/pharmacie.guard';
 import { DeposerAvisComponent } from './avis/deposer-avis.component';
 import { MesAvisComponent } from './avis/mes-avis.component';
+import { MesDemandesComponent } from './dawini/mes-demandes.component';
+import { ReponsesDemandeComponent } from './dawini/reponses-demande.component';
 import { FicheMedecinComponent } from './fiche-medecin/fiche-medecin.component';
 import { AgendaMedecinComponent } from './medecin/agenda-medecin.component';
 import { AvisMedecinComponent } from './medecin/avis-medecin.component';
@@ -21,6 +24,7 @@ import { MesRendezVousComponent } from './rendezvous/mes-rendez-vous.component';
 import { MesNotificationsComponent } from './notifications/mes-notifications.component';
 import { MesOrdonnancesComponent } from './ordonnances/mes-ordonnances.component';
 import { OrdonnanceDetailComponent } from './ordonnances/ordonnance-detail.component';
+import { EspacePharmacieComponent } from './pharmacie/espace-pharmacie.component';
 import { VerifierOrdonnanceComponent } from './ordonnances/verifier-ordonnance.component';
 import { MesTeleconsultationsComponent } from './teleconsultation/mes-teleconsultations.component';
 import { MoiComponent } from './moi/moi.component';
@@ -40,6 +44,15 @@ export const routes: Routes = [
   // Avis du patient sur un rendez-vous honore, et ses avis (les pages redirigent vers la connexion).
   { path: 'avis/nouveau/:rendezVousId', component: DeposerAvisComponent },
   { path: 'mes-avis', component: MesAvisComponent },
+  // Dawini, cote patient : demandes de medicaments et reponses des pharmacies (redirection vers la connexion).
+  { path: 'dawini', component: MesDemandesComponent },
+  { path: 'dawini/:id', component: ReponsesDemandeComponent },
+  {
+    // Espace pharmacie (Dawini) : reserve au role PHARMACIE (pharmacieGuard), sinon retour a l'accueil.
+    path: 'pharmacie',
+    canActivate: [pharmacieGuard],
+    component: EspacePharmacieComponent,
+  },
   {
     // Espace medecin : reserve au role MEDECIN (medecinGuard), sinon retour a l'accueil.
     path: 'medecin',

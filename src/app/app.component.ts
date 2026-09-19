@@ -19,6 +19,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
         <a *ngIf="connecte()" routerLink="/teleconsultations" routerLinkActive="actif">Mes téléconsultations</a>
         <a *ngIf="connecte()" routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
         <a *ngIf="connecte()" routerLink="/mes-avis" routerLinkActive="actif">Mes avis</a>
+        <a *ngIf="connecte()" routerLink="/dawini" routerLinkActive="actif">Dawini</a>
         <a routerLink="/verifier" routerLinkActive="actif">Vérifier une ordonnance</a>
         <a routerLink="/moi" routerLinkActive="actif" style="margin-left:auto">Mon compte</a>
         <app-cloche-notifications *ngIf="connecte()" />
@@ -32,6 +33,12 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
           <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">Téléconsultations</a>
           <a routerLink="/medecin/candidature" routerLinkActive="actif">Ma candidature</a>
           <a routerLink="/medecin/avis" routerLinkActive="actif">Avis des patients</a>
+        </div>
+      </div>
+      <div *ngIf="estPharmacie()" style="background:#0b5c4b">
+        <div style="max-width:720px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;font-size:.95rem">
+          <span style="color:#cfe7e0">Espace pharmacie</span>
+          <a routerLink="/pharmacie" routerLinkActive="actif">Demandes de médicaments</a>
         </div>
       </div>
       <div *ngIf="estAdmin()" style="background:#083f33">
@@ -56,6 +63,8 @@ export class AppComponent implements OnInit {
   estMedecin = this.roleService.estMedecin;
   /** Vrai si l'utilisateur connecte a le role ADMIN (section « Administration »). */
   estAdmin = this.roleService.estAdmin;
+  /** Vrai si l'utilisateur connecte a le role PHARMACIE (section « Espace pharmacie », Dawini). */
+  estPharmacie = this.roleService.estPharmacie;
 
   /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()), puis roles. */
   async ngOnInit() {
