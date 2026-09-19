@@ -282,3 +282,49 @@ decrite dans le README et le journal de tabibi-backend.
   409 transmis), fiche (inscription depuis l'etat sans creneau puis confirmation et lien, 409, non connecte puis 403),
   mes listes (tri et noms, retrait et ligne retiree, echec de retrait avec ligne conservee, etat vide et redirection,
   403), liste du medecin (tri et identifiants abreges, etat vide, 403 et 401), barre de navigation.
+
+## v0.15.0 — Cabinet : secretaires et espace secretaire
+- `RoleService.estSecretaire()` (role SECRETAIRE du realm, autorite ROLE_SECRETAIRE cote API) ; `secretaireGuard`
+  sur `/secretaire`, calque sur `medecinGuard` (non connecte → connexion avec retour ; sans le role →
+  `router.parseUrl('/')`). Defense en profondeur : l'API verifie le rattachement a chaque action.
+- `SecretaireService` (`secretaire/secretaire.service.ts`) : `mesMedecins` (`GET /api/secretaire/medecins`),
+  `agenda(medecinId)`, `ouvrirCreneau(medecinId, debut, dureeMinutes)` (`{ debut, dureeMinutes }`), `honorer`,
+  `annuler` (`POST /api/secretaire/rendezvous/{id}/...`, sans corps) ; type `Rattachement` (`id`, `medecinId`,
+  `secretaireId`, `creeLe`), bornes `DUREE_MIN_MINUTES` 5 / `DUREE_MAX_MINUTES` 120 (celles de `CreneauService`),
+  `estUuid` (format d'un sujet Keycloak, casse indifferente). `MedecinService` : `annulerRendezVous`
+  (`POST /api/medecin/rendezvous/{id}/annuler`), `secretaires`, `rattacherSecretaire(secretaireId)`
+  (`{ secretaireId }`), `retirerSecretaire(id)` (204).
+- `/medecin/secretaires` (`SecretairesComponent`, sous `medecinGuard`) : formulaire a un champ (identifiant du
+  compte de la secretaire, explication « visible dans Mon compte », nettoye et mis en minuscules, refuse cote
+  client s'il n'a pas la forme d'un UUID) ; 201 → confirmation, champ vide et rechargement ; 409 → motif et
+  rechargement ; 400 (soi-meme) → motif ; liste des rattachements tries par `creeLe` croissant (identifiant complet
+  en `<code>` : c'est la donnee que le medecin a saisie, pas une donnee de patient) avec « Retirer » apres
+  `confirm()` puis rechargement ; 404 au retrait → rechargement ; etat vide ; 403 → « reservee aux medecins ».
+- `/medecin/agenda` : « Annuler » (rouge, comme cote patient) sur les seuls CONFIRME, `confirm()` puis
+  `annulerRendezVous` ; succes → message avec la date et rechargement ; 409 → `charger(motif)` (motif conserve
+  pendant le rechargement, comme les candidatures) ; les messages de teleconsultation et d'annulation s'excluent.
+- `/secretaire` (`EspaceSecretaireComponent`, sous `secretaireGuard`) : rattachements tries par date, nom des medecins
+  lu une fois par identifiant dans l'annuaire (a defaut « Medecin » + identifiant abrege), `<select>` « Choisir un
+  medecin » ; un seul rattachement → choisi d'office ; `choisir()` efface les messages et recharge l'agenda (une
+  reponse tardive d'un autre medecin est ignoree) ; agenda trie par `debut`, « Patient » + identifiant abrege,
+  « Marquer honore » et « Annuler » (confirm) sur les CONFIRME, succes → message date et rechargement, 409 / 404 →
+  `chargerAgenda(motif)`, 403 → « Ce cabinet ne vous est pas rattache. » ; formulaire d'ouverture de creneau repris
+  des disponibilites du medecin (datetime-local → `toISOString()`, futur, duree entiere 5..120 controlee cote
+  client), 201 → « Creneau ouvert le … », 400 → motif ; sans rattachement : explication (communiquer son identifiant
+  au medecin) ; 403 → « reservee aux secretaires ».
+- « Mon compte » (`MoiComponent`) : « Identifiant du compte : … » (sujet de `/api/moi`) et bouton « Copier »
+  (`navigator.clipboard.writeText` dans try/catch : contexte non securise ou permission refusee → « Copie
+  impossible : selectionnez l'identifiant et copiez-le. »), phrase d'explication pour les secretaires.
+- Routes `/secretaire` (secretaireGuard) et `/medecin/secretaires` (medecinGuard) ; lien « Mes secretaires »
+  (espace medecin) et section « Espace secretaire » (Agenda du cabinet) si `estSecretaire()`.
+- Tests (37 specs ajoutees, 256 au total) : RoleService (estSecretaire), secretaireGuard (laisse passer, connexion
+  avec l'URL, UrlTree '/'), MedecinService (annulation sans corps et 409 transmis, secretaires, rattachement avec
+  `{ secretaireId }`, retrait 204), SecretaireService (cabinets, agenda, creneau avec corps, honorer / annuler sans
+  corps, 403 et 409 transmis, `estUuid` et bornes), secretaires (liste triee et explication, UUID refuse sans appel,
+  rattachement nettoye puis rechargement, 409 recharge, 400 sans rechargement, retrait apres confirmation, etat vide
+  et 403), agenda du medecin (bouton sur les seuls CONFIRME, annulation avec confirmation puis rechargement, 409
+  recharge), espace secretaire (cabinet unique choisi d'office et actions sur les seuls CONFIRME, choix parmi
+  plusieurs cabinets, honorer, annuler avec confirmation, 409 recharge, ouverture de creneau avec conversion ISO,
+  duree hors bornes refusee et 400, sans rattachement et 403 d'agenda, 403 / 401 de la page), Mon compte
+  (identifiant et copie confirmee, presse-papiers refuse, non connecte), barre de navigation (section pour
+  SECRETAIRE seulement, lien « Mes secretaires »).

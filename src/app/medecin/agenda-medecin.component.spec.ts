@@ -27,7 +27,7 @@ const PLANIFIEE: Teleconsultation = {
   termineeLe: null,
 };
 
-/** Agenda du medecin : proposition d'une teleconsultation sur un rendez-vous confirme. */
+/** Agenda du medecin : proposition d'une teleconsultation et annulation d'un rendez-vous confirme. */
 describe('AgendaMedecinComponent', () => {
   let fixture: ComponentFixture<AgendaMedecinComponent>;
   let medecinService: jasmine.SpyObj<MedecinService>;
@@ -35,7 +35,7 @@ describe('AgendaMedecinComponent', () => {
 
   beforeEach(() => {
     registerLocaleData(localeFr);
-    medecinService = jasmine.createSpyObj<MedecinService>('MedecinService', ['agenda', 'honorer']);
+    medecinService = jasmine.createSpyObj<MedecinService>('MedecinService', ['agenda', 'honorer', 'annulerRendezVous']);
     medecinService.agenda.and.returnValue(of([CONFIRME, HONORE]));
     teleconsultations = jasmine.createSpyObj<TeleconsultationService>('TeleconsultationService', ['planifier']);
 
@@ -61,12 +61,18 @@ describe('AgendaMedecinComponent', () => {
     return boutons.filter((b) => b.textContent?.includes('Proposer une téléconsultation'));
   }
 
+  function boutonsAnnuler(): HTMLButtonElement[] {
+    const boutons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
+    return boutons.filter((b) => b.textContent?.trim() === 'Annuler');
+  }
+
   it('propose une teleconsultation uniquement sur les rendez-vous confirmes', () => {
     fixture.detectChanges();
 
     const lignes: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
     expect(lignes.length).toBe(2);
     expect(boutonsProposer().length).toBe(1);
+    expect(boutonsAnnuler().length).toBe(1);
     // Tri chronologique : le rendez-vous honore (septembre) precede le confirme (decembre).
     expect(lignes[0].textContent).toContain('Honoré');
     expect(lignes[0].querySelector('button')).toBeNull();
@@ -98,5 +104,40 @@ describe('AgendaMedecinComponent', () => {
     expect(texte()).toContain('Une teleconsultation est deja planifiee sur ce rendez-vous.');
     expect(texte()).not.toContain('Téléconsultation proposée au patient');
     expect(boutonsProposer()[0].disabled).toBeFalse();
+  });
+
+  it('« Annuler » demande confirmation, annule le rendez-vous, confirme et recharge l agenda', () => {
+    const confirmation = spyOn(window, 'confirm').and.returnValue(false);
+    medecinService.annulerRendezVous.and.returnValue(of({ ...CONFIRME, statut: 'ANNULE' }));
+    fixture.detectChanges();
+
+    boutonsAnnuler()[0].click();
+    fixture.detectChanges();
+    expect(medecinService.annulerRendezVous).not.toHaveBeenCalled();
+
+    confirmation.and.returnValue(true);
+    boutonsAnnuler()[0].click();
+    fixture.detectChanges();
+
+    expect(medecinService.annulerRendezVous).toHaveBeenCalledWith('r1');
+    expect(texte()).toContain('Rendez-vous du');
+    expect(texte()).toContain('7 décembre');
+    expect(texte()).toContain('annulé : le créneau est de nouveau proposé et le patient est prévenu.');
+    expect(medecinService.agenda).toHaveBeenCalledTimes(2);
+  });
+
+  it('affiche le motif { erreur } d un 409 a l annulation (plus confirme) et recharge l agenda', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    medecinService.annulerRendezVous.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Seul un rendez-vous confirme peut etre annule.' } })),
+    );
+    fixture.detectChanges();
+
+    boutonsAnnuler()[0].click();
+    fixture.detectChanges();
+
+    expect(texte()).toContain('Seul un rendez-vous confirme peut etre annule.');
+    expect(texte()).not.toContain('le patient est prévenu');
+    expect(medecinService.agenda).toHaveBeenCalledTimes(2);
   });
 });

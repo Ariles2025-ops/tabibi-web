@@ -35,6 +35,13 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
           <a routerLink="/medecin/candidature" routerLinkActive="actif">Ma candidature</a>
           <a routerLink="/medecin/avis" routerLinkActive="actif">Avis des patients</a>
           <a routerLink="/medecin/liste-attente" routerLinkActive="actif">Liste d'attente</a>
+          <a routerLink="/medecin/secretaires" routerLinkActive="actif">Mes secrétaires</a>
+        </div>
+      </div>
+      <div *ngIf="estSecretaire()" style="background:#0b5c4b">
+        <div style="max-width:720px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;font-size:.95rem">
+          <span style="color:#cfe7e0">Espace secrétaire</span>
+          <a routerLink="/secretaire" routerLinkActive="actif">Agenda du cabinet</a>
         </div>
       </div>
       <div *ngIf="estPharmacie()" style="background:#0b5c4b">
@@ -67,6 +74,8 @@ export class AppComponent implements OnInit {
   estAdmin = this.roleService.estAdmin;
   /** Vrai si l'utilisateur connecte a le role PHARMACIE (section « Espace pharmacie », Dawini). */
   estPharmacie = this.roleService.estPharmacie;
+  /** Vrai si l'utilisateur connecte a le role SECRETAIRE (section « Espace secrétaire », cabinet). */
+  estSecretaire = this.roleService.estSecretaire;
 
   /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()), puis roles. */
   async ngOnInit() {

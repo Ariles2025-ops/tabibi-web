@@ -6,6 +6,7 @@ import { AnnuaireComponent } from './annuaire/annuaire.component';
 import { adminGuard } from './auth/admin.guard';
 import { medecinGuard } from './auth/medecin.guard';
 import { pharmacieGuard } from './auth/pharmacie.guard';
+import { secretaireGuard } from './auth/secretaire.guard';
 import { DeposerAvisComponent } from './avis/deposer-avis.component';
 import { MesAvisComponent } from './avis/mes-avis.component';
 import { MesDemandesComponent } from './dawini/mes-demandes.component';
@@ -19,6 +20,7 @@ import { DisponibilitesComponent } from './medecin/disponibilites.component';
 import { ListeAttenteMedecinComponent } from './medecin/liste-attente-medecin.component';
 import { NouvelleOrdonnanceComponent } from './medecin/nouvelle-ordonnance.component';
 import { OrdonnancesRedigeesComponent } from './medecin/ordonnances-redigees.component';
+import { SecretairesComponent } from './medecin/secretaires.component';
 import { TeleconsultationsMedecinComponent } from './medecin/teleconsultations-medecin.component';
 import { ConversationComponent } from './messagerie/conversation.component';
 import { MesConversationsComponent } from './messagerie/mes-conversations.component';
@@ -27,6 +29,7 @@ import { MesNotificationsComponent } from './notifications/mes-notifications.com
 import { MesOrdonnancesComponent } from './ordonnances/mes-ordonnances.component';
 import { OrdonnanceDetailComponent } from './ordonnances/ordonnance-detail.component';
 import { EspacePharmacieComponent } from './pharmacie/espace-pharmacie.component';
+import { EspaceSecretaireComponent } from './secretaire/espace-secretaire.component';
 import { VerifierOrdonnanceComponent } from './ordonnances/verifier-ordonnance.component';
 import { MesTeleconsultationsComponent } from './teleconsultation/mes-teleconsultations.component';
 import { MoiComponent } from './moi/moi.component';
@@ -59,6 +62,12 @@ export const routes: Routes = [
     component: EspacePharmacieComponent,
   },
   {
+    // Espace secretaire (cabinet) : reserve au role SECRETAIRE (secretaireGuard), sinon retour a l'accueil.
+    path: 'secretaire',
+    canActivate: [secretaireGuard],
+    component: EspaceSecretaireComponent,
+  },
+  {
     // Espace medecin : reserve au role MEDECIN (medecinGuard), sinon retour a l'accueil.
     path: 'medecin',
     canActivate: [medecinGuard],
@@ -71,6 +80,7 @@ export const routes: Routes = [
       { path: 'candidature', component: CandidatureMedecinComponent },
       { path: 'avis', component: AvisMedecinComponent },
       { path: 'liste-attente', component: ListeAttenteMedecinComponent },
+      { path: 'secretaires', component: SecretairesComponent },
       { path: '', redirectTo: 'agenda', pathMatch: 'full' },
     ],
   },

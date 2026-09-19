@@ -23,6 +23,8 @@ export class RoleService {
   estAdmin = computed(() => this.roles().includes('ADMIN'));
   /** Vrai pour le role PHARMACIE du realm Keycloak (Dawini, autorite ROLE_PHARMACIE cote API) : section « Espace pharmacie ». */
   estPharmacie = computed(() => this.roles().includes('PHARMACIE'));
+  /** Vrai pour le role SECRETAIRE du realm Keycloak (cabinet, autorite ROLE_SECRETAIRE cote API) : section « Espace secrétaire ». */
+  estSecretaire = computed(() => this.roles().includes('SECRETAIRE'));
 
   /**
    * Charge le profil une seule fois (les appels suivants renvoient la meme promesse).

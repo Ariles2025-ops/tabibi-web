@@ -9,8 +9,8 @@ import { TeleconsultationService } from '../teleconsultation/teleconsultation.se
 import { MedecinService } from './medecin.service';
 
 /**
- * Agenda du medecin : ses rendez-vous, a marquer honores, avec redaction d'ordonnance preremplie et
- * proposition d'une teleconsultation sur un rendez-vous confirme.
+ * Agenda du medecin : ses rendez-vous, a marquer honores ou a annuler (creneau remis a disposition, patient
+ * prevenu), avec redaction d'ordonnance preremplie et proposition d'une teleconsultation sur un rendez-vous confirme.
  */
 @Component({
   selector: 'app-agenda-medecin',
@@ -25,6 +25,9 @@ import { MedecinService } from './medecin.service';
       <p *ngIf="teleconsultationProposee() as r" style="color:var(--vert)">
         Téléconsultation proposée au patient pour le rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }}.
         <a routerLink="/medecin/teleconsultations" style="color:var(--vert)">Voir mes téléconsultations</a>
+      </p>
+      <p *ngIf="annule() as r" style="color:var(--vert)">
+        Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }} annulé : le créneau est de nouveau proposé et le patient est prévenu.
       </p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
@@ -43,6 +46,10 @@ import { MedecinService } from './medecin.service';
             <button *ngIf="r.statut === 'CONFIRME'" type="button" class="bouton-secondaire" (click)="proposerTeleconsultation(r)"
                     [disabled]="enCours() !== null">
               {{ enCours() === r.id ? 'Envoi…' : 'Proposer une téléconsultation' }}
+            </button>
+            <button *ngIf="r.statut === 'CONFIRME'" type="button" (click)="annuler(r)" [disabled]="enCours() !== null"
+                    style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
+              {{ enCours() === r.id ? 'Annulation…' : 'Annuler' }}
             </button>
             <a *ngIf="r.statut !== 'ANNULE'" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
                [queryParams]="{ patientId: r.patientId, rendezVousId: r.id }">Rédiger une ordonnance</a>
@@ -67,15 +74,18 @@ export class AgendaMedecinComponent implements OnInit {
   enCours = signal<string | null>(null);
   /** Rendez-vous sur lequel une teleconsultation vient d'etre proposee (message de confirmation). */
   teleconsultationProposee = signal<RendezVous | null>(null);
+  /** Rendez-vous que le medecin vient d'annuler (message de confirmation). */
+  annule = signal<RendezVous | null>(null);
   erreur = signal('');
 
   ngOnInit() {
     this.charger();
   }
 
-  charger() {
+  /** Recharge l'agenda ; `motif` est un message d'erreur a conserver a l'ecran (rendez-vous modifie ailleurs). */
+  charger(motif = '') {
     this.charge.set(true);
-    this.erreur.set('');
+    this.erreur.set(motif);
     this.service.agenda().subscribe({
       next: (liste) => {
         this.rendezVous.set([...liste].sort((a, b) => Date.parse(a.debut) - Date.parse(b.debut)));
@@ -98,6 +108,7 @@ export class AgendaMedecinComponent implements OnInit {
     this.enCours.set(rdv.id);
     this.erreur.set('');
     this.teleconsultationProposee.set(null);
+    this.annule.set(null);
     this.service.honorer(rdv.id).subscribe({
       next: () => {
         this.enCours.set(null);
@@ -110,11 +121,41 @@ export class AgendaMedecinComponent implements OnInit {
     });
   }
 
+  /**
+   * Annule un rendez-vous confirme, apres confirmation : le creneau est remis a disposition et le patient prevenu
+   * par l'API (409 s'il n'est plus confirme : motif affiche et agenda recharge).
+   */
+  annuler(rdv: RendezVous) {
+    if (!confirm('Annuler ce rendez-vous ? Le patient sera prévenu et le créneau de nouveau proposé.')) return;
+    this.enCours.set(rdv.id);
+    this.erreur.set('');
+    this.teleconsultationProposee.set(null);
+    this.annule.set(null);
+    this.service.annulerRendezVous(rdv.id).subscribe({
+      next: () => {
+        this.enCours.set(null);
+        this.annule.set(rdv);
+        this.charger();
+      },
+      error: (e: HttpErrorResponse) => {
+        this.enCours.set(null);
+        if (e.status === 409) {
+          this.charger(e.error?.erreur ?? "Ce rendez-vous n'est plus confirmé.");
+        } else if (e.status === 401) {
+          this.auth.seConnecter();
+        } else {
+          this.erreur.set(e.error?.erreur ?? "L'annulation a échoué, veuillez réessayer.");
+        }
+      },
+    });
+  }
+
   /** Planifie une teleconsultation sur le rendez-vous (409 si non confirme ou deja planifiee : motif affiche). */
   proposerTeleconsultation(rdv: RendezVous) {
     this.enCours.set(rdv.id);
     this.erreur.set('');
     this.teleconsultationProposee.set(null);
+    this.annule.set(null);
     this.teleconsultations.planifier(rdv.id).subscribe({
       next: () => {
         this.enCours.set(null);

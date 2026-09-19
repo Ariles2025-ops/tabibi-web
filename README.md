@@ -269,3 +269,31 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
   état vide avec lien vers les disponibilités.
 - `ListeAttenteService` (`inscrire`, `mes`, `retirer`, `duMedecin`), type `InscriptionAttente`.
 - Barre de navigation : « Mes listes d'attente » (utilisateurs connectés), « Liste d'attente » (espace médecin).
+
+## v0.15.0 — Cabinet : secrétaires et espace secrétaire
+- `RoleService.estSecretaire()` (rôle SECRETAIRE lu sur `/api/moi`) ; `secretaireGuard` (`canActivate` sur
+  `/secretaire`, même modèle que `medecinGuard`) : non connecté → connexion Keycloak puis retour sur la page
+  demandée ; connecté sans le rôle → redirection vers l'accueil. L'autorisation réelle reste côté API (chaque action
+  exige un rattachement au cabinet du médecin).
+- `/medecin/secretaires` (sous `medecinGuard`) : secrétaires rattachées à mon cabinet (`GET /api/medecin/secretaires`),
+  rattachement par l'identifiant Keycloak du compte de la secrétaire — champ « Identifiant du compte de votre
+  secrétaire (visible dans Mon compte) », contrôle du format UUID côté client — (`POST /api/medecin/secretaires
+  { secretaireId }`, 201 ; 409 déjà rattachée → motif affiché et liste rechargée ; 400 soi-même → motif), retrait
+  avec confirmation (`POST /api/medecin/secretaires/{id}/retirer`, 204) ; la secrétaire est prévenue par l'API.
+- `/medecin/agenda` : bouton « Annuler » sur les rendez-vous CONFIRME (confirmation, `POST
+  /api/medecin/rendezvous/{id}/annuler`) : le créneau est de nouveau proposé et le patient prévenu ; 409 (plus
+  confirmé) → motif `{ erreur }` affiché et agenda rechargé.
+- `/secretaire` (sous `secretaireGuard`) : espace secrétaire — choix du médecin parmi mes rattachements
+  (`GET /api/secretaire/medecins`, nom lu dans l'annuaire, choisi d'office s'il n'y en a qu'un), puis son agenda
+  (`GET /api/secretaire/medecins/{medecinId}/rendezvous`) avec « Marquer honoré » et « Annuler » (confirmation) sur
+  les CONFIRME (`POST /api/secretaire/rendezvous/{id}/honorer | annuler` ; 409 → motif affiché et agenda rechargé ;
+  403 → « Ce cabinet ne vous est pas rattaché. ») et formulaire d'ouverture de créneau (`<input type="datetime-local">`
+  converti en ISO 8601 UTC, durée de 5 à 120 minutes contrôlée côté client → `POST
+  /api/secretaire/medecins/{medecinId}/creneaux { debut, dureeMinutes }`, 400 → motif affiché).
+- « Mon compte » (`/moi`) : identifiant du compte (sujet du jeton) avec bouton « Copier » (`navigator.clipboard`,
+  message de repli si la copie est refusée), à communiquer au médecin pour le rattachement.
+- `SecretaireService` (`mesMedecins`, `agenda`, `ouvrirCreneau`, `honorer`, `annuler`), type `Rattachement`,
+  bornes `DUREE_MIN_MINUTES` / `DUREE_MAX_MINUTES`, `estUuid` ; `MedecinService` gagne `annulerRendezVous`,
+  `secretaires`, `rattacherSecretaire`, `retirerSecretaire`.
+- Barre de navigation : « Mes secrétaires » (espace médecin) et section « Espace secrétaire » (Agenda du cabinet),
+  visible uniquement si `estSecretaire()`.
