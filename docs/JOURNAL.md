@@ -524,3 +524,57 @@ decrite dans le README et le journal de tabibi-backend.
   criteres), `FicheMedecinComponent` (titre « Dr Amina Belkacem, Généraliste à Alger | Tabibi », description,
   canonique, indexable ; praticien inconnu → titre, noindex, 404), `MesNotificationsComponent` (titre, noindex).
 
+## v0.21.0 — Tests de bout en bout (Playwright) sur une API simulee
+- Pourquoi : les specs Karma testent chaque composant avec des services factices ; rien ne parcourait l'application
+  reelle (build de production, rendu serveur, hydratation, navigation) dans un navigateur.
+- `@playwright/test` 1.63.0 (`npm install --save-dev`). `playwright.config.ts` : `testDir: e2e`, `webServer` =
+  `node dist/tabibi-web/server/server.mjs` avec `PORT=4300`, `TABIBI_API_URL=http://localhost:4301`,
+  `TABIBI_KEYCLOAK_ISSUER=http://localhost:4301/realms/tabibi` (readiness sur `/assets/config.json`, fichier
+  statique : ni rendu ni appel a l'API), `globalSetup: e2e/global-setup.ts`, projet `chromium` (`Desktop Chrome`,
+  `chromiumSandbox: false`, `executablePath: CHROME_BIN` si defini — ici
+  `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`, Chrome 141, alors que Playwright 1.63 attend la revision 1243 :
+  fonctionne), `locale fr-FR`, `timezoneId Africa/Algiers`, `trace: retain-on-failure`, `retries: 1` en CI, rapport
+  `list` (+ `html` en CI).
+- `e2e/api-simulee.ts` : serveur `node:http` (CORS ouvert, OPTIONS 204) — `GET /api/medecins` (deux praticiens,
+  filtres `specialite`, `wilaya`, `q` sans accents), `/api/medecins/{id}` (404 sinon), `/creneaux` (trois creneaux
+  dans deux jours, un pris), `/avis` (m1 : 4,5 / 5, deux avis ; m2 : aucun), `POST /api/creneaux/{id}/reserver`
+  (201), `/api/moi`, `/api/rendezvous/mes`, `/api/notifications/*` (401 sans `Authorization: Bearer`),
+  `/api/ordonnances/verifier/{code}` (`TBB-2026-0001` → `{ valide: true, emiseLe, statut: EMISE }`, sinon 404) ;
+  issuer OIDC simule `/realms/tabibi` (decouverte conforme a la validation stricte d'angular-oauth2-oidc : tous
+  les points de terminaison sous l'issuer, `certs` → `{ keys: [] }`, page HTML « Connexion simulée » sur
+  `/protocol/openid-connect/auth`). Exporte `demarrerApiSimulee(port)`, `arreter`, `MEDECINS`,
+  `CODE_ORDONNANCE_VALIDE`, `journal` des requetes ; lancable seul avec node 22+ (`node e2e/api-simulee.ts 4301`).
+- `e2e/global-setup.ts` : ecrit `dist/tabibi-web/browser/assets/config.json` (`apiUrl`, `keycloakIssuer` simules,
+  comme `docker/entrypoint.sh` : sans cela le navigateur, apres l'hydratation, appellerait `localhost:8080` et le
+  cache de transfert, cle par URL, ne servirait a rien), demarre l'API simulee, la ferme au teardown. Le `webServer`
+  demarre avant le `globalSetup` (ordre de Playwright), d'ou la readiness sur un fichier statique.
+- `e2e/outils.ts` : `ouvrir(page, url)` = `page.goto` puis attente de `app-root:not([ngh])` (Angular retire
+  l'attribut `ngh` une fois l'application hydratee). Sans cette attente, une saisie ou un clic sur le HTML rendu par
+  le serveur, avant l'execution du JavaScript, est perdu : observe une fois sur « recherche par nom » (soumission
+  native du formulaire, page rechargee, champ vide). Les pages qui redirigent vers l'issuer utilisent `page.goto`.
+- Connexion simulee : angular-oauth2-oidc n'accepte pas un jeton fabrique (signature, issuer), et pre-remplir
+  `sessionStorage` sans jeton valide ne connecte pas ; les tests couvrent donc les parcours publics et verifient que
+  les pages privees rendent « Redirection vers la page de connexion… » (HTML du serveur, `noindex`) puis envoient le
+  navigateur sur l'adresse d'autorisation de l'issuer simule (`client_id=tabibi-web`, `response_type=code`,
+  `redirect_uri=http://localhost:4300`, `state` contenant la page de retour).
+- Tests (16, tous verts ici en 9,4 s, un seul worker) : `recherche.spec.ts` (5 : chargement et filtre par
+  specialite, recherche par nom, fiche avec deux boutons « Réserver », « 4,5 / 5 (2 avis) », dernier avis, liste
+  d'attente, « Écrire au médecin », titre de la fiche ; fiche sans avis ; « Réserver » sans connexion → connexion
+  simulee), `verification.spec.ts` (3 : code valide « émise le mardi 15 septembre 2026 à hh:30 (Émise). » — l'heure
+  n'est pas figee, 09:30 UTC dans le HTML du serveur puis 10:30 Alger apres hydratation —, code inconnu, lien
+  `?code=` rendu par le serveur), `navigation.spec.ts` (8 : 404 « Page introuvable » et retour a l'annuaire, praticien
+  inconnu 404 — le texte est « Praticien introuvable. » ou le motif `{ erreur }` du 404 des creneaux, selon la reponse
+  arrivee en dernier —, `robots.txt`, `sitemap.xml`, titres / descriptions / canoniques sans JavaScript, titre mis a
+  jour en navigation cote client, page privee noindex puis connexion, « Mon compte » → « Se connecter »).
+- `package.json` : script `e2e` (`ng build && playwright test`), version 0.21.0 ; `.gitignore` et `.dockerignore` :
+  `test-results/`, `playwright-report/` (+ `e2e/`, `playwright.config.ts` hors du contexte Docker) ;
+  `tsconfig.app.json` et `tsconfig.spec.json` ne compilent pas `e2e/` (listes explicites), `ng build` et `ng test`
+  inchanges.
+- CI : job `e2e` (Node 20, `npm ci`, `npx playwright install --with-deps chromium`, `npm run e2e`, rapport et
+  `test-results/` joints en artefact si echec) ; `image` attend `build-test` et `e2e`. YAML valide (PyYAML), workflow
+  non execute ici.
+- README : section « Tests de bout en bout (Playwright) », « Prochaines etapes ».
+- Verifie : `ng build` sans erreur, `ng test` 286 specs SUCCESS (inchangees), `CHROME_BIN=... npm run e2e` :
+  16 passed (trois passes consecutives, puis `--workers=3`) ; aucun serveur node restant apres la fin (webServer et
+  API simulee arretes par Playwright).
+

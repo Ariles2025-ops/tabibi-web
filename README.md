@@ -57,6 +57,38 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
 (job `build-test`, sur chaque pull request et push) ; `package-lock.json` est versionne pour la reproductibilite.
 Le journal des versions est dans `docs/JOURNAL.md`.
 
+### Tests de bout en bout (Playwright)
+Parcours publics dans un vrai navigateur, sur le build de production servi par `server.ts` (rendu cote serveur) face a
+une **API simulee** (`e2e/api-simulee.ts`, petit serveur http node : deux praticiens, creneaux, avis, reservation
+201, `/api/moi`, notifications, verification d'ordonnance — code valide `TBB-2026-0001`) qui tient aussi lieu
+d'**issuer OIDC simule** (document de decouverte et page « Connexion simulée » : aucun jeton n'est delivre, les
+parcours connectes ne sont pas testes ici mais par les specs Karma avec des services factices).
+```bash
+npm run e2e                                   # ng build, puis Playwright : API simulee (4301) + serveur SSR (4300)
+CHROME_BIN=/chemin/vers/chrome npm run e2e    # Chrome deja installe (poste, conteneur) au lieu du Chromium de Playwright
+npx playwright install chromium               # sinon, une fois : le Chromium de Playwright (--with-deps en CI)
+npx playwright test e2e/recherche.spec.ts     # un seul fichier (build deja fait)
+npx playwright show-report                    # rapport HTML (CI : joint au workflow en cas d'echec)
+```
+- `playwright.config.ts` : `webServer` = `node dist/tabibi-web/server/server.mjs` (`PORT=4300`,
+  `TABIBI_API_URL=http://localhost:4301`, `TABIBI_KEYCLOAK_ISSUER=http://localhost:4301/realms/tabibi`, pret sur
+  `/assets/config.json`) ; `globalSetup` (`e2e/global-setup.ts`) reecrit `dist/tabibi-web/browser/assets/config.json`
+  vers la meme API (comme `docker/entrypoint.sh` au deploiement : sinon le navigateur viserait `localhost:8080` apres
+  l'hydratation) et demarre l'API simulee (arretee a la fin) ; navigateur `Desktop Chrome`, `fr-FR`,
+  `Africa/Algiers`, trace conservee en cas d'echec ; `executablePath` = `CHROME_BIN` si la variable est definie.
+- `e2e/outils.ts` : `ouvrir(page, url)` attend l'hydratation (`app-root` sans attribut `ngh`) avant toute
+  interaction, sinon une saisie faite sur le HTML du serveur est perdue.
+- `e2e/recherche.spec.ts` : praticiens affiches au chargement, filtre par specialite, recherche par nom, fiche
+  (creneaux disponibles, « 4,5 / 5 (2 avis) », dernier avis, liste d'attente, messagerie), fiche sans avis,
+  « Réserver » sans connexion → page de connexion de l'issuer simule (`client_id`, `redirect_uri`, `state`).
+- `e2e/verification.spec.ts` : code valide (« Ordonnance authentique, émise le … (Émise). »), code inconnu
+  (« Code inconnu. »), lien `/verifier?code=…` rendu par le serveur.
+- `e2e/navigation.spec.ts` : URL inconnue → 404 et « Page introuvable », praticien inconnu → 404, `robots.txt`,
+  `sitemap.xml`, titres / descriptions / canoniques rendus par le serveur, titre mis a jour en navigation cote client,
+  page privee `noindex` puis redirection vers la connexion, « Mon compte » → « Se connecter ».
+- CI : job `e2e` (`npx playwright install --with-deps chromium`, `npm run e2e`, rapport joint en cas d'echec) ; le job
+  `image` attend `build-test` et `e2e`. `test-results/` et `playwright-report/` sont ignores par git et Docker.
+
 ## Deploiement
 
 ### Image Docker (`Dockerfile`)
@@ -205,7 +237,7 @@ Limites :
 
 ## Prochaines etapes
 - Nom du patient dans l'agenda et sur l'ordonnance (l'API n'expose que l'identifiant).
-- Tests de bout en bout (Playwright) sur les parcours publics.
+- Tests de bout en bout des parcours connectes (Keycloak de test ou jeton de developpement accepte par l'API).
 
 ## v0.2.0 — Annuaire (web)
 - Ecran d'accueil public : recherche de praticiens (specialite, wilaya, nom) via `GET /api/medecins`.
