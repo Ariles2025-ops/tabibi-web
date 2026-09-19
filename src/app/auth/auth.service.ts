@@ -62,6 +62,18 @@ export class AuthService {
     this.oauth.initCodeFlow(retour);
   }
 
+  /**
+   * Redirige vers la page d'inscription Keycloak (meme flux OIDC que la connexion, mais vers
+   * l'endpoint /registrations). Apres creation du compte, l'utilisateur revient sur `retour`.
+   */
+  async sInscrire(retour: string = this.router.url): Promise<void> {
+    if (!this.navigateur) return;
+    await this.initialiser();
+    const base = (this.oauth.issuer || '').replace(/\/$/, '');
+    if (base) (this.oauth as unknown as { loginUrl: string }).loginUrl = base + '/protocol/openid-connect/registrations';
+    this.oauth.initCodeFlow(retour);
+  }
+
   seDeconnecter(): void {
     if (!this.navigateur) return;
     this.oauth.logOut();
