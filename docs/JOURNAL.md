@@ -350,3 +350,39 @@ decrite dans le README et le journal de tabibi-backend.
   `EspaceSecretaireComponent`.
 - Tests (4 specs ajoutees, 264 au total) : `disponibilites.component.spec.ts` (attributs min / max et libelle, 180
   minutes refusees sans appel, ouverture de 120 minutes avec conversion ISO puis confirmation, motif d'un 400).
+
+## v0.17.0 — Image Docker (nginx, configuration a l'execution)
+- Jusqu'ici le front n'etait deployable qu'en copiant `dist/` a la main. `Dockerfile` multi-etapes : `node:20-alpine`
+  (`npm ci --no-audit --no-fund`, `npm run build`, `NG_CLI_ANALYTICS=false`), puis `nginx:1.27-alpine` qui sert
+  `dist/tabibi-web/browser` dans `/usr/share/nginx/html` sur le port 80 (celui du `reverse_proxy web:80` du
+  Caddyfile de tabibi-backend), `EXPOSE 80`, `HEALTHCHECK` (`wget` busybox sur `/`), `ENTRYPOINT /docker/entrypoint.sh`.
+- `docker/entrypoint.sh` (POSIX sh, `sh -n` et execution verifiees dans un bac a sable avec `dash`, `nginx` et
+  `envsubst` factices — pas de daemon Docker sur le poste) : lit `TABIBI_API_URL`, `TABIBI_KEYCLOAK_ISSUER`,
+  `TABIBI_KEYCLOAK_CLIENT_ID` ; sans elles, derive `https://api.$DOMAINE` et `https://auth.$DOMAINE/realms/tabibi`
+  si `DOMAINE` est fourni (le `.env` du compose de production du backend), sinon les valeurs localhost ; nettoie
+  (espaces, fins de ligne, barre oblique finale), avertit si une valeur n'est pas une URL `http(s)://`, ecrit
+  `assets/config.json` avec un echappement JSON minimal (`\` et `"`), calcule `TABIBI_CSP_CONNECT_SRC` (`'self'` +
+  origines de l'API et de Keycloak), genere `/etc/nginx/conf.d/default.conf` depuis
+  `/etc/nginx/tabibi/default.conf.template` par `envsubst` limite a cette seule variable (les `$uri` de nginx
+  restent intacts), puis `exec nginx -g 'daemon off;'`.
+- `nginx/default.conf.template` : `listen 80`, `try_files $uri $uri/ /index.html`, `gzip on` (types textuels),
+  `server_tokens off` ; `map $uri $tabibi_cache_control` (`no-store` pour `index.html` et `assets/config.json`,
+  `public, max-age=31536000, immutable` pour les `*.js` / `*.css` a empreinte de la racine, `max-age=3600` sinon)
+  applique par une seule directive `add_header` au niveau du serveur (un `add_header` dans un `location` ferait
+  perdre ceux du parent) ; en-tetes `X-Content-Type-Options nosniff`, `X-Frame-Options DENY`,
+  `Referrer-Policy strict-origin-when-cross-origin`, `Permissions-Policy camera=(), microphone=(), geolocation=()`
+  (Jitsi s'ouvre dans un autre onglet) et `Content-Security-Policy` (`default-src 'self'`, `connect-src` calcule,
+  `frame-ancestors 'none'`, `img-src 'self' data:`, `style-src 'self' 'unsafe-inline'` pour les styles inline des
+  composants, `script-src 'self'`, `base-uri 'self'`, `object-src 'none'`, `form-action 'self'`), tous avec `always`.
+- `angular.json` : `outputHashing: all` (les bundles sortaient sans empreinte, `main.js`, ce qui interdisait tout
+  cache long) et `optimization.styles.inlineCritical: false` : l'inlining du CSS critique (Critters) ajoutait dans
+  `index.html` un `onload="this.media='all'"` inline que `script-src 'self'` bloque, la feuille restant alors en
+  `media="print"` ; la feuille de style fait 1,6 ko, l'optimisation n'apportait rien.
+- Utilisateur : processus maitre root (port 80, lecture de la configuration), processus de travail sous `nginx` ;
+  l'image `nginx-unprivileged` ecoute sur 8080 et exigerait de modifier le Caddyfile, choix documente dans le README.
+- `.dockerignore` (`node_modules`, `dist`, `.angular`, `coverage`, `out-tsc`, `.git`, `.github`, `docs`, `*.md`).
+- README : section « Deploiement » (image, variables, gabarit nginx, lancement local avec la remarque sur le port 4200
+  du realm de developpement, coherence avec `docker-compose.prod.yml` : le service `web` doit recevoir `DOMAINE` ou
+  les variables `TABIBI_*`), mention dans « Configuration ».
+- Tests : inchanges (264 specs) ; `ng build` verifie avec les nouvelles options (`main-XXXXXXXX.js`, `index.html`
+  sans script ni gestionnaire inline).

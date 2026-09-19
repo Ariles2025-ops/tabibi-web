@@ -1,0 +1,11 @@
+# Contexte de construction de l'image : seuls package*.json, angular.json, tsconfig*.json et src/ sont necessaires.
+node_modules/
+dist/
+.angular/
+coverage/
+out-tsc/
+.git/
+.github/
+docs/
+*.md
+.DS_Store

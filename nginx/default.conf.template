@@ -1,0 +1,49 @@
+# Serveur nginx du front web Tabibi (fichiers statiques du build Angular).
+# Gabarit : docker/entrypoint.sh y remplace ${TABIBI_CSP_CONNECT_SRC} (envsubst limite a cette seule variable,
+# les $variables nginx restent intactes) et ecrit le resultat dans /etc/nginx/conf.d/default.conf.
+# Le fichier est inclus dans le bloc http de /etc/nginx/nginx.conf : map y est autorise.
+
+# Politique de cache selon le fichier servi (une seule directive add_header au niveau du serveur : nginx
+# n'herite pas des add_header d'un bloc parent des qu'un bloc location en definit un).
+map $uri $tabibi_cache_control {
+    # Point d'entree de l'application et configuration a l'execution : jamais mis en cache, le deploiement
+    # les remplace (index.html reference les bundles du build courant, config.json vient de l'environnement).
+    ~^/index\.html$              "no-store";
+    ~^/assets/config\.json$      "no-store";
+    # Bundles avec empreinte (main-XXXXXXXX.js, styles-XXXXXXXX.css, chunk-XXXXXXXX.js ; outputHashing "all") :
+    # un contenu different a toujours un nom different, cache long et immuable.
+    ~^/[^/]+\.(js|css)$          "public, max-age=31536000, immutable";
+    # Autres fichiers statiques (assets/, polices, images) : cache court avec revalidation.
+    default                      "public, max-age=3600";
+}
+
+server {
+    listen 80;
+    server_name _;
+    server_tokens off;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Compression des reponses textuelles (Caddy, devant, ne recompresse pas une reponse deja compressee).
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 256;
+    gzip_types text/plain text/css application/json application/javascript text/javascript image/svg+xml;
+
+    # En-tetes de securite, sur toutes les reponses (y compris index.html servi pour une route Angular et les 404).
+    add_header Cache-Control $tabibi_cache_control always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    # La teleconsultation s'ouvre dans un autre onglet (Jitsi) : la page n'a besoin ni de la camera ni du micro.
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    # CSP compatible Angular (styles inline des composants) et Keycloak (discovery et jetons en XHR vers l'issuer) :
+    # connect-src recoit l'origine de l'API et celle de Keycloak, calculees a l'execution par l'entrypoint.
+    add_header Content-Security-Policy "default-src 'self'; connect-src ${TABIBI_CSP_CONNECT_SRC}; frame-ancestors 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'" always;
+
+    # Routage cote client : une URL profonde (/medecins/42, rechargement) renvoie index.html, Angular fait le reste.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

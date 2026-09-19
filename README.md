@@ -33,6 +33,8 @@ Le build est le meme partout : l'application lit **`assets/config.json`** au dem
 - `index.html` porte `<base href="/">` : les chemins relatifs (scripts, `assets/config.json`) se resolvent depuis la
   racine, y compris apres un rechargement sur une route profonde ; pour publier sous un sous-chemin,
   `npx ng build --base-href /tabibi/`.
+- Avec l'image Docker (section « Deploiement »), ce fichier est ecrit au demarrage du conteneur a partir des variables
+  d'environnement `TABIBI_API_URL`, `TABIBI_KEYCLOAK_ISSUER` et `TABIBI_KEYCLOAK_CLIENT_ID`.
 
 ## Tester
 Tests unitaires Karma / Jasmine (`*.spec.ts` a cote de chaque fichier ; services avec `HttpTestingController`,
@@ -47,9 +49,72 @@ Le lanceur `ChromeHeadlessCI` (`ChromeHeadless` + `--no-sandbox --disable-gpu`) 
 L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, `ng build` et `ng test` headless ;
 `package-lock.json` est versionne pour la reproductibilite. Le journal des versions est dans `docs/JOURNAL.md`.
 
+## Deploiement
+
+### Image Docker (`Dockerfile`)
+Image multi-etapes : `node:20-alpine` construit le bundle (`npm ci`, `npm run build`, empreintes dans les noms de
+fichiers : `outputHashing: all`), puis `nginx:1.27-alpine` sert `dist/tabibi-web/browser` sur le **port 80**.
+La configuration n'est pas figee dans l'image : au demarrage du conteneur, `docker/entrypoint.sh` (POSIX sh)
+ecrit `assets/config.json` et genere la configuration nginx a partir de l'environnement, puis lance nginx au premier
+plan. Le meme build sert donc en recette et en production.
+
+| Variable | Defaut | Role |
+|---|---|---|
+| `TABIBI_API_URL` | `https://api.$DOMAINE` si `DOMAINE` est defini, sinon `http://localhost:8080` | origine de l'API (`apiUrl`) |
+| `TABIBI_KEYCLOAK_ISSUER` | `https://auth.$DOMAINE/realms/tabibi` si `DOMAINE` est defini, sinon `http://localhost:8081/realms/tabibi` | issuer OIDC (`keycloakIssuer`) |
+| `TABIBI_KEYCLOAK_CLIENT_ID` | `tabibi-web` | client public OIDC (`keycloakClientId`) |
+| `DOMAINE` | (aucun) | domaine public, celui du `.env` de `docker-compose.prod.yml` (tabibi-backend) : en derive les deux URL ci-dessus, avec les hotes `api.` et `auth.` du Caddyfile |
+
+Les valeurs sont nettoyees (espaces, barre oblique finale) et echappees pour le JSON ; une valeur qui n'est pas une
+URL `http(s)://` est signalee dans le journal du conteneur (l'application ne joindrait alors ni l'API ni Keycloak).
+
+`nginx/default.conf.template` (gabarit, `envsubst` limite a `${TABIBI_CSP_CONNECT_SRC}` : les `$variables` nginx
+restent intactes) :
+- `try_files $uri $uri/ /index.html` : une route Angular rechargee (`/medecins/42`) renvoie `index.html` ;
+- cache : `no-store` sur `index.html` et `assets/config.json` (remplaces a chaque deploiement), un an et `immutable`
+  sur les bundles a empreinte (`main-XXXXXXXX.js`, `styles-XXXXXXXX.css`), une heure sur le reste de `assets/` ;
+- `gzip on` ; `server_tokens off` ;
+- en-tetes de securite sur toutes les reponses : `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+  (la teleconsultation s'ouvre dans un autre onglet, sur Jitsi) et une `Content-Security-Policy` compatible Angular et
+  Keycloak : `default-src 'self'; connect-src 'self' <origine de l'API> <origine de Keycloak>; frame-ancestors 'none';
+  img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; object-src 'none';
+  form-action 'self'`. Les origines de `connect-src` sont calculees a l'execution a partir des variables ci-dessus.
+  Pour que `script-src 'self'` tienne, le build n'inline plus le CSS critique dans `index.html`
+  (`optimization.styles.inlineCritical: false`) : cette optimisation ajoutait un `onload` inline sur la feuille de style.
+- `HEALTHCHECK` : `wget` sur `/` toutes les 30 s.
+
+Utilisateur : le processus maitre de nginx reste root, pour ecouter sur le port 80 attendu par le reverse proxy
+(`reverse_proxy web:80` dans le Caddyfile de tabibi-backend) ; les processus de travail, qui servent les requetes,
+tournent sous l'utilisateur `nginx` (directive `user` de l'image officielle). La variante `nginx-unprivileged`
+ecoute sur 8080 et imposerait de modifier le Caddyfile ; ce choix est documente plutot que force.
+
+```bash
+docker build -t tabibi-web .
+# En local, face a l'API et au Keycloak de developpement (docker compose up dans tabibi-backend) :
+docker run --rm -p 8088:80 -e TABIBI_API_URL=http://localhost:8080 \
+  -e TABIBI_KEYCLOAK_ISSUER=http://localhost:8081/realms/tabibi tabibi-web
+curl -sI http://localhost:8088/ | grep -i "content-security-policy\|cache-control"
+curl -s http://localhost:8088/assets/config.json
+```
+Le realm de developpement n'autorise que l'origine `http://localhost:4200` (redirections du client `tabibi-web`,
+`TABIBI_CORS_ORIGINES` de l'API) : pour se connecter depuis le conteneur sans toucher au realm, publier sur ce port
+(`-p 4200:80`, `ng serve` arrete), sinon ajouter `http://localhost:8088/*` au client et `http://localhost:8088` aux
+origines CORS de l'API. Le contexte de construction est reduit par `.dockerignore` (`node_modules`, `dist`,
+`.angular`, `coverage`, `.git`, documentation).
+
+### Avec `docker-compose.prod.yml` (tabibi-backend)
+Le service `web` y attend l'image `ghcr.io/${ORG_GITHUB}/tabibi-web:${WEB_TAG}` derriere Caddy (`https://DOMAINE` ->
+`web:80`, l'API sur `https://api.DOMAINE`, Keycloak sur `https://auth.DOMAINE`). Pour que le front vise ces hotes,
+le service doit recevoir soit `DOMAINE` (`environment: DOMAINE: ${DOMAINE}`, les URL sont derivees), soit les
+trois variables `TABIBI_*` explicites ; sans rien, l'image retombe sur les valeurs localhost du poste de developpement.
+Le client `tabibi-web` du realm de production (genere par `infra/keycloak/realm-production.py`) autorise deja
+`https://DOMAINE/*`.
+
 ## Prochaines etapes
 - Nom du patient dans l'agenda et sur l'ordonnance (l'API n'expose que l'identifiant).
 - SSR (Angular Universal) pour les pages publiques / SEO.
+- Publication de l'image sur GHCR par la CI.
 
 ## v0.2.0 — Annuaire (web)
 - Ecran d'accueil public : recherche de praticiens (specialite, wilaya, nom) via `GET /api/medecins`.
@@ -309,3 +374,10 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
 - `/medecin/disponibilites` : la durée d'un créneau est bornée à **5..120 minutes** comme dans l'API (le champ acceptait
   jusqu'à 240 et l'API répondait 400) ; libellé « Durée (minutes, de 5 à 120) », contrôle côté client « Indiquez une
   durée entre 5 et 120 minutes. », bornes `DUREE_MIN_MINUTES` / `DUREE_MAX_MINUTES` partagées avec l'espace secrétaire.
+
+## v0.17.0 — Image Docker
+- `Dockerfile` multi-etapes (`node:20-alpine` puis `nginx:1.27-alpine`, port 80), `docker/entrypoint.sh` (configuration
+  a l'execution : `assets/config.json` et CSP depuis `TABIBI_API_URL`, `TABIBI_KEYCLOAK_ISSUER`,
+  `TABIBI_KEYCLOAK_CLIENT_ID` ou `DOMAINE`), `nginx/default.conf.template` (routage Angular, cache, gzip, en-tetes de
+  securite), `.dockerignore`. Build avec empreintes (`outputHashing: all`) et sans CSS critique inline (CSP).
+- Voir la section « Deploiement » ci-dessus.
