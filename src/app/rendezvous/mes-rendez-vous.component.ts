@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
+import { AvisService } from '../avis/avis.service';
 import { RendezVous, RendezVousService } from './rendezvous.service';
 import { libelleStatutRendezVous } from './statut-rendez-vous';
 
@@ -33,6 +34,8 @@ import { libelleStatutRendezVous } from './statut-rendez-vous';
                     style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px">
               {{ enCours() === r.id ? 'Annulation…' : 'Annuler' }}
             </button>
+            <a *ngIf="r.statut === 'HONORE' && !avisDonne(r)" class="bouton-secondaire" [routerLink]="['/avis/nouveau', r.id]">Donner mon avis</a>
+            <span *ngIf="r.statut === 'HONORE' && avisDonne(r)" style="color:#566b64">Avis donné</span>
           </li>
         </ul>
         <p *ngIf="!charge() && !erreur() && rendezVous().length === 0">
@@ -46,12 +49,15 @@ export class MesRendezVousComponent implements OnInit {
   private auth = inject(AuthService);
   private service = inject(RendezVousService);
   private annuaire = inject(AnnuaireService);
+  private avis = inject(AvisService);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
   rendezVous = signal<RendezVous[]>([]);
   /** Nom complet des praticiens, par identifiant. */
   noms = signal<Partial<Record<string, string>>>({});
+  /** Identifiants des rendez-vous pour lesquels j'ai deja donne un avis (GET /api/avis/mes). */
+  rendezVousNotes = signal<Set<string>>(new Set());
   charge = signal(false);
   /** Identifiant du rendez-vous dont l'annulation est en cours. */
   enCours = signal<string | null>(null);
@@ -75,6 +81,7 @@ export class MesRendezVousComponent implements OnInit {
       next: (liste) => {
         this.rendezVous.set([...liste].sort((a, b) => Date.parse(a.debut) - Date.parse(b.debut)));
         this.chargerNoms(liste);
+        this.chargerAvis(liste);
         this.charge.set(false);
       },
       error: (e: HttpErrorResponse) => {
@@ -115,6 +122,11 @@ export class MesRendezVousComponent implements OnInit {
     return libelleStatutRendezVous(statut);
   }
 
+  /** Vrai si un avis a deja ete depose sur ce rendez-vous (« Avis donné » a la place du bouton). */
+  avisDonne(rdv: RendezVous): boolean {
+    return this.rendezVousNotes().has(rdv.id);
+  }
+
   /** Recupere (une seule fois par praticien) le nom des medecins des rendez-vous. */
   private chargerNoms(liste: RendezVous[]) {
     const ids = new Set(liste.map((r) => r.medecinId));
@@ -122,5 +134,14 @@ export class MesRendezVousComponent implements OnInit {
       if (this.noms()[id] !== undefined) continue;
       this.annuaire.medecin(id).subscribe((m) => this.noms.update((noms) => ({ ...noms, [id]: m.nomComplet })));
     }
+  }
+
+  /** Lit mes avis (s'il y a au moins un rendez-vous honore) pour ne proposer « Donner mon avis » qu'une fois. */
+  private chargerAvis(liste: RendezVous[]) {
+    if (!liste.some((r) => r.statut === 'HONORE')) return;
+    this.avis.mes().subscribe({
+      next: (avis) => this.rendezVousNotes.set(new Set(avis.map((a) => a.rendezVousId))),
+      error: () => undefined,
+    });
   }
 }

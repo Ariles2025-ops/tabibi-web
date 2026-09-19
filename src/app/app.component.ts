@@ -18,6 +18,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
         <a *ngIf="connecte()" routerLink="/mes-ordonnances" routerLinkActive="actif">Mes ordonnances</a>
         <a *ngIf="connecte()" routerLink="/teleconsultations" routerLinkActive="actif">Mes téléconsultations</a>
         <a *ngIf="connecte()" routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
+        <a *ngIf="connecte()" routerLink="/mes-avis" routerLinkActive="actif">Mes avis</a>
         <a routerLink="/verifier" routerLinkActive="actif">Vérifier une ordonnance</a>
         <a routerLink="/moi" routerLinkActive="actif" style="margin-left:auto">Mon compte</a>
         <app-cloche-notifications *ngIf="connecte()" />
@@ -30,6 +31,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
           <a routerLink="/medecin/ordonnances" routerLinkActive="actif">Mes ordonnances rédigées</a>
           <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">Téléconsultations</a>
           <a routerLink="/medecin/candidature" routerLinkActive="actif">Ma candidature</a>
+          <a routerLink="/medecin/avis" routerLinkActive="actif">Avis des patients</a>
         </div>
       </div>
       <div *ngIf="estAdmin()" style="background:#083f33">
@@ -37,6 +39,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
           <span style="color:#cfe7e0">Administration</span>
           <a routerLink="/admin" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Tableau de bord</a>
           <a routerLink="/admin/candidatures" routerLinkActive="actif">Candidatures</a>
+          <a routerLink="/admin/avis" routerLinkActive="actif">Modération des avis</a>
         </div>
       </div>
     </nav>

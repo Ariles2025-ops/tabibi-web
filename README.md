@@ -150,3 +150,33 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
 - `MessagerieService` (`ouvrir`, `mesConversations`, `messages`, `envoyer`), types `Conversation`, `Message`,
   `LONGUEUR_MAX_MESSAGE`, `abregerIdentifiant`.
 - Barre de navigation : « Messagerie » (utilisateurs connectés).
+
+## v0.10.0 — Avis
+- `/avis/nouveau/:rendezVousId` : dépôt d'un avis par le patient (`POST /api/avis { rendezVousId, note, commentaire }`,
+  201) — rappel du rendez-vous et du praticien (lus dans `GET /api/rendezvous/mes` et l'annuaire), note de 1 à 5 par
+  cinq boutons radio stylisés (obligatoire : « Choisissez une note de 1 à 5. »), commentaire facultatif avec compteur
+  « n / 500 » ; confirmation « Merci, votre avis a été enregistré. » avec lien vers « Mes avis » ; 409 → « Vous avez
+  déjà donné votre avis pour ce rendez-vous. » ; 400 / 403 → motif `{ erreur }` ; 404 → « Rendez-vous introuvable. ».
+  Redirige vers la connexion si l'utilisateur n'est pas connecté.
+- `/mes-avis` : mes avis (`GET /api/avis/mes`, rôle PATIENT), les plus récents d'abord — note « n / 5 », statut
+  (Publié, Signalé, Masqué), date, praticien (nom lu dans l'annuaire, lien vers sa fiche), commentaire ; état vide
+  avec lien vers « Mes rendez-vous ».
+- « Mes rendez-vous » : sur un rendez-vous HONORE, bouton « Donner mon avis » (lien vers `/avis/nouveau/:id`) ou
+  mention « Avis donné » si un avis existe déjà (`GET /api/avis/mes`, lu seulement s'il y a un rendez-vous honoré).
+- Fiche du praticien : synthèse publique `app-synthese-avis` (`GET /api/medecins/{id}/avis`, sans jeton) —
+  « 4,5 / 5 (12 avis) » au format français (virgule) ou « Aucun avis pour le moment », puis les cinq derniers avis
+  anonymes (note, date, commentaire).
+- `/medecin/avis` (sous `medecinGuard`) : avis publics reçus par le praticien (`GET /api/medecins/{moi}/avis`, « moi »
+  étant le sujet du jeton lu sur `/api/moi`), moyenne et bouton « Signaler » (`POST /api/avis/{id}/signaler`) :
+  l'avis quitte la vue publique, message de confirmation puis rechargement ; 409 / 404 → motif `{ erreur }` affiché
+  et liste rechargée ; 403 → « Cet avis ne vous concerne pas. ».
+- `/admin/avis` (sous `adminGuard`) : modération (`GET /api/admin/avis?statut=`), filtre par statut (Signalés par
+  défaut, Publiés, Masqués, Tous), note, statut, date, commentaire, identifiants du médecin, du patient et du
+  rendez-vous ; « Masquer » (`POST /api/admin/avis/{id}/masquer`, sauf si déjà masqué) et « Rétablir »
+  (`POST .../retablir`, sauf si déjà publié) ; confirmation puis rechargement ; 409 / 404 → motif affiché et liste
+  rechargée.
+- `AvisService` (`deposer`, `mes`, `synthese`, `signaler`, `pourModeration`, `masquer`, `retablir`), types `Avis`,
+  `AvisPublic`, `SyntheseAvis`, `AvisAdmin`, `formaterMoyenne`, `libelleStatutAvis`, bornes `NOTE_MIN`, `NOTE_MAX`,
+  `LONGUEUR_MAX_COMMENTAIRE`.
+- Barre de navigation : « Mes avis » (utilisateurs connectés), « Avis des patients » (espace médecin),
+  « Modération des avis » (administration).

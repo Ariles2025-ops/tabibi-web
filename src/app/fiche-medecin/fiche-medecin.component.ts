@@ -5,12 +5,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AnnuaireService, Creneau, Medecin } from '../annuaire/annuaire.service';
 import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { AuthService } from '../auth/auth.service';
+import { SyntheseAvisComponent } from '../avis/synthese-avis.component';
 import { MessagerieService } from '../messagerie/messagerie.service';
 
 @Component({
   selector: 'app-fiche-medecin',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, SyntheseAvisComponent],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <p style="margin:0 0 16px"><a routerLink="/" style="color:var(--vert)">Retour à l'annuaire</a></p>
@@ -49,6 +50,10 @@ import { MessagerieService } from '../messagerie/messagerie.service';
         </li>
       </ul>
       <p *ngIf="!charge() && !erreur() && creneaux().length === 0">Aucun créneau disponible pour le moment.</p>
+
+      <div *ngIf="medecin() as m" style="margin:32px 0 0">
+        <app-synthese-avis [medecinId]="m.id" />
+      </div>
     </main>
   `,
 })

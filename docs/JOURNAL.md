@@ -130,3 +130,42 @@ decrite dans le README et le journal de tabibi-backend.
   (bulles selon l'auteur pour un patient puis pour un medecin, compteur et bouton, envoi puis rechargement,
   vide / trop long refuses, 400 sans rechargement, relecture a 30 s avec erreur passagere ignoree et arret a la
   destruction, 403 sans champ, redirection), fiche (bouton et navigation, 403, non connecte), barre de navigation.
+
+## v0.10.0 — Avis
+- `AvisService` : `deposer(rendezVousId, note, commentaire | null)` (`POST /api/avis`), `mes`, `synthese(medecinId)`
+  (`GET /api/medecins/{id}/avis`, public), `signaler`, `pourModeration(statut?)` (`GET /api/admin/avis`), `masquer`,
+  `retablir` ; `formaterMoyenne(moyenne, nombre)` → « 4,5 / 5 (12 avis) » (`toFixed(1)` puis virgule, sans dependance
+  a la locale) ou « Aucun avis pour le moment » si la moyenne est null ou le nombre nul ; `libelleStatutAvis`
+  (Publie, Signale, Masque).
+- `/avis/nouveau/:rendezVousId` (`DeposerAvisComponent`) : identifiant lu dans `route.snapshot.paramMap` ; rappel du
+  rendez-vous (retrouve dans `GET /api/rendezvous/mes`) et du praticien (annuaire), erreurs de ces lectures ignorees ;
+  cinq boutons radio stylises (`.note` / `.note-choisie`, bouton natif masque, etiquette 1 a 5 avec `aria-label`
+  « Note n sur 5 », aucun emoji), note obligatoire controlee cote client, commentaire avec compteur « n / 500 »
+  (rouge et envoi bloque au-dela), commentaire nettoye et envoye null s'il est vide ; succes : formulaire remplace
+  par la confirmation et le lien « Voir mes avis » ; 409 : « Vous avez deja donne votre avis pour ce rendez-vous. »
+  (message fixe, le 409 « rendez-vous non honore » est hors du parcours normal puisque le bouton n'apparait que sur
+  les HONORE) ; 400 / 403 : motif `{ erreur }` ; 404 : « Rendez-vous introuvable. » ; redirection si non connecte.
+- `/mes-avis` (`MesAvisComponent`) : liste triee par `deposeLe` decroissant, nom du praticien lu une fois par
+  identifiant, statut traduit, etat vide avec lien vers « Mes rendez-vous », 403 : « reservee aux patients ».
+- « Mes rendez-vous » : `rendezVousNotes` (ensemble des `rendezVousId` de `GET /api/avis/mes`, lu seulement s'il y a un
+  rendez-vous HONORE, echec ignore) ; lien « Donner mon avis » (`/avis/nouveau/:id`) ou mention « Avis donne ».
+- `SyntheseAvisComponent` (`app-synthese-avis`, entree `medecinId` requise, rechargement dans `ngOnChanges`) :
+  moyenne formatee et les cinq derniers avis (tri par date decroissante) ; erreur `{ erreur }` affichee ; place en bas
+  de la fiche du praticien.
+- `/medecin/avis` (`AvisMedecinComponent`, sous `medecinGuard`) : sujet du jeton via `RoleService.charger()` (profil
+  illisible → message), `GET /api/medecins/{moi}/avis`, « Signaler » par avis (`POST /api/avis/{id}/signaler`) puis
+  confirmation et rechargement ; 409 / 404 : motif affiche et rechargement ; 403 : « Cet avis ne vous concerne pas. ».
+- `/admin/avis` (`ModerationAvisComponent`, sous `adminGuard`) : filtre SIGNALE par defaut (PUBLIE, MASQUE, tous =
+  sans parametre), « Masquer » (sauf MASQUE) et « Retablir » (sauf PUBLIE), confirmation puis rechargement ;
+  409 / 404 : motif affiche et rechargement ; 403 : « reservee a l'administrateur » ; etat vide par filtre.
+- Routes `/avis/nouveau/:rendezVousId`, `/mes-avis`, `/medecin/avis` (medecinGuard), `/admin/avis` (adminGuard) ;
+  liens « Mes avis », « Avis des patients », « Moderation des avis » dans la barre de navigation.
+- Tests (38 specs ajoutees, 145 au total) : service avec `HttpTestingController` (URL, methode, corps avec
+  commentaire ou null, parametre statut, 409 transmis), `formaterMoyenne` (virgule, 5,0, arrondi, aucun avis),
+  libelles, depot (cinq notes et compteur, note obligatoire, envoi avec commentaire nettoye puis confirmation,
+  commentaire null, 409, 400, redirection), mes avis (tri et praticien, etat vide, redirection et 403), mes
+  rendez-vous (bouton sur les seuls HONORE sans avis, « Avis donne », pas de lecture des avis sans HONORE), synthese
+  (format, aucun avis, rechargement au changement d'identifiant et erreur), fiche (synthese affichee), avis du
+  medecin (lecture avec mon identifiant, signalement et rechargement, 409, aucun avis, profil illisible), moderation
+  (filtre par defaut, boutons selon le statut, tous sans parametre, masquer, retablir, 409, etat vide, 403), barre de
+  navigation.

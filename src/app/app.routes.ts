@@ -1,11 +1,15 @@
 import { Routes } from '@angular/router';
 import { CandidaturesAdminComponent } from './admin/candidatures-admin.component';
+import { ModerationAvisComponent } from './admin/moderation-avis.component';
 import { TableauDeBordAdminComponent } from './admin/tableau-de-bord-admin.component';
 import { AnnuaireComponent } from './annuaire/annuaire.component';
 import { adminGuard } from './auth/admin.guard';
 import { medecinGuard } from './auth/medecin.guard';
+import { DeposerAvisComponent } from './avis/deposer-avis.component';
+import { MesAvisComponent } from './avis/mes-avis.component';
 import { FicheMedecinComponent } from './fiche-medecin/fiche-medecin.component';
 import { AgendaMedecinComponent } from './medecin/agenda-medecin.component';
+import { AvisMedecinComponent } from './medecin/avis-medecin.component';
 import { CandidatureMedecinComponent } from './medecin/candidature-medecin.component';
 import { DisponibilitesComponent } from './medecin/disponibilites.component';
 import { NouvelleOrdonnanceComponent } from './medecin/nouvelle-ordonnance.component';
@@ -33,6 +37,9 @@ export const routes: Routes = [
   // Messagerie patient-medecin (utilisateur connecte, patient ou medecin : les pages redirigent vers la connexion).
   { path: 'messagerie', component: MesConversationsComponent },
   { path: 'messagerie/:id', component: ConversationComponent },
+  // Avis du patient sur un rendez-vous honore, et ses avis (les pages redirigent vers la connexion).
+  { path: 'avis/nouveau/:rendezVousId', component: DeposerAvisComponent },
+  { path: 'mes-avis', component: MesAvisComponent },
   {
     // Espace medecin : reserve au role MEDECIN (medecinGuard), sinon retour a l'accueil.
     path: 'medecin',
@@ -44,6 +51,7 @@ export const routes: Routes = [
       { path: 'ordonnance/nouvelle', component: NouvelleOrdonnanceComponent },
       { path: 'teleconsultations', component: TeleconsultationsMedecinComponent },
       { path: 'candidature', component: CandidatureMedecinComponent },
+      { path: 'avis', component: AvisMedecinComponent },
       { path: '', redirectTo: 'agenda', pathMatch: 'full' },
     ],
   },
@@ -54,6 +62,7 @@ export const routes: Routes = [
     children: [
       { path: '', component: TableauDeBordAdminComponent, pathMatch: 'full' },
       { path: 'candidatures', component: CandidaturesAdminComponent },
+      { path: 'avis', component: ModerationAvisComponent },
     ],
   },
   { path: 'moi', component: MoiComponent },
