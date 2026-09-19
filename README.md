@@ -304,3 +304,8 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
   24 prochaines heures (un seul rappel par rendez-vous, comme le planificateur horaire du backend) et affiche
   « n rappel(s) envoyé(s) » (« 0 rappel envoyé », « 3 rappels envoyés ») ; erreur → motif `{ erreur }` affiché.
 - `AdminService.executerRappels()` (lit `{ nombre }`), `libelleRappels`.
+
+## v0.16.1 — Correctif : durée maximale d'un créneau
+- `/medecin/disponibilites` : la durée d'un créneau est bornée à **5..120 minutes** comme dans l'API (le champ acceptait
+  jusqu'à 240 et l'API répondait 400) ; libellé « Durée (minutes, de 5 à 120) », contrôle côté client « Indiquez une
+  durée entre 5 et 120 minutes. », bornes `DUREE_MIN_MINUTES` / `DUREE_MAX_MINUTES` partagées avec l'espace secrétaire.

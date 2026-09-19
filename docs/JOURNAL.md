@@ -341,3 +341,12 @@ decrite dans le README et le journal de tabibi-backend.
 - Tests (4 specs ajoutees, 260 au total) : service avec `HttpTestingController` (URL, POST sans corps, lecture de
   `{ nombre }`), `libelleRappels`, tableau de bord (execution puis « 3 rappels envoyes », seconde execution
   « 0 rappel envoye » qui remplace le premier resultat, echec avec motif et compteurs conserves).
+
+## v0.16.1 — Correctif : duree maximale d'un creneau
+- `DisponibilitesComponent` : `max="240"` laissait le medecin saisir une duree que l'API refuse (`CreneauService`
+  borne 5..120, 400 sinon). Le champ prend desormais `[min]` / `[max]` sur `DUREE_MIN_MINUTES` / `DUREE_MAX_MINUTES`
+  (constantes de `secretaire.service.ts`, deja utilisees par l'espace secretaire), le libelle annonce les bornes et le
+  controle cote client refuse aussi une duree trop longue (« Indiquez une durée entre 5 et 120 minutes. »), comme dans
+  `EspaceSecretaireComponent`.
+- Tests (4 specs ajoutees, 264 au total) : `disponibilites.component.spec.ts` (attributs min / max et libelle, 180
+  minutes refusees sans appel, ouverture de 120 minutes avec conversion ISO puis confirmation, motif d'un 400).

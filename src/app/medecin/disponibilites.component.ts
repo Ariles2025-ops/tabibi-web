@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { DUREE_MAX_MINUTES, DUREE_MIN_MINUTES } from '../secretaire/secretaire.service';
 import { MedecinService } from './medecin.service';
 
 /** Creneau que le medecin vient d'ouvrir (message de confirmation). */
@@ -31,8 +32,8 @@ interface CreneauOuvert {
                  style="color:#10241F;font-size:1rem">
         </label>
         <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-          Durée (minutes)
-          <input class="champ" type="number" [(ngModel)]="dureeMinutes" name="dureeMinutes" required min="5" max="240" step="5"
+          Durée (minutes, de {{ dureeMin }} à {{ dureeMax }})
+          <input class="champ" type="number" [(ngModel)]="dureeMinutes" name="dureeMinutes" required [min]="dureeMin" [max]="dureeMax" step="5"
                  style="color:#10241F;font-size:1rem">
         </label>
         <div>
@@ -58,6 +59,9 @@ export class DisponibilitesComponent {
   /** Valeur du champ datetime-local : heure locale sans fuseau (« 2026-09-21T09:30 »). */
   debut = '';
   dureeMinutes = 30;
+  /** Bornes de la duree, celles de l'API (CreneauService : 5 a 120 minutes), partagees avec l'espace secretaire. */
+  dureeMin = DUREE_MIN_MINUTES;
+  dureeMax = DUREE_MAX_MINUTES;
   /** Borne basse du selecteur : maintenant, au format attendu par datetime-local. */
   minDebut = formatDate(new Date(), "yyyy-MM-dd'T'HH:mm", this.locale);
   enCours = signal(false);
@@ -78,8 +82,8 @@ export class DisponibilitesComponent {
       this.erreur.set('Le créneau doit commencer dans le futur.');
       return;
     }
-    if (!Number.isInteger(dureeMinutes) || dureeMinutes < 5) {
-      this.erreur.set("Indiquez une durée d'au moins 5 minutes.");
+    if (!Number.isInteger(dureeMinutes) || dureeMinutes < DUREE_MIN_MINUTES || dureeMinutes > DUREE_MAX_MINUTES) {
+      this.erreur.set(`Indiquez une durée entre ${DUREE_MIN_MINUTES} et ${DUREE_MAX_MINUTES} minutes.`);
       return;
     }
     const debutIso = debut.toISOString();
