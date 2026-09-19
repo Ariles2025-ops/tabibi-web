@@ -6,6 +6,7 @@ import { AnnuaireService, Creneau, Medecin } from '../annuaire/annuaire.service'
 import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { AuthService } from '../auth/auth.service';
 import { SyntheseAvisComponent } from '../avis/synthese-avis.component';
+import { ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { MessagerieService } from '../messagerie/messagerie.service';
 
 @Component({
@@ -51,6 +52,23 @@ import { MessagerieService } from '../messagerie/messagerie.service';
       </ul>
       <p *ngIf="!charge() && !erreur() && creneaux().length === 0">Aucun créneau disponible pour le moment.</p>
 
+      <section *ngIf="!charge()" [style.margin]="creneaux().length === 0 ? '8px 0 0' : '24px 0 0'"
+               style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;background:#f8faf9">
+        <h2 style="font-size:1.05rem;margin:0 0 6px">Liste d'attente</h2>
+        <p style="color:#566b64;margin:0 0 12px">
+          {{ creneaux().length === 0 ? 'Aucun créneau ne vous est proposé ?' : 'Aucun créneau ne vous convient ?' }}
+          Inscrivez-vous sur la liste d'attente de ce praticien. Vous serez notifié dès qu'un créneau se libère.
+        </p>
+        <p *ngIf="inscription()" style="color:var(--vert);margin:0">
+          {{ inscription() }}
+          <a routerLink="/liste-attente" style="color:var(--vert)">Voir mes listes d'attente</a>
+        </p>
+        <button *ngIf="!inscription()" type="button" class="bouton-secondaire" (click)="inscrire()" [disabled]="inscriptionEnCours()">
+          {{ inscriptionEnCours() ? 'Inscription…' : "M'inscrire sur la liste d'attente" }}
+        </button>
+        <p *ngIf="erreurInscription()" style="color:#b3261e;margin:12px 0 0">{{ erreurInscription() }}</p>
+      </section>
+
       <div *ngIf="medecin() as m" style="margin:32px 0 0">
         <app-synthese-avis [medecinId]="m.id" />
       </div>
@@ -63,6 +81,7 @@ export class FicheMedecinComponent implements OnInit {
   private rendezVous = inject(RendezVousService);
   private auth = inject(AuthService);
   private messagerie = inject(MessagerieService);
+  private listeAttente = inject(ListeAttenteService);
   private router = inject(Router);
 
   private medecinId = '';
@@ -77,6 +96,10 @@ export class FicheMedecinComponent implements OnInit {
   /** Vrai pendant l'ouverture de la conversation avec le medecin. */
   ouvertureMessagerie = signal(false);
   erreurMessagerie = signal('');
+  /** Message une fois inscrit sur la liste d'attente du praticien (ou deja inscrit, 409) ; vide sinon. */
+  inscription = signal('');
+  inscriptionEnCours = signal(false);
+  erreurInscription = signal('');
 
   ngOnInit() {
     this.route.paramMap.subscribe((params) => this.charger(params.get('id') ?? ''));
@@ -89,6 +112,8 @@ export class FicheMedecinComponent implements OnInit {
     this.reservation.set(null);
     this.erreur.set('');
     this.erreurMessagerie.set('');
+    this.inscription.set('');
+    this.erreurInscription.set('');
     this.annuaire.medecin(id).subscribe({
       next: (m) => this.medecin.set(m),
       error: (e: HttpErrorResponse) =>
@@ -170,6 +195,40 @@ export class FicheMedecinComponent implements OnInit {
           this.auth.seConnecter();
         } else {
           this.erreurMessagerie.set(e.error?.erreur ?? "L'ouverture de la conversation a échoué, veuillez réessayer.");
+        }
+      },
+    });
+  }
+
+  /**
+   * Inscrit le patient sur la liste d'attente du praticien : il sera prevenu des qu'un creneau se libere.
+   * 409 (deja inscrit) → message et etat « inscrit ». Non connecte → page de connexion puis retour sur la fiche.
+   */
+  async inscrire() {
+    await this.auth.pret();
+    if (!this.auth.estConnecte()) {
+      this.auth.seConnecter();
+      return;
+    }
+    this.inscriptionEnCours.set(true);
+    this.erreurInscription.set('');
+    this.listeAttente.inscrire(this.medecinId).subscribe({
+      next: () => {
+        this.inscriptionEnCours.set(false);
+        this.inscription.set("Vous êtes inscrit sur la liste d'attente de ce praticien.");
+      },
+      error: (e: HttpErrorResponse) => {
+        this.inscriptionEnCours.set(false);
+        if (e.status === 409) {
+          this.inscription.set('Vous êtes déjà inscrit sur cette liste.');
+        } else if (e.status === 401) {
+          this.auth.seConnecter();
+        } else if (e.status === 403) {
+          this.erreurInscription.set("Seul un compte patient peut s'inscrire sur une liste d'attente.");
+        } else if (e.status === 404) {
+          this.erreurInscription.set('Praticien introuvable.');
+        } else {
+          this.erreurInscription.set(e.error?.erreur ?? "L'inscription a échoué, veuillez réessayer.");
         }
       },
     });

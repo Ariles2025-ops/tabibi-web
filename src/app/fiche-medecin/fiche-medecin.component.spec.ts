@@ -8,6 +8,7 @@ import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { AvisService, SyntheseAvis } from '../avis/avis.service';
+import { InscriptionAttente, ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { Conversation, MessagerieService } from '../messagerie/messagerie.service';
 import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { FicheMedecinComponent } from './fiche-medecin.component';
@@ -31,6 +32,8 @@ const CONVERSATION: Conversation = {
   nonLus: 0,
 };
 
+const INSCRIPTION: InscriptionAttente = { id: 'i1', patientId: 'p1', medecinId: 'm1', inscritLe: '2026-09-18T10:00:00Z' };
+
 const SYNTHESE: SyntheseAvis = {
   moyenne: 4.5,
   nombre: 2,
@@ -40,11 +43,12 @@ const SYNTHESE: SyntheseAvis = {
   ],
 };
 
-/** Fiche du praticien : bouton « Écrire au médecin » et synthese des avis (les creneaux et la reservation datent de la v0.3.0). */
-describe('FicheMedecinComponent (messagerie et avis)', () => {
+/** Fiche du praticien : « Écrire au médecin », synthese des avis et liste d'attente (les creneaux et la reservation datent de la v0.3.0). */
+describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
   let fixture: ComponentFixture<FicheMedecinComponent>;
   let messagerie: jasmine.SpyObj<MessagerieService>;
   let avis: jasmine.SpyObj<AvisService>;
+  let listeAttente: jasmine.SpyObj<ListeAttenteService>;
   let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy };
   let naviguer: jasmine.Spy;
 
@@ -56,6 +60,7 @@ describe('FicheMedecinComponent (messagerie et avis)', () => {
     messagerie = jasmine.createSpyObj<MessagerieService>('MessagerieService', ['ouvrir']);
     avis = jasmine.createSpyObj<AvisService>('AvisService', ['synthese']);
     avis.synthese.and.returnValue(of(SYNTHESE));
+    listeAttente = jasmine.createSpyObj<ListeAttenteService>('ListeAttenteService', ['inscrire']);
     auth = { pret: () => Promise.resolve(), estConnecte: () => true, seConnecter: jasmine.createSpy('seConnecter') };
 
     TestBed.configureTestingModule({
@@ -67,6 +72,7 @@ describe('FicheMedecinComponent (messagerie et avis)', () => {
         { provide: RendezVousService, useValue: jasmine.createSpyObj<RendezVousService>('RendezVousService', ['reserver']) },
         { provide: MessagerieService, useValue: messagerie },
         { provide: AvisService, useValue: avis },
+        { provide: ListeAttenteService, useValue: listeAttente },
         { provide: AuthService, useValue: auth },
         { provide: LOCALE_ID, useValue: 'fr' },
       ],
@@ -89,6 +95,11 @@ describe('FicheMedecinComponent (messagerie et avis)', () => {
   function boutonEcrire(): HTMLButtonElement | undefined {
     const boutons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
     return boutons.find((b) => b.textContent?.includes('Écrire au médecin'));
+  }
+
+  function boutonInscrire(): HTMLButtonElement | undefined {
+    const boutons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
+    return boutons.find((b) => b.textContent?.includes("M'inscrire sur la liste d'attente"));
   }
 
   it('affiche la fiche avec le bouton « Écrire au médecin », qui ouvre la conversation puis mene au fil', async () => {
@@ -137,5 +148,53 @@ describe('FicheMedecinComponent (messagerie et avis)', () => {
     expect(texte()).toContain('Avis des patients');
     expect(texte()).toContain('4,5 / 5 (2 avis)');
     expect(texte()).toContain('Très bon accueil.');
+  });
+
+  it('propose l inscription sur la liste d attente quand aucun creneau n est disponible, puis confirme', async () => {
+    listeAttente.inscrire.and.returnValue(of(INSCRIPTION));
+    await afficher();
+
+    expect(texte()).toContain('Aucun créneau disponible pour le moment.');
+    expect(texte()).toContain("Vous serez notifié dès qu'un créneau se libère.");
+    expect(boutonInscrire()).toBeDefined();
+
+    boutonInscrire()!.click();
+    await afficher();
+
+    expect(listeAttente.inscrire).toHaveBeenCalledWith('m1');
+    expect(texte()).toContain("Vous êtes inscrit sur la liste d'attente de ce praticien.");
+    expect(fixture.nativeElement.querySelector('a[href="/liste-attente"]')).not.toBeNull();
+    expect(boutonInscrire()).toBeUndefined();
+  });
+
+  it('indique « Vous êtes déjà inscrit sur cette liste. » sur un 409', async () => {
+    listeAttente.inscrire.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Vous etes deja inscrit sur la liste d attente de ce medecin.' } })),
+    );
+    await afficher();
+
+    boutonInscrire()!.click();
+    await afficher();
+
+    expect(texte()).toContain('Vous êtes déjà inscrit sur cette liste.');
+    expect(fixture.nativeElement.querySelector('a[href="/liste-attente"]')).not.toBeNull();
+    expect(boutonInscrire()).toBeUndefined();
+  });
+
+  it('envoie un visiteur non connecte vers la connexion sans l inscrire, et explique le 403 a un compte non patient', async () => {
+    auth.estConnecte = () => false;
+    await afficher();
+
+    boutonInscrire()!.click();
+    await afficher();
+    expect(auth.seConnecter).toHaveBeenCalled();
+    expect(listeAttente.inscrire).not.toHaveBeenCalled();
+
+    auth.estConnecte = () => true;
+    listeAttente.inscrire.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403, error: { erreur: 'Acces refuse.' } })));
+    boutonInscrire()!.click();
+    await afficher();
+    expect(texte()).toContain("Seul un compte patient peut s'inscrire sur une liste d'attente.");
+    expect(boutonInscrire()!.disabled).toBeFalse();
   });
 });

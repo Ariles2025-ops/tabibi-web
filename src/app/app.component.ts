@@ -20,6 +20,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
         <a *ngIf="connecte()" routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
         <a *ngIf="connecte()" routerLink="/mes-avis" routerLinkActive="actif">Mes avis</a>
         <a *ngIf="connecte()" routerLink="/dawini" routerLinkActive="actif">Dawini</a>
+        <a *ngIf="connecte()" routerLink="/liste-attente" routerLinkActive="actif">Mes listes d'attente</a>
         <a routerLink="/verifier" routerLinkActive="actif">Vérifier une ordonnance</a>
         <a routerLink="/moi" routerLinkActive="actif" style="margin-left:auto">Mon compte</a>
         <app-cloche-notifications *ngIf="connecte()" />
@@ -33,6 +34,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
           <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">Téléconsultations</a>
           <a routerLink="/medecin/candidature" routerLinkActive="actif">Ma candidature</a>
           <a routerLink="/medecin/avis" routerLinkActive="actif">Avis des patients</a>
+          <a routerLink="/medecin/liste-attente" routerLinkActive="actif">Liste d'attente</a>
         </div>
       </div>
       <div *ngIf="estPharmacie()" style="background:#0b5c4b">

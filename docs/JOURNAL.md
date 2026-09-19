@@ -256,3 +256,29 @@ decrite dans le README et le journal de tabibi-backend.
   avec service factice (formulaire vide et quatre langues sur 404, preremplissage, refus cote client sans appel,
   enregistrement avec champs nettoyes et null puis confirmation, telephone sans espaces et date, 400 avec saisie
   conservee, erreur de chargement sans formulaire, redirection).
+
+## v0.14.0 — Liste d'attente
+- `ListeAttenteService` (`liste-attente/liste-attente.service.ts`) : `inscrire(medecinId)` (`POST
+  /api/medecins/{id}/liste-attente`, sans corps, 201 ; 409 deja inscrit), `mes` (`GET /api/liste-attente/mes`),
+  `retirer(id)` (`POST /api/liste-attente/{id}/retirer`, 204), `duMedecin` (`GET /api/medecin/liste-attente`) ;
+  type `InscriptionAttente` (`id`, `patientId`, `medecinId`, `inscritLe`).
+- Fiche du praticien (`FicheMedecinComponent`) : section « Liste d'attente » affichee une fois les creneaux lus,
+  collee a l'etat vide (« Aucun creneau ne vous est propose ? ») ou plus bas s'il y a des creneaux (« Aucun creneau
+  ne vous convient ? »), phrase « Vous serez notifie des qu'un creneau se libere. » ; `inscrire()` attend l'etat de
+  connexion (non connecte → connexion avec retour sur la fiche) ; succes → message et lien « Voir mes listes
+  d'attente », bouton retire ; 409 → « Vous etes deja inscrit sur cette liste. » traite comme un etat, pas comme une
+  erreur (meme presentation, bouton retire) ; 403 → « Seul un compte patient… » ; 404 → « Praticien introuvable. » ;
+  l'etat est remis a zero quand l'identifiant de route change.
+- `/liste-attente` (`MesListesAttenteComponent`, PATIENT) : tri par `inscritLe` croissant, nom du praticien lu une
+  fois par identifiant (echec ignore, lien generique), « Me retirer » retire la ligne sans relire la liste ; 404 au
+  retrait (deja retiree ailleurs) → liste rechargee ; autre erreur → motif `{ erreur }` ; 403 → « reservee aux
+  patients » ; etat vide avec lien vers l'annuaire ; redirection si non connecte.
+- `/medecin/liste-attente` (`ListeAttenteMedecinComponent`, sous `medecinGuard`) : liste ordonnee (`<ol>`) du plus
+  ancien au plus recent, « Patient » + identifiant abrege (`abregerIdentifiant`, huit caracteres : pas d'UUID complet
+  a l'ecran) et date ; etat vide avec lien vers les disponibilites ; 403 / 401 comme les autres pages medecin.
+- Routes `/liste-attente` et `/medecin/liste-attente` ; liens « Mes listes d'attente » (connectes) et « Liste
+  d'attente » (espace medecin) dans la barre de navigation.
+- Tests (16 specs ajoutees, 219 au total) : service avec `HttpTestingController` (URL, methode, corps nul, 204,
+  409 transmis), fiche (inscription depuis l'etat sans creneau puis confirmation et lien, 409, non connecte puis 403),
+  mes listes (tri et noms, retrait et ligne retiree, echec de retrait avec ligne conservee, etat vide et redirection,
+  403), liste du medecin (tri et identifiants abreges, etat vide, 403 et 401), barre de navigation.

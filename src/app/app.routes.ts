@@ -11,10 +11,12 @@ import { MesAvisComponent } from './avis/mes-avis.component';
 import { MesDemandesComponent } from './dawini/mes-demandes.component';
 import { ReponsesDemandeComponent } from './dawini/reponses-demande.component';
 import { FicheMedecinComponent } from './fiche-medecin/fiche-medecin.component';
+import { MesListesAttenteComponent } from './liste-attente/mes-listes-attente.component';
 import { AgendaMedecinComponent } from './medecin/agenda-medecin.component';
 import { AvisMedecinComponent } from './medecin/avis-medecin.component';
 import { CandidatureMedecinComponent } from './medecin/candidature-medecin.component';
 import { DisponibilitesComponent } from './medecin/disponibilites.component';
+import { ListeAttenteMedecinComponent } from './medecin/liste-attente-medecin.component';
 import { NouvelleOrdonnanceComponent } from './medecin/nouvelle-ordonnance.component';
 import { OrdonnancesRedigeesComponent } from './medecin/ordonnances-redigees.component';
 import { TeleconsultationsMedecinComponent } from './medecin/teleconsultations-medecin.component';
@@ -48,6 +50,8 @@ export const routes: Routes = [
   // Dawini, cote patient : demandes de medicaments et reponses des pharmacies (redirection vers la connexion).
   { path: 'dawini', component: MesDemandesComponent },
   { path: 'dawini/:id', component: ReponsesDemandeComponent },
+  // Mes listes d'attente (patient ; la page redirige vers la connexion).
+  { path: 'liste-attente', component: MesListesAttenteComponent },
   {
     // Espace pharmacie (Dawini) : reserve au role PHARMACIE (pharmacieGuard), sinon retour a l'accueil.
     path: 'pharmacie',
@@ -66,6 +70,7 @@ export const routes: Routes = [
       { path: 'teleconsultations', component: TeleconsultationsMedecinComponent },
       { path: 'candidature', component: CandidatureMedecinComponent },
       { path: 'avis', component: AvisMedecinComponent },
+      { path: 'liste-attente', component: ListeAttenteMedecinComponent },
       { path: '', redirectTo: 'agenda', pathMatch: 'full' },
     ],
   },

@@ -61,6 +61,7 @@ describe('AppComponent', () => {
     expect(texteNav()).not.toContain('Messagerie');
     expect(texteNav()).not.toContain('Mes avis');
     expect(texteNav()).not.toContain('Dawini');
+    expect(texteNav()).not.toContain("Mes listes d'attente");
     expect(texteNav()).toContain('Vérifier une ordonnance');
     expect(texteNav()).toContain('Mon compte');
     expect(fixture.nativeElement.querySelector('app-cloche-notifications')).toBeNull();
@@ -80,6 +81,7 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/mes-avis"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/dawini"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/liste-attente"]')).not.toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
     expect(texteNav()).not.toContain('Espace pharmacie');
     expect(texteNav()).not.toContain('Administration');
@@ -96,6 +98,7 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.querySelector('a[href="/medecin/teleconsultations"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/medecin/candidature"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/medecin/avis"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/medecin/liste-attente"]')).not.toBeNull();
     expect(texteNav()).not.toContain('Administration');
   });
 

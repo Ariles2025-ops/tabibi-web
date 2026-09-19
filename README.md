@@ -253,3 +253,19 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
 - « Mon compte » (`/moi`) : lien « Mon profil ».
 - `ProfilService` (`monProfil`, `enregistrer`), types `Profil`, `DemandeProfil`, `LANGUES`, `nettoyerProfil`,
   `validerProfil`, `libelleLangue`, `dateLocaleIso`.
+
+## v0.14.0 — Liste d'attente
+- Fiche du praticien : encart « Liste d'attente » sous les créneaux (mis en avant quand aucun créneau n'est
+  disponible) — « Vous serez notifié dès qu'un créneau se libère. » et bouton « M'inscrire sur la liste d'attente »
+  (`POST /api/medecins/{id}/liste-attente`, rôle PATIENT, 201) ; confirmation avec lien vers mes listes d'attente ;
+  409 → « Vous êtes déjà inscrit sur cette liste. » ; 403 → « Seul un compte patient peut s'inscrire… » ; non
+  connecté → connexion Keycloak puis retour sur la fiche.
+- `/liste-attente` : mes listes d'attente (`GET /api/liste-attente/mes`), les plus anciennes d'abord, avec le nom du
+  praticien (annuaire, lien vers sa fiche) et la date d'inscription ; bouton « Me retirer »
+  (`POST /api/liste-attente/{id}/retirer`, 204) ; état vide avec lien vers l'annuaire. Redirige vers la connexion
+  si l'utilisateur n'est pas connecté.
+- `/medecin/liste-attente` (sous `medecinGuard`) : patients en attente chez le praticien
+  (`GET /api/medecin/liste-attente`), du plus ancien au plus récent, identifiant abrégé et date d'inscription ;
+  état vide avec lien vers les disponibilités.
+- `ListeAttenteService` (`inscrire`, `mes`, `retirer`, `duMedecin`), type `InscriptionAttente`.
+- Barre de navigation : « Mes listes d'attente » (utilisateurs connectés), « Liste d'attente » (espace médecin).
