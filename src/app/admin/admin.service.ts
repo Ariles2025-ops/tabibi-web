@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from '../config/config.service';
 
 /** Candidature d'un medecin a figurer dans l'annuaire, telle que renvoyee par l'API (au medecin comme a l'administrateur). */
 export interface Candidature {
@@ -61,7 +62,12 @@ export function libelleStatutCandidature(statut: string | null | undefined): str
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:8080';
+  private config = inject(ConfigService);
+
+  /** Origine de l'API, lue a l'execution dans assets/config.json. */
+  private get base(): string {
+    return this.config.apiUrl;
+  }
 
   /** Candidatures, filtrees par statut si demande, de la plus ancienne a la plus recente. */
   candidatures(statut?: string): Observable<Candidature[]> {

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from '../config/config.service';
 
 /** Longueur maximale d'un message, identique a la regle du domaine backend (400 au-dela). */
 export const LONGUEUR_MAX_MESSAGE = 2000;
@@ -42,7 +43,12 @@ export function abregerIdentifiant(id: string): string {
 @Injectable({ providedIn: 'root' })
 export class MessagerieService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:8080';
+  private config = inject(ConfigService);
+
+  /** Origine de l'API, lue a l'execution dans assets/config.json. */
+  private get base(): string {
+    return this.config.apiUrl;
+  }
 
   /** Ouvre (201) ou retrouve (200) la conversation du patient connecte avec un medecin ; 403 sans rendez-vous commun. */
   ouvrir(medecinId: string): Observable<Conversation> {

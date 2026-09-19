@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from '../config/config.service';
 
 export interface Medecin {
   id: string;
@@ -25,7 +26,12 @@ export interface Creneau {
 @Injectable({ providedIn: 'root' })
 export class AnnuaireService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:8080';
+  private config = inject(ConfigService);
+
+  /** Origine de l'API, lue a l'execution dans assets/config.json. */
+  private get base(): string {
+    return this.config.apiUrl;
+  }
 
   rechercher(specialite?: string, wilaya?: string, q?: string): Observable<Medecin[]> {
     let params = new HttpParams();

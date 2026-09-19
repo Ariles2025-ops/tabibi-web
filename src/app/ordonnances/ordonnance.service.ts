@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from '../config/config.service';
 
 /** Ligne de prescription : un medicament, sa posologie et sa duree. */
 export interface LigneOrdonnance {
@@ -43,7 +44,12 @@ export interface Verification {
 @Injectable({ providedIn: 'root' })
 export class OrdonnanceService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:8080';
+  private config = inject(ConfigService);
+
+  /** Origine de l'API, lue a l'execution dans assets/config.json. */
+  private get base(): string {
+    return this.config.apiUrl;
+  }
 
   /** Ordonnances du patient connecte. */
   mes(): Observable<Ordonnance[]> {

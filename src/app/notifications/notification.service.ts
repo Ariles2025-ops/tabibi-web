@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject, map, tap } from 'rxjs';
+import { ConfigService } from '../config/config.service';
 
 /** Notification adressee a l'utilisateur connecte, quel que soit son role (GET /api/notifications/mes). */
 export interface Notification {
@@ -24,8 +25,13 @@ interface Nombre {
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:8080';
+  private config = inject(ConfigService);
   private changements = new Subject<void>();
+
+  /** Origine de l'API, lue a l'execution dans assets/config.json. */
+  private get base(): string {
+    return this.config.apiUrl;
+  }
 
   /** Emet apres chaque marquage lu reussi : la cloche de la barre de navigation relit alors son compteur. */
   changements$ = this.changements.asObservable();

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from '../config/config.service';
 
 /** Bornes de la note et du commentaire, identiques aux regles du domaine backend (400 au-dela). */
 export const NOTE_MIN = 1;
@@ -69,7 +70,12 @@ export function formaterMoyenne(moyenne: number | null, nombre: number): string 
 @Injectable({ providedIn: 'root' })
 export class AvisService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:8080';
+  private config = inject(ConfigService);
+
+  /** Origine de l'API, lue a l'execution dans assets/config.json. */
+  private get base(): string {
+    return this.config.apiUrl;
+  }
 
   /** Depot par le patient sur un de ses rendez-vous honores (201 ; 409 si non honore ou avis deja donne ; 400 si invalide). */
   deposer(rendezVousId: string, note: number, commentaire: string | null = null): Observable<Avis> {

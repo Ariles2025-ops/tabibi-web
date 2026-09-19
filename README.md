@@ -14,6 +14,26 @@ npm start          # http://localhost:4200
 # necessite l'API (tabibi-backend) + Keycloak (docker compose up) en marche
 ```
 
+## Configuration
+Le build est le meme partout : l'application lit **`assets/config.json`** au demarrage (avant le rendu, via
+`APP_INITIALIZER` et `ConfigService`) pour connaitre l'API et Keycloak :
+```json
+{
+  "apiUrl": "http://localhost:8080",
+  "keycloakIssuer": "http://localhost:8081/realms/tabibi",
+  "keycloakClientId": "tabibi-web"
+}
+```
+- En dev, le fichier versionne `src/assets/config.json` pointe sur l'API et le Keycloak locaux.
+- Au deploiement, on **remplace `assets/config.json`** dans le dossier publie (`dist/tabibi-web/browser/assets/`) par
+  les valeurs de l'environnement (recette, production), sans reconstruire. `apiUrl` et `keycloakIssuer` sont pris sans
+  barre oblique finale ; HTTPS est exige par la couche OIDC des que l'issuer est en `https://`.
+- Si le fichier est absent ou illisible, les valeurs localhost ci-dessus s'appliquent, avec un avertissement dans la
+  console du navigateur ; un champ manquant ou vide est complete par sa valeur par defaut.
+- `index.html` porte `<base href="/">` : les chemins relatifs (scripts, `assets/config.json`) se resolvent depuis la
+  racine, y compris apres un rechargement sur une route profonde ; pour publier sous un sous-chemin,
+  `npx ng build --base-href /tabibi/`.
+
 ## Tester
 Tests unitaires Karma / Jasmine (`*.spec.ts` a cote de chaque fichier ; services avec `HttpTestingController`,
 composants avec un service factice) :
@@ -210,3 +230,14 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
   `DemandeBesoin`, `Reponse`, `DemandeReponse`, `libelleStatutBesoin`, `formaterPrix`, `libelleReponses`.
 - Barre de navigation : « Dawini » (utilisateurs connectés) et section « Espace pharmacie » (Demandes de médicaments)
   visible uniquement si `estPharmacie()`.
+
+## v0.12.0 — Configuration à l'exécution
+- `ConfigService` (`config/config.service.ts`) : charge `assets/config.json` une seule fois avant le démarrage
+  (`APP_INITIALIZER`, Angular 18.2 n'ayant pas `provideAppInitializer`) et expose `apiUrl`, `keycloakIssuer`,
+  `keycloakClientId` ; repli sur les valeurs localhost (avertissement console) si le fichier est absent ou illisible,
+  champ manquant ou vide complété par sa valeur par défaut, barre oblique finale retirée des URL.
+- Tous les services HTTP construisent leurs URL sur `config.apiUrl` (plus aucune origine codée en dur) ;
+  `creerAuthConfig(config)` (`auth/auth.config.ts`) remplace la constante : `AuthService.initialiser()` attend la
+  configuration avant d'appliquer l'OIDC (`requireHttps` déduit de l'issuer).
+- `angular.json` : `src/assets` publié (build et test) ; `index.html` : `<base href="/">`.
+- Voir la section « Configuration » ci-dessus pour le déploiement.

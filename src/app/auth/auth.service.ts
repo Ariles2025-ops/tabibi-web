@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
-import { authConfig } from './auth.config';
+import { ConfigService } from '../config/config.service';
+import { creerAuthConfig } from './auth.config';
 
 /**
  * Fin wrapper d'OAuthService (Keycloak) : initialisation unique de l'OIDC
@@ -11,18 +12,23 @@ import { authConfig } from './auth.config';
 export class AuthService {
   private oauth = inject(OAuthService);
   private router = inject(Router);
+  private config = inject(ConfigService);
   private initialisation: Promise<void> | null = null;
 
   /**
-   * Configure l'OIDC puis charge le discovery document et traite un eventuel
-   * retour de Keycloak (?code=...). Appelee une seule fois par AppComponent ;
+   * Attend la configuration (issuer et client Keycloak lus dans assets/config.json ; deja chargee par
+   * l'APP_INITIALIZER, l'attente est alors immediate), configure l'OIDC, puis charge le discovery document
+   * et traite un eventuel retour de Keycloak (?code=...). Appelee une seule fois par AppComponent ;
    * les appels suivants renvoient la meme promesse.
    */
   initialiser(): Promise<void> {
     if (!this.initialisation) {
-      this.oauth.configure(authConfig);
-      this.initialisation = this.oauth
-        .loadDiscoveryDocumentAndTryLogin()
+      this.initialisation = this.config
+        .charger()
+        .then(() => {
+          this.oauth.configure(creerAuthConfig(this.config));
+          return this.oauth.loadDiscoveryDocumentAndTryLogin();
+        })
         .then(() => this.revenirApresConnexion())
         .catch((e) => console.error('Initialisation OIDC impossible', e));
     }

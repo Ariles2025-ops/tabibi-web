@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ConfigService } from '../config/config.service';
 
 /**
  * Besoin de medicament publie par un patient (Dawini). `patientId` vaut null dans la vue remise aux pharmacies ;
@@ -78,7 +79,12 @@ export function libelleReponses(nombre: number): string {
 @Injectable({ providedIn: 'root' })
 export class DawiniService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:8080';
+  private config = inject(ConfigService);
+
+  /** Origine de l'API, lue a l'execution dans assets/config.json. */
+  private get base(): string {
+    return this.config.apiUrl;
+  }
 
   /** Publication d'un besoin par le patient connecte (201 ; 400 si le medicament ou la wilaya manque). */
   publier(demande: DemandeBesoin): Observable<Besoin> {

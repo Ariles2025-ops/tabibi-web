@@ -205,3 +205,30 @@ decrite dans le README et le journal de tabibi-backend.
   etat vide, 403 et redirection), espace pharmacie (wilaya obligatoire puis liste et formulaires, refus sans nom ou sans
   disponibilite, reponse envoyee avec nom memorise et formulaire remplace, nom prerempli et indisponibilite sans
   prix, 409 rechargee, 400 de la recherche et etat vide), barre de navigation (section pour PHARMACIE seulement).
+
+## v0.12.0 — Configuration a l'execution
+- Jusqu'ici chaque service codait en dur `http://localhost:8080` et `auth.config.ts` l'issuer Keycloak : un
+  deploiement imposait de reconstruire. Desormais `src/assets/config.json` (`apiUrl`, `keycloakIssuer`,
+  `keycloakClientId`) est lu a l'execution par `ConfigService` (`config/config.service.ts`), charge avant le
+  demarrage par un `APP_INITIALIZER` (`useFactory` + `multi: true` : `provideAppInitializer` n'existe qu'a partir
+  d'Angular 19, verifie dans @angular/core 18.2.14). Le fichier est remplace au deploiement dans
+  `dist/tabibi-web/browser/assets/`, le build reste le meme partout.
+- `ConfigService.charger()` : une seule lecture (les appels suivants renvoient la meme promesse), ne rejette jamais :
+  fichier absent ou illisible → valeurs localhost par defaut avec `console.warn` ; champ manquant, vide ou non
+  textuel → valeur par defaut de ce champ ; barre oblique finale retiree de `apiUrl` et `keycloakIssuer`.
+- Les onze services HTTP injectent `ConfigService` et lisent `apiUrl` par un accesseur (`private get base()`),
+  jamais a la construction, pour ne dependre d'aucun ordre d'initialisation. Les specs existantes restent inchangees :
+  sans fichier charge, l'origine par defaut est celle qu'elles attendent.
+- `auth.config.ts` : la constante `authConfig` devient `creerAuthConfig({ keycloakIssuer, keycloakClientId })` ;
+  `requireHttps` est deduit de l'issuer (HTTPS exige des que l'issuer est en `https://`, HTTP local tolere en dev).
+  `AuthService.initialiser()` attend `config.charger()` (immediat apres l'initializer, sinon au premier usage) avant
+  `oauth.configure(...)` puis `loadDiscoveryDocumentAndTryLogin()` : l'OIDC n'est jamais configure avec des valeurs
+  non chargees.
+- `angular.json` : `assets` inclut `src/assets` (build et test). `index.html` gagne `<base href="/">` : sans lui, les
+  chemins relatifs (`main.js`, `assets/config.json`) se resolvaient depuis la route courante et cassaient au
+  rechargement d'une route profonde ; `ng build --base-href` permet un sous-chemin.
+- README : section « Configuration » (config.json en dev, remplace au deploiement, repli, base href).
+- Tests (9 specs ajoutees, 184 au total) : ConfigService (valeurs par defaut avant chargement, lecture par GET et
+  exposition des trois champs, barre oblique et champs manquants, repli sur 404 avec avertissement et promesse
+  resolue, lecture unique), `creerAuthConfig` (issuer et client, HTTP local sans HTTPS, HTTPS exige en deploiement),
+  MoiService (URL construite sur l'origine de la configuration, origine localhost par defaut).

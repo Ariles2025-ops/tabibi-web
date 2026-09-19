@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Candidature, DemandeCandidature } from '../admin/admin.service';
 import { Creneau } from '../annuaire/annuaire.service';
+import { ConfigService } from '../config/config.service';
 import { Ordonnance } from '../ordonnances/ordonnance.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 
@@ -13,7 +14,12 @@ import { RendezVous } from '../rendezvous/rendezvous.service';
 @Injectable({ providedIn: 'root' })
 export class MedecinService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:8080';
+  private config = inject(ConfigService);
+
+  /** Origine de l'API, lue a l'execution dans assets/config.json. */
+  private get base(): string {
+    return this.config.apiUrl;
+  }
 
   /** Rendez-vous pris chez le medecin connecte. */
   agenda(): Observable<RendezVous[]> {
