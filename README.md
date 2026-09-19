@@ -88,3 +88,23 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
 - Infrastructure de test : Karma / Jasmine (`tsconfig.spec.json`, cible `test` d'`angular.json`, `karma.conf.js`
   avec le lanceur `ChromeHeadlessCI`), specs du service, des deux composants et test de fumée d'`AppComponent` ;
   workflow GitHub Actions.
+
+## v0.7.0 — Téléconsultation
+- `/teleconsultations` : téléconsultations du patient (`GET /api/teleconsultations/mes`, rôle PATIENT), les plus
+  récentes d'abord, avec le praticien (nom lu dans l'annuaire), la date du rendez-vous lié (lue dans
+  `GET /api/rendezvous/mes`) et le statut. Tant que `consentementPatientLe` est `null`, un encart de consentement
+  explicite est affiché — « En rejoignant cette téléconsultation, vous acceptez qu'elle se déroule en vidéo via un
+  service tiers (Jitsi Meet). Aucun enregistrement n'est réalisé par Tabibi. » — avec le bouton « Je donne mon
+  consentement » (`POST /api/teleconsultations/{id}/consentir`) ; la vue renvoyée porte alors `lienSalle` et le lien
+  « Rejoindre la téléconsultation » (`target="_blank" rel="noopener"`) apparaît, uniquement si le statut est
+  PLANIFIEE ou EN_COURS. Redirige vers la connexion si besoin.
+- `/medecin/teleconsultations` (sous `medecinGuard`) : téléconsultations du praticien (`GET /api/medecin/teleconsultations`),
+  boutons « Démarrer » (`POST .../demarrer`, désactivé avec la mention « En attente du consentement du patient » tant que
+  le patient n'a pas consenti), « Terminer » (`POST .../terminer`, si EN_COURS), « Annuler » (`POST .../annuler`, si
+  PLANIFIEE, avec confirmation) et lien « Ouvrir la salle » ; un 409 affiche le motif `{ erreur }` et recharge la liste.
+- `/medecin/agenda` : bouton « Proposer une téléconsultation » sur les rendez-vous CONFIRME
+  (`POST /api/medecin/teleconsultations { rendezVousId }`), message de confirmation avec la date du rendez-vous ;
+  409 (rendez-vous non confirmé ou téléconsultation déjà planifiée) → motif `{ erreur }` affiché.
+- `TeleconsultationService` (`mes`, `parId`, `consentir`, `planifier`, `duMedecin`, `demarrer`, `terminer`, `annuler`),
+  `salleAccessible()` ; libellés `libelleStatutTeleconsultation` (Planifiée, En cours, Terminée, Annulée).
+- Barre de navigation : « Mes téléconsultations » (utilisateurs connectés) et « Téléconsultations » dans l'espace médecin.

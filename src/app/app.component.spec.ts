@@ -48,6 +48,7 @@ describe('AppComponent', () => {
     await afficher();
 
     expect(texteNav()).toContain('Accueil');
+    expect(texteNav()).not.toContain('Mes téléconsultations');
     expect(texteNav()).toContain('Vérifier une ordonnance');
     expect(texteNav()).toContain('Mon compte');
     expect(fixture.nativeElement.querySelector('app-cloche-notifications')).toBeNull();
@@ -61,6 +62,7 @@ describe('AppComponent', () => {
 
     expect(fixture.nativeElement.querySelector('app-cloche-notifications')).not.toBeNull();
     expect(texteNav()).toContain('Mes ordonnances');
+    expect(texteNav()).toContain('Mes téléconsultations');
     expect(texteNav()).not.toContain('Espace médecin');
   });
 
@@ -72,5 +74,6 @@ describe('AppComponent', () => {
     expect(texteNav()).toContain('Espace médecin');
     expect(texteNav()).toContain('Agenda');
     expect(texteNav()).toContain('Disponibilités');
+    expect(fixture.nativeElement.querySelector('a[href="/medecin/teleconsultations"]')).not.toBeNull();
   });
 });

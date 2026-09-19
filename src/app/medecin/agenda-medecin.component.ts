@@ -5,9 +5,13 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
+import { TeleconsultationService } from '../teleconsultation/teleconsultation.service';
 import { MedecinService } from './medecin.service';
 
-/** Agenda du medecin : ses rendez-vous, a marquer honores, avec redaction d'ordonnance preremplie. */
+/**
+ * Agenda du medecin : ses rendez-vous, a marquer honores, avec redaction d'ordonnance preremplie et
+ * proposition d'une teleconsultation sur un rendez-vous confirme.
+ */
 @Component({
   selector: 'app-agenda-medecin',
   standalone: true,
@@ -18,6 +22,10 @@ import { MedecinService } from './medecin.service';
 
       <p *ngIf="charge()">Chargement…</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
+      <p *ngIf="teleconsultationProposee() as r" style="color:var(--vert)">
+        Téléconsultation proposée au patient pour le rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }}.
+        <a routerLink="/medecin/teleconsultations" style="color:var(--vert)">Voir mes téléconsultations</a>
+      </p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let r of rendezVous()"
@@ -31,6 +39,10 @@ import { MedecinService } from './medecin.service';
             <button *ngIf="r.statut === 'CONFIRME'" type="button" class="bouton" (click)="honorer(r)"
                     [disabled]="enCours() !== null">
               {{ enCours() === r.id ? 'Enregistrement…' : 'Marquer honoré' }}
+            </button>
+            <button *ngIf="r.statut === 'CONFIRME'" type="button" class="bouton-secondaire" (click)="proposerTeleconsultation(r)"
+                    [disabled]="enCours() !== null">
+              {{ enCours() === r.id ? 'Envoi…' : 'Proposer une téléconsultation' }}
             </button>
             <a *ngIf="r.statut !== 'ANNULE'" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
                [queryParams]="{ patientId: r.patientId, rendezVousId: r.id }">Rédiger une ordonnance</a>
@@ -47,11 +59,14 @@ import { MedecinService } from './medecin.service';
 export class AgendaMedecinComponent implements OnInit {
   private auth = inject(AuthService);
   private service = inject(MedecinService);
+  private teleconsultations = inject(TeleconsultationService);
 
   rendezVous = signal<RendezVous[]>([]);
   charge = signal(false);
   /** Identifiant du rendez-vous en cours de mise a jour. */
   enCours = signal<string | null>(null);
+  /** Rendez-vous sur lequel une teleconsultation vient d'etre proposee (message de confirmation). */
+  teleconsultationProposee = signal<RendezVous | null>(null);
   erreur = signal('');
 
   ngOnInit() {
@@ -82,6 +97,7 @@ export class AgendaMedecinComponent implements OnInit {
   honorer(rdv: RendezVous) {
     this.enCours.set(rdv.id);
     this.erreur.set('');
+    this.teleconsultationProposee.set(null);
     this.service.honorer(rdv.id).subscribe({
       next: () => {
         this.enCours.set(null);
@@ -90,6 +106,29 @@ export class AgendaMedecinComponent implements OnInit {
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
         this.erreur.set(e.error?.erreur ?? 'La mise à jour du rendez-vous a échoué, veuillez réessayer.');
+      },
+    });
+  }
+
+  /** Planifie une teleconsultation sur le rendez-vous (409 si non confirme ou deja planifiee : motif affiche). */
+  proposerTeleconsultation(rdv: RendezVous) {
+    this.enCours.set(rdv.id);
+    this.erreur.set('');
+    this.teleconsultationProposee.set(null);
+    this.teleconsultations.planifier(rdv.id).subscribe({
+      next: () => {
+        this.enCours.set(null);
+        this.teleconsultationProposee.set(rdv);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.enCours.set(null);
+        if (e.status === 409) {
+          this.erreur.set(e.error?.erreur ?? 'Une téléconsultation est déjà proposée sur ce rendez-vous.');
+        } else if (e.status === 401) {
+          this.auth.seConnecter();
+        } else {
+          this.erreur.set(e.error?.erreur ?? 'La proposition de téléconsultation a échoué, veuillez réessayer.');
+        }
       },
     });
   }

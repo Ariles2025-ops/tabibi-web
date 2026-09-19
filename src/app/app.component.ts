@@ -16,6 +16,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
         <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
         <a routerLink="/mes-rendez-vous" routerLinkActive="actif">Mes rendez-vous</a>
         <a *ngIf="connecte()" routerLink="/mes-ordonnances" routerLinkActive="actif">Mes ordonnances</a>
+        <a *ngIf="connecte()" routerLink="/teleconsultations" routerLinkActive="actif">Mes téléconsultations</a>
         <a routerLink="/verifier" routerLinkActive="actif">Vérifier une ordonnance</a>
         <a routerLink="/moi" routerLinkActive="actif" style="margin-left:auto">Mon compte</a>
         <app-cloche-notifications *ngIf="connecte()" />
@@ -26,6 +27,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
           <a routerLink="/medecin/agenda" routerLinkActive="actif">Agenda</a>
           <a routerLink="/medecin/disponibilites" routerLinkActive="actif">Disponibilités</a>
           <a routerLink="/medecin/ordonnances" routerLinkActive="actif">Mes ordonnances rédigées</a>
+          <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">Téléconsultations</a>
         </div>
       </div>
     </nav>
