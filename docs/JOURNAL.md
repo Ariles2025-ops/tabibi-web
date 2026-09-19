@@ -469,3 +469,6 @@ decrite dans le README et le journal de tabibi-backend.
   nettoyage, defaut du client), `configurationDepuisEnvironnement` (variables explicites, derivation de `DOMAINE`,
   rien), `AuthService` (navigateur : configuration OIDC, discovery, `initCodeFlow` ; serveur : rien, jamais connecte),
   cloche cote serveur (ni lecture ni minuterie).
+
+## v0.19.1 — Version alignee
+- package.json / package-lock.json : version 0.19.x, alignee sur ce journal.

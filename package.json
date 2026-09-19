@@ -1,6 +1,6 @@
 {
   "name": "tabibi-web",
-  "version": "0.1.0",
+  "version": "0.19.0",
   "description": "Front web Tabibi (Angular 18) — connexion Keycloak + API Tabibi",
   "scripts": {
     "start": "ng serve",
