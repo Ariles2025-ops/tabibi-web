@@ -84,7 +84,7 @@ export const EN: Record<ClesTraduction, string> = {
   'annuaire.recherche': 'Searching…',
   'annuaire.aucun': 'No practitioner found.',
   'accueil.badge': 'Doctors all across Algeria',
-  'accueil.titre': 'Your health should never wait.',
+  'accueil.titre': 'Your health should <em>never wait</em>',
   'accueil.sousTitre': 'Book an appointment with a doctor anywhere in Algeria — 58 wilayas, 24/7.',
   'accueil.recherchePlaceholder': 'Dr. Benali, cardiology, Algiers…',
   'accueil.paiement': 'Pay at the practice — cash or Chifa card. No online prepayment.',

@@ -89,7 +89,7 @@ export const AR: Record<ClesTraduction, string> = {
   'annuaire.recherche': 'جارٍ البحث…',
   'annuaire.aucun': 'لم يُعثر على أي طبيب.',
   'accueil.badge': 'أطباء في كل أنحاء الجزائر',
-  'accueil.titre': 'صحتك يجب ألا تنتظر أبداً.',
+  'accueil.titre': 'صحتك <em>يجب ألا تنتظر</em> أبداً',
   'accueil.sousTitre': 'احجز موعداً مع طبيب في أي مكان في الجزائر — 58 ولاية، على مدار الساعة.',
   'accueil.recherchePlaceholder': 'د. بن علي، أمراض القلب، الجزائر…',
   'accueil.paiement': 'الدفع في العيادة — نقداً أو ببطاقة الشفاء. لا دفع مسبق عبر الإنترنت.',

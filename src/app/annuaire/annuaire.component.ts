@@ -13,55 +13,46 @@ import { AnnuaireService, Medecin } from './annuaire.service';
   template: `
     <main style="max-width:880px;margin:0 auto;padding:24px 16px 48px">
 
-      <!-- HERO -->
-      <section class="carte" style="border-radius:var(--rayon-lg);padding:36px 24px;text-align:center">
-        <span class="badge-or">{{ 'accueil.badge' | t }}</span>
+      <!-- HERO de marque (dégradé vert, signature Tabibi) -->
+      <section class="hero">
+        <span class="hero-badge"><span class="hero-dot"></span>{{ 'accueil.badge' | t }}</span>
 
-        <h1 style="font-size:clamp(2rem,6vw,3rem);margin:18px auto 10px;max-width:12ch;text-wrap:balance">
-          {{ 'accueil.titre' | t }}
-        </h1>
-        <p style="color:var(--texte-doux);font-size:1.1rem;max-width:52ch;margin:0 auto 24px">
-          {{ 'accueil.sousTitre' | t }}
-        </p>
+        <h1 [innerHTML]="'accueil.titre' | t"></h1>
+        <p class="hero-sous">{{ 'accueil.sousTitre' | t }}</p>
 
-        <!-- Barre de recherche unifiee -->
-        <form (ngSubmit)="rechercher()"
-              style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--bord-fort);
-                     border-radius:999px;padding:6px 6px 6px 18px;max-width:640px;margin:0 auto;box-shadow:var(--ombre)">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="flex:none">
-            <circle cx="11" cy="11" r="7" stroke="var(--vert)" stroke-width="2"/>
-            <path d="M20 20l-3.2-3.2" stroke="var(--vert)" stroke-width="2" stroke-linecap="round"/>
+        <!-- Barre de recherche unifiée -->
+        <form (ngSubmit)="rechercher()" class="recherche-barre">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="flex:none;color:#64748b">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+            <path d="M20 20l-3.2-3.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
           <input [(ngModel)]="recherche" name="q" [placeholder]="'accueil.recherchePlaceholder' | t"
-                 [attr.aria-label]="'accueil.recherchePlaceholder' | t"
-                 style="flex:1;min-width:0;border:0;outline:none;font:inherit;font-size:1.05rem;color:var(--texte);background:transparent">
-          <button type="submit" class="bouton" style="border-radius:999px;padding:11px 22px">
-            {{ 'annuaire.rechercher' | t }}
-          </button>
+                 [attr.aria-label]="'accueil.recherchePlaceholder' | t">
+          <button type="submit" class="bouton">{{ 'annuaire.rechercher' | t }}</button>
         </form>
 
-        <!-- Paiement -->
-        <p style="display:flex;align-items:center;justify-content:center;gap:8px;color:var(--texte-doux);margin:18px 0 0;font-size:.95rem">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex:none">
-            <rect x="2.5" y="5" width="19" height="14" rx="3" stroke="var(--or)" stroke-width="2"/>
-            <path d="M2.5 9.5h19" stroke="var(--or)" stroke-width="2"/>
+        <!-- Note de paiement -->
+        <p class="hero-paiement">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex:none;color:#fcd34d">
+            <rect x="2.5" y="5" width="19" height="14" rx="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M2.5 9.5h19" stroke="currentColor" stroke-width="2"/>
           </svg>
           {{ 'accueil.paiement' | t }}
         </p>
 
         <!-- Tuiles de stats -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:26px">
-          <div class="carte" style="padding:16px 8px">
-            <div style="font-family:var(--police-titre);font-weight:800;font-size:1.7rem;color:var(--vert)">{{ resultats().length }}</div>
-            <div style="color:var(--texte-doux);font-size:.9rem">{{ 'accueil.statMedecins' | t }}</div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-val">{{ resultats().length }}</div>
+            <div class="hero-stat-lib">{{ 'accueil.statMedecins' | t }}</div>
           </div>
-          <div class="carte" style="padding:16px 8px">
-            <div style="font-family:var(--police-titre);font-weight:800;font-size:1.7rem;color:var(--vert)">58</div>
-            <div style="color:var(--texte-doux);font-size:.9rem">{{ 'accueil.statWilayas' | t }}</div>
+          <div class="hero-stat">
+            <div class="hero-stat-val">58</div>
+            <div class="hero-stat-lib">{{ 'accueil.statWilayas' | t }}</div>
           </div>
-          <div class="carte" style="padding:16px 8px">
-            <div style="font-family:var(--police-titre);font-weight:800;font-size:1.7rem;color:var(--vert)">24/7</div>
-            <div style="color:var(--texte-doux);font-size:.9rem">{{ 'accueil.statReservation' | t }}</div>
+          <div class="hero-stat">
+            <div class="hero-stat-val">24/7</div>
+            <div class="hero-stat-lib">{{ 'accueil.statReservation' | t }}</div>
           </div>
         </div>
       </section>
@@ -71,16 +62,12 @@ import { AnnuaireService, Medecin } from './annuaire.service';
       <p *ngIf="charge()" style="color:var(--texte-doux)">{{ 'annuaire.recherche' | t }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:12px">
-        <li *ngFor="let m of resultats()" class="carte" style="padding:0">
-          <a [routerLink]="['/medecins', m.id]"
-             style="display:flex;align-items:center;gap:14px;padding:16px;color:inherit;text-decoration:none">
-            <span style="flex:none;width:46px;height:46px;border-radius:50%;background:var(--vert-clair);color:var(--vert);
-                         display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--police-titre)">
-              {{ initiales(m.nomComplet) }}
-            </span>
+        <li *ngFor="let m of resultats()" class="carte carte-cliquable medecin-carte">
+          <a [routerLink]="['/medecins', m.id]" class="medecin-lien">
+            <span class="medecin-avatar">{{ initiales(m.nomComplet) }}</span>
             <span style="flex:1;min-width:0">
-              <strong style="color:var(--texte);font-family:var(--police-titre);font-size:1.05rem">{{ m.nomComplet }}</strong><br>
-              <span style="color:var(--texte-doux);font-size:.92rem">{{ m.specialiteFr }} · {{ m.ville }} ({{ m.wilayaFr }})</span>
+              <span class="medecin-nom">{{ m.nomComplet }}</span><br>
+              <span class="medecin-meta">{{ m.specialiteFr }} · {{ m.ville }} ({{ m.wilayaFr }})</span>
             </span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex:none;color:var(--bord-fort)">
               <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

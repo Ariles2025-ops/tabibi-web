@@ -53,9 +53,9 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
                   [class.actif]="langue() === l.code" [attr.aria-pressed]="langue() === l.code">{{ l.libelle }}</button>
         </span>
       </div>
-      <div *ngIf="estMedecin()" style="background:#0b5c4b">
+      <div *ngIf="estMedecin()" style="background:var(--vert-800)">
         <div style="max-width:1000px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:.95rem">
-          <span style="color:#cfe7e0">{{ 'nav.espaceMedecin' | t }}</span>
+          <span style="color:#d7ece5">{{ 'nav.espaceMedecin' | t }}</span>
           <a routerLink="/medecin/agenda" routerLinkActive="actif">{{ 'nav.agenda' | t }}</a>
           <a routerLink="/medecin/disponibilites" routerLinkActive="actif">{{ 'nav.disponibilites' | t }}</a>
           <a routerLink="/medecin/ordonnances" routerLinkActive="actif">{{ 'nav.ordonnancesRedigees' | t }}</a>
@@ -66,21 +66,21 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
           <a routerLink="/medecin/secretaires" routerLinkActive="actif">{{ 'nav.mesSecretaires' | t }}</a>
         </div>
       </div>
-      <div *ngIf="estSecretaire()" style="background:#0b5c4b">
+      <div *ngIf="estSecretaire()" style="background:var(--vert-800)">
         <div style="max-width:1000px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:.95rem">
-          <span style="color:#cfe7e0">{{ 'nav.espaceSecretaire' | t }}</span>
+          <span style="color:#d7ece5">{{ 'nav.espaceSecretaire' | t }}</span>
           <a routerLink="/secretaire" routerLinkActive="actif">{{ 'nav.agendaCabinet' | t }}</a>
         </div>
       </div>
-      <div *ngIf="estPharmacie()" style="background:#0b5c4b">
+      <div *ngIf="estPharmacie()" style="background:var(--vert-800)">
         <div style="max-width:1000px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:.95rem">
-          <span style="color:#cfe7e0">{{ 'nav.espacePharmacie' | t }}</span>
+          <span style="color:#d7ece5">{{ 'nav.espacePharmacie' | t }}</span>
           <a routerLink="/pharmacie" routerLinkActive="actif">{{ 'nav.demandesMedicaments' | t }}</a>
         </div>
       </div>
-      <div *ngIf="estAdmin()" style="background:#083f33">
+      <div *ngIf="estAdmin()" style="background:var(--vert-fonce)">
         <div style="max-width:1000px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:.95rem">
-          <span style="color:#cfe7e0">{{ 'nav.administration' | t }}</span>
+          <span style="color:#d7ece5">{{ 'nav.administration' | t }}</span>
           <a routerLink="/admin" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">{{ 'nav.tableauDeBord' | t }}</a>
           <a routerLink="/admin/candidatures" routerLinkActive="actif">{{ 'nav.candidatures' | t }}</a>
           <a routerLink="/admin/avis" routerLinkActive="actif">{{ 'nav.moderationAvis' | t }}</a>

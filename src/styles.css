@@ -1,86 +1,236 @@
-/* =========================================================================
-   Charte Tabibi — reprise de l'app deployee (tabibi.doctor)
-   Vert emeraude #0E5F46 + or #D4A437, Plus Jakarta Sans (titres) + Inter (texte).
+/* ======================================================================
+   Charte Tabibi — port fidèle de l'app déployée (tabibi.doctor)
+   Source : dist/styles/tokens-v2.css + components-v2.css
+   Vert #0F7560 + Or #D4A437 · Plus Jakarta Sans · IBM Plex Sans Arabic
    ========================================================================= */
 :root {
-  /* Marque */
-  --vert:        #0E5F46;   /* couleur principale */
-  --vert-fonce:  #0a4536;
-  --vert-clair:  #e7f3ef;
-  --vert-tres-clair:#f3faf7;
-  --or:          #D4A437;   /* accent dore */
-  --or-clair:    #fef3c7;
-  --or-texte:    #7D5E18;
+  /* Marque (valeurs EXACTES tokens-v2) */
+  --vert:          #0F7560;   /* PRIMARY — boutons d'action */
+  --vert-fonce:    #0a4d3e;   /* hover / pressed */
+  --vert-800:      #0c5e4d;
+  --vert-clair:    #e7f3ef;   /* pastille verte pâle */
+  --vert-clair-bd: #d4e9e1;
+  --vert-tres-clair:#f0fdf4;
+  --vert-500:      #2E8B57;   /* succès / vérifié */
 
-  /* Neutres (fond slate clair) */
+  --or:            #D4A437;   /* ACCENT — premium */
+  --or-fonce:      #a17a1f;   /* hover */
+  --or-clair:      #fef3c7;
+  --or-texte:      #a17a1f;
+
+  --rouge:         #D21010;
+  --rouge-clair:   #fff0f0;
+  --ambre:         #F59E0B;
+
+  /* Neutres, texte, fonds (canon slate) */
+  --ink:       #0F2A24;   /* encre titres héro */
+  --texte:     #0f172a;   /* texte principal */
+  --texte-doux:#475569;   /* texte courant */
+  --texte-3:   #64748b;   /* métadonnées */
+  --texte-4:   #94a3b8;   /* placeholders */
+
   --bg:      #f8fafc;
   --bg2:     #f1f5f9;
+  --bg3:     #e2e8f0;
   --surface: #ffffff;
   --bord:    #e2e8f0;
   --bord-fort:#cbd5e1;
-  --texte:   #10241F;
-  --texte-doux:#566b64;
 
   /* Formes */
-  --rayon:   14px;
-  --rayon-lg:20px;
-  --ombre:   0 1px 2px rgba(16,36,31,.04), 0 8px 24px rgba(16,36,31,.06);
-  --ombre-forte:0 10px 30px rgba(16,36,31,.12);
+  --r8:  8px;
+  --r12: 12px;
+  --r16: 16px;
+  --r20: 20px;
+  --rfull:999px;
+  --rayon:   12px;
+  --rayon-lg:16px;
 
-  --police-titre:'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --police-texte:'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Ombres (exactes) */
+  --s1: 0 1px 3px rgba(0,0,0,.04);
+  --s2: 0 4px 12px rgba(0,0,0,.06);
+  --s3: 0 12px 36px rgba(0,0,0,.08);
+  --ombre:        var(--s2);
+  --ombre-forte:  var(--s3);
+  --ombre-carte:  0 2px 8px rgba(16,40,34,.06), 0 20px 40px rgba(16,40,34,.10);
+  --ombre-recherche: 0 8px 24px rgba(16,40,34,.10), 0 2px 6px rgba(16,40,34,.05);
+  --ombre-primaire:  0 4px 14px rgba(15,117,96,.24);
+  --anneau-primaire: 0 0 0 3px rgba(15,117,96,.18);
+
+  /* Dégradés de marque */
+  --grad-brand: linear-gradient(155deg, #0F7560 0%, #0a4d3e 100%);
+  --grad-hero:  linear-gradient(180deg, #f0f7f4 0%, #f8fafc 100%);
+
+  /* Typographie — Plus Jakarta Sans PARTOUT (comme l'app déployée) */
+  --police:       'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --police-titre: var(--police);
+  --police-texte: var(--police);
+  --police-ar:    'IBM Plex Sans Arabic', 'Cairo', 'Segoe UI Arabic', sans-serif;
 }
 
 * { box-sizing: border-box; }
 
 body {
-  font-family: var(--police-texte);
+  font-family: var(--police);
   margin: 0;
   color: var(--texte);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   line-height: 1.55;
 }
 
-h1, h2, h3, h4 { font-family: var(--police-titre); color: var(--texte); line-height: 1.15; letter-spacing:-.01em; }
+[dir='rtl'] body,
+[lang='ar'] body { font-family: var(--police-ar); }
+
+h1, h2, h3, h4 {
+  font-family: var(--police-titre);
+  color: var(--texte);
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  text-wrap: balance;
+}
 h1 { font-weight: 800; }
 h2, h3 { font-weight: 700; }
 
 a { color: var(--vert); }
 
-/* Navigation (barre du haut) : liens clairs sur fond vert */
-nav a { color:#eaf4f0; text-decoration:none; font-weight:500; }
+/* Navigation (bandeau vert) : liens clairs */
+nav a { color:#d7ece5; text-decoration:none; font-weight:600; font-size:.95rem; transition:color .15s; }
 nav a:hover { color:#fff; }
-nav a.actif { color:#fff; text-decoration:underline; text-underline-offset:5px; text-decoration-thickness:2px; }
-
-button:disabled { opacity:.55; cursor:default; }
-
-/* Champs de formulaire */
-.champ {
-  padding:11px 13px; border:1px solid var(--bord-fort); border-radius:10px;
-  font:inherit; color:var(--texte); background:var(--surface); box-sizing:border-box;
-  transition:border-color .15s, box-shadow .15s;
+nav a.actif { color:#fff; }
+nav a.actif::after {
+  content:""; display:block; height:2px; border-radius:2px;
+  background:var(--or); margin-top:3px;
 }
-.champ:focus { outline:none; border-color:var(--vert); box-shadow:0 0 0 3px var(--vert-clair); }
-.champ::placeholder { color:#94a3b8; }
 
-/* Boutons */
-.bouton, .bouton-secondaire {
-  padding:11px 20px; border-radius:10px; font:inherit; font-weight:600; cursor:pointer;
-  text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  transition:transform .05s ease, filter .15s, background .15s;
+button:disabled { opacity:.55; cursor:not-allowed; }
+
+/* ── Champs de formulaire (= .form-control) ── */
+.champ, input:not([type=checkbox]):not([type=radio]):not([type=range]).champ, select.champ, textarea.champ {
+  width:100%; height:48px; padding:0 14px;
+  border:1.5px solid var(--bord); border-radius:var(--r12);
+  font:inherit; font-size:15px; color:var(--texte); background:var(--surface);
+  transition:border-color .15s, box-shadow .15s; outline:none; appearance:none;
 }
-.bouton { background:var(--vert); color:#fff; border:0; box-shadow:0 1px 2px rgba(14,95,70,.25); }
-.bouton:hover { filter:brightness(1.07); }
-.bouton:active { transform:translateY(1px); }
-.bouton-secondaire { background:var(--surface); color:var(--vert); border:1.5px solid var(--vert); }
+textarea.champ { height:auto; min-height:96px; padding:12px 14px; resize:vertical; line-height:1.45; }
+.champ:hover:not(:focus) { border-color:var(--bord-fort); }
+.champ:focus { border-color:var(--vert); box-shadow:var(--anneau-primaire); }
+.champ::placeholder { color:var(--texte-4); }
+
+/* ── Boutons (= .btn / .btn-primary / .btn-secondary) ── */
+.bouton, .bouton-secondaire, .bouton-or {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  height:44px; padding:0 20px; border-radius:var(--r12);
+  font:inherit; font-weight:600; font-size:14px; line-height:1;
+  border:1.5px solid transparent; cursor:pointer; text-decoration:none;
+  white-space:nowrap; user-select:none;
+  transition:background-color .2s, border-color .2s, color .2s, box-shadow .2s, transform .2s;
+}
+.bouton:active, .bouton-secondaire:active, .bouton-or:active { transform:scale(.97); }
+
+.bouton { background:var(--vert); color:#fff; border-color:var(--vert); }
+.bouton:hover { background:var(--vert-fonce); border-color:var(--vert-fonce); box-shadow:var(--ombre-primaire); }
+
+.bouton-secondaire { background:var(--surface); color:var(--vert); border-color:var(--vert); }
 .bouton-secondaire:hover { background:var(--vert-clair); }
 
-/* Carte generique (surface blanche arrondie) */
+.bouton-or { background:var(--or); color:#1A1A1A; border-color:var(--or); font-weight:700; }
+.bouton-or:hover { background:var(--or-fonce); border-color:var(--or-fonce); color:#fff; }
+
+/* ── Carte (= .card) ── */
 .carte {
-  background:var(--surface); border:1px solid var(--bord); border-radius:var(--rayon);
-  box-shadow:var(--ombre); padding:20px;
+  background:var(--surface); border:1px solid var(--bord); border-radius:var(--r16);
+  box-shadow:var(--s1); padding:20px;
+  transition:box-shadow .2s, transform .2s, border-color .2s;
 }
+.carte-cliquable { cursor:pointer; }
+.carte-cliquable:hover { border-color:var(--vert); box-shadow:var(--ombre-primaire); }
+
+/* ── Badge doré (pilule) = .badge-gold ── */
+.badge-or {
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--or-clair); color:var(--or-texte);
+  font-weight:700; padding:5px 14px; border-radius:var(--rfull); font-size:12px;
+  letter-spacing:.2px;
+}
+.badge-or::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--or); }
+
+.badge-vert {
+  display:inline-flex; align-items:center; gap:4px;
+  background:var(--vert-tres-clair); color:var(--vert);
+  font-weight:700; padding:3px 12px; border-radius:var(--rfull); font-size:11px;
+}
+
+/* ══ HERO de marque (dégradé vert, signature Tabibi) ══ */
+.hero {
+  position:relative; overflow:hidden;
+  background:var(--grad-brand);
+  border-radius:var(--r20);
+  padding:40px 28px 44px;
+  color:#fff; text-align:center;
+  box-shadow:var(--ombre-carte);
+}
+.hero::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(circle at 82% 12%, rgba(255,255,255,.09) 0%, transparent 45%),
+    radial-gradient(circle at 8% 88%, rgba(255,255,255,.06) 0%, transparent 42%);
+}
+.hero > * { position:relative; }
+.hero-badge {
+  display:inline-flex; align-items:center; gap:7px;
+  background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.22);
+  color:#fff; padding:5px 14px; border-radius:var(--rfull);
+  font-size:12px; font-weight:700; letter-spacing:.3px; margin-bottom:16px;
+}
+.hero-dot { width:7px; height:7px; background:#4ade80; border-radius:50%; flex:none; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.hero h1 { color:#fff; font-size:clamp(1.9rem,5vw,2.6rem); margin:0 auto 10px; max-width:16ch; }
+.hero h1 em { color:#86efac; font-style:normal; }
+.hero-sous { color:rgba(255,255,255,.82); font-size:1.02rem; max-width:48ch; margin:0 auto 24px; line-height:1.6; }
+
+/* Barre de recherche unifiée (blanche, sur le hero) */
+.recherche-barre {
+  display:flex; align-items:center; gap:8px;
+  background:#fff; border-radius:var(--r16);
+  padding:7px 7px 7px 18px; max-width:600px; margin:0 auto;
+  box-shadow:var(--ombre-recherche);
+}
+.recherche-barre input {
+  flex:1; min-width:0; border:0; outline:none;
+  font:inherit; font-size:1rem; color:var(--texte); background:transparent;
+}
+.recherche-barre input::placeholder { color:var(--texte-4); }
+
+/* Note de paiement */
+.hero-paiement {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  color:rgba(255,255,255,.85); margin:18px 0 0; font-size:.95rem;
+}
+
+/* Tuiles de stats sur le hero */
+.hero-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:26px; }
+.hero-stat {
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
+  border-radius:var(--r12); padding:14px 8px; text-align:center;
+}
+.hero-stat-val { font-family:var(--police-titre); font-weight:800; font-size:1.6rem; color:#fff; }
+.hero-stat-lib { color:rgba(255,255,255,.78); font-size:.82rem; margin-top:2px; }
+
+/* ── Cartes médecin (liste résultats) ── */
+.medecin-carte { padding:0; }
+.medecin-lien {
+  display:flex; align-items:center; gap:14px; padding:16px;
+  color:inherit; text-decoration:none;
+}
+.medecin-avatar {
+  flex:none; width:48px; height:48px; border-radius:50%;
+  background:var(--vert-clair); color:var(--vert);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:1.05rem; font-family:var(--police-titre);
+}
+.medecin-nom { color:var(--texte); font-family:var(--police-titre); font-weight:700; font-size:1.02rem; }
+.medecin-meta { color:var(--texte-doux); font-size:.92rem; }
 
 /* Notifications */
 .notification-non-lue { background:var(--vert-tres-clair); }
@@ -92,34 +242,36 @@ button:disabled { opacity:.55; cursor:default; }
 .conversation-non-lue strong { color:var(--vert); }
 .message-moi, .message-autre { max-width:80%; padding:10px 12px; border-radius:12px; }
 .message-moi { justify-self:end; background:var(--vert-clair); }
-.message-autre { justify-self:start; background:#f1f3f2; }
+.message-autre { justify-self:start; background:var(--bg2); }
 
-/* Avis : note 1 a 5 */
-.note { position:relative; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--vert); border-radius:10px; color:var(--vert); font-weight:600; cursor:pointer; }
+/* Avis : note 1 à 5 */
+.note { position:relative; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1.5px solid var(--vert); border-radius:var(--r12); color:var(--vert); font-weight:700; cursor:pointer; }
 .note input { position:absolute; opacity:0; width:0; height:0; margin:0; }
 .note:focus-within { outline:2px solid var(--texte); outline-offset:2px; }
 .note-choisie { background:var(--vert); color:#fff; }
 
-/* Badge dore (pilule) facultatif */
-.badge-or { display:inline-flex; align-items:center; gap:8px; background:var(--or-clair); color:var(--or-texte); font-weight:600; padding:7px 14px; border-radius:999px; font-size:.9rem; }
-.badge-or::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--or); }
-
 /* Impression (ordonnance) */
 @media print {
-  nav, .sans-impression { display:none !important; }
+  nav, header, .sans-impression { display:none !important; }
   body { color:#000; background:#fff; }
   main { max-width:none !important; margin:0 !important; padding:0 !important; }
 }
 
-/* Selecteur de langue (pilules) */
+/* Sélecteur de langue (pilules) */
 .pousser-fin { margin-inline-start: auto; }
-.selecteur-langue { display:inline-flex; gap:4px; align-items:center; background:rgba(255,255,255,.12); border-radius:999px; padding:3px; }
-.selecteur-langue button { background:none; border:0; padding:4px 10px; border-radius:999px; color:#cfe7e0; font:inherit; font-size:.85rem; cursor:pointer; font-weight:600; }
+.selecteur-langue { display:inline-flex; gap:3px; align-items:center; background:rgba(255,255,255,.14); border-radius:var(--rfull); padding:3px; }
+.selecteur-langue button { background:none; border:0; padding:4px 11px; border-radius:var(--rfull); color:#d7ece5; font:inherit; font-size:.82rem; cursor:pointer; font-weight:700; transition:all .15s; }
 .selecteur-langue button.actif { color:var(--vert); background:#fff; }
 
-/* Ecriture de droite a gauche (arabe) */
+/* RTL (arabe) */
 [dir='rtl'] .message-moi { justify-self:start; }
 [dir='rtl'] .message-autre { justify-self:end; }
 [dir='rtl'] ol, [dir='rtl'] ul { padding-inline-start:0; padding-inline-end:0; }
 [dir='rtl'] .liste-numerotee { padding-inline-start:0; padding-inline-end:24px; }
 [dir='rtl'] code { direction:ltr; unicode-bidi:embed; display:inline-block; }
+[dir='rtl'] .recherche-barre { padding:7px 18px 7px 7px; }
+
+@media (max-width:560px) {
+  .hero { padding:30px 18px 34px; }
+  .hero-stats { gap:8px; }
+}

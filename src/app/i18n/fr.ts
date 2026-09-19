@@ -90,7 +90,7 @@ export const FR = {
   'annuaire.recherche': 'Recherche…',
   'annuaire.aucun': 'Aucun praticien trouve.',
   'accueil.badge': 'Des médecins partout en Algérie',
-  'accueil.titre': 'Votre santé ne devrait jamais attendre.',
+  'accueil.titre': 'Votre santé ne devrait <em>jamais attendre</em>',
   'accueil.sousTitre': 'Prenez rendez-vous avec un médecin partout en Algérie — 58 wilayas, 24h/24.',
   'accueil.recherchePlaceholder': 'Dr. Benali, cardiologie, Alger…',
   'accueil.paiement': 'Paiement au cabinet — espèces ou carte Chifa. Aucun prépaiement en ligne.',
