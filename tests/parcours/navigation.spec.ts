@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { ISSUER_SIMULE, URL_WEB } from '../playwright.config';
-import { ouvrir } from './outils';
+import { ISSUER_SIMULE, URL_WEB } from '../../playwright.config';
+import { ouvrir } from '../outils';
 
 /** Page introuvable (404), robots.txt, plan du site, titres et descriptions SEO, pages privees sans connexion. */
 test.describe('Navigation, SEO et pages privées', () => {

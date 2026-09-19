@@ -34,7 +34,7 @@ export class AuthService {
         : this.config
             .charger()
             .then(() => {
-              this.oauth.configure(creerAuthConfig(this.config));
+              this.oauth.configure(creerAuthConfig(this.config, window.location.origin));
               return this.oauth.loadDiscoveryDocumentAndTryLogin();
             })
             .then(() => this.revenirApresConnexion())

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { CODE_ORDONNANCE_VALIDE } from './api-simulee';
-import { ouvrir } from './outils';
+import { CODE_ORDONNANCE_VALIDE } from '../api-simulee';
+import { ouvrir } from '../outils';
 
 /** Parcours public : verification d'une ordonnance par son code (page /verifier), code valide puis code inconnu. */
 test.describe("Vérification d'une ordonnance", () => {

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { URL_WEB } from '../playwright.config';
-import { ouvrir } from './outils';
+import { URL_WEB } from '../../playwright.config';
+import { ouvrir } from '../outils';
 
 /**
  * Langues de l'interface (francais, arabe, anglais) : bascule par le selecteur de la barre de navigation, sens

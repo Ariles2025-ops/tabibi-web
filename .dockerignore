@@ -3,7 +3,7 @@ node_modules/
 dist/
 .angular/
 coverage/
-e2e/
+tests/
 playwright.config.ts
 outils/
 test-results/

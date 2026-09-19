@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { ISSUER_SIMULE } from '../playwright.config';
-import { ouvrir } from './outils';
+import { ISSUER_SIMULE } from '../../playwright.config';
+import { ouvrir } from '../outils';
 
 /**
  * Parcours public : recherche d'un praticien, ouverture de sa fiche (creneaux, synthese des avis), tentative de
