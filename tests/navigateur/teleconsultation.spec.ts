@@ -215,3 +215,104 @@ test.describe('Écran des teleconsultations sans connexion', () => {
     expect(journal.contient('/api/teleconsultations/mes')).toBe(false);
   });
 });
+
+test.describe('Écran des teleconsultations du medecin', () => {
+  const EN_COURS = { ...CONSENTIE, id: 't3', statut: 'EN_COURS' };
+
+  test.beforeEach(async ({ page }) => {
+    await connecter(page, { sujet: 'm1', roles: ['MEDECIN'] });
+    await stub(page, '**/api/medecin/rendezvous', { corps: [RENDEZ_VOUS_CONFIRME] });
+  });
+
+  test('« Démarrer » est inactif et l attente du consentement est mentionnee', async ({ page }) => {
+    await stub(page, '**/api/medecin/teleconsultations', { corps: [PLANIFIEE] });
+
+    await ouvrir(page, '/medecin/teleconsultations');
+
+    const ligne = page.locator('main li').first();
+    await expect(ligne.getByRole('button', { name: FR['teleconsultationMedecin.demarrer'] })).toBeDisabled();
+    await expect(ligne).toContainText(FR['teleconsultationMedecin.enAttenteConsentement']);
+    await expect(ligne.getByRole('button', { name: FR['commun.annuler'], exact: true })).toBeEnabled();
+    await expect(ligne.getByRole('button', { name: FR['teleconsultationMedecin.terminer'] })).toHaveCount(0);
+    await expect(ligne).toContainText('Rendez-vous du');
+    await expect(ligne).toContainText('7 décembre');
+    await expect(ligne).toContainText('Patient : p1');
+    await expect(ligne).toContainText('Planifiée');
+  });
+
+  test('apres consentement : salle ouvrable en nouvel onglet et « Démarrer » actif, puis « Terminer »', async ({ page }) => {
+    await stub(page, '**/api/medecin/teleconsultations', { corps: [CONSENTIE] });
+    await stub(page, '**/api/teleconsultations/t1/demarrer', { corps: { ...CONSENTIE, statut: 'EN_COURS' } });
+
+    await ouvrir(page, '/medecin/teleconsultations');
+
+    const ligne = page.locator('main li').first();
+    const salle = ligne.getByRole('link', { name: FR['teleconsultationMedecin.ouvrirSalle'] });
+    await expect(salle).toHaveAttribute('href', CONSENTIE.lienSalle!);
+    await expect(salle).toHaveAttribute('rel', 'noopener');
+    await expect(ligne).toContainText('consentement donné le');
+    await expect(ligne).not.toContainText(FR['teleconsultationMedecin.enAttenteConsentement']);
+
+    await ligne.getByRole('button', { name: FR['teleconsultationMedecin.demarrer'] }).click();
+
+    await expect(ligne).toContainText('En cours');
+    await expect(ligne.getByRole('button', { name: FR['teleconsultationMedecin.terminer'] })).toBeVisible();
+    await expect(ligne.getByRole('button', { name: FR['teleconsultationMedecin.demarrer'] })).toHaveCount(0);
+  });
+
+  test('« Terminer » clot la teleconsultation : plus de salle ni de bouton', async ({ page }) => {
+    await stub(page, '**/api/medecin/teleconsultations', { corps: [EN_COURS] });
+    await stub(page, '**/api/teleconsultations/t3/terminer', { corps: { ...EN_COURS, statut: 'TERMINEE' } });
+
+    await ouvrir(page, '/medecin/teleconsultations');
+
+    const ligne = page.locator('main li').first();
+    await expect(ligne.locator('a[target="_blank"]')).toHaveCount(1);
+
+    await ligne.getByRole('button', { name: FR['teleconsultationMedecin.terminer'] }).click();
+
+    await expect(ligne).toContainText('Terminée');
+    await expect(ligne.locator('a[target="_blank"]')).toHaveCount(0);
+    await expect(ligne.getByRole('button')).toHaveCount(0);
+  });
+
+  test('« Annuler » demande confirmation puis annule', async ({ page }) => {
+    const confirmations = accepterConfirmations(page);
+    await stub(page, '**/api/medecin/teleconsultations', { corps: [PLANIFIEE] });
+    await stub(page, '**/api/teleconsultations/t1/annuler', { corps: { ...PLANIFIEE, statut: 'ANNULEE' } });
+
+    await ouvrir(page, '/medecin/teleconsultations');
+    await page.getByRole('button', { name: FR['commun.annuler'], exact: true }).click();
+
+    expect(confirmations).toContain(FR['teleconsultationMedecin.confirmerAnnulation']);
+    await expect(page.locator('main li').first()).toContainText('Annulée');
+  });
+
+  test('409 : motif de l API affiche et liste relue', async ({ page }) => {
+    const journal = requetes(page);
+    await stub(page, '**/api/medecin/teleconsultations', { corps: [CONSENTIE] });
+    await stub(page, '**/api/teleconsultations/t1/demarrer', {
+      statut: 409,
+      corps: { erreur: "Le patient n'a pas consenti." },
+    });
+
+    await ouvrir(page, '/medecin/teleconsultations');
+    await journal.attendre('/api/medecin/teleconsultations');
+    await page.getByRole('button', { name: FR['teleconsultationMedecin.demarrer'] }).click();
+
+    await expect(page.getByText("Le patient n'a pas consenti.")).toBeVisible();
+    await expect.poll(() => journal.filtrer('/api/medecin/teleconsultations', 'GET').length).toBe(2);
+  });
+
+  test('aucune teleconsultation : message, lien vers l agenda et aucun rendez-vous relu', async ({ page }) => {
+    const journal = requetes(page);
+    await stub(page, '**/api/medecin/teleconsultations', { corps: [] });
+
+    await ouvrir(page, '/medecin/teleconsultations');
+    await journal.attendre('/api/medecin/teleconsultations');
+
+    await expect(page.getByText(FR['teleconsultationMedecin.aucune'])).toBeVisible();
+    await expect(page.locator('main a[href="/medecin/agenda"]')).toHaveCount(1);
+    expect(journal.contient('/api/medecin/rendezvous')).toBe(false);
+  });
+});

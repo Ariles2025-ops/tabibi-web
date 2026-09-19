@@ -286,3 +286,134 @@ test.describe('Écran des reponses a une demande', () => {
     await expect(page.getByText(FR['demande.nAppartientPas'])).toBeVisible();
   });
 });
+
+test.describe('Écran de l espace pharmacie', () => {
+  /** Cle localStorage du nom de la pharmacie (confort : prerempli d'une visite a l'autre). */
+  const CLE_NOM_PHARMACIE = 'tabibi.pharmacie.nom';
+
+  test('exige une wilaya, puis liste les demandes ouvertes avec un formulaire de reponse', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page, { roles: ['PHARMACIE'] });
+    await stub(page, '**/api/dawini/besoins?**', { corps: [{ ...BESOIN, patientId: null, nombreReponses: 2 }] });
+
+    await ouvrir(page, '/pharmacie');
+    await page.getByRole('button', { name: FR['pharmacie.afficher'] }).click();
+
+    await expect(page.getByText(FR['pharmacie.indiquerWilaya'])).toBeVisible();
+    expect(journal.contient(/\/api\/dawini\/besoins\?/)).toBe(false);
+
+    await page.locator('input[name="wilayaCode"]').fill('16');
+    await page.getByRole('button', { name: FR['pharmacie.afficher'] }).click();
+
+    await expect(page.getByText('Amoxicilline 1 g')).toBeVisible();
+    await expect(page.getByText('Wilaya 16 · Bab Ezzouar')).toBeVisible();
+    await expect(page.getByText('Boîte de 14 comprimés')).toBeVisible();
+    await expect(page.getByText('2 réponses')).toBeVisible();
+    await expect(page.getByLabel(FR['pharmacie.nom'])).toHaveCount(1);
+    await expect(page.locator('main form').nth(1).locator('input[type="radio"]')).toHaveCount(2);
+    await expect(page.getByLabel(FR['pharmacie.prix'])).toHaveCount(1);
+  });
+
+  test('refuse une reponse sans nom de pharmacie, puis sans disponibilite', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page, { roles: ['PHARMACIE'] });
+    await stub(page, '**/api/dawini/besoins?**', { corps: [{ ...BESOIN, patientId: null }] });
+
+    await ouvrir(page, '/pharmacie');
+    await page.locator('input[name="wilayaCode"]').fill('16');
+    await page.getByRole('button', { name: FR['pharmacie.afficher'] }).click();
+    await expect(page.getByText('Amoxicilline 1 g')).toBeVisible();
+
+    await page.getByRole('button', { name: FR['pharmacie.repondre'] }).click();
+    await expect(page.getByText(FR['pharmacie.indiquerNom'])).toBeVisible();
+
+    await page.getByLabel(FR['pharmacie.nom']).fill('Pharmacie El Amel');
+    await page.getByRole('button', { name: FR['pharmacie.repondre'] }).click();
+    await expect(page.getByText(FR['pharmacie.indiquerDisponibilite'])).toBeVisible();
+
+    expect(journal.contient('/api/dawini/besoins/b1/reponses', 'POST')).toBe(false);
+  });
+
+  test('reponse envoyee : confirmation nominative, nom memorise, formulaire remplace et liste rechargee', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page, { roles: ['PHARMACIE'] });
+    await stub(page, '**/api/dawini/besoins?**', { corps: [{ ...BESOIN, patientId: null }] });
+    await stub(page, '**/api/dawini/besoins/b1/reponses', { statut: 201, corps: REPONSE });
+
+    await ouvrir(page, '/pharmacie');
+    await page.locator('input[name="wilayaCode"]').fill('16');
+    await page.getByRole('button', { name: FR['pharmacie.afficher'] }).click();
+    await expect(page.getByText('Amoxicilline 1 g')).toBeVisible();
+    journal.vider();
+
+    await page.getByLabel(FR['pharmacie.nom']).fill('Pharmacie El Amel');
+    await page.getByLabel(FR['commun.oui'], { exact: true }).check();
+    await page.getByLabel(FR['pharmacie.prix']).fill('850');
+    await page.getByRole('button', { name: FR['pharmacie.repondre'] }).click();
+
+    const envoi = await journal.attendre('/api/dawini/besoins/b1/reponses', 'POST');
+    expect(envoi.corps).toEqual({ nomPharmacie: 'Pharmacie El Amel', disponible: true, prixDa: 850, commentaire: null });
+    await expect(page.getByText(/Réponse envoyée pour « Amoxicilline 1 g »/)).toBeVisible();
+    await expect(page.getByText(FR['pharmacie.dejaRepondu'])).toBeVisible();
+    await expect(page.getByLabel(FR['pharmacie.nom'])).toHaveCount(0);
+    await expect.poll(() => journal.filtrer(/\/api\/dawini\/besoins\?/).length).toBe(1);
+    expect(await page.evaluate((cle) => localStorage.getItem(cle), CLE_NOM_PHARMACIE)).toBe('Pharmacie El Amel');
+  });
+
+  test('nom memorise prerempli, et indisponibilite envoyee sans prix', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page, { roles: ['PHARMACIE'] });
+    await page.addInitScript(() => localStorage.setItem('tabibi.pharmacie.nom', 'Pharmacie du Centre'));
+    await stub(page, '**/api/dawini/besoins?**', { corps: [{ ...BESOIN, patientId: null }] });
+    await stub(page, '**/api/dawini/besoins/b1/reponses', { statut: 201, corps: { ...REPONSE, disponible: false, prixDa: null } });
+
+    await ouvrir(page, '/pharmacie');
+    await page.locator('input[name="wilayaCode"]').fill('16');
+    await page.getByRole('button', { name: FR['pharmacie.afficher'] }).click();
+    await expect(page.getByLabel(FR['pharmacie.nom'])).toHaveValue('Pharmacie du Centre');
+
+    await page.getByLabel(FR['commun.non'], { exact: true }).check();
+    await page.getByRole('button', { name: FR['pharmacie.repondre'] }).click();
+
+    const envoi = await journal.attendre('/api/dawini/besoins/b1/reponses', 'POST');
+    expect(envoi.corps).toEqual({ nomPharmacie: 'Pharmacie du Centre', disponible: false, prixDa: null, commentaire: null });
+  });
+
+  test('409 : motif de l API, liste rechargee et formulaire conserve', async ({ page }) => {
+    const journal = requetes(page);
+    await connecter(page, { roles: ['PHARMACIE'] });
+    await stub(page, '**/api/dawini/besoins?**', { corps: [{ ...BESOIN, patientId: null }] });
+    await stub(page, '**/api/dawini/besoins/b1/reponses', {
+      statut: 409,
+      corps: { erreur: 'Cette pharmacie a deja repondu a ce besoin.' },
+    });
+
+    await ouvrir(page, '/pharmacie');
+    await page.locator('input[name="wilayaCode"]').fill('16');
+    await page.getByRole('button', { name: FR['pharmacie.afficher'] }).click();
+    await expect(page.getByText('Amoxicilline 1 g')).toBeVisible();
+    journal.vider();
+
+    await page.getByLabel(FR['pharmacie.nom']).fill('Pharmacie El Amel');
+    await page.getByLabel(FR['commun.oui'], { exact: true }).check();
+    await page.getByRole('button', { name: FR['pharmacie.repondre'] }).click();
+
+    await expect(page.getByText('Cette pharmacie a deja repondu a ce besoin.')).toBeVisible();
+    await expect(page.getByText(FR['pharmacie.dejaRepondu'])).toHaveCount(0);
+    await expect.poll(() => journal.filtrer(/\/api\/dawini\/besoins\?/).length).toBe(1);
+  });
+
+  test('400 a la recherche : motif de l API ; aucune demande : etat vide', async ({ page }) => {
+    await connecter(page, { roles: ['PHARMACIE'] });
+    await stub(page, '**/api/dawini/besoins?**', { statut: 400, corps: { erreur: 'La wilaya est obligatoire.' } });
+
+    await ouvrir(page, '/pharmacie');
+    await page.locator('input[name="wilayaCode"]').fill('16');
+    await page.getByRole('button', { name: FR['pharmacie.afficher'] }).click();
+    await expect(page.getByText('La wilaya est obligatoire.')).toBeVisible();
+
+    await stub(page, '**/api/dawini/besoins?**', { corps: [] });
+    await page.getByRole('button', { name: FR['pharmacie.afficher'] }).click();
+    await expect(page.getByText(FR['pharmacie.aucune'])).toBeVisible();
+  });
+});
