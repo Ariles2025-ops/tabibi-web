@@ -1,0 +1,21 @@
+# Mises a jour de dependances hebdomadaires (pull requests a verifier par la CI : build, tests, image).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      # Angular se met a jour d'un bloc (core, cli, build, compiler-cli...) : une seule pull request par semaine.
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@angular-devkit/*"
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly

@@ -386,3 +386,19 @@ decrite dans le README et le journal de tabibi-backend.
   les variables `TABIBI_*`), mention dans « Configuration ».
 - Tests : inchanges (264 specs) ; `ng build` verifie avec les nouvelles options (`main-XXXXXXXX.js`, `index.html`
   sans script ni gestionnaire inline).
+
+## v0.18.0 — Publication de l'image sur GHCR (CI)
+- `.github/workflows/ci.yml` : `permissions: contents: read` au niveau du workflow ; le job `build-test` (npm ci,
+  ng build, ng test headless) reste tel quel, sur chaque pull request et push ; nouveau job `image`, calque sur celui
+  de tabibi-backend : `if: push && refs/heads/main`, `needs: build-test`, `permissions: packages: write`,
+  `docker/setup-buildx-action@v3`, `docker/login-action@v3` sur ghcr.io avec `github.actor` / `GITHUB_TOKEN`,
+  nom de l'image en minuscules `ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/tabibi-web` (celui qu'attend
+  `docker-compose.prod.yml` : `ghcr.io/${ORG_GITHUB}/tabibi-web`, quel que soit le nom du depot),
+  `docker/metadata-action@v5` (tags `latest` et `sha-<commit>`), `docker/build-push-action@v6` (`push: true`, cache
+  `type=gha`). Le declencheur `push` garde `master` pour `build-test` ; l'image n'est publiee que depuis `main`.
+- `.github/dependabot.yml` : npm (paquets `@angular/*` et `@angular-devkit/*` groupes en une seule pull request),
+  github-actions et docker (images de base du Dockerfile), chaque semaine.
+- README : badge CI (`<org>` a remplacer), section « Publication sur GHCR (CI) » (tags, paquet prive par defaut,
+  `WEB_TAG=sha-xxxxxxx` dans le `.env` du backend), mention du job dans « Tester ».
+- Tests : inchanges (264 specs) ; les fichiers YAML ont ete valides (chargement PyYAML), le workflow n'a pas ete
+  execute ici.

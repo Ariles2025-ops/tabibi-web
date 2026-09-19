@@ -1,5 +1,8 @@
 # tabibi-web
 
+[![ci](https://github.com/<org>/tabibi-web/actions/workflows/ci.yml/badge.svg)](https://github.com/<org>/tabibi-web/actions/workflows/ci.yml)
+(remplacer `<org>` par l'organisation GitHub qui heberge le depot)
+
 Front web Tabibi — **Angular 18** (composants standalone), connexion **Keycloak** (OIDC) et appel de l'API.
 
 ## Ce que fait cette premiere version
@@ -46,8 +49,9 @@ npx ng test --watch=false --browsers=ChromeHeadlessCI          # idem sans bac a
 CHROME_BIN=/chemin/vers/chrome npx ng test --watch=false --browsers=ChromeHeadlessCI   # Chrome hors du PATH
 ```
 Le lanceur `ChromeHeadlessCI` (`ChromeHeadless` + `--no-sandbox --disable-gpu`) est defini dans `karma.conf.js`.
-L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, `ng build` et `ng test` headless ;
-`package-lock.json` est versionne pour la reproductibilite. Le journal des versions est dans `docs/JOURNAL.md`.
+L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, `ng build` et `ng test` headless
+(job `build-test`, sur chaque pull request et push) ; `package-lock.json` est versionne pour la reproductibilite.
+Le journal des versions est dans `docs/JOURNAL.md`.
 
 ## Deploiement
 
@@ -103,6 +107,16 @@ Le realm de developpement n'autorise que l'origine `http://localhost:4200` (redi
 origines CORS de l'API. Le contexte de construction est reduit par `.dockerignore` (`node_modules`, `dist`,
 `.angular`, `coverage`, `.git`, documentation).
 
+### Publication sur GHCR (CI)
+L'image officielle est publiee sur GitHub Container Registry par la CI (job `image` de `.github/workflows/ci.yml`) a
+chaque push sur `main`, une fois le job `build-test` vert : `ghcr.io/<org>/tabibi-web:latest` et
+`ghcr.io/<org>/tabibi-web:sha-<commit>` (tag fige, a preferer pour un deploiement reproductible :
+`WEB_TAG=sha-xxxxxxx` dans le `.env` du backend). Le nom est force en minuscules (`<org>` = proprietaire du depot,
+exigence de GHCR) ; l'authentification utilise le `GITHUB_TOKEN` du workflow (`permissions: packages: write`),
+aucun secret a creer. Un paquet GHCR est prive par defaut : le rendre public dans les reglages du paquet, ou
+`docker login ghcr.io` sur le serveur avec un jeton `read:packages`. Dependabot (`.github/dependabot.yml`) propose
+chaque semaine les mises a jour npm (paquets Angular groupes), GitHub Actions et images de base du Dockerfile.
+
 ### Avec `docker-compose.prod.yml` (tabibi-backend)
 Le service `web` y attend l'image `ghcr.io/${ORG_GITHUB}/tabibi-web:${WEB_TAG}` derriere Caddy (`https://DOMAINE` ->
 `web:80`, l'API sur `https://api.DOMAINE`, Keycloak sur `https://auth.DOMAINE`). Pour que le front vise ces hotes,
@@ -114,7 +128,6 @@ Le client `tabibi-web` du realm de production (genere par `infra/keycloak/realm-
 ## Prochaines etapes
 - Nom du patient dans l'agenda et sur l'ordonnance (l'API n'expose que l'identifiant).
 - SSR (Angular Universal) pour les pages publiques / SEO.
-- Publication de l'image sur GHCR par la CI.
 
 ## v0.2.0 — Annuaire (web)
 - Ecran d'accueil public : recherche de praticiens (specialite, wilaya, nom) via `GET /api/medecins`.
@@ -381,3 +394,9 @@ Le client `tabibi-web` du realm de production (genere par `infra/keycloak/realm-
   `TABIBI_KEYCLOAK_CLIENT_ID` ou `DOMAINE`), `nginx/default.conf.template` (routage Angular, cache, gzip, en-tetes de
   securite), `.dockerignore`. Build avec empreintes (`outputHashing: all`) et sans CSS critique inline (CSP).
 - Voir la section « Deploiement » ci-dessus.
+
+## v0.18.0 — Publication de l'image (CI)
+- `.github/workflows/ci.yml` : job `image` (push sur `main` seulement, apres `build-test`) qui construit le
+  `Dockerfile` et publie `ghcr.io/<org>/tabibi-web` avec les tags `latest` et `sha-<commit>` (`docker/login-action`
+  avec `GITHUB_TOKEN`, `docker/metadata-action`, `docker/build-push-action`, cache GitHub Actions).
+- `.github/dependabot.yml` (npm, GitHub Actions, Docker, hebdomadaire) ; badge CI dans ce README.
