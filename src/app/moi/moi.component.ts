@@ -1,12 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 
 @Component({
   selector: 'app-moi',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <main style="max-width:640px;margin:40px auto;padding:0 16px">
       <h1 style="color:var(--vert)">Mon compte</h1>
@@ -14,7 +15,10 @@ import { RoleService } from '../auth/role.service';
       <div *ngIf="connecte()">
         <p>Connecté en tant que <b>{{ moi()?.nom }}</b></p>
         <p>Rôles : {{ moi()?.roles?.join(', ') }}</p>
-        <button type="button" class="bouton-secondaire" (click)="seDeconnecter()">Se déconnecter</button>
+        <p style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="bouton" routerLink="/moi/profil">Mon profil</a>
+          <button type="button" class="bouton-secondaire" (click)="seDeconnecter()">Se déconnecter</button>
+        </p>
       </div>
     </main>
   `,

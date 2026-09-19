@@ -241,3 +241,15 @@ L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, 
   configuration avant d'appliquer l'OIDC (`requireHttps` déduit de l'issuer).
 - `angular.json` : `src/assets` publié (build et test) ; `index.html` : `<base href="/">`.
 - Voir la section « Configuration » ci-dessus pour le déploiement.
+
+## v0.13.0 — Mon profil
+- `/moi/profil` : mon profil (`GET /api/moi/profil`, 404 = jamais renseigné → formulaire vide ; `PUT /api/moi/profil
+  { nomComplet, telephone, dateNaissance, wilayaCode, langue }`), pour tout utilisateur connecté — nom complet
+  (obligatoire, 2 à 120 caractères), téléphone (algérien, 9 à 10 chiffres commençant par 0, espaces tolérés puis
+  retirés), date de naissance (`<input type="date">`, dans le passé et après 1900), code de wilaya (4 caractères au
+  plus), langue par liste (Français, العربية, Taqbaylit, English) ; validation côté client identique aux règles du
+  backend, message « Profil enregistré. », mention « Dernière mise à jour le … » ; 400 → motif `{ erreur }` affiché,
+  saisie conservée. Redirige vers la connexion si l'utilisateur n'est pas connecté.
+- « Mon compte » (`/moi`) : lien « Mon profil ».
+- `ProfilService` (`monProfil`, `enregistrer`), types `Profil`, `DemandeProfil`, `LANGUES`, `nettoyerProfil`,
+  `validerProfil`, `libelleLangue`, `dateLocaleIso`.

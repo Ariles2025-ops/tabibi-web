@@ -232,3 +232,27 @@ decrite dans le README et le journal de tabibi-backend.
   exposition des trois champs, barre oblique et champs manquants, repli sur 404 avec avertissement et promesse
   resolue, lecture unique), `creerAuthConfig` (issuer et client, HTTP local sans HTTPS, HTTPS exige en deploiement),
   MoiService (URL construite sur l'origine de la configuration, origine localhost par defaut).
+
+## v0.13.0 — Mon profil
+- `ProfilService` (`moi/profil.service.ts`) : `monProfil` (`GET /api/moi/profil`, 404 `{ erreur }` tant que non
+  renseigne), `enregistrer` (`PUT /api/moi/profil`) ; types `Profil` (`utilisateurId`, `nomComplet`, `telephone`,
+  `dateNaissance` yyyy-MM-dd, `wilayaCode`, `langue`, `misAJourLe`) et `DemandeProfil` ; constantes reprises du
+  domaine backend (`LONGUEUR_MIN_NOM` 2, `LONGUEUR_MAX_NOM` 120, `LONGUEUR_MAX_WILAYA` 4, `ANNEE_NAISSANCE_MIN` 1900,
+  `LANGUES` fr / ar / kab / en avec leur libelle dans la langue elle-meme) ; `nettoyerProfil` (espaces retires,
+  telephone sans espaces, facultatifs vides → null, langue vide → fr) ; `validerProfil(demande, aujourdHui)` renvoie
+  le premier motif en francais ou null (nom 2..120, telephone `0` + 8 a 9 chiffres, date valide, passee et
+  posterieure a 1900 — comparaison de chaines yyyy-MM-dd sur la date locale du navigateur, `aujourdHui` injectable
+  pour les tests —, wilaya <= 4, langue connue) ; `libelleLangue`, `dateLocaleIso`.
+- `/moi/profil` (`ProfilComponent`) : redirection vers la connexion si non connecte ; chargement (404 → formulaire
+  vide avec la langue fr, autre erreur → motif sans formulaire) ; formulaire prerempli (nom, telephone `type="tel"`,
+  date `type="date"` bornee a la veille et a 1901-01-01, wilaya, langue par `<select>`) ; a l'envoi, nettoyage puis
+  validation cote client (message et pas d'appel) ; PUT puis « Profil enregistré. », formulaire recharge depuis la
+  vue renvoyee et « Derniere mise a jour le … » ; 400 → motif `{ erreur }`, saisie conservee ; 401 → connexion.
+- « Mon compte » (`/moi`) : lien « Mon profil » ; route `moi/profil` (aucun garde de role : tous les roles ont un
+  profil, l'API exige seulement un jeton).
+- Tests (19 specs ajoutees, 203 au total) : service avec `HttpTestingController` (GET, 404 transmis, PUT avec le
+  corps complet, 400 transmis), `nettoyerProfil`, `validerProfil` (profil complet ou reduit au nom, bornes du nom,
+  telephones refuses, date du jour / future / 1900 / invalide, wilaya et langue), formatage et libelles ; composant
+  avec service factice (formulaire vide et quatre langues sur 404, preremplissage, refus cote client sans appel,
+  enregistrement avec champs nettoyes et null puis confirmation, telephone sans espaces et date, 400 avec saisie
+  conservee, erreur de chargement sans formulaire, redirection).

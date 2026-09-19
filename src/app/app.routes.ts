@@ -28,6 +28,7 @@ import { EspacePharmacieComponent } from './pharmacie/espace-pharmacie.component
 import { VerifierOrdonnanceComponent } from './ordonnances/verifier-ordonnance.component';
 import { MesTeleconsultationsComponent } from './teleconsultation/mes-teleconsultations.component';
 import { MoiComponent } from './moi/moi.component';
+import { ProfilComponent } from './moi/profil.component';
 
 export const routes: Routes = [
   { path: '', component: AnnuaireComponent },
@@ -79,4 +80,6 @@ export const routes: Routes = [
     ],
   },
   { path: 'moi', component: MoiComponent },
+  // Mon profil (utilisateur connecte, tous roles : la page redirige vers la connexion).
+  { path: 'moi/profil', component: ProfilComponent },
 ];
