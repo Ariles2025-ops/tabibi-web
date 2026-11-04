@@ -3,7 +3,8 @@ import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import localeFr from '@angular/common/locales/fr';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
+import { AnnuaireService } from '../annuaire/annuaire.service';
 import { of, throwError } from 'rxjs';
 import { Candidature, DemandeCandidature } from '../admin/admin.service';
 import { AuthService } from '../auth/auth.service';
@@ -40,17 +41,20 @@ const AUCUNE = () => throwError(() => new HttpErrorResponse({ status: 404, error
 describe('CandidatureMedecinComponent', () => {
   let fixture: ComponentFixture<CandidatureMedecinComponent>;
   let service: jasmine.SpyObj<MedecinService>;
+  let annuaire: jasmine.SpyObj<AnnuaireService>;
 
   beforeEach(() => {
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<MedecinService>('MedecinService', ['maCandidature', 'deposerCandidature']);
     service.maCandidature.and.returnValue(AUCUNE());
+    annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin']);
 
     TestBed.configureTestingModule({
       imports: [CandidatureMedecinComponent],
       providers: [
         provideRouter([]),
         { provide: MedecinService, useValue: service },
+        { provide: AnnuaireService, useValue: annuaire },
         { provide: AuthService, useValue: { seConnecter: jasmine.createSpy('seConnecter') } },
         { provide: LOCALE_ID, useValue: 'fr' },
       ],
@@ -80,7 +84,7 @@ describe('CandidatureMedecinComponent', () => {
   async function saisir(valeurs: Partial<DemandeCandidature>) {
     for (const [nom, valeur] of Object.entries(valeurs)) {
       const c = champ(nom);
-      c.value = valeur;
+      c.value = valeur ?? '';
       c.dispatchEvent(new Event('input'));
     }
     await afficher();
@@ -186,5 +190,26 @@ describe('CandidatureMedecinComponent', () => {
 
     expect(texte()).toContain('Cette page est réservée aux médecins.');
     expect(formulaire()).toBeNull();
+  });
+
+  it('reclame une fiche existante : formulaire prerempli depuis l annuaire et fiche jointe au depot', async () => {
+    annuaire.medecin.and.returnValue(of({
+      id: 'f1', nomComplet: 'BELKACEM Amina', specialiteSlug: 'cardiologue', specialiteFr: 'Cardiologue',
+      wilayaCode: '16', wilayaFr: 'Alger', ville: 'Hydra',
+    }));
+    service.deposerCandidature.and.returnValue(of({ ...EN_ATTENTE, ficheReclamee: 'f1' }));
+    TestBed.inject(ActivatedRoute).snapshot.queryParams = { fiche: 'f1' };
+    await afficher();
+
+    expect(texte()).toContain('Réclamer ma fiche');
+    expect(champ('nomComplet').value).toBe('BELKACEM Amina');
+    await saisir({ numeroOrdre: 'ORD-9' });
+    formulaire()!.dispatchEvent(new Event('submit'));
+    await afficher();
+
+    const depot = service.deposerCandidature.calls.mostRecent().args[0];
+    expect(depot.ficheReclamee).toBe('f1');
+    expect(depot.nomComplet).toBe('BELKACEM Amina');
+    expect(depot.ville).toBe('Hydra');
   });
 });

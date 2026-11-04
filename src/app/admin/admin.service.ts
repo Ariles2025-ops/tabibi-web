@@ -22,6 +22,8 @@ export interface Candidature {
   /** Dates au format ISO 8601 ; traiteeLe est null tant que la candidature est en attente. */
   deposeeLe: string;
   traiteeLe: string | null;
+  /** Fiche de l'annuaire reclamee par le medecin ; null (ou absente) pour une nouvelle fiche. */
+  ficheReclamee?: string | null;
 }
 
 /** Donnees du depot d'une candidature (POST /api/medecin/candidature, role MEDECIN). */
@@ -34,6 +36,8 @@ export interface DemandeCandidature {
   ville: string;
   numeroOrdre: string;
   telephone: string;
+  /** Fiche de l'annuaire que le medecin reclame (absente pour une nouvelle fiche). */
+  ficheReclamee?: string | null;
 }
 
 /** Tableau de bord de l'administrateur (GET /api/admin/statistiques). */

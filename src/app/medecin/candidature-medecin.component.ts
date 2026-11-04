@@ -2,7 +2,8 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { AnnuaireService } from '../annuaire/annuaire.service';
 import { Candidature, DemandeCandidature, libelleStatutCandidature } from '../admin/admin.service';
 import { AuthService } from '../auth/auth.service';
 import { MedecinService } from './medecin.service';
@@ -22,9 +23,13 @@ function formulaireVide(): DemandeCandidature {
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Ma candidature</h1>
-      <p style="color:#566b64;margin:0 0 20px">
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ ficheReclamee ? 'Réclamer ma fiche' : 'Ma candidature' }}</h1>
+      <p *ngIf="!ficheReclamee" style="color:#566b64;margin:0 0 20px">
         Pour figurer dans l'annuaire Tabibi, déposez votre candidature : elle est examinée par un administrateur.
+      </p>
+      <p *ngIf="ficheReclamee" style="color:#566b64;margin:0 0 20px">
+        Vérifiez les informations de votre fiche et ajoutez votre numéro d'inscription à l'ordre :
+        un administrateur confirme que c'est bien vous avant de vous la confier.
       </p>
 
       <p *ngIf="charge()">Chargement…</p>
@@ -92,7 +97,7 @@ function formulaireVide(): DemandeCandidature {
         <p style="color:#566b64;font-size:.9rem;margin:0">* Champs obligatoires.</p>
         <div>
           <button type="submit" class="bouton" [disabled]="enCours()">
-            {{ enCours() ? 'Envoi…' : 'Déposer ma candidature' }}
+            {{ enCours() ? 'Envoi…' : (ficheReclamee ? 'Réclamer ma fiche' : 'Déposer ma candidature') }}
           </button>
         </div>
       </form>
@@ -102,6 +107,11 @@ function formulaireVide(): DemandeCandidature {
 export class CandidatureMedecinComponent implements OnInit {
   private auth = inject(AuthService);
   private service = inject(MedecinService);
+  private route = inject(ActivatedRoute);
+  private annuaire = inject(AnnuaireService);
+
+  /** Fiche de l'annuaire reclamee (parametre ?fiche=) ; null pour une nouvelle candidature. */
+  ficheReclamee: string | null = null;
 
   /** Derniere candidature deposee ; null s'il n'y en a aucune. */
   candidature = signal<Candidature | null>(null);
@@ -114,7 +124,32 @@ export class CandidatureMedecinComponent implements OnInit {
   erreur = signal('');
 
   ngOnInit() {
+    this.ficheReclamee = this.route.snapshot.queryParamMap.get('fiche');
+    if (this.ficheReclamee) {
+      this.preremplirDepuisFiche(this.ficheReclamee);
+    }
     this.charger();
+  }
+
+  /** Reprend nom, specialite et lieu de la fiche reclamee ; le medecin n'ajoute que son numero d'ordre. */
+  private preremplirDepuisFiche(id: string) {
+    this.annuaire.medecin(id).subscribe({
+      next: (m) => {
+        this.demande = {
+          ...this.demande,
+          nomComplet: m.nomComplet,
+          specialiteSlug: m.specialiteSlug,
+          specialiteFr: m.specialiteFr,
+          wilayaCode: m.wilayaCode,
+          wilayaFr: m.wilayaFr,
+          ville: m.ville ?? '',
+        };
+      },
+      error: () => {
+        this.ficheReclamee = null;
+        this.erreur.set("La fiche à réclamer est introuvable : vous pouvez déposer une candidature.");
+      },
+    });
   }
 
   charger() {
@@ -152,6 +187,7 @@ export class CandidatureMedecinComponent implements OnInit {
       ville: this.demande.ville.trim(),
       numeroOrdre: this.demande.numeroOrdre.trim(),
       telephone: this.demande.telephone.trim(),
+      ...(this.ficheReclamee ? { ficheReclamee: this.ficheReclamee } : {}),
     };
     this.succes.set('');
     if (!demande.nomComplet || !demande.specialiteSlug || !demande.wilayaCode || !demande.numeroOrdre) {

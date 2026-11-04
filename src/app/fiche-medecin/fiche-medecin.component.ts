@@ -26,6 +26,10 @@ import { MessagerieService } from '../messagerie/messagerie.service';
           </button>
         </p>
         <p *ngIf="erreurMessagerie()" style="color:#b3261e;margin:-12px 0 24px">{{ erreurMessagerie() }}</p>
+        <p *ngIf="reclamable()" style="border:1px dashed var(--vert);border-radius:12px;padding:12px 14px;margin:0 0 24px">
+          Vous êtes ce praticien ? Réclamez gratuitement cette fiche pour gérer vos rendez-vous.
+          <a routerLink="/medecin/candidature" [queryParams]="{ fiche: m.id }" style="color:var(--vert);font-weight:600">Réclamer ma fiche</a>
+        </p>
       </ng-container>
 
       <h2 style="font-size:1.1rem;margin:0 0 12px">Créneaux disponibles</h2>
@@ -86,6 +90,8 @@ export class FicheMedecinComponent implements OnInit {
 
   private medecinId = '';
   medecin = signal<Medecin | null>(null);
+  /** Vrai si la fiche n'appartient a aucun compte : on propose au praticien de la reclamer. */
+  reclamable = signal(false);
   creneaux = signal<Creneau[]>([]);
   charge = signal(false);
   /** Identifiant du creneau dont la reservation est en cours. */
@@ -108,6 +114,7 @@ export class FicheMedecinComponent implements OnInit {
   private charger(id: string) {
     this.medecinId = id;
     this.medecin.set(null);
+    this.reclamable.set(false);
     this.creneaux.set([]);
     this.reservation.set(null);
     this.erreur.set('');
@@ -118,6 +125,10 @@ export class FicheMedecinComponent implements OnInit {
       next: (m) => this.medecin.set(m),
       error: (e: HttpErrorResponse) =>
         this.erreur.set(e.status === 404 ? 'Praticien introuvable.' : (e.error?.erreur ?? 'Impossible de charger la fiche du praticien.')),
+    });
+    this.annuaire.reclamable(id).subscribe({
+      next: (r) => this.reclamable.set(r.reclamable),
+      error: () => this.reclamable.set(false),
     });
     this.chargerCreneaux();
   }

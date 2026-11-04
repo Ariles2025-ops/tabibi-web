@@ -45,6 +45,11 @@ export class AnnuaireService {
     return this.http.get<Medecin>(`${this.base}/api/medecins/${id}`);
   }
 
+  /** Vrai si la fiche n'appartient encore a aucun compte : son praticien peut la reclamer. */
+  reclamable(id: string): Observable<{ reclamable: boolean }> {
+    return this.http.get<{ reclamable: boolean }>(`${this.base}/api/medecins/${id}/reclamable`);
+  }
+
   creneaux(medecinId: string): Observable<Creneau[]> {
     return this.http.get<Creneau[]>(`${this.base}/api/medecins/${medecinId}/creneaux`);
   }

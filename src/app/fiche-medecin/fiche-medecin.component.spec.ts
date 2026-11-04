@@ -54,9 +54,10 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
 
   beforeEach(() => {
     registerLocaleData(localeFr);
-    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'creneaux']);
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'creneaux', 'reclamable']);
     annuaire.medecin.and.returnValue(of(MEDECIN));
     annuaire.creneaux.and.returnValue(of([]));
+    annuaire.reclamable.and.returnValue(of({ reclamable: true }));
     messagerie = jasmine.createSpyObj<MessagerieService>('MessagerieService', ['ouvrir']);
     avis = jasmine.createSpyObj<AvisService>('AvisService', ['synthese']);
     avis.synthese.and.returnValue(of(SYNTHESE));
@@ -196,5 +197,16 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
     await afficher();
     expect(texte()).toContain("Seul un compte patient peut s'inscrire sur une liste d'attente.");
     expect(boutonInscrire()!.disabled).toBeFalse();
+  });
+
+  it('propose au praticien de reclamer une fiche qui n appartient a aucun compte', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const lien: HTMLAnchorElement = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>)
+      .find((a) => a.textContent?.includes('Réclamer ma fiche'))!;
+    expect(lien).toBeTruthy();
+    expect(lien.getAttribute('href')).toBe('/medecin/candidature?fiche=m1');
   });
 });

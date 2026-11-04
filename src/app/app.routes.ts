@@ -1,3 +1,4 @@
+import { connecteGuard } from './auth/connecte.guard';
 import { Routes } from '@angular/router';
 import { CandidaturesAdminComponent } from './admin/candidatures-admin.component';
 import { ModerationAvisComponent } from './admin/moderation-avis.component';
@@ -68,6 +69,12 @@ export const routes: Routes = [
     component: EspaceSecretaireComponent,
   },
   {
+    // Candidature ou reclamation de fiche : ouverte a toute personne connectee (le role MEDECIN vient a la validation).
+    path: 'medecin/candidature',
+    canActivate: [connecteGuard],
+    component: CandidatureMedecinComponent,
+  },
+  {
     // Espace medecin : reserve au role MEDECIN (medecinGuard), sinon retour a l'accueil.
     path: 'medecin',
     canActivate: [medecinGuard],
@@ -77,7 +84,6 @@ export const routes: Routes = [
       { path: 'ordonnances', component: OrdonnancesRedigeesComponent },
       { path: 'ordonnance/nouvelle', component: NouvelleOrdonnanceComponent },
       { path: 'teleconsultations', component: TeleconsultationsMedecinComponent },
-      { path: 'candidature', component: CandidatureMedecinComponent },
       { path: 'avis', component: AvisMedecinComponent },
       { path: 'liste-attente', component: ListeAttenteMedecinComponent },
       { path: 'secretaires', component: SecretairesComponent },

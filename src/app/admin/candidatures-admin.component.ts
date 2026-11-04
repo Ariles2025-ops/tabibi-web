@@ -43,7 +43,9 @@ const STATUTS_FILTRE = [
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
             <div>
               <strong>{{ c.nomComplet }}</strong>
-              <span style="color:#566b64"> · {{ libelleStatut(c.statut) }}</span><br>
+              <span style="color:#566b64"> · {{ libelleStatut(c.statut) }}</span>
+              <span *ngIf="c.ficheReclamee" style="color:var(--vert)"> · Réclame la fiche
+                <a [routerLink]="['/medecins', c.ficheReclamee]" style="color:var(--vert)">existante</a></span><br>
               <span style="color:#566b64">
                 {{ c.specialiteFr || c.specialiteSlug }} · {{ c.ville || 'Ville non précisée' }} ({{ c.wilayaFr || c.wilayaCode }})
                 · N° d'ordre {{ c.numeroOrdre }}<ng-container *ngIf="c.telephone"> · {{ c.telephone }}</ng-container>
