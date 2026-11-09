@@ -122,6 +122,5 @@ describe('MesNotificationsComponent', () => {
 
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.mesNotifications).not.toHaveBeenCalled();
-    expect(fixture.nativeElement.textContent).toContain('Redirection vers la page de connexion');
   });
 });

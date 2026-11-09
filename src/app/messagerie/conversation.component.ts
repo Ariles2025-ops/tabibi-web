@@ -27,7 +27,6 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
       <p style="margin:0 0 16px"><a routerLink="/messagerie" style="color:var(--vert)">Retour à la messagerie</a></p>
       <h1 style="color:var(--vert);margin:0 0 16px">{{ interlocuteur() ?? 'Conversation' }}</h1>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
 
       <ng-container *ngIf="connecte()">
         <p *ngIf="charge()">Chargement…</p>

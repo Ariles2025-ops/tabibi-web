@@ -20,7 +20,6 @@ import { Conversation, MessagerieService, abregerIdentifiant } from './messageri
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 16px">Messagerie</h1>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
 
       <ng-container *ngIf="connecte()">
         <p *ngIf="charge()">Chargement…</p>

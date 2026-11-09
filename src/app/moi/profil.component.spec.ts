@@ -186,6 +186,5 @@ describe('ProfilComponent', () => {
 
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.monProfil).not.toHaveBeenCalled();
-    expect(texte()).toContain('Redirection vers la page de connexion');
   });
 });

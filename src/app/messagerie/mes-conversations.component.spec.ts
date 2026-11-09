@@ -132,7 +132,6 @@ describe('MesConversationsComponent', () => {
 
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.mesConversations).not.toHaveBeenCalled();
-    expect(texte()).toContain('Redirection vers la page de connexion');
   });
 
   it('indique que la page est reservee aux patients et aux medecins sur un 403', async () => {

@@ -28,7 +28,6 @@ function formulaireVide(): Required<DemandeBesoin> {
         (disponibilité, prix), sans connaître votre identité.
       </p>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
 
       <ng-container *ngIf="connecte()">
         <form (ngSubmit)="publier()" style="display:grid;gap:12px;margin:0 0 28px">

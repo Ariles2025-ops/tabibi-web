@@ -171,7 +171,6 @@ describe('MesTeleconsultationsComponent', () => {
 
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.mes).not.toHaveBeenCalled();
-    expect(texte()).toContain('Redirection vers la page de connexion');
   });
 
   it('indique qu une page est reservee aux patients sur un 403', async () => {

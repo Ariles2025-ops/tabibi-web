@@ -245,7 +245,6 @@ describe('ConversationComponent', () => {
 
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.messages).not.toHaveBeenCalled();
-    expect(texte()).toContain('Redirection vers la page de connexion');
 
     fixture.destroy();
   }));

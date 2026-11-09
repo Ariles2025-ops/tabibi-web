@@ -19,7 +19,6 @@ import { Notification, NotificationService } from './notification.service';
         </button>
       </div>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
 
       <ng-container *ngIf="connecte()">
         <p *ngIf="charge()">Chargement…</p>

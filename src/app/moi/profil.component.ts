@@ -40,7 +40,6 @@ function formulaireVide(): DemandeProfil {
         Ces informations servent aux praticiens et aux rappels de rendez-vous. Seul le nom complet est obligatoire.
       </p>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
 
       <ng-container *ngIf="connecte()">
         <p *ngIf="charge()">Chargement…</p>

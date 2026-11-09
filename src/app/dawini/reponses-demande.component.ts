@@ -19,7 +19,6 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } fro
       <p style="margin:0 0 16px"><a routerLink="/dawini" style="color:var(--vert)">Retour à mes demandes</a></p>
       <h1 style="color:var(--vert);margin:0 0 8px">{{ besoin()?.medicament ?? 'Ma demande' }}</h1>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
 
       <ng-container *ngIf="connecte()">
         <ng-container *ngIf="besoin() as b">

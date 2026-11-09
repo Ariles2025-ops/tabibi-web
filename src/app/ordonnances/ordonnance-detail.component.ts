@@ -19,7 +19,6 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
         <a *ngIf="estMedecin()" routerLink="/medecin/ordonnances" style="color:var(--vert)">Retour à mes ordonnances rédigées</a>
       </p>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
       <p *ngIf="charge()">Chargement…</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 

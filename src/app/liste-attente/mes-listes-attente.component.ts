@@ -21,7 +21,6 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
         Vous serez notifié dès qu'un créneau se libère chez l'un de ces praticiens.
       </p>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
 
       <ng-container *ngIf="connecte()">
         <p *ngIf="charge()">Chargement…</p>

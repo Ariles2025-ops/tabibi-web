@@ -184,6 +184,5 @@ describe('DeposerAvisComponent', () => {
 
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(formulaire()).toBeNull();
-    expect(texte()).toContain('Redirection vers la page de connexion');
   });
 });

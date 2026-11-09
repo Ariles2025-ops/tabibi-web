@@ -25,7 +25,6 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
       <p style="margin:0 0 16px"><a routerLink="/mes-rendez-vous" style="color:var(--vert)">Retour à mes rendez-vous</a></p>
       <h1 style="color:var(--vert);margin:0 0 8px">Donner mon avis</h1>
 
-      <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
 
       <ng-container *ngIf="connecte()">
         <p *ngIf="rendezVous() as r" style="color:var(--text3);margin:0 0 20px">
