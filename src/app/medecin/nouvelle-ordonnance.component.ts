@@ -23,11 +23,11 @@ interface LigneSaisie extends LigneOrdonnance {
 
       <form (ngSubmit)="emettre()" #f="ngForm" style="display:grid;gap:16px">
         <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Identifiant du patient
             <input class="champ" [(ngModel)]="patientId" name="patientId" required style="color:#10241F;font-size:1rem">
           </label>
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Rendez-vous lié (facultatif)
             <input class="champ" [(ngModel)]="rendezVousId" name="rendezVousId" style="color:#10241F;font-size:1rem">
           </label>
@@ -35,18 +35,18 @@ interface LigneSaisie extends LigneOrdonnance {
 
         <h2 style="font-size:1.1rem;margin:8px 0 0">Prescription</h2>
         <div *ngFor="let l of lignes; let i = index; trackBy: parCle"
-             style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;border:1px solid #e4e9e7;border-radius:12px;padding:12px">
-          <label style="flex:2;min-width:160px;display:grid;gap:4px;color:#566b64;font-size:.9rem">
+             style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;border:1px solid var(--border);border-radius:12px;padding:12px">
+          <label style="flex:2;min-width:160px;display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Médicament
             <input class="champ" [(ngModel)]="l.medicament" [name]="'medicament-' + l.cle" required
                    placeholder="Ex. Paracétamol 1 g" style="color:#10241F;font-size:1rem">
           </label>
-          <label style="flex:2;min-width:160px;display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="flex:2;min-width:160px;display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Posologie
             <input class="champ" [(ngModel)]="l.posologie" [name]="'posologie-' + l.cle" required
                    placeholder="Ex. 1 comprimé matin et soir" style="color:#10241F;font-size:1rem">
           </label>
-          <label style="flex:1;min-width:120px;display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="flex:1;min-width:120px;display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Durée
             <input class="champ" [(ngModel)]="l.duree" [name]="'duree-' + l.cle" required
                    placeholder="Ex. 7 jours" style="color:#10241F;font-size:1rem">

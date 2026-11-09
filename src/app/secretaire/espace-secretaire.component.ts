@@ -28,7 +28,7 @@ interface CreneauOuvert {
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Espace secrétaire</h1>
-      <p style="color:#566b64;margin:0 0 20px">
+      <p style="color:var(--text3);margin:0 0 20px">
         Choisissez le cabinet pour lequel vous intervenez : vous consultez son agenda, ouvrez des créneaux et marquez
         les rendez-vous honorés ou annulés. Le patient est prévenu de chaque annulation.
       </p>
@@ -36,7 +36,7 @@ interface CreneauOuvert {
       <p *ngIf="charge()">Chargement…</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
-      <label *ngIf="rattachements().length > 0" style="display:grid;gap:4px;color:#566b64;font-size:.9rem;max-width:360px;margin:0 0 24px">
+      <label *ngIf="rattachements().length > 0" style="display:grid;gap:4px;color:var(--text3);font-size:.9rem;max-width:360px;margin:0 0 24px">
         Médecin
         <select class="champ" [ngModel]="medecinId()" (ngModelChange)="choisir($event)" name="medecinId" style="color:#10241F;font-size:1rem">
           <option value="">Choisir un médecin</option>
@@ -49,15 +49,15 @@ interface CreneauOuvert {
       </p>
 
       <ng-container *ngIf="medecinId()">
-        <section style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;margin:0 0 24px;background:#f8faf9">
+        <section style="border:1px solid var(--border);border-radius:12px;padding:14px;margin:0 0 24px;background:#f8faf9">
           <h2 style="font-size:1.1rem;margin:0 0 12px">Ouvrir un créneau</h2>
           <form (ngSubmit)="ouvrir()" #f="ngForm" style="display:grid;gap:12px;max-width:360px">
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Date et heure
               <input class="champ" type="datetime-local" [(ngModel)]="debut" name="debut" required [min]="minDebut"
                      style="color:#10241F;font-size:1rem">
             </label>
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Durée (minutes, de {{ dureeMin }} à {{ dureeMax }})
               <input class="champ" type="number" [(ngModel)]="dureeMinutes" name="dureeMinutes" required [min]="dureeMin" [max]="dureeMax" step="5"
                      style="color:#10241F;font-size:1rem">
@@ -81,11 +81,11 @@ interface CreneauOuvert {
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let r of rendezVous()"
-              style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+              style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <strong>{{ r.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
-              <span style="color:#566b64"> · {{ libelleStatut(r.statut) }}</span><br>
-              <span style="color:#566b64">Patient {{ abreger(r.patientId) }}</span>
+              <span style="color:var(--text3)"> · {{ libelleStatut(r.statut) }}</span><br>
+              <span style="color:var(--text3)">Patient {{ abreger(r.patientId) }}</span>
             </div>
             <div *ngIf="r.statut === 'CONFIRME'" style="display:flex;gap:8px;flex-wrap:wrap">
               <button type="button" class="bouton" (click)="honorer(r)" [disabled]="enCours() !== null">

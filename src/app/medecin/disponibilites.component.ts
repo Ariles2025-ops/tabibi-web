@@ -21,17 +21,17 @@ interface CreneauOuvert {
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Disponibilités</h1>
-      <p style="color:#566b64;margin:0 0 20px">
+      <p style="color:var(--text3);margin:0 0 20px">
         Ouvrez un créneau de consultation : les patients pourront le réserver depuis votre fiche.
       </p>
 
       <form (ngSubmit)="ouvrir()" #f="ngForm" style="display:grid;gap:12px;max-width:360px">
-        <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+        <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
           Date et heure
           <input class="champ" type="datetime-local" [(ngModel)]="debut" name="debut" required [min]="minDebut"
                  style="color:#10241F;font-size:1rem">
         </label>
-        <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+        <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
           Durée (minutes, de {{ dureeMin }} à {{ dureeMax }})
           <input class="champ" type="number" [(ngModel)]="dureeMinutes" name="dureeMinutes" required [min]="dureeMin" [max]="dureeMax" step="5"
                  style="color:#10241F;font-size:1rem">

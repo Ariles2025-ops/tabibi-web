@@ -18,13 +18,13 @@ import { MedecinService } from './medecin.service';
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Mes secrétaires</h1>
-      <p style="color:#566b64;margin:0 0 20px">
+      <p style="color:var(--text3);margin:0 0 20px">
         Une secrétaire rattachée à votre cabinet consulte votre agenda, ouvre des créneaux et marque vos rendez-vous
         honorés ou annulés depuis son espace. Elle est prévenue de son rattachement et de son retrait.
       </p>
 
       <form (ngSubmit)="rattacher()" style="display:grid;gap:12px;margin:0 0 28px">
-        <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+        <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
           Identifiant du compte de votre secrétaire (visible dans Mon compte)
           <input class="champ" [(ngModel)]="secretaireId" name="secretaireId" required
                  placeholder="Ex. 55555555-5555-5555-5555-555555555555" style="color:#10241F;font-size:1rem;font-family:monospace">
@@ -42,10 +42,10 @@ import { MedecinService } from './medecin.service';
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let r of rattachements()"
-            style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div>
             <code style="font-size:.95rem">{{ r.secretaireId }}</code><br>
-            <span style="color:#566b64">Rattachée le {{ r.creeLe | date:'d MMMM yyyy à HH:mm' }}</span>
+            <span style="color:var(--text3)">Rattachée le {{ r.creeLe | date:'d MMMM yyyy à HH:mm' }}</span>
           </div>
           <button type="button" (click)="retirer(r)" [disabled]="retraitEnCours() !== null"
                   style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">

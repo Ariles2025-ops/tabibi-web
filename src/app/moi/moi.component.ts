@@ -25,7 +25,7 @@ import { RoleService } from '../auth/role.service';
           <span *ngIf="copie()" style="color:var(--vert)">Identifiant copié.</span>
           <span *ngIf="erreurCopie()" style="color:#b3261e">{{ erreurCopie() }}</span>
         </p>
-        <p style="color:#566b64;font-size:.9rem">
+        <p style="color:var(--text3);font-size:.9rem">
           Une secrétaire communique cet identifiant au médecin qui la rattache à son cabinet.
         </p>
         <p style="display:flex;gap:8px;flex-wrap:wrap">

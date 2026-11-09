@@ -18,7 +18,7 @@ import { abregerIdentifiant } from '../messagerie/messagerie.service';
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Liste d'attente</h1>
-      <p style="color:#566b64;margin:0 0 20px">
+      <p style="color:var(--text3);margin:0 0 20px">
         Patients qui attendent un créneau chez vous, du plus ancien au plus récent. Ils sont prévenus dès que vous
         ouvrez un créneau ou qu'un rendez-vous est annulé.
       </p>
@@ -29,7 +29,7 @@ import { abregerIdentifiant } from '../messagerie/messagerie.service';
       <ol style="padding:0 0 0 24px;margin:0;display:grid;gap:10px">
         <li *ngFor="let i of inscriptions()" style="padding:4px 0">
           <strong>Patient {{ abreger(i.patientId) }}</strong>
-          <span style="color:#566b64"> · inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
+          <span style="color:var(--text3)"> · inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
         </li>
       </ol>
       <p *ngIf="!charge() && !erreur() && inscriptions().length === 0">

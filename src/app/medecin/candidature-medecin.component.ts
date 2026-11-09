@@ -24,10 +24,10 @@ function formulaireVide(): DemandeCandidature {
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">{{ ficheReclamee ? 'Réclamer ma fiche' : 'Ma candidature' }}</h1>
-      <p *ngIf="!ficheReclamee" style="color:#566b64;margin:0 0 20px">
+      <p *ngIf="!ficheReclamee" style="color:var(--text3);margin:0 0 20px">
         Pour figurer dans l'annuaire Tabibi, déposez votre candidature : elle est examinée par un administrateur.
       </p>
-      <p *ngIf="ficheReclamee" style="color:#566b64;margin:0 0 20px">
+      <p *ngIf="ficheReclamee" style="color:var(--text3);margin:0 0 20px">
         Vérifiez les informations de votre fiche et ajoutez votre numéro d'inscription à l'ordre :
         un administrateur confirme que c'est bien vous avant de vous la confier.
       </p>
@@ -36,14 +36,14 @@ function formulaireVide(): DemandeCandidature {
       <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
-      <section *ngIf="candidature() as c" style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;margin:0 0 20px">
+      <section *ngIf="candidature() as c" style="border:1px solid var(--border);border-radius:12px;padding:14px;margin:0 0 20px">
         <strong>{{ c.nomComplet }}</strong>
-        <span style="color:#566b64"> · {{ libelleStatut(c.statut) }}</span><br>
-        <span style="color:#566b64">
+        <span style="color:var(--text3)"> · {{ libelleStatut(c.statut) }}</span><br>
+        <span style="color:var(--text3)">
           {{ c.specialiteFr || c.specialiteSlug }} · {{ c.ville || 'Ville non précisée' }} ({{ c.wilayaFr || c.wilayaCode }})
           · N° d'ordre {{ c.numeroOrdre }}<ng-container *ngIf="c.telephone"> · {{ c.telephone }}</ng-container>
         </span><br>
-        <span style="color:#566b64;font-size:.9rem">
+        <span style="color:var(--text3);font-size:.9rem">
           Déposée le {{ c.deposeeLe | date:'d MMMM yyyy à HH:mm' }}<ng-container *ngIf="c.traiteeLe"> · traitée le {{ c.traiteeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container>
         </span>
         <p *ngIf="c.statut === 'EN_ATTENTE'" style="margin:10px 0 0">Votre candidature est en cours d'examen.</p>
@@ -60,41 +60,41 @@ function formulaireVide(): DemandeCandidature {
       <form *ngIf="formulaireVisible()" (ngSubmit)="deposer()" #f="ngForm" style="display:grid;gap:12px">
         <h2 *ngIf="candidature()" style="font-size:1.1rem;margin:0">Nouvelle candidature</h2>
         <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Nom complet *
             <input class="champ" [(ngModel)]="demande.nomComplet" name="nomComplet" required placeholder="Ex. Dr Amina Belkacem" style="color:#10241F;font-size:1rem">
           </label>
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Numéro d'inscription à l'ordre *
             <input class="champ" [(ngModel)]="demande.numeroOrdre" name="numeroOrdre" required style="color:#10241F;font-size:1rem">
           </label>
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Spécialité (code) *
             <input class="champ" [(ngModel)]="demande.specialiteSlug" name="specialiteSlug" required
                    placeholder="Ex. generaliste, cardiologue, dermatologue, pediatre" style="color:#10241F;font-size:1rem">
           </label>
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Spécialité (libellé affiché)
             <input class="champ" [(ngModel)]="demande.specialiteFr" name="specialiteFr" placeholder="Ex. Cardiologue" style="color:#10241F;font-size:1rem">
           </label>
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Wilaya (code) *
             <input class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required placeholder="Ex. 16" style="color:#10241F;font-size:1rem">
           </label>
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Wilaya (libellé affiché)
             <input class="champ" [(ngModel)]="demande.wilayaFr" name="wilayaFr" placeholder="Ex. Alger" style="color:#10241F;font-size:1rem">
           </label>
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Ville
             <input class="champ" [(ngModel)]="demande.ville" name="ville" style="color:#10241F;font-size:1rem">
           </label>
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Téléphone
             <input class="champ" [(ngModel)]="demande.telephone" name="telephone" type="tel" placeholder="Ex. 0550 00 00 00" style="color:#10241F;font-size:1rem">
           </label>
         </div>
-        <p style="color:#566b64;font-size:.9rem;margin:0">* Champs obligatoires.</p>
+        <p style="color:var(--text3);font-size:.9rem;margin:0">* Champs obligatoires.</p>
         <div>
           <button type="submit" class="bouton" [disabled]="enCours()">
             {{ enCours() ? 'Envoi…' : (ficheReclamee ? 'Réclamer ma fiche' : 'Déposer ma candidature') }}

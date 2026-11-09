@@ -14,7 +14,7 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Vérifier une ordonnance</h1>
-      <p style="color:#566b64;margin:0 0 20px">Saisissez le code de vérification imprimé sur l'ordonnance.</p>
+      <p style="color:var(--text3);margin:0 0 20px">Saisissez le code de vérification imprimé sur l'ordonnance.</p>
 
       <form (ngSubmit)="verifier()" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px">
         <input class="champ" [(ngModel)]="code" name="code" placeholder="Code de vérification" autocomplete="off"

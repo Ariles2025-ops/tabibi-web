@@ -24,18 +24,18 @@ import { libelleStatutRendezVous } from './statut-rendez-vous';
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let r of rendezVous()"
-              style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+              style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
-              <strong>{{ r.debut | date:'EEEE d MMMM à HH:mm' }}</strong><br>
-              <a [routerLink]="['/medecins', r.medecinId]" style="color:var(--vert)">{{ noms()[r.medecinId] ?? 'Voir le praticien' }}</a>
-              <span style="color:#566b64"> · {{ libelleStatut(r.statut) }}</span>
+              <strong style="color:var(--ink)"><i class="fa fa-calendar-day fa-xs" style="color:var(--blue)"></i> {{ r.debut | date:'EEEE d MMMM à HH:mm' }}</strong><br>
+              <a [routerLink]="['/medecins', r.medecinId]" style="color:var(--blue-d);font-weight:600">{{ noms()[r.medecinId] ?? 'Voir le praticien' }}</a>
+              <span style="display:inline-block;background:var(--blue-l);color:var(--blue-d);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span>
             </div>
             <button *ngIf="peutAnnuler(r)" (click)="annuler(r)" [disabled]="enCours() !== null"
                     style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px">
               {{ enCours() === r.id ? 'Annulation…' : 'Annuler' }}
             </button>
             <a *ngIf="r.statut === 'HONORE' && !avisDonne(r)" class="bouton-secondaire" [routerLink]="['/avis/nouveau', r.id]">Donner mon avis</a>
-            <span *ngIf="r.statut === 'HONORE' && avisDonne(r)" style="color:#566b64">Avis donné</span>
+            <span *ngIf="r.statut === 'HONORE' && avisDonne(r)" style="color:var(--text3)">Avis donné</span>
           </li>
         </ul>
         <p *ngIf="!charge() && !erreur() && rendezVous().length === 0">

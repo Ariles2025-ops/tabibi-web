@@ -17,7 +17,7 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Mes listes d'attente</h1>
-      <p style="color:#566b64;margin:0 0 20px">
+      <p style="color:var(--text3);margin:0 0 20px">
         Vous serez notifié dès qu'un créneau se libère chez l'un de ces praticiens.
       </p>
 
@@ -29,10 +29,10 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let i of inscriptions()"
-              style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+              style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <a [routerLink]="['/medecins', i.medecinId]" style="color:var(--vert);font-weight:600">{{ noms()[i.medecinId] ?? 'Voir le praticien' }}</a><br>
-              <span style="color:#566b64">Inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
+              <span style="color:var(--text3)">Inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
             </div>
             <button type="button" (click)="retirer(i)" [disabled]="enCours() !== null"
                     style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">

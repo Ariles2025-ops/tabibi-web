@@ -32,11 +32,11 @@ import { MedecinService } from './medecin.service';
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let r of rendezVous()"
-            style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div>
             <strong>{{ r.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
-            <span style="color:#566b64"> · {{ libelleStatut(r.statut) }}</span><br>
-            <span style="color:#566b64">Patient : {{ r.patientId }}</span>
+            <span style="color:var(--text3)"> · {{ libelleStatut(r.statut) }}</span><br>
+            <span style="color:var(--text3)">Patient : {{ r.patientId }}</span>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button *ngIf="r.statut === 'CONFIRME'" type="button" class="bouton" (click)="honorer(r)"

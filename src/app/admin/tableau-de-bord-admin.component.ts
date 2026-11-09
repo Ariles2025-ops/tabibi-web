@@ -21,16 +21,16 @@ import { AdminService, StatistiquesAdministration, libelleRappels } from './admi
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
       <ul *ngIf="statistiques() as s" style="list-style:none;padding:0;margin:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
-        <li style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
-          <span style="display:block;color:#566b64;font-size:.9rem">Candidatures en attente</span>
+        <li style="border:1px solid var(--border);border-radius:12px;padding:14px">
+          <span style="display:block;color:var(--text3);font-size:.9rem">Candidatures en attente</span>
           <strong style="display:block;font-size:2rem;font-weight:600">{{ s.candidaturesEnAttente }}</strong>
         </li>
-        <li style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
-          <span style="display:block;color:#566b64;font-size:.9rem">Candidatures validées</span>
+        <li style="border:1px solid var(--border);border-radius:12px;padding:14px">
+          <span style="display:block;color:var(--text3);font-size:.9rem">Candidatures validées</span>
           <strong style="display:block;font-size:2rem;font-weight:600">{{ s.candidaturesValidees }}</strong>
         </li>
-        <li style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
-          <span style="display:block;color:#566b64;font-size:.9rem">Candidatures refusées</span>
+        <li style="border:1px solid var(--border);border-radius:12px;padding:14px">
+          <span style="display:block;color:var(--text3);font-size:.9rem">Candidatures refusées</span>
           <strong style="display:block;font-size:2rem;font-weight:600">{{ s.candidaturesRefusees }}</strong>
         </li>
       </ul>
@@ -39,9 +39,9 @@ import { AdminService, StatistiquesAdministration, libelleRappels } from './admi
         <a class="bouton" routerLink="/admin/candidatures">Examiner les candidatures</a>
       </p>
 
-      <section style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;margin:32px 0 0">
+      <section style="border:1px solid var(--border);border-radius:12px;padding:14px;margin:32px 0 0">
         <h2 style="font-size:1.1rem;margin:0 0 6px">Rappels de rendez-vous</h2>
-        <p style="color:#566b64;margin:0 0 12px">
+        <p style="color:var(--text3);margin:0 0 12px">
           Les patients reçoivent un rappel la veille de chaque rendez-vous confirmé (envoi automatique toutes les
           heures, un seul rappel par rendez-vous). Lancez l'envoi maintenant pour vérifier ou rattraper une exécution.
         </p>

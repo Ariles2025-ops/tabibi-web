@@ -28,15 +28,15 @@ import { Teleconsultation, TeleconsultationService, salleAccessible } from './te
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-          <li *ngFor="let t of teleconsultations()" style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
+          <li *ngFor="let t of teleconsultations()" style="border:1px solid var(--border);border-radius:12px;padding:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
               <div>
                 <strong *ngIf="datesRendezVous()[t.rendezVousId] as debut">Rendez-vous du {{ debut | date:'EEEE d MMMM à HH:mm' }}</strong>
                 <strong *ngIf="!datesRendezVous()[t.rendezVousId]">Téléconsultation proposée le {{ t.creeLe | date:'EEEE d MMMM à HH:mm' }}</strong>
                 <br>
                 <a [routerLink]="['/medecins', t.medecinId]" style="color:var(--vert)">{{ noms()[t.medecinId] ?? 'Voir le praticien' }}</a>
-                <span style="color:#566b64"> · {{ libelleStatut(t.statut) }}</span>
-                <span *ngIf="t.consentementPatientLe" style="color:#566b64"> · consentement donné le {{ t.consentementPatientLe | date:'d MMMM à HH:mm' }}</span>
+                <span style="color:var(--text3)"> · {{ libelleStatut(t.statut) }}</span>
+                <span *ngIf="t.consentementPatientLe" style="color:var(--text3)"> · consentement donné le {{ t.consentementPatientLe | date:'d MMMM à HH:mm' }}</span>
               </div>
               <a *ngIf="salleAccessible(t)" class="bouton" [href]="t.lienSalle" target="_blank" rel="noopener">
                 Rejoindre la téléconsultation

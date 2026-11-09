@@ -36,7 +36,7 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
         <ol style="list-style:none;padding:0;margin:0 0 16px;display:grid;gap:8px">
           <li *ngFor="let m of messages()" [class.message-moi]="estDeMoi(m)" [class.message-autre]="!estDeMoi(m)">
             <p style="margin:0;white-space:pre-wrap">{{ m.contenu }}</p>
-            <span style="display:block;margin:4px 0 0;color:#566b64;font-size:.85rem">
+            <span style="display:block;margin:4px 0 0;color:var(--text3);font-size:.85rem">
               {{ m.envoyeLe | date:'d MMMM à HH:mm' }}<ng-container *ngIf="estDeMoi(m) && m.luLe"> · lu</ng-container>
             </span>
           </li>
@@ -44,12 +44,12 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
         <p *ngIf="accessible() && messages().length === 0">Aucun message pour le moment.</p>
 
         <form *ngIf="accessible()" (ngSubmit)="envoyer()" style="display:grid;gap:8px">
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Votre message
             <textarea class="champ" [(ngModel)]="contenu" name="contenu" rows="3" style="color:#10241F;font-size:1rem;resize:vertical"></textarea>
           </label>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-            <span [style.color]="tropLong() ? '#b3261e' : '#566b64'" style="font-size:.9rem">{{ contenu.length }} / {{ max }}</span>
+            <span [style.color]="tropLong() ? '#b3261e' : 'var(--text3)'" style="font-size:.9rem">{{ contenu.length }} / {{ max }}</span>
             <button type="submit" class="bouton" [disabled]="!peutEnvoyer()">{{ enCours() ? 'Envoi…' : 'Envoyer' }}</button>
           </div>
         </form>

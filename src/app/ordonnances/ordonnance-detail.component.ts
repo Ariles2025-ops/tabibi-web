@@ -27,10 +27,10 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
         <header style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div>
             <h1 style="color:var(--vert);margin:0 0 4px">Ordonnance</h1>
-            <p style="color:#566b64;margin:0">
+            <p style="color:var(--text3);margin:0">
               Émise le {{ o.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }} · {{ libelleStatut(o.statut) }}
             </p>
-            <p style="color:#566b64;margin:4px 0 0">
+            <p style="color:var(--text3);margin:4px 0 0">
               Praticien : {{ medecin()?.nomComplet ?? o.medecinId }}<br>
               Patient : {{ o.patientId }}
             </p>
@@ -40,27 +40,27 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
 
         <table style="width:100%;border-collapse:collapse;margin:24px 0">
           <thead>
-            <tr style="text-align:left;color:#566b64">
-              <th style="padding:8px;border-bottom:2px solid #e4e9e7">Médicament</th>
-              <th style="padding:8px;border-bottom:2px solid #e4e9e7">Posologie</th>
-              <th style="padding:8px;border-bottom:2px solid #e4e9e7">Durée</th>
+            <tr style="text-align:left;color:var(--text3)">
+              <th style="padding:8px;border-bottom:2px solid var(--border)">Médicament</th>
+              <th style="padding:8px;border-bottom:2px solid var(--border)">Posologie</th>
+              <th style="padding:8px;border-bottom:2px solid var(--border)">Durée</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let l of o.lignes">
-              <td style="padding:8px;border-bottom:1px solid #e4e9e7"><strong>{{ l.medicament }}</strong></td>
-              <td style="padding:8px;border-bottom:1px solid #e4e9e7">{{ l.posologie }}</td>
-              <td style="padding:8px;border-bottom:1px solid #e4e9e7">{{ l.duree }}</td>
+              <td style="padding:8px;border-bottom:1px solid var(--border)"><strong>{{ l.medicament }}</strong></td>
+              <td style="padding:8px;border-bottom:1px solid var(--border)">{{ l.posologie }}</td>
+              <td style="padding:8px;border-bottom:1px solid var(--border)">{{ l.duree }}</td>
             </tr>
           </tbody>
         </table>
 
         <section style="border:2px dashed var(--vert);border-radius:12px;padding:16px;text-align:center">
-          <p style="margin:0 0 4px;color:#566b64">Code de vérification</p>
+          <p style="margin:0 0 4px;color:var(--text3)">Code de vérification</p>
           <p style="margin:0;font-size:2.2rem;font-weight:700;letter-spacing:.15em;font-family:ui-monospace,monospace;color:var(--vert)">
             {{ o.codeVerification }}
           </p>
-          <p style="margin:8px 0 0;color:#566b64;font-size:.9rem">
+          <p style="margin:8px 0 0;color:var(--text3);font-size:.9rem">
             Authenticité vérifiable sur Tabibi, page
             <a routerLink="/verifier" [queryParams]="{ code: o.codeVerification }" style="color:var(--vert)">Vérifier une ordonnance</a>.
           </p>

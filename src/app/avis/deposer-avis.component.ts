@@ -28,7 +28,7 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
       <p *ngIf="connecte() === false">Redirection vers la page de connexion…</p>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="rendezVous() as r" style="color:#566b64;margin:0 0 20px">
+        <p *ngIf="rendezVous() as r" style="color:var(--text3);margin:0 0 20px">
           Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }}<ng-container *ngIf="nomMedecin()"> avec {{ nomMedecin() }}</ng-container>.
           Votre avis est publié sans votre nom.
         </p>
@@ -40,19 +40,19 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
 
         <form *ngIf="!succes()" (ngSubmit)="deposer()" style="display:grid;gap:16px">
           <fieldset style="border:0;padding:0;margin:0">
-            <legend style="color:#566b64;font-size:.9rem;margin:0 0 6px">Note *</legend>
+            <legend style="color:var(--text3);font-size:.9rem;margin:0 0 6px">Note *</legend>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
               <label *ngFor="let n of notes" class="note" [class.note-choisie]="note === n" [attr.aria-label]="'Note ' + n + ' sur 5'">
                 <input type="radio" name="note" [value]="n" [(ngModel)]="note">{{ n }}
               </label>
-              <span style="color:#566b64;font-size:.9rem;margin-left:4px">{{ note !== null ? note + ' / 5' : 'Choisissez une note de 1 à 5' }}</span>
+              <span style="color:var(--text3);font-size:.9rem;margin-left:4px">{{ note !== null ? note + ' / 5' : 'Choisissez une note de 1 à 5' }}</span>
             </div>
           </fieldset>
 
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Commentaire (facultatif)
             <textarea class="champ" [(ngModel)]="commentaire" name="commentaire" rows="4" style="color:#10241F;font-size:1rem;resize:vertical"></textarea>
-            <span [style.color]="commentaireTropLong() ? '#b3261e' : '#566b64'">{{ commentaire.length }} / {{ maxCommentaire }}</span>
+            <span [style.color]="commentaireTropLong() ? '#b3261e' : 'var(--text3)'">{{ commentaire.length }} / {{ maxCommentaire }}</span>
           </label>
 
           <div>

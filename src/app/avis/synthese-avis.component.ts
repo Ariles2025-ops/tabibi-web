@@ -22,9 +22,9 @@ const NOMBRE_DERNIERS_AVIS = 5;
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:8px">
-        <li *ngFor="let a of derniers()" style="border:1px solid #e4e9e7;border-radius:12px;padding:12px 14px">
+        <li *ngFor="let a of derniers()" style="border:1px solid var(--border);border-radius:12px;padding:12px 14px">
           <strong>{{ a.note }} / 5</strong>
-          <span style="color:#566b64"> · {{ a.deposeLe | date:'d MMMM yyyy' }}</span>
+          <span style="color:var(--text3)"> · {{ a.deposeLe | date:'d MMMM yyyy' }}</span>
           <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
         </li>
       </ul>

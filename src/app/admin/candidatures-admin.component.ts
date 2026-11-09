@@ -26,7 +26,7 @@ const STATUTS_FILTRE = [
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
         <h1 style="color:var(--vert);margin:0">Candidatures</h1>
-        <label style="display:flex;align-items:center;gap:8px;color:#566b64;font-size:.9rem">
+        <label style="display:flex;align-items:center;gap:8px;color:var(--text3);font-size:.9rem">
           Statut
           <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:#10241F;font-size:1rem">
             <option *ngFor="let s of statuts" [value]="s.valeur">{{ s.libelle }}</option>
@@ -39,18 +39,18 @@ const STATUTS_FILTRE = [
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-        <li *ngFor="let c of candidatures()" style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
+        <li *ngFor="let c of candidatures()" style="border:1px solid var(--border);border-radius:12px;padding:14px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
             <div>
               <strong>{{ c.nomComplet }}</strong>
-              <span style="color:#566b64"> · {{ libelleStatut(c.statut) }}</span>
+              <span style="color:var(--text3)"> · {{ libelleStatut(c.statut) }}</span>
               <span *ngIf="c.ficheReclamee" style="color:var(--vert)"> · Réclame la fiche
                 <a [routerLink]="['/medecins', c.ficheReclamee]" style="color:var(--vert)">existante</a></span><br>
-              <span style="color:#566b64">
+              <span style="color:var(--text3)">
                 {{ c.specialiteFr || c.specialiteSlug }} · {{ c.ville || 'Ville non précisée' }} ({{ c.wilayaFr || c.wilayaCode }})
                 · N° d'ordre {{ c.numeroOrdre }}<ng-container *ngIf="c.telephone"> · {{ c.telephone }}</ng-container>
               </span><br>
-              <span style="color:#566b64;font-size:.9rem">
+              <span style="color:var(--text3);font-size:.9rem">
                 Déposée le {{ c.deposeeLe | date:'d MMMM yyyy à HH:mm' }}<ng-container *ngIf="c.traiteeLe"> · traitée le {{ c.traiteeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container>
               </span>
               <p *ngIf="c.motifRefus" style="margin:6px 0 0;color:#b3261e">Motif du refus : {{ c.motifRefus }}</p>

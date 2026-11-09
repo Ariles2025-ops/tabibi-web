@@ -23,7 +23,7 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } fro
 
       <ng-container *ngIf="connecte()">
         <ng-container *ngIf="besoin() as b">
-          <p style="color:#566b64;margin:0 0 16px">
+          <p style="color:var(--text3);margin:0 0 16px">
             {{ libelleStatut(b.statut) }} · Wilaya {{ b.wilayaCode }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
             · publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}<ng-container *ngIf="b.clotureLe"> · clôturée le {{ b.clotureLe | date:'d MMMM à HH:mm' }}</ng-container>
             <ng-container *ngIf="b.precision"><br>{{ b.precision }}</ng-container>
@@ -41,11 +41,11 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } fro
 
         <h2 style="font-size:1.1rem;margin:0 0 12px">Réponses des pharmacies</h2>
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-          <li *ngFor="let r of reponses()" style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
+          <li *ngFor="let r of reponses()" style="border:1px solid var(--border);border-radius:12px;padding:14px">
             <strong>{{ r.nomPharmacie }}</strong>
             <span [style.color]="r.disponible ? 'var(--vert)' : '#b3261e'"> · {{ r.disponible ? 'Disponible' : 'Indisponible' }}</span>
-            <span *ngIf="r.prixDa !== null" style="color:#566b64"> · {{ prix(r.prixDa) }}</span>
-            <span style="color:#566b64"> · {{ r.repondueLe | date:'d MMMM à HH:mm' }}</span>
+            <span *ngIf="r.prixDa !== null" style="color:var(--text3)"> · {{ prix(r.prixDa) }}</span>
+            <span style="color:var(--text3)"> · {{ r.repondueLe | date:'d MMMM à HH:mm' }}</span>
             <p *ngIf="r.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ r.commentaire }}</p>
           </li>
         </ul>

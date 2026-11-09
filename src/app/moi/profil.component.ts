@@ -36,7 +36,7 @@ function formulaireVide(): DemandeProfil {
     <main style="max-width:640px;margin:32px auto;padding:0 16px">
       <p style="margin:0 0 16px"><a routerLink="/moi" style="color:var(--vert)">Retour à mon compte</a></p>
       <h1 style="color:var(--vert);margin:0 0 8px">Mon profil</h1>
-      <p style="color:#566b64;margin:0 0 20px">
+      <p style="color:var(--text3);margin:0 0 20px">
         Ces informations servent aux praticiens et aux rappels de rendez-vous. Seul le nom complet est obligatoire.
       </p>
 
@@ -47,41 +47,41 @@ function formulaireVide(): DemandeProfil {
         <p *ngIf="erreurChargement()" style="color:#b3261e">{{ erreurChargement() }}</p>
 
         <form *ngIf="!charge() && !erreurChargement()" (ngSubmit)="enregistrer()" style="display:grid;gap:12px">
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Nom complet *
             <input class="champ" [(ngModel)]="formulaire.nomComplet" name="nomComplet" required [maxlength]="longueurMaxNom"
                    placeholder="Ex. Amina Belkacem" style="color:#10241F;font-size:1rem">
           </label>
           <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Téléphone
               <input class="champ" [(ngModel)]="formulaire.telephone" name="telephone" type="tel" placeholder="Ex. 0550 12 34 56"
                      style="color:#10241F;font-size:1rem">
             </label>
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Date de naissance
               <input class="champ" [(ngModel)]="formulaire.dateNaissance" name="dateNaissance" type="date" [max]="hier" [min]="dateMin"
                      style="color:#10241F;font-size:1rem">
             </label>
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Wilaya (code)
               <input class="champ" [(ngModel)]="formulaire.wilayaCode" name="wilayaCode" [maxlength]="longueurMaxWilaya" placeholder="Ex. 16"
                      style="color:#10241F;font-size:1rem">
             </label>
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Langue
               <select class="champ" [(ngModel)]="formulaire.langue" name="langue" style="color:#10241F;font-size:1rem">
                 <option *ngFor="let l of langues" [value]="l.code">{{ l.libelle }}</option>
               </select>
             </label>
           </div>
-          <p style="color:#566b64;font-size:.9rem;margin:0">* Champ obligatoire.</p>
+          <p style="color:var(--text3);font-size:.9rem;margin:0">* Champ obligatoire.</p>
           <p *ngIf="succes()" style="color:var(--vert);margin:0">{{ succes() }}</p>
           <p *ngIf="erreur()" style="color:#b3261e;margin:0">{{ erreur() }}</p>
           <div>
             <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? 'Enregistrement…' : 'Enregistrer' }}</button>
           </div>
-          <p *ngIf="profil() as p" style="color:#566b64;font-size:.9rem;margin:0">
+          <p *ngIf="profil() as p" style="color:var(--text3);font-size:.9rem;margin:0">
             Dernière mise à jour le {{ p.misAJourLe | date:'d MMMM yyyy à HH:mm' }}.
           </p>
         </form>

@@ -34,13 +34,13 @@ function formulaireVide(): FormulaireReponse {
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Espace pharmacie</h1>
-      <p style="color:#566b64;margin:0 0 20px">
+      <p style="color:var(--text3);margin:0 0 20px">
         Demandes de médicaments publiées par les patients de votre wilaya. Répondez en indiquant la disponibilité,
         le prix et vos précisions : le patient est prévenu, sans que son identité vous soit communiquée.
       </p>
 
       <form (ngSubmit)="chercher()" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:0 0 20px">
-        <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+        <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
           Wilaya (code) *
           <input class="champ" [(ngModel)]="wilayaCode" name="wilayaCode" required placeholder="Ex. 16" style="width:120px;color:#10241F;font-size:1rem">
         </label>
@@ -51,9 +51,9 @@ function formulaireVide(): FormulaireReponse {
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-        <li *ngFor="let b of besoins()" style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
+        <li *ngFor="let b of besoins()" style="border:1px solid var(--border);border-radius:12px;padding:14px">
           <strong>{{ b.medicament }}</strong>
-          <span style="color:#566b64">
+          <span style="color:var(--text3)">
             · Wilaya {{ b.wilayaCode }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
             · publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }} · {{ libelleReponses(b.nombreReponses) }}
           </span>
@@ -62,12 +62,12 @@ function formulaireVide(): FormulaireReponse {
           <p *ngIf="repondus().has(b.id)" style="margin:10px 0 0;color:var(--vert)">Vous avez répondu à cette demande.</p>
 
           <form *ngIf="!repondus().has(b.id) && formulaires[b.id] as f" (ngSubmit)="repondre(b)"
-                style="display:grid;gap:10px;margin:12px 0 0;padding:12px;border:1px solid #e4e9e7;border-radius:8px;background:#f8faf9">
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+                style="display:grid;gap:10px;margin:12px 0 0;padding:12px;border:1px solid var(--border);border-radius:8px;background:#f8faf9">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Nom de la pharmacie *
               <input class="champ" [(ngModel)]="nomPharmacie" [name]="'nom-' + b.id" required placeholder="Ex. Pharmacie El Amel" style="color:#10241F;font-size:1rem">
             </label>
-            <fieldset style="border:0;padding:0;margin:0;display:flex;gap:16px;align-items:center;flex-wrap:wrap;color:#566b64;font-size:.9rem">
+            <fieldset style="border:0;padding:0;margin:0;display:flex;gap:16px;align-items:center;flex-wrap:wrap;color:var(--text3);font-size:.9rem">
               <legend style="padding:0;margin:0 0 4px">Médicament disponible *</legend>
               <label style="display:flex;gap:6px;align-items:center;color:#10241F;font-size:1rem">
                 <input type="radio" [name]="'disponible-' + b.id" [value]="true" [(ngModel)]="f.disponible"> Oui
@@ -77,11 +77,11 @@ function formulaireVide(): FormulaireReponse {
               </label>
             </fieldset>
             <div style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
-              <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+              <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
                 Prix (DA)
                 <input class="champ" type="number" min="0" step="1" [(ngModel)]="f.prixDa" [name]="'prix-' + b.id" placeholder="Ex. 850" style="color:#10241F;font-size:1rem">
               </label>
-              <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+              <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
                 Commentaire
                 <input class="champ" [(ngModel)]="f.commentaire" [name]="'commentaire-' + b.id" placeholder="Ex. Disponible jusqu'à 19 h" style="color:#10241F;font-size:1rem">
               </label>

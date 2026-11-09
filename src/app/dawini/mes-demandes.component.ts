@@ -23,7 +23,7 @@ function formulaireVide(): Required<DemandeBesoin> {
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Dawini</h1>
-      <p style="color:#566b64;margin:0 0 20px">
+      <p style="color:var(--text3);margin:0 0 20px">
         Vous cherchez un médicament ? Publiez votre demande : les pharmacies de votre wilaya y répondent
         (disponibilité, prix), sans connaître votre identité.
       </p>
@@ -33,24 +33,24 @@ function formulaireVide(): Required<DemandeBesoin> {
       <ng-container *ngIf="connecte()">
         <form (ngSubmit)="publier()" style="display:grid;gap:12px;margin:0 0 28px">
           <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Médicament *
               <input class="champ" [(ngModel)]="demande.medicament" name="medicament" required placeholder="Ex. Amoxicilline 1 g" style="color:#10241F;font-size:1rem">
             </label>
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Wilaya (code) *
               <input class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required placeholder="Ex. 16" style="color:#10241F;font-size:1rem">
             </label>
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Commune
               <input class="champ" [(ngModel)]="demande.commune" name="commune" placeholder="Ex. Bab Ezzouar" style="color:#10241F;font-size:1rem">
             </label>
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Précision (dosage, forme, urgence)
               <input class="champ" [(ngModel)]="demande.precision" name="precision" placeholder="Ex. Boîte de 14 comprimés" style="color:#10241F;font-size:1rem">
             </label>
           </div>
-          <p style="color:#566b64;font-size:.9rem;margin:0">* Champs obligatoires.</p>
+          <p style="color:var(--text3);font-size:.9rem;margin:0">* Champs obligatoires.</p>
           <p *ngIf="succes()" style="color:var(--vert);margin:0">{{ succes() }}</p>
           <p *ngIf="erreurFormulaire()" style="color:#b3261e;margin:0">{{ erreurFormulaire() }}</p>
           <div>
@@ -63,13 +63,13 @@ function formulaireVide(): Required<DemandeBesoin> {
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-          <li *ngFor="let b of besoins()" style="border:1px solid #e4e9e7;border-radius:12px">
+          <li *ngFor="let b of besoins()" style="border:1px solid var(--border);border-radius:12px">
             <a [routerLink]="['/dawini', b.id]"
                style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px;color:inherit;text-decoration:none">
               <span>
                 <strong>{{ b.medicament }}</strong>
-                <span style="color:#566b64"> · {{ libelleStatut(b.statut) }}</span><br>
-                <span style="color:#566b64">
+                <span style="color:var(--text3)"> · {{ libelleStatut(b.statut) }}</span><br>
+                <span style="color:var(--text3)">
                   Wilaya {{ b.wilayaCode }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
                   · publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}
                 </span>

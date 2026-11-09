@@ -17,7 +17,7 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Avis des patients</h1>
-      <p style="color:#566b64;margin:0 0 16px">
+      <p style="color:var(--text3);margin:0 0 16px">
         Avis publiés sur votre fiche, anonymes. Un avis signalé est retiré de la vue publique et examiné par un administrateur.
       </p>
 
@@ -28,10 +28,10 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let a of avis()"
-            style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div>
             <strong>{{ a.note }} / 5</strong>
-            <span style="color:#566b64"> · {{ a.deposeLe | date:'d MMMM yyyy' }}</span>
+            <span style="color:var(--text3)"> · {{ a.deposeLe | date:'d MMMM yyyy' }}</span>
             <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
           </div>
           <button type="button" class="bouton-secondaire" (click)="signaler(a)" [disabled]="enCours() !== null">

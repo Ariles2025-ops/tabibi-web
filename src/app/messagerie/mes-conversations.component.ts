@@ -27,13 +27,13 @@ import { Conversation, MessagerieService, abregerIdentifiant } from './messageri
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-          <li *ngFor="let c of conversations()" style="border:1px solid #e4e9e7;border-radius:12px"
+          <li *ngFor="let c of conversations()" style="border:1px solid var(--border);border-radius:12px"
               [class.conversation-non-lue]="c.nonLus > 0">
             <a [routerLink]="['/messagerie', c.id]"
                style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px;color:inherit;text-decoration:none">
               <span>
                 <strong>{{ interlocuteur(c) }}</strong><br>
-                <span style="color:#566b64">Dernière activité le {{ c.dernierMessageLe | date:'EEEE d MMMM à HH:mm' }}</span>
+                <span style="color:var(--text3)">Dernière activité le {{ c.dernierMessageLe | date:'EEEE d MMMM à HH:mm' }}</span>
               </span>
               <span *ngIf="c.nonLus > 0" style="color:var(--vert);font-weight:600">{{ c.nonLus }} non lus</span>
             </a>

@@ -27,10 +27,10 @@ import { Notification, NotificationService } from './notification.service';
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let n of notifications()" [class.notification-lue]="n.lue" [class.notification-non-lue]="!n.lue"
-              style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+              style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <strong>{{ n.sujet }}</strong>
-              <span style="color:#566b64"> · {{ n.creeLe | date:'EEEE d MMMM yyyy à HH:mm' }}</span><br>
+              <span style="color:var(--text3)"> · {{ n.creeLe | date:'EEEE d MMMM yyyy à HH:mm' }}</span><br>
               <span>{{ n.message }}</span>
             </div>
             <button *ngIf="!n.lue" type="button" class="bouton-secondaire" (click)="marquerLue(n)"

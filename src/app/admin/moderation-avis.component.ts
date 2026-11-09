@@ -26,7 +26,7 @@ const STATUTS_FILTRE = [
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
         <h1 style="color:var(--vert);margin:0">Modération des avis</h1>
-        <label style="display:flex;align-items:center;gap:8px;color:#566b64;font-size:.9rem">
+        <label style="display:flex;align-items:center;gap:8px;color:var(--text3);font-size:.9rem">
           Statut
           <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:#10241F;font-size:1rem">
             <option *ngFor="let s of statuts" [value]="s.valeur">{{ s.libelle }}</option>
@@ -40,13 +40,13 @@ const STATUTS_FILTRE = [
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let a of avis()"
-            style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div>
             <strong>{{ a.note }} / 5</strong>
-            <span style="color:#566b64"> · {{ libelleStatut(a.statut) }} · déposé le {{ a.deposeLe | date:'d MMMM yyyy à HH:mm' }}</span>
+            <span style="color:var(--text3)"> · {{ libelleStatut(a.statut) }} · déposé le {{ a.deposeLe | date:'d MMMM yyyy à HH:mm' }}</span>
             <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
-            <p *ngIf="!a.commentaire" style="margin:6px 0 0;color:#566b64">Sans commentaire.</p>
-            <span style="display:block;margin:6px 0 0;color:#566b64;font-size:.85rem">
+            <p *ngIf="!a.commentaire" style="margin:6px 0 0;color:var(--text3)">Sans commentaire.</p>
+            <span style="display:block;margin:6px 0 0;color:var(--text3);font-size:.85rem">
               Médecin {{ a.medecinId }} · Patient {{ a.patientId }} · Rendez-vous {{ a.rendezVousId }}
             </span>
           </div>
