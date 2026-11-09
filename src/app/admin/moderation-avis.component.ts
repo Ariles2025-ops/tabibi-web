@@ -40,7 +40,7 @@ const STATUTS_FILTRE = [
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let a of avis()"
-            style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div>
             <strong>{{ a.note }} / 5</strong>
             <span style="color:var(--text3)"> · {{ libelleStatut(a.statut) }} · déposé le {{ a.deposeLe | date:'d MMMM yyyy à HH:mm' }}</span>
@@ -52,7 +52,7 @@ const STATUTS_FILTRE = [
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button *ngIf="a.statut !== 'MASQUE'" type="button" (click)="masquer(a)" [disabled]="enCours() !== null"
-                    style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
+                    style="padding:11px 18px;background:#fff;color:#b3261e;border:1.5px solid #f0c9c6;border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
               {{ enCours() === a.id ? 'Enregistrement…' : 'Masquer' }}
             </button>
             <button *ngIf="a.statut !== 'PUBLIE'" type="button" class="bouton" (click)="retablir(a)" [disabled]="enCours() !== null">

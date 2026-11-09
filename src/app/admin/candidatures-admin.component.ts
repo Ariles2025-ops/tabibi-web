@@ -39,7 +39,7 @@ const STATUTS_FILTRE = [
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-        <li *ngFor="let c of candidatures()" style="border:1px solid var(--border);border-radius:12px;padding:14px">
+        <li *ngFor="let c of candidatures()" style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
             <div>
               <strong>{{ c.nomComplet }}</strong>
@@ -65,7 +65,7 @@ const STATUTS_FILTRE = [
             <input class="champ" [(ngModel)]="motifs[c.id]" [name]="'motif-' + c.id" placeholder="Motif du refus (obligatoire)"
                    required style="flex:1;min-width:220px;color:#10241F;font-size:1rem">
             <button type="submit" [disabled]="enCours() !== null || !motifRenseigne(c)"
-                    style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
+                    style="padding:11px 18px;background:#fff;color:#b3261e;border:1.5px solid #f0c9c6;border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
               Refuser
             </button>
           </form>
