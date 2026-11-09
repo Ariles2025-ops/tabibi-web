@@ -32,11 +32,11 @@ import { MedecinService } from './medecin.service';
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let r of rendezVous()"
-            style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div>
-            <strong>{{ r.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
-            <span style="color:var(--text3)"> · {{ libelleStatut(r.statut) }}</span><br>
-            <span style="color:var(--text3)">Patient : {{ r.patientId }}</span>
+            <strong style="color:var(--ink)"><i class="fa fa-calendar-day fa-xs" style="color:var(--blue)"></i> {{ r.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
+            <span style="display:inline-block;background:var(--blue-l);color:var(--blue-d);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span><br>
+            <span style="color:var(--text3)"><i class="fa fa-user fa-xs"></i> Patient : {{ r.patientId }}</span>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button *ngIf="r.statut === 'CONFIRME'" type="button" class="bouton" (click)="honorer(r)"
@@ -48,7 +48,7 @@ import { MedecinService } from './medecin.service';
               {{ enCours() === r.id ? 'Envoi…' : 'Proposer une téléconsultation' }}
             </button>
             <button *ngIf="r.statut === 'CONFIRME'" type="button" (click)="annuler(r)" [disabled]="enCours() !== null"
-                    style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
+                    style="padding:11px 18px;background:#fff;color:#b3261e;border:1.5px solid #f0c9c6;border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
               {{ enCours() === r.id ? 'Annulation…' : 'Annuler' }}
             </button>
             <a *ngIf="r.statut !== 'ANNULE'" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"

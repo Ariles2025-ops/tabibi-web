@@ -25,7 +25,7 @@ interface CreneauOuvert {
         Ouvrez un créneau de consultation : les patients pourront le réserver depuis votre fiche.
       </p>
 
-      <form (ngSubmit)="ouvrir()" #f="ngForm" style="display:grid;gap:12px;max-width:360px">
+      <form (ngSubmit)="ouvrir()" #f="ngForm" style="display:grid;gap:12px;max-width:380px;background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:20px">
         <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
           Date et heure
           <input class="champ" type="datetime-local" [(ngModel)]="debut" name="debut" required [min]="minDebut"

@@ -11,16 +11,16 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
   imports: [CommonModule, RouterLink],
   template: `
     <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-      <li *ngFor="let o of ordonnances()" style="border:1px solid var(--border);border-radius:12px">
+      <li *ngFor="let o of ordonnances()" style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1)">
         <a [routerLink]="['/ordonnances', o.id]"
-           style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px;color:inherit;text-decoration:none">
+           style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;color:inherit;text-decoration:none">
           <span>
-            <strong>{{ o.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}</strong><br>
+            <strong style="color:var(--ink)"><i class="fa fa-file-prescription fa-xs" style="color:var(--blue)"></i> {{ o.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}</strong><br>
             <span style="color:var(--text3)">
               <ng-container *ngIf="afficherPatient()">Patient : {{ o.patientId }} · </ng-container>{{ libelleStatut(o.statut) }}
             </span>
           </span>
-          <code style="font-size:1.05rem;letter-spacing:.1em;color:var(--vert)">{{ o.codeVerification }}</code>
+          <code style="font-size:1rem;letter-spacing:.1em;color:var(--blue-d);background:var(--blue-l);border-radius:999px;padding:4px 12px">{{ o.codeVerification }}</code>
         </a>
       </li>
     </ul>
