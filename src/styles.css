@@ -1,36 +1,45 @@
+/* Styles propres a l'application (hors accueil, qui reprend legacy-accueil.css de l'ancien site).
+   Les variables de couleur viennent de legacy-accueil.css (tabibi-ui.css). */
 :root { --vert:#0F7560; }
-body { font-family: system-ui, sans-serif; margin: 0; color:#10241F; }
+
+/* Barre de navigation (fond emeraude pose dans le gabarit). */
 nav a { color:#fff; text-decoration:none; }
 nav a.actif { text-decoration:underline; text-underline-offset:4px; }
 button:disabled { opacity:.6; cursor:default; }
 
-/* Champs et boutons des formulaires. */
-.champ { padding:10px; border:1px solid #ddd; border-radius:8px; font:inherit; box-sizing:border-box; }
-.bouton { padding:10px 16px; background:var(--vert); color:#fff; border:0; border-radius:8px; font:inherit; cursor:pointer; text-decoration:none; display:inline-block; }
-.bouton-secondaire { padding:10px 16px; background:#fff; color:var(--vert); border:1px solid var(--vert); border-radius:8px; font:inherit; cursor:pointer; text-decoration:none; display:inline-block; }
+/* Champs et boutons des formulaires internes. */
+.champ { padding:10px 12px; border:1.5px solid #E7E0D2; border-radius:12px; font:inherit; box-sizing:border-box; background:#fff; }
+.champ:focus { outline:none; border-color:var(--vert); box-shadow:0 0 0 3px rgba(15,117,96,.14); }
+.bouton { padding:11px 18px; background:var(--vert); color:#fff; border:0; border-radius:999px; font:inherit; font-weight:700; cursor:pointer; text-decoration:none; display:inline-block; }
+.bouton:hover { background:#0E5F46; }
+.bouton-secondaire { padding:11px 18px; background:#fff; color:#0E5F46; border:1.5px solid #E7E0D2; border-radius:999px; font:inherit; font-weight:700; cursor:pointer; text-decoration:none; display:inline-block; }
 
-/* Notifications : une non lue ressort (fond teinte, sujet en vert), une lue est attenuee. */
+/* Notifications. */
 .notification-non-lue { background:#f3faf7; }
 .notification-non-lue strong { color:var(--vert); }
 .notification-lue { color:#566b64; }
 
-/* Messagerie : une conversation avec des messages non lus ressort ; dans le fil, mes messages sont a droite
-   (fond vert clair), ceux de l'autre participant a gauche. */
+/* Messagerie. */
 .conversation-non-lue { background:#f3faf7; }
 .conversation-non-lue strong { color:var(--vert); }
 .message-moi, .message-autre { max-width:80%; padding:10px 12px; border-radius:12px; }
 .message-moi { justify-self:end; background:#e3f3ee; }
 .message-autre { justify-self:start; background:#f1f3f2; }
 
-/* Avis : note de 1 a 5 par boutons radio stylises (le bouton natif est masque, l'etiquette fait office de bouton). */
-.note { position:relative; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--vert); border-radius:8px; color:var(--vert); font-weight:600; cursor:pointer; }
+/* Avis : note de 1 a 5. */
+.note { position:relative; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--vert); border-radius:12px; color:var(--vert); font-weight:600; cursor:pointer; background:#fff; }
 .note input { position:absolute; opacity:0; width:0; height:0; margin:0; }
 .note:focus-within { outline:2px solid #10241F; outline-offset:2px; }
 .note-choisie { background:var(--vert); color:#fff; }
 
-/* Impression (ordonnance) : seul le contenu de la page est imprime. */
+/* Impression (ordonnance). */
 @media print {
   nav, .sans-impression { display:none !important; }
-  body { color:#000; }
+  body { color:#000; background:#fff; }
   main { max-width:none !important; margin:0 !important; padding:0 !important; }
 }
+
+/* Pied de page. */
+.pied { max-width:760px; margin:56px auto 0; padding:22px 16px 36px; border-top:1px solid #E7E0D2; display:flex; flex-wrap:wrap; gap:8px 20px; font-size:.9rem; }
+.pied a { color:#5C6B63; text-decoration:none; }
+.pied a:hover { color:#0E5F46; }

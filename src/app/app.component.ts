@@ -60,6 +60,12 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
       </div>
     </nav>
     <router-outlet />
+    <footer class="pied">
+      <a href="/legal/mentions-legales.html">Mentions légales</a>
+      <a href="/legal/cgu.html">Conditions d'utilisation</a>
+      <a href="/legal/confidentialite.html">Confidentialité</a>
+      <a href="mailto:contact@tabibi.doctor">contact&#64;tabibi.doctor</a>
+    </footer>
   `,
 })
 export class AppComponent implements OnInit {
