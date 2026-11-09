@@ -22,13 +22,13 @@ button:disabled { opacity:.6; cursor:default; }
   .side__brand { display:block; font-size:1.6rem; font-weight:800; color:#fff; text-decoration:none; padding:6px 12px 20px; letter-spacing:-.02em; }
   .side__brand i { color:var(--or); font-style:normal; }
   .side__nav { flex-direction:column; align-items:stretch; gap:3px; padding:0; }
-  .side__nav a { padding:10px 12px; border-radius:10px; }
+  .side__nav a { display:block; padding:10px 12px; border-radius:10px; }
   .side__nav a:hover { background:rgba(255,255,255,.12); }
   .side__nav a.actif { background:rgba(255,255,255,.18); font-weight:700; }
   .side__group { display:block; margin-top:14px; border-top:1px solid rgba(255,255,255,.18); padding-top:10px; }
   .side__grouptitle { text-transform:uppercase; letter-spacing:.05em; font-size:.72rem; padding:4px 12px; opacity:.85; width:auto; }
-  .side__account { margin:auto 0 0; padding-top:14px; border-top:1px solid rgba(255,255,255,.18); }
-  .side__account a { flex:1; padding:10px 12px; border-radius:10px; }
+  .side__account { margin:auto 0 0; padding-top:14px; border-top:1px solid rgba(255,255,255,.18); flex-direction:column; align-items:stretch; gap:3px; }
+  .side__account a { display:block; padding:10px 12px; border-radius:10px; }
   .side__account a:hover { background:rgba(255,255,255,.12); }
 }
 

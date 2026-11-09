@@ -4,3 +4,8 @@ dist/
 out-tsc/
 coverage/
 .DS_Store
+
+# Playwright (captures et resultats de test, non versionnes)
+e2e/captures/
+test-results/
+playwright-report/
