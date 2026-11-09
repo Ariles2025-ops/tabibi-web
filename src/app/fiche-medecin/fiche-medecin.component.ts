@@ -14,61 +14,68 @@ import { MessagerieService } from '../messagerie/messagerie.service';
   standalone: true,
   imports: [CommonModule, RouterLink, SyntheseAvisComponent],
   template: `
-    <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <p style="margin:0 0 16px"><a routerLink="/" style="color:var(--vert)">Retour à l'annuaire</a></p>
+    <main class="section" style="max-width:720px;margin:0 auto">
+      <p style="margin:0 0 16px"><a routerLink="/" style="color:var(--blue);text-decoration:none;font-weight:600"><i class="fa fa-arrow-left fa-xs"></i> Retour à l'annuaire</a></p>
 
       <ng-container *ngIf="medecin() as m">
-        <h1 style="color:var(--vert);margin:0 0 4px">{{ m.nomComplet }}</h1>
-        <p style="color:#566b64;margin:0 0 16px">{{ m.specialiteFr }} · {{ m.ville }} ({{ m.wilayaFr }})</p>
-        <p style="margin:0 0 24px">
-          <button type="button" class="bouton-secondaire" (click)="ecrire()" [disabled]="ouvertureMessagerie()">
-            {{ ouvertureMessagerie() ? 'Ouverture…' : 'Écrire au médecin' }}
-          </button>
-        </p>
-        <p *ngIf="erreurMessagerie()" style="color:#b3261e;margin:-12px 0 24px">{{ erreurMessagerie() }}</p>
-        <p *ngIf="reclamable()" style="border:1px dashed var(--vert);border-radius:12px;padding:12px 14px;margin:0 0 24px">
-          Vous êtes ce praticien ? Réclamez gratuitement cette fiche pour gérer vos rendez-vous.
-          <a routerLink="/medecin/candidature" [queryParams]="{ fiche: m.id }" style="color:var(--vert);font-weight:600">Réclamer ma fiche</a>
-        </p>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:20px;margin:0 0 20px">
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div class="doc-ava" style="width:56px;height:56px;font-size:18px;flex:none">{{ initiales(m.nomComplet) }}</div>
+            <div style="flex:1;min-width:0">
+              <h1 style="font-size:1.4rem;margin:0 0 4px;color:var(--ink)">{{ m.nomComplet }}</h1>
+              <div style="color:var(--blue);font-weight:600"><i class="fa fa-stethoscope fa-xs"></i> {{ m.specialiteFr }}</div>
+              <div style="color:var(--text3)"><i class="fa fa-location-dot fa-xs"></i> {{ m.ville || m.wilayaFr }} ({{ m.wilayaFr }})</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 0">
+            <button type="button" class="btn" style="background:#fff;border:1.5px solid var(--border);color:var(--ink)" (click)="ecrire()" [disabled]="ouvertureMessagerie()">
+              <i class="fa fa-comment-dots"></i> {{ ouvertureMessagerie() ? 'Ouverture…' : 'Écrire au médecin' }}
+            </button>
+          </div>
+          <p *ngIf="erreurMessagerie()" style="color:#b3261e;margin:12px 0 0">{{ erreurMessagerie() }}</p>
+          <p *ngIf="reclamable()" style="border:1.5px dashed var(--pastille-bd);border-radius:var(--r12);padding:12px 14px;margin:16px 0 0;font-size:13px">
+            <i class="fa fa-user-doctor" style="color:var(--blue)"></i> Vous êtes ce praticien ? Réclamez gratuitement cette fiche.
+            <a routerLink="/medecin/candidature" [queryParams]="{ fiche: m.id }" style="color:var(--blue);font-weight:700">Réclamer ma fiche</a>
+          </p>
+        </div>
       </ng-container>
 
-      <h2 style="font-size:1.1rem;margin:0 0 12px">Créneaux disponibles</h2>
+      <h2 class="sec-title" style="font-size:1.1rem;margin:0 0 12px">Créneaux disponibles</h2>
 
-      <p *ngIf="reservation() as r" style="color:var(--vert)">
-        Rendez-vous réservé le {{ r.debut | date:'EEEE d MMMM à HH:mm' }}.
-        <a routerLink="/mes-rendez-vous" style="color:var(--vert)">Voir mes rendez-vous</a>
+      <p *ngIf="reservation() as r" style="background:var(--blue-l);color:var(--blue-d);border-radius:var(--r12);padding:12px 14px">
+        <i class="fa fa-circle-check"></i> Rendez-vous réservé le {{ r.debut | date:'EEEE d MMMM à HH:mm' }}.
+        <a routerLink="/mes-rendez-vous" style="color:var(--blue-d);font-weight:700">Voir mes rendez-vous</a>
       </p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
-      <p *ngIf="charge()">Chargement…</p>
+      <p *ngIf="charge()" style="color:var(--text3)">Chargement…</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let c of creneaux()"
-            style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <span>
-            <strong>{{ c.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
-            <span style="color:#566b64">({{ c.dureeMinutes }} min)</span>
+            <strong style="color:var(--ink)"><i class="fa fa-calendar-day fa-xs" style="color:var(--blue)"></i> {{ c.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
+            <span style="color:var(--text3)"> · {{ c.dureeMinutes }} min</span>
           </span>
-          <button (click)="reserver(c)" [disabled]="enCours() !== null"
-                  style="padding:10px 16px;background:var(--vert);color:#fff;border:0;border-radius:8px">
+          <button class="btn btn-primary btn-sm" (click)="reserver(c)" [disabled]="enCours() !== null">
             {{ enCours() === c.id ? 'Réservation…' : 'Réserver' }}
           </button>
         </li>
       </ul>
-      <p *ngIf="!charge() && !erreur() && creneaux().length === 0">Aucun créneau disponible pour le moment.</p>
+      <p *ngIf="!charge() && !erreur() && creneaux().length === 0" style="color:var(--text3)">Aucun créneau disponible pour le moment.</p>
 
-      <section *ngIf="!charge()" [style.margin]="creneaux().length === 0 ? '8px 0 0' : '24px 0 0'"
-               style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;background:#f8faf9">
-        <h2 style="font-size:1.05rem;margin:0 0 6px">Liste d'attente</h2>
-        <p style="color:#566b64;margin:0 0 12px">
+      <section *ngIf="!charge()" [style.margin]="creneaux().length === 0 ? '12px 0 0' : '24px 0 0'"
+               style="background:var(--blue-l);border:1px solid var(--border);border-radius:var(--r16);padding:18px">
+        <h2 style="font-size:1.05rem;margin:0 0 6px;color:var(--ink)">Liste d'attente</h2>
+        <p style="color:var(--text2);margin:0 0 12px;font-size:14px">
           {{ creneaux().length === 0 ? 'Aucun créneau ne vous est proposé ?' : 'Aucun créneau ne vous convient ?' }}
           Inscrivez-vous sur la liste d'attente de ce praticien. Vous serez notifié dès qu'un créneau se libère.
         </p>
-        <p *ngIf="inscription()" style="color:var(--vert);margin:0">
+        <p *ngIf="inscription()" style="color:var(--blue-d);margin:0;font-weight:600">
           {{ inscription() }}
-          <a routerLink="/liste-attente" style="color:var(--vert)">Voir mes listes d'attente</a>
+          <a routerLink="/liste-attente" style="color:var(--blue-d)">Voir mes listes d'attente</a>
         </p>
-        <button *ngIf="!inscription()" type="button" class="bouton-secondaire" (click)="inscrire()" [disabled]="inscriptionEnCours()">
-          {{ inscriptionEnCours() ? 'Inscription…' : "M'inscrire sur la liste d'attente" }}
+        <button *ngIf="!inscription()" type="button" class="btn" style="background:#fff;border:1.5px solid var(--border);color:var(--ink)" (click)="inscrire()" [disabled]="inscriptionEnCours()">
+          <i class="fa fa-bell"></i> {{ inscriptionEnCours() ? 'Inscription…' : "M'inscrire sur la liste d'attente" }}
         </button>
         <p *ngIf="erreurInscription()" style="color:#b3261e;margin:12px 0 0">{{ erreurInscription() }}</p>
       </section>
@@ -109,6 +116,13 @@ export class FicheMedecinComponent implements OnInit {
 
   ngOnInit() {
     this.route.paramMap.subscribe((params) => this.charger(params.get('id') ?? ''));
+  }
+
+  /** Monogramme (1 ou 2 lettres) a partir du nom, pour l'avatar. */
+  initiales(nom: string): string {
+    const mots = (nom || '').replace(/^(Dr|Dre|Docteur|Pr|Professeur)\.?\s+/i, '').trim().split(/\s+/);
+    const lettres = mots.filter((x) => /\p{L}/u.test(x[0] || '')).slice(0, 2).map((x) => x[0].toUpperCase());
+    return lettres.join('') || '•';
   }
 
   private charger(id: string) {

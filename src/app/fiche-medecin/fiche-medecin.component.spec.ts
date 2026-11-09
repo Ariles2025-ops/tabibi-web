@@ -108,7 +108,8 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
     await afficher();
 
     expect(texte()).toContain('Dr Amina Belkacem');
-    expect(texte()).toContain('Généraliste · Alger (Alger)');
+    expect(texte()).toContain('Généraliste');
+    expect(texte()).toContain('Alger (Alger)');
     expect(boutonEcrire()).toBeDefined();
 
     boutonEcrire()!.click();
