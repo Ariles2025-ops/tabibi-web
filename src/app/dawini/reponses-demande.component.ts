@@ -41,7 +41,7 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } fro
 
         <h2 style="font-size:1.1rem;margin:0 0 12px">Réponses des pharmacies</h2>
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-          <li *ngFor="let r of reponses()" style="border:1px solid var(--border);border-radius:12px;padding:14px">
+          <li *ngFor="let r of reponses()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
             <strong>{{ r.nomPharmacie }}</strong>
             <span [style.color]="r.disponible ? 'var(--vert)' : '#b3261e'"> · {{ r.disponible ? 'Disponible' : 'Indisponible' }}</span>
             <span *ngIf="r.prixDa !== null" style="color:var(--text3)"> · {{ prix(r.prixDa) }}</span>

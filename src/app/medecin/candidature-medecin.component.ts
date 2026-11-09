@@ -36,7 +36,7 @@ function formulaireVide(): DemandeCandidature {
       <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
-      <section *ngIf="candidature() as c" style="border:1px solid var(--border);border-radius:12px;padding:14px;margin:0 0 20px">
+      <section *ngIf="candidature() as c" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;margin:0 0 20px">
         <strong>{{ c.nomComplet }}</strong>
         <span style="color:var(--text3)"> · {{ libelleStatut(c.statut) }}</span><br>
         <span style="color:var(--text3)">

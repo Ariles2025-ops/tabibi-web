@@ -51,7 +51,7 @@ function formulaireVide(): FormulaireReponse {
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-        <li *ngFor="let b of besoins()" style="border:1px solid var(--border);border-radius:12px;padding:14px">
+        <li *ngFor="let b of besoins()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
           <strong>{{ b.medicament }}</strong>
           <span style="color:var(--text3)">
             · Wilaya {{ b.wilayaCode }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>

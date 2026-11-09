@@ -29,7 +29,7 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let i of inscriptions()"
-              style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+              style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <a [routerLink]="['/medecins', i.medecinId]" style="color:var(--vert);font-weight:600">{{ noms()[i.medecinId] ?? 'Voir le praticien' }}</a><br>
               <span style="color:var(--text3)">Inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>

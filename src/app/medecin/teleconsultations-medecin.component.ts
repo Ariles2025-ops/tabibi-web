@@ -27,7 +27,7 @@ type Action = 'demarrer' | 'terminer' | 'annuler';
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let t of teleconsultations()"
-            style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div>
             <strong *ngIf="datesRendezVous()[t.rendezVousId] as debut">Rendez-vous du {{ debut | date:'EEEE d MMMM à HH:mm' }}</strong>
             <strong *ngIf="!datesRendezVous()[t.rendezVousId]">Proposée le {{ t.creeLe | date:'EEEE d MMMM à HH:mm' }}</strong>

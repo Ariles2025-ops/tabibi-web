@@ -49,7 +49,7 @@ interface CreneauOuvert {
       </p>
 
       <ng-container *ngIf="medecinId()">
-        <section style="border:1px solid var(--border);border-radius:12px;padding:14px;margin:0 0 24px;background:#f8faf9">
+        <section style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;margin:0 0 24px;background:#f8faf9">
           <h2 style="font-size:1.1rem;margin:0 0 12px">Ouvrir un créneau</h2>
           <form (ngSubmit)="ouvrir()" #f="ngForm" style="display:grid;gap:12px;max-width:360px">
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
@@ -81,7 +81,7 @@ interface CreneauOuvert {
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let r of rendezVous()"
-              style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+              style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <strong>{{ r.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
               <span style="color:var(--text3)"> · {{ libelleStatut(r.statut) }}</span><br>

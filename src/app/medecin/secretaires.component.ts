@@ -42,7 +42,7 @@ import { MedecinService } from './medecin.service';
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let r of rattachements()"
-            style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div>
             <code style="font-size:.95rem">{{ r.secretaireId }}</code><br>
             <span style="color:var(--text3)">Rattachée le {{ r.creeLe | date:'d MMMM yyyy à HH:mm' }}</span>

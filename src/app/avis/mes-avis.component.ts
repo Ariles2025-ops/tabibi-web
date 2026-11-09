@@ -22,7 +22,7 @@ import { Avis, AvisService, libelleStatutAvis } from './avis.service';
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-          <li *ngFor="let a of avis()" style="border:1px solid var(--border);border-radius:12px;padding:14px">
+          <li *ngFor="let a of avis()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
             <strong>{{ a.note }} / 5</strong>
             <span style="color:var(--text3)"> · {{ libelleStatut(a.statut) }} · {{ a.deposeLe | date:'d MMMM yyyy' }}</span><br>
             <a [routerLink]="['/medecins', a.medecinId]" style="color:var(--vert)">{{ noms()[a.medecinId] ?? 'Voir le praticien' }}</a>

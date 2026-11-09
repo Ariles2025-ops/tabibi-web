@@ -35,7 +35,7 @@ interface LigneSaisie extends LigneOrdonnance {
 
         <h2 style="font-size:1.1rem;margin:8px 0 0">Prescription</h2>
         <div *ngFor="let l of lignes; let i = index; trackBy: parCle"
-             style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;border:1px solid var(--border);border-radius:12px;padding:12px">
+             style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px">
           <label style="flex:2;min-width:160px;display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Médicament
             <input class="champ" [(ngModel)]="l.medicament" [name]="'medicament-' + l.cle" required

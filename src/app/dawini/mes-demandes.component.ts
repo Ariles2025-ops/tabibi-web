@@ -63,7 +63,7 @@ function formulaireVide(): Required<DemandeBesoin> {
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-          <li *ngFor="let b of besoins()" style="border:1px solid var(--border);border-radius:12px">
+          <li *ngFor="let b of besoins()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px">
             <a [routerLink]="['/dawini', b.id]"
                style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px;color:inherit;text-decoration:none">
               <span>

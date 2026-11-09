@@ -28,7 +28,7 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let a of avis()"
-            style="border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div>
             <strong>{{ a.note }} / 5</strong>
             <span style="color:var(--text3)"> · {{ a.deposeLe | date:'d MMMM yyyy' }}</span>
