@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './auth/auth.service';
@@ -15,13 +15,13 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
         <a class="side__brand" routerLink="/">tabibi<i>.</i></a>
         <nav class="side__nav">
           <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
-          <a routerLink="/mes-rendez-vous" routerLinkActive="actif">Mes rendez-vous</a>
-          <a *ngIf="connecte()" routerLink="/mes-ordonnances" routerLinkActive="actif">Mes ordonnances</a>
-          <a *ngIf="connecte()" routerLink="/teleconsultations" routerLinkActive="actif">Mes téléconsultations</a>
-          <a *ngIf="connecte()" routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
-          <a *ngIf="connecte()" routerLink="/mes-avis" routerLinkActive="actif">Mes avis</a>
-          <a *ngIf="connecte()" routerLink="/dawini" routerLinkActive="actif">Dawini</a>
-          <a *ngIf="connecte()" routerLink="/liste-attente" routerLinkActive="actif">Mes listes d'attente</a>
+          <a *ngIf="estPatient()" routerLink="/mes-rendez-vous" routerLinkActive="actif">Mes rendez-vous</a>
+          <a *ngIf="estPatient()" routerLink="/mes-ordonnances" routerLinkActive="actif">Mes ordonnances</a>
+          <a *ngIf="estPatient()" routerLink="/teleconsultations" routerLinkActive="actif">Mes téléconsultations</a>
+          <a *ngIf="estPatient()" routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
+          <a *ngIf="estPatient()" routerLink="/mes-avis" routerLinkActive="actif">Mes avis</a>
+          <a *ngIf="estPatient()" routerLink="/dawini" routerLinkActive="actif">Dawini</a>
+          <a *ngIf="estPatient()" routerLink="/liste-attente" routerLinkActive="actif">Mes listes d'attente</a>
           <a routerLink="/verifier" routerLinkActive="actif">Vérifier une ordonnance</a>
 
           <div *ngIf="estMedecin()" class="side__group">
@@ -86,6 +86,13 @@ export class AppComponent implements OnInit {
   estPharmacie = this.roleService.estPharmacie;
   /** Vrai si l'utilisateur connecte a le role SECRETAIRE (section « Espace secrétaire », cabinet). */
   estSecretaire = this.roleService.estSecretaire;
+  /**
+   * Patient « pur » : connecte sans role professionnel ni admin. Les comptes medecin / admin / pharmacie /
+   * secretaire ont aussi le role PATIENT par defaut ; on leur masque le menu patient pour n'afficher que leur espace.
+   */
+  estPatient = computed(() =>
+    this.connecte() && !this.estMedecin() && !this.estAdmin() && !this.estPharmacie() && !this.estSecretaire(),
+  );
 
   /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()), puis roles. */
   async ngOnInit() {
