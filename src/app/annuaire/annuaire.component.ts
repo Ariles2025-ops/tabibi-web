@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Subject, Subscription, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { AnnuaireService, Medecin } from './annuaire.service';
 
 /**
@@ -19,10 +20,19 @@ import { AnnuaireService, Medecin } from './annuaire.service';
           <div class="hero-badge"><span class="hero-dot" aria-hidden="true"></span><span>75 000+ médecins référencés en Algérie</span></div>
           <h1 class="hero-title">Votre santé ne devrait jamais attendre.</h1>
           <p class="hero-sub">Prenez rendez-vous avec un médecin partout en Algérie — 69 wilayas, 24h/24.</p>
-          <div class="hero-search-wrap">
+          <div class="hero-search-wrap" style="position:relative">
             <i class="hero-si fa fa-search" aria-hidden="true"></i>
-            <input class="hero-search" type="search" [(ngModel)]="q" (input)="rechercheDifferee()"
-                   placeholder="Dr. Benali, Cardiologie, Alger..." autocomplete="off" aria-label="Rechercher un médecin">
+            <input class="hero-search" type="search" [(ngModel)]="q" (input)="surSaisie()" (focus)="surFocus()" (blur)="masquerBientot()"
+                   placeholder="Dr. Benali, Cardiologie, Alger..." autocomplete="off" aria-label="Rechercher un médecin"
+                   role="combobox" aria-autocomplete="list" aria-controls="ac-suggestions" [attr.aria-expanded]="suggestionsVisibles() && suggestions().length > 0">
+            <ul id="ac-suggestions" class="ac-liste" role="listbox" *ngIf="suggestionsVisibles() && suggestions().length">
+              <li *ngFor="let s of suggestions()" role="option">
+                <a class="ac-item" [routerLink]="['/medecins', s.id]" (click)="choisirSuggestion()">
+                  <span class="ac-nom" dir="auto">{{ s.nomComplet }}</span>
+                  <span class="ac-meta">{{ s.specialiteFr }} · {{ s.wilayaFr }}</span>
+                </a>
+              </li>
+            </ul>
           </div>
           <div class="v4-paynote"><i class="fa fa-credit-card" aria-hidden="true"></i> <span>Paiement au cabinet — espèces ou carte Chifa. Aucun prépaiement en ligne.</span></div>
         </div>
@@ -198,19 +208,87 @@ import { AnnuaireService, Medecin } from './annuaire.service';
       </div>
     </section>
   `,
+  styles: [`
+    .ac-liste { position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:40; margin:0; padding:6px; list-style:none; background:#fff; border:1px solid var(--border); border-radius:var(--r12); box-shadow:var(--s1); max-height:340px; overflow-y:auto; }
+    .ac-item { display:flex; flex-direction:column; gap:2px; padding:9px 12px; border-radius:8px; text-decoration:none; color:var(--ink); }
+    .ac-item:hover, .ac-item:focus { background:#E7F1EC; outline:none; }
+    .ac-nom { font-weight:700; line-height:1.25; }
+    .ac-meta { font-size:12px; color:var(--text3); }
+  `],
 })
-export class AnnuaireComponent implements OnInit {
+export class AnnuaireComponent implements OnInit, OnDestroy {
   private service = inject(AnnuaireService);
+  private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
   q = ''; specialite = ''; wilaya = '';
   resultats = signal<Medecin[]>([]);
   charge = signal(false);
   erreur = signal('');
   private minuteur: any;
 
+  /** Suggestions d'autocompletion affichees sous le champ (max 6). */
+  suggestions = signal<Medecin[]>([]);
+  suggestionsVisibles = signal(false);
+  /** Frappes successives dans le champ, pour l'autocompletion differee (debounce). */
+  private saisie = new Subject<string>();
+  private abonnementAuto: Subscription | null = null;
+  private masquage: any;
+
   /** Vrai des que l'utilisateur a saisi une recherche : on masque le marketing pour montrer les resultats tout de suite. */
   get enRecherche(): boolean { return this.q.trim().length > 0; }
 
-  ngOnInit() { this.rechercher(); }
+  ngOnInit() {
+    this.rechercher();
+    // L'autocompletion n'est active que dans le navigateur : cote serveur (SSR), aucun flux debounce ne doit tourner.
+    if (!this.navigateur) return;
+    this.abonnementAuto = this.saisie
+      .pipe(
+        debounceTime(250),
+        map((t) => t.trim()),
+        distinctUntilChanged(),
+        switchMap((t) =>
+          t.length < 2
+            ? of<Medecin[]>([])
+            : this.service.rechercher(undefined, undefined, t).pipe(
+                map((liste) => liste.slice(0, 6)),
+                catchError(() => of<Medecin[]>([])),
+              ),
+        ),
+      )
+      .subscribe((liste) => {
+        this.suggestions.set(liste);
+        this.suggestionsVisibles.set(liste.length > 0);
+      });
+  }
+
+  ngOnDestroy() {
+    this.abonnementAuto?.unsubscribe();
+    this.abonnementAuto = null;
+    clearTimeout(this.minuteur);
+    clearTimeout(this.masquage);
+  }
+
+  /** Frappe dans le champ : relance la liste principale (differee) et alimente l'autocompletion. */
+  surSaisie() {
+    this.rechercheDifferee();
+    this.suggestionsVisibles.set(true);
+    this.saisie.next(this.q);
+  }
+
+  /** Focus : reaffiche les suggestions deja chargees si le champ en a. */
+  surFocus() {
+    if (this.suggestions().length) this.suggestionsVisibles.set(true);
+  }
+
+  /** Masque la liste apres un court delai, le temps de laisser passer le clic sur une suggestion. */
+  masquerBientot() {
+    clearTimeout(this.masquage);
+    this.masquage = setTimeout(() => this.suggestionsVisibles.set(false), 150);
+  }
+
+  /** Clic sur une suggestion : la navigation est geree par routerLink, on ferme juste la liste. */
+  choisirSuggestion() {
+    this.suggestionsVisibles.set(false);
+  }
 
   /** Attend un court instant apres la frappe avant de lancer la recherche. */
   rechercheDifferee() {

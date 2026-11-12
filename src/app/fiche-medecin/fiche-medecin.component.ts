@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -49,18 +49,18 @@ import { MessagerieService } from '../messagerie/messagerie.service';
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
       <p *ngIf="charge()" style="color:var(--text3)">Chargement…</p>
 
-      <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-        <li *ngFor="let c of creneaux()"
-            style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-          <span>
-            <strong style="color:var(--ink)"><i class="fa fa-calendar-day fa-xs" style="color:var(--blue)"></i> {{ c.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
-            <span style="color:var(--text3)"> · {{ c.dureeMinutes }} min</span>
-          </span>
-          <button class="btn btn-primary" (click)="reserver(c)" [disabled]="enCours() !== null">
-            {{ enCours() === c.id ? 'Réservation…' : 'Réserver' }}
-          </button>
-        </li>
-      </ul>
+      <div *ngIf="joursCreneaux().length" class="cal-jours">
+        <div class="cal-jour" *ngFor="let j of joursCreneaux()">
+          <div class="cal-date">{{ j.date | date:'EEE d MMM' }}</div>
+          <div class="cal-horaires">
+            <button type="button" class="cal-slot" *ngFor="let c of j.creneaux"
+                    (click)="reserver(c)" [disabled]="enCours() !== null"
+                    [attr.aria-label]="'Réserver le ' + (c.debut | date:'EEEE d MMMM à HH:mm')" dir="ltr">
+              {{ enCours() === c.id ? '…' : (c.debut | date:'HH:mm') }}
+            </button>
+          </div>
+        </div>
+      </div>
       <p *ngIf="!charge() && !erreur() && creneaux().length === 0" style="color:var(--text3)">Aucun créneau disponible pour le moment.</p>
 
       <section *ngIf="!charge()" [style.margin]="creneaux().length === 0 ? '12px 0 0' : '24px 0 0'"
@@ -85,6 +85,16 @@ import { MessagerieService } from '../messagerie/messagerie.service';
       </div>
     </main>
   `,
+  styles: [`
+    /* Creneaux en grille par jour : chaque jour est une colonne qui defile horizontalement sur mobile. */
+    .cal-jours { display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; -webkit-overflow-scrolling:touch; }
+    .cal-jour { flex:0 0 auto; width:128px; background:#fff; border:1px solid var(--border); border-radius:var(--r12); box-shadow:var(--s1); padding:12px 10px; }
+    .cal-date { font-weight:700; color:var(--ink); text-align:center; text-transform:capitalize; padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid var(--border); }
+    .cal-horaires { display:flex; flex-direction:column; gap:8px; }
+    .cal-slot { padding:9px 6px; background:#fff; border:1.5px solid var(--vert); border-radius:10px; color:var(--vert); font:inherit; font-weight:700; cursor:pointer; }
+    .cal-slot:hover:not(:disabled) { background:var(--vert); color:#fff; }
+    .cal-slot:disabled { opacity:.5; cursor:default; }
+  `],
 })
 export class FicheMedecinComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -100,6 +110,21 @@ export class FicheMedecinComponent implements OnInit {
   /** Vrai si la fiche n'appartient a aucun compte : on propose au praticien de la reclamer. */
   reclamable = signal(false);
   creneaux = signal<Creneau[]>([]);
+  /**
+   * Creneaux regroupes par jour pour l'affichage en grille (une colonne par date).
+   * `creneaux()` est deja trie par date croissante, donc les jours et leurs horaires restent dans l'ordre.
+   */
+  joursCreneaux = computed<{ date: string; creneaux: Creneau[] }[]>(() => {
+    const groupes = new Map<string, { date: string; creneaux: Creneau[] }>();
+    for (const c of this.creneaux()) {
+      const d = new Date(c.debut);
+      const cle = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      let groupe = groupes.get(cle);
+      if (!groupe) { groupe = { date: c.debut, creneaux: [] }; groupes.set(cle, groupe); }
+      groupe.creneaux.push(c);
+    }
+    return Array.from(groupes.values());
+  });
   charge = signal(false);
   /** Identifiant du creneau dont la reservation est en cours. */
   enCours = signal<string | null>(null);
