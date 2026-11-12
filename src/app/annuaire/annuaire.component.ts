@@ -18,7 +18,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
         <div class="hero-col-l">
           <div class="hero-badge"><span class="hero-dot" aria-hidden="true"></span><span>75 000+ médecins référencés en Algérie</span></div>
           <h1 class="hero-title">Votre santé ne devrait jamais attendre.</h1>
-          <p class="hero-sub">Prenez rendez-vous avec un médecin partout en Algérie — 58 wilayas, 24h/24.</p>
+          <p class="hero-sub">Prenez rendez-vous avec un médecin partout en Algérie — 69 wilayas, 24h/24.</p>
           <div class="hero-search-wrap">
             <i class="hero-si fa fa-search" aria-hidden="true"></i>
             <input class="hero-search" type="search" [(ngModel)]="q" (input)="rechercheDifferee()"
@@ -29,7 +29,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
 
         <div class="hero-stats" *ngIf="!enRecherche">
           <div class="hero-stat"><div class="hs-n">75 000+</div><div class="hs-l">Médecins référencés</div></div>
-          <div class="hero-stat"><div class="hs-n">58</div><div class="hs-l">Wilayas</div></div>
+          <div class="hero-stat"><div class="hs-n">69</div><div class="hs-l">Wilayas</div></div>
           <div class="hero-stat"><div class="hs-n">24/7</div><div class="hs-l">Réservation</div></div>
         </div>
 
@@ -172,7 +172,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
       <div style="padding:0 var(--gutter)">
         <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;box-shadow:var(--s1)">
           <div style="text-align:center"><div style="font-size:28px;font-weight:800;color:var(--blue)">75 000+</div><div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">Médecins référencés</div></div>
-          <div style="text-align:center;border-left:1px solid var(--border)"><div style="font-size:28px;font-weight:800;color:var(--blue)">58</div><div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">Wilayas</div></div>
+          <div style="text-align:center;border-left:1px solid var(--border)"><div style="font-size:28px;font-weight:800;color:var(--blue)">69</div><div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">Wilayas</div></div>
         </div>
       </div>
     </section>
