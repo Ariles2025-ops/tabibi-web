@@ -1,9 +1,17 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Subject, Subscription, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { AnnuaireService, Medecin } from './annuaire.service';
+
+/** Une wilaya du referentiel (assets/referentiel.json) : code officiel + libelle FR. */
+interface OptionWilaya { code: string; nom: string; }
+/** Une specialite du referentiel : slug utilise par l'API + libelle FR. */
+interface OptionSpecialite { slug: string; nom: string; }
+/** Contenu de assets/referentiel.json. */
+interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]; }
 
 /**
  * Accueil public : le design (hero, cartes) est repris tel quel de l'ancien site
@@ -33,6 +41,22 @@ import { AnnuaireService, Medecin } from './annuaire.service';
                 </a>
               </li>
             </ul>
+          </div>
+          <div class="rech-filtres">
+            <label class="rf-field">
+              <span class="rf-ic" aria-hidden="true"><i class="fa fa-stethoscope"></i></span>
+              <select class="rf-select" [(ngModel)]="specialite" (change)="surFiltre()" aria-label="Filtrer par spécialité">
+                <option value="">Toutes les spécialités</option>
+                <option *ngFor="let s of specialites()" [value]="s.slug">{{ s.nom }}</option>
+              </select>
+            </label>
+            <label class="rf-field">
+              <span class="rf-ic" aria-hidden="true"><i class="fa fa-location-dot"></i></span>
+              <select class="rf-select" [(ngModel)]="wilaya" (change)="surFiltre()" aria-label="Filtrer par wilaya">
+                <option value="">Toutes les wilayas</option>
+                <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.nom }}</option>
+              </select>
+            </label>
           </div>
           <div class="v4-paynote"><i class="fa fa-credit-card" aria-hidden="true"></i> <span>Paiement au cabinet — espèces ou carte Chifa. Aucun prépaiement en ligne.</span></div>
         </div>
@@ -214,12 +238,34 @@ import { AnnuaireService, Medecin } from './annuaire.service';
     .ac-item:hover, .ac-item:focus { background:#E7F1EC; outline:none; }
     .ac-nom { font-weight:700; line-height:1.25; }
     .ac-meta { font-size:12px; color:var(--text3); }
+
+    /* Recherche structuree facon Doctolib : deux listes sous le champ texte. */
+    .rech-filtres { display:flex; gap:10px; margin-top:12px; }
+    .rf-field { position:relative; flex:1 1 0; min-width:0; display:block; }
+    .rf-ic { position:absolute; top:50%; left:14px; transform:translateY(-50%); color:var(--vert); font-size:14px; line-height:1; pointer-events:none; }
+    [dir="rtl"] .rf-ic { left:auto; right:14px; }
+    .rf-select {
+      width:100%; appearance:none; -webkit-appearance:none;
+      background-color:#fff; color:var(--ink); font:inherit; font-size:14px;
+      border:1px solid var(--border); border-radius:var(--r16); box-shadow:var(--s1);
+      padding:14px 38px 14px 40px; cursor:pointer;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="%23D4A437" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+      background-repeat:no-repeat; background-position:right 14px center;
+      transition:box-shadow .2s, border-color .15s;
+    }
+    [dir="rtl"] .rf-select { padding:14px 40px 14px 38px; background-position:left 14px center; }
+    .rf-select:focus { outline:none; border-color:var(--vert); box-shadow:0 0 0 3px rgba(15,117,96,.14); }
+    @media (max-width:640px) { .rech-filtres { flex-direction:column; } }
   `],
 })
 export class AnnuaireComponent implements OnInit, OnDestroy {
   private service = inject(AnnuaireService);
+  private http = inject(HttpClient);
   private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
   q = ''; specialite = ''; wilaya = '';
+  /** Listes du referentiel (assets/referentiel.json) qui alimentent les deux <select>. */
+  wilayas = signal<OptionWilaya[]>([]);
+  specialites = signal<OptionSpecialite[]>([]);
   resultats = signal<Medecin[]>([]);
   charge = signal(false);
   erreur = signal('');
@@ -233,10 +279,18 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   private abonnementAuto: Subscription | null = null;
   private masquage: any;
 
-  /** Vrai des que l'utilisateur a saisi une recherche : on masque le marketing pour montrer les resultats tout de suite. */
-  get enRecherche(): boolean { return this.q.trim().length > 0; }
+  /** Vrai des que l'utilisateur a saisi un texte ou choisi un filtre : on masque le marketing pour montrer les resultats tout de suite. */
+  get enRecherche(): boolean { return this.q.trim().length > 0 || !!this.specialite || !!this.wilaya; }
 
   ngOnInit() {
+    // Charge le referentiel wilayas/specialites. URL relative : SSR-safe, et catchError evite tout plantage si le fichier est indisponible.
+    this.http
+      .get<Referentiel>('/assets/referentiel.json')
+      .pipe(catchError(() => of<Referentiel>({ wilayas: [], specialites: [] })))
+      .subscribe((ref) => {
+        this.wilayas.set(ref?.wilayas ?? []);
+        this.specialites.set(ref?.specialites ?? []);
+      });
     this.rechercher();
     // L'autocompletion n'est active que dans le navigateur : cote serveur (SSR), aucun flux debounce ne doit tourner.
     if (!this.navigateur) return;
@@ -288,6 +342,12 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   /** Clic sur une suggestion : la navigation est geree par routerLink, on ferme juste la liste. */
   choisirSuggestion() {
     this.suggestionsVisibles.set(false);
+  }
+
+  /** Changement d'un des deux <select> : ferme l'autocompletion et relance la recherche combinee (texte + specialite + wilaya). */
+  surFiltre() {
+    this.suggestionsVisibles.set(false);
+    this.rechercher();
   }
 
   /** Attend un court instant apres la frappe avant de lancer la recherche. */

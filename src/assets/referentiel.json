@@ -1,0 +1,426 @@
+{
+"wilayas": [
+{
+"code": "1",
+"nom": "Adrar"
+},
+{
+"code": "2",
+"nom": "Chlef"
+},
+{
+"code": "3",
+"nom": "Laghouat"
+},
+{
+"code": "4",
+"nom": "Oum El Bouaghi"
+},
+{
+"code": "5",
+"nom": "Batna"
+},
+{
+"code": "6",
+"nom": "Béjaïa"
+},
+{
+"code": "7",
+"nom": "Biskra"
+},
+{
+"code": "8",
+"nom": "Béchar"
+},
+{
+"code": "9",
+"nom": "Blida"
+},
+{
+"code": "10",
+"nom": "Bouira"
+},
+{
+"code": "11",
+"nom": "Tamanrasset"
+},
+{
+"code": "12",
+"nom": "Tébessa"
+},
+{
+"code": "13",
+"nom": "Tlemcen"
+},
+{
+"code": "14",
+"nom": "Tiaret"
+},
+{
+"code": "15",
+"nom": "Tizi Ouzou"
+},
+{
+"code": "16",
+"nom": "Alger"
+},
+{
+"code": "17",
+"nom": "Djelfa"
+},
+{
+"code": "18",
+"nom": "Jijel"
+},
+{
+"code": "19",
+"nom": "Sétif"
+},
+{
+"code": "20",
+"nom": "Saïda"
+},
+{
+"code": "21",
+"nom": "Skikda"
+},
+{
+"code": "22",
+"nom": "Sidi Bel Abbès"
+},
+{
+"code": "23",
+"nom": "Annaba"
+},
+{
+"code": "24",
+"nom": "Guelma"
+},
+{
+"code": "25",
+"nom": "Constantine"
+},
+{
+"code": "26",
+"nom": "Médéa"
+},
+{
+"code": "27",
+"nom": "Mostaganem"
+},
+{
+"code": "28",
+"nom": "M'Sila"
+},
+{
+"code": "29",
+"nom": "Mascara"
+},
+{
+"code": "30",
+"nom": "Ouargla"
+},
+{
+"code": "31",
+"nom": "Oran"
+},
+{
+"code": "32",
+"nom": "El Bayadh"
+},
+{
+"code": "33",
+"nom": "Illizi"
+},
+{
+"code": "34",
+"nom": "Bordj Bou Arréridj"
+},
+{
+"code": "35",
+"nom": "Boumerdès"
+},
+{
+"code": "36",
+"nom": "El Tarf"
+},
+{
+"code": "37",
+"nom": "Tindouf"
+},
+{
+"code": "38",
+"nom": "Tissemsilt"
+},
+{
+"code": "39",
+"nom": "El Oued"
+},
+{
+"code": "40",
+"nom": "Khenchela"
+},
+{
+"code": "41",
+"nom": "Souk Ahras"
+},
+{
+"code": "42",
+"nom": "Tipaza"
+},
+{
+"code": "43",
+"nom": "Mila"
+},
+{
+"code": "44",
+"nom": "Aïn Defla"
+},
+{
+"code": "45",
+"nom": "Naâma"
+},
+{
+"code": "46",
+"nom": "Aïn Témouchent"
+},
+{
+"code": "47",
+"nom": "Ghardaïa"
+},
+{
+"code": "48",
+"nom": "Relizane"
+},
+{
+"code": "49",
+"nom": "Timimoun"
+},
+{
+"code": "51",
+"nom": "Ouled Djellal"
+},
+{
+"code": "52",
+"nom": "Béni Abbès"
+},
+{
+"code": "53",
+"nom": "In Salah"
+},
+{
+"code": "55",
+"nom": "Touggourt"
+},
+{
+"code": "56",
+"nom": "Djanet"
+},
+{
+"code": "57",
+"nom": "El M'Ghair"
+},
+{
+"code": "58",
+"nom": "El Meniaa"
+},
+{
+"code": "59",
+"nom": "Aflou"
+},
+{
+"code": "60",
+"nom": "Barika"
+},
+{
+"code": "61",
+"nom": "El Kantara"
+},
+{
+"code": "62",
+"nom": "Bir El Ater"
+},
+{
+"code": "63",
+"nom": "El Aricha"
+},
+{
+"code": "64",
+"nom": "Ksar Chellala"
+},
+{
+"code": "65",
+"nom": "Aïn Ouessara"
+},
+{
+"code": "66",
+"nom": "Messaad"
+},
+{
+"code": "67",
+"nom": "Ksar El Boukhari"
+},
+{
+"code": "68",
+"nom": "Bou Saâda"
+}
+],
+"specialites": [
+{
+"slug": "allergologue",
+"nom": "Allergologue"
+},
+{
+"slug": "anesthesiste",
+"nom": "Anesthésiste-réanimateur"
+},
+{
+"slug": "autre",
+"nom": "Autre"
+},
+{
+"slug": "cardiologue",
+"nom": "Cardiologue"
+},
+{
+"slug": "centre-sante",
+"nom": "Centre de santé"
+},
+{
+"slug": "chirurgien",
+"nom": "Chirurgien général"
+},
+{
+"slug": "chirurgien-orthopediste",
+"nom": "Chirurgien orthopédiste"
+},
+{
+"slug": "clinique-privee",
+"nom": "Clinique privée"
+},
+{
+"slug": "dentiste",
+"nom": "Dentiste"
+},
+{
+"slug": "dermatologue",
+"nom": "Dermatologue"
+},
+{
+"slug": "endocrinologue",
+"nom": "Endocrinologue"
+},
+{
+"slug": "gastro-enterologue",
+"nom": "Gastro-entérologue"
+},
+{
+"slug": "gynecologue",
+"nom": "Gynécologue"
+},
+{
+"slug": "hematologue",
+"nom": "Hématologue"
+},
+{
+"slug": "hopital",
+"nom": "Hôpital"
+},
+{
+"slug": "kinesitherapeute",
+"nom": "Kinésithérapeute"
+},
+{
+"slug": "laboratoire",
+"nom": "Laboratoire d'analyses"
+},
+{
+"slug": "medecin-sport",
+"nom": "Médecin du sport"
+},
+{
+"slug": "medecin-travail",
+"nom": "Médecin du travail"
+},
+{
+"slug": "medecin-generaliste",
+"nom": "Médecin généraliste"
+},
+{
+"slug": "neurologue",
+"nom": "Neurologue"
+},
+{
+"slug": "nutritionniste",
+"nom": "Nutritionniste"
+},
+{
+"slug": "nephrologue",
+"nom": "Néphrologue"
+},
+{
+"slug": "ORL",
+"nom": "ORL"
+},
+{
+"slug": "oncologue",
+"nom": "Oncologue"
+},
+{
+"slug": "ophtalmologue",
+"nom": "Ophtalmologue"
+},
+{
+"slug": "opticien",
+"nom": "Opticien"
+},
+{
+"slug": "orthodontiste",
+"nom": "Orthodontiste"
+},
+{
+"slug": "orthophoniste",
+"nom": "Orthophoniste"
+},
+{
+"slug": "orthopediste",
+"nom": "Orthopédiste"
+},
+{
+"slug": "pharmacie",
+"nom": "Pharmacie"
+},
+{
+"slug": "pneumologue",
+"nom": "Pneumologue"
+},
+{
+"slug": "podologue",
+"nom": "Podologue"
+},
+{
+"slug": "psychiatre",
+"nom": "Psychiatre"
+},
+{
+"slug": "pediatre",
+"nom": "Pédiatre"
+},
+{
+"slug": "radiologue",
+"nom": "Radiologue"
+},
+{
+"slug": "rhumatologue",
+"nom": "Rhumatologue"
+},
+{
+"slug": "sage-femme",
+"nom": "Sage-femme"
+},
+{
+"slug": "urologue",
+"nom": "Urologue"
+}
+]
+}
