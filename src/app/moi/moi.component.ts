@@ -15,7 +15,13 @@ import { RoleService } from '../auth/role.service';
   template: `
     <main style="max-width:640px;margin:40px auto;padding:0 16px">
       <h1 style="color:var(--vert)">Mon compte</h1>
-      <button *ngIf="!connecte()" type="button" class="bouton" (click)="seConnecter()">Se connecter</button>
+      <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:12px;max-width:380px">
+        <button type="button" class="bouton" (click)="seConnecter()">Créer un compte</button>
+        <button type="button" class="bouton-secondaire" (click)="seConnecter()">J'ai déjà un compte — Se connecter</button>
+        <p style="color:var(--text3);font-size:.9rem;margin:4px 0 0">
+          Nouveau patient ? Cliquez <b>« Créer un compte »</b>, saisissez votre numéro de téléphone et validez le code reçu par SMS : votre compte est créé automatiquement.
+        </p>
+      </div>
       <div *ngIf="connecte()">
         <p>Connecté en tant que <b>{{ moi()?.nom }}</b></p>
         <p>Rôles : {{ moi()?.roles?.join(', ') }}</p>
