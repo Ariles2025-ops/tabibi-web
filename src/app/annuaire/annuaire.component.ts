@@ -27,13 +27,13 @@ import { AnnuaireService, Medecin } from './annuaire.service';
           <div class="v4-paynote"><i class="fa fa-credit-card" aria-hidden="true"></i> <span>Paiement au cabinet — espèces ou carte Chifa. Aucun prépaiement en ligne.</span></div>
         </div>
 
-        <div class="hero-stats">
+        <div class="hero-stats" *ngIf="!enRecherche">
           <div class="hero-stat"><div class="hs-n">75 000+</div><div class="hs-l">Médecins référencés</div></div>
           <div class="hero-stat"><div class="hs-n">58</div><div class="hs-l">Wilayas</div></div>
           <div class="hero-stat"><div class="hs-n">24/7</div><div class="hs-l">Réservation</div></div>
         </div>
 
-        <div class="hero-visual" aria-hidden="true">
+        <div class="hero-visual" aria-hidden="true" *ngIf="!enRecherche">
           <div class="bookcard-ghost"></div>
           <div class="bookcard">
             <div class="bc-doc">
@@ -51,20 +51,20 @@ import { AnnuaireService, Medecin } from './annuaire.service';
         </div>
       </div>
 
-      <a routerLink="/medecin/candidature" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:12px 14px;background:#fff;border:1.5px dashed var(--pastille-bd);border-radius:var(--r12);color:var(--ink);text-decoration:none;font-size:13px">
+      <a routerLink="/medecin/candidature" *ngIf="!enRecherche" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:12px 14px;background:#fff;border:1.5px dashed var(--pastille-bd);border-radius:var(--r12);color:var(--ink);text-decoration:none;font-size:13px">
         <span><i class="fa fa-user-doctor" style="margin-right:6px;color:var(--blue)"></i> Vous êtes médecin ? Réclamez votre fiche</span>
         <i class="fa fa-arrow-right" style="opacity:.7"></i>
       </a>
     </section>
 
-    <div class="v4strip" aria-label="Garanties Tabibi">
+    <div class="v4strip" aria-label="Garanties Tabibi" *ngIf="!enRecherche">
       <div class="item"><i class="fa fa-shield-halved" aria-hidden="true"></i> <span>Médecins vérifiés</span></div>
       <div class="item"><i class="fa fa-calendar-check" aria-hidden="true"></i> <span>RDV en 30 secondes</span></div>
       <div class="item"><i class="fa fa-server" aria-hidden="true"></i> <span>Vos données protégées (loi 18-07)</span></div>
       <div class="item"><i class="fa fa-lock" aria-hidden="true"></i> <span>Paiement au cabinet</span></div>
     </div>
 
-    <section class="dwh" id="sec-dawini">
+    <section class="dwh" id="sec-dawini" *ngIf="!enRecherche">
       <div class="dwh-card">
         <div class="dwh-l">
           <span class="dwh-new"><i class="fa fa-wand-magic-sparkles" aria-hidden="true"></i> <span>Nouveau</span></span>
@@ -98,8 +98,12 @@ import { AnnuaireService, Medecin } from './annuaire.service';
       </div>
 
       <p *ngIf="charge()" style="padding:0 var(--gutter);color:var(--text3)">Recherche…</p>
+      <p *ngIf="erreur()" style="padding:0 var(--gutter);color:#b3261e">
+        {{ erreur() }}
+        <button type="button" (click)="rechercher()" style="margin-left:8px;background:none;border:0;color:var(--vert);font-weight:700;text-decoration:underline;cursor:pointer;font:inherit;padding:0">Réessayer</button>
+      </p>
 
-      <div id="docs-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:0 var(--gutter)">
+      <div id="docs-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;padding:0 var(--gutter)">
         <article class="doc-card fu" *ngFor="let m of resultats()" [routerLink]="['/medecins', m.id]" tabindex="0">
           <div class="doc-row">
             <div class="doc-ava">{{ initiales(m) }}</div>
@@ -116,12 +120,12 @@ import { AnnuaireService, Medecin } from './annuaire.service';
         </article>
       </div>
 
-      <p *ngIf="!charge() && resultats().length === 0" style="text-align:center;color:var(--text3);padding:32px var(--gutter)">
+      <p *ngIf="!charge() && !erreur() && resultats().length === 0" style="text-align:center;color:var(--text3);padding:32px var(--gutter)">
         Aucun médecin trouvé. Essayez un autre nom ou une autre wilaya.
       </p>
     </section>
 
-    <section class="section" id="sec-avis" style="padding-top:0">
+    <section class="section" id="sec-avis" style="padding-top:0" *ngIf="!enRecherche">
       <div class="v4-revgrid">
         <figure class="v4-rev" style="grid-column:1 / -1;max-width:600px;margin:0 auto;text-align:center">
           <div style="font-size:22px;color:#D4A437;margin-bottom:8px" aria-hidden="true"><i class="fa fa-star"></i></div>
@@ -131,7 +135,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
       </div>
     </section>
 
-    <div class="v4-tele">
+    <div class="v4-tele" *ngIf="!enRecherche">
       <span class="ti"><i class="fa fa-video" aria-hidden="true"></i></span>
       <div>
         <h3>Téléconsultation <span class="v4-live">Disponible</span></h3>
@@ -140,7 +144,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
       <a class="btn btn-primary cta" href="#sec-docs">Réserver une téléconsultation</a>
     </div>
 
-    <section class="section" style="background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+    <section class="section" *ngIf="!enRecherche" style="background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
       <div class="sec-hdr" style="padding-bottom:16px"><h2 class="sec-title" style="font-size:18px">Comment prendre RDV en ligne ?</h2></div>
       <div class="steps-col">
         <div class="step-row"><div class="step-num">1</div><div class="step-info"><div class="step-title">Recherchez</div><div class="step-desc">Filtrez par nom, ville ou spécialité.</div></div></div>
@@ -149,7 +153,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
       </div>
     </section>
 
-    <section class="section" id="sec-diff" style="padding-top:0">
+    <section class="section" id="sec-diff" style="padding-top:0" *ngIf="!enRecherche">
       <div class="v4-sechead">
         <span class="v4-eyebrow">La différence Tabibi</span>
         <h2>Pourquoi Tabibi, et pas un simple annuaire ?</h2>
@@ -164,7 +168,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" *ngIf="!enRecherche">
       <div style="padding:0 var(--gutter)">
         <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;box-shadow:var(--s1)">
           <div style="text-align:center"><div style="font-size:28px;font-weight:800;color:var(--blue)">75 000+</div><div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">Médecins référencés</div></div>
@@ -173,7 +177,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
       </div>
     </section>
 
-    <section class="section" style="padding-bottom:8px">
+    <section class="section" style="padding-bottom:8px" *ngIf="!enRecherche">
       <div style="padding:0 var(--gutter)">
         <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);padding:24px;text-align:center;box-shadow:var(--s1)">
           <div style="font-size:24px;margin-bottom:10px;color:var(--blue)"><i class="fa fa-user-doctor"></i></div>
@@ -184,7 +188,7 @@ import { AnnuaireService, Medecin } from './annuaire.service';
       </div>
     </section>
 
-    <section class="section" id="sec-faq" style="padding-top:0">
+    <section class="section" id="sec-faq" style="padding-top:0" *ngIf="!enRecherche">
       <div class="v4-sechead"><span class="v4-eyebrow">FAQ</span><h2>Questions fréquentes</h2></div>
       <div class="v4-faq">
         <details open><summary><span>L'application est-elle gratuite ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Oui, Tabibi est 100 % gratuite pour les patients. Vous réglez uniquement la consultation, directement au cabinet — en espèces ou avec la carte Chifa.</p></details>
@@ -200,7 +204,11 @@ export class AnnuaireComponent implements OnInit {
   q = ''; specialite = ''; wilaya = '';
   resultats = signal<Medecin[]>([]);
   charge = signal(false);
+  erreur = signal('');
   private minuteur: any;
+
+  /** Vrai des que l'utilisateur a saisi une recherche : on masque le marketing pour montrer les resultats tout de suite. */
+  get enRecherche(): boolean { return this.q.trim().length > 0; }
 
   ngOnInit() { this.rechercher(); }
 
@@ -212,9 +220,13 @@ export class AnnuaireComponent implements OnInit {
 
   rechercher() {
     this.charge.set(true);
+    this.erreur.set('');
     this.service.rechercher(this.specialite, this.wilaya, this.q).subscribe({
       next: (r) => { this.resultats.set(r); this.charge.set(false); },
-      error: () => this.charge.set(false),
+      error: () => {
+        this.erreur.set('Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.');
+        this.charge.set(false);
+      },
     });
   }
 

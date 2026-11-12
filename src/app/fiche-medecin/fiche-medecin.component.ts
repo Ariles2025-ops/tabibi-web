@@ -56,7 +56,7 @@ import { MessagerieService } from '../messagerie/messagerie.service';
             <strong style="color:var(--ink)"><i class="fa fa-calendar-day fa-xs" style="color:var(--blue)"></i> {{ c.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
             <span style="color:var(--text3)"> · {{ c.dureeMinutes }} min</span>
           </span>
-          <button class="btn btn-primary btn-sm" (click)="reserver(c)" [disabled]="enCours() !== null">
+          <button class="btn btn-primary" (click)="reserver(c)" [disabled]="enCours() !== null">
             {{ enCours() === c.id ? 'Réservation…' : 'Réserver' }}
           </button>
         </li>

@@ -4,9 +4,13 @@
 
 button:disabled { opacity:.6; cursor:default; }
 
+/* « 75 000+ » doit tenir sur une seule ligne dans les tuiles stats (sinon coupure « 75 / 000+ »). */
+.hero-stat .hs-n { white-space:nowrap; font-size:clamp(16px,4.8vw,20px); }
+
 /* Coquille : menu lateral vert a gauche sur PC, barre en haut sur telephone. */
 .side { background:var(--vert); color:#fff; }
-.side__brand { display:none; }
+.side__brand { display:block; font-size:1.3rem; font-weight:800; color:#fff; text-decoration:none; padding:10px 16px 0; letter-spacing:-.02em; }
+.side__brand i { color:var(--or); font-style:normal; }
 .side__nav { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 16px; }
 .side__nav a { color:#fff; text-decoration:none; opacity:.92; }
 .side__nav a:hover { opacity:1; }

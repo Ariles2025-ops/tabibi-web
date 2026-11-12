@@ -103,4 +103,6 @@ export const routes: Routes = [
   { path: 'moi', component: MoiComponent },
   // Mon profil (utilisateur connecte, tous roles : la page redirige vers la connexion).
   { path: 'moi/profil', component: ProfilComponent },
+  // Toute adresse inconnue (lien obsolete, faute de frappe) revient a l'accueil plutot qu'une page vide.
+  { path: '**', redirectTo: '' },
 ];

@@ -22,7 +22,7 @@
             "outputHashing": "all",
             "optimization": {
               "scripts": true,
-              "fonts": true,
+              "fonts": false,
               "styles": { "minify": true, "inlineCritical": false }
             },
             "server": "src/main.server.ts",
