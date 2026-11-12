@@ -13,7 +13,7 @@
    Les pages à layout dédié (index, dawini…) gardent leurs surcharges
    inline, chargées après ce fichier — elles gagnent.
    ═══════════════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* Polices auto-hébergées, chargées via assets/fonts/fonts.css dans index.html (plus de Google Fonts). */
 
 :root{
   /* ── Tokens canon (source : landing) ─────────────────────────────── */

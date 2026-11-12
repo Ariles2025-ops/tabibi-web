@@ -44,7 +44,7 @@ export function entetesSecurite(config: Partial<ConfigurationApplication>): Reco
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     'Content-Security-Policy':
       `default-src 'self'; connect-src ${connectSrc.join(' ')}; frame-ancestors 'none'; img-src 'self' data:; ` +
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; " +
+      "style-src 'self' 'unsafe-inline'; font-src 'self'; " +
       "script-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'",
   };
 }
