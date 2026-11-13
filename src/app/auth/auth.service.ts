@@ -62,6 +62,23 @@ export class AuthService {
     this.oauth.initCodeFlow(retour);
   }
 
+  /**
+   * Inscription par e-mail : redirige directement vers le formulaire d'inscription Keycloak
+   * (endpoint /registrations au lieu de /auth), avec les memes parametres OIDC (dont PKCE).
+   * initCodeFlow part de `loginUrl` ; on le pointe sur l'endpoint d'inscription juste avant la redirection
+   * (la page quitte aussitot vers Keycloak, l'etat n'a pas besoin d'etre restaure).
+   */
+  async sInscrireParEmail(retour: string = this.router.url): Promise<void> {
+    if (!this.navigateur) return;
+    await this.initialiser();
+    const urlAuth = this.oauth.loginUrl || '';
+    // Cibler l'endpoint precis (pas le "/auth" present dans l'hote auth.tabibi.doctor).
+    if (urlAuth.includes('/openid-connect/auth')) {
+      this.oauth.loginUrl = urlAuth.replace('/openid-connect/auth', '/openid-connect/registrations');
+    }
+    this.oauth.initCodeFlow(retour);
+  }
+
   seDeconnecter(): void {
     if (!this.navigateur) return;
     this.oauth.logOut();

@@ -15,12 +15,14 @@ import { RoleService } from '../auth/role.service';
   template: `
     <main style="max-width:640px;margin:40px auto;padding:0 16px">
       <h1 style="color:var(--vert)">Mon compte</h1>
-      <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:12px;max-width:380px">
-        <button type="button" class="bouton" (click)="seConnecter()">Créer un compte</button>
-        <button type="button" class="bouton-secondaire" (click)="seConnecter()">J'ai déjà un compte — Se connecter</button>
-        <p style="color:var(--text3);font-size:.9rem;margin:4px 0 0">
-          Nouveau patient ? Cliquez <b>« Créer un compte »</b>, saisissez votre numéro de téléphone et validez le code reçu par SMS : votre compte est créé automatiquement.
+      <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:10px;max-width:420px">
+        <p style="font-weight:700;color:var(--vert);margin:0 0 2px;font-size:1.05rem">Créer un compte</p>
+        <button type="button" class="bouton" (click)="seConnecter()">Par téléphone (code SMS)</button>
+        <button type="button" class="bouton" (click)="sInscrireParEmail()">Par e-mail</button>
+        <p style="color:var(--text3);font-size:.85rem;margin:2px 0 10px">
+          <b>Téléphone</b> : entrez votre numéro, validez le code reçu par SMS. <b>E-mail</b> : votre adresse + un mot de passe.
         </p>
+        <button type="button" class="bouton-secondaire" (click)="seConnecter()">J'ai déjà un compte — Se connecter</button>
       </div>
       <div *ngIf="connecte()">
         <p>Connecté en tant que <b>{{ moi()?.nom }}</b></p>
@@ -61,6 +63,7 @@ export class MoiComponent implements OnInit {
   }
 
   seConnecter() { this.auth.seConnecter(); }
+  sInscrireParEmail() { this.auth.sInscrireParEmail(); }
   seDeconnecter() { this.auth.seDeconnecter(); this.connecte.set(false); }
 
   /** Copie l'identifiant ; le presse-papiers peut etre refuse (contexte non securise, permission) : message de repli. */
