@@ -57,7 +57,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
               <a class="side__pro" routerLink="/praticien">Vous êtes praticien ?</a>
               <a class="side__help" href="#aide">Centre d'aide</a>
               <a class="side__login" (click)="seConnecter()" tabindex="0" role="button">Se connecter</a>
-              <a class="side__signup" routerLink="/moi">Créer un compte</a>
+              <a class="side__signup" (click)="seConnecter()" tabindex="0" role="button" style="cursor:pointer">Créer un compte</a>
             </ng-container>
             <ng-container *ngIf="connecte()">
               <a class="side__help" href="#aide">Centre d'aide</a>

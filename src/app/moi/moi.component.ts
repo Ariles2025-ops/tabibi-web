@@ -15,14 +15,9 @@ import { RoleService } from '../auth/role.service';
   template: `
     <main style="max-width:640px;margin:40px auto;padding:0 16px">
       <h1 style="color:var(--vert)">Mon compte</h1>
-      <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:10px;max-width:420px">
-        <p style="font-weight:700;color:var(--vert);margin:0 0 2px;font-size:1.05rem">Créer un compte</p>
-        <button type="button" class="bouton" (click)="seConnecter()">Par téléphone (code SMS)</button>
-        <button type="button" class="bouton" (click)="sInscrireParEmail()">Par e-mail</button>
-        <p style="color:var(--text3);font-size:.85rem;margin:2px 0 10px">
-          <b>Téléphone</b> : entrez votre numéro, validez le code reçu par SMS. <b>E-mail</b> : votre adresse + un mot de passe.
-        </p>
-        <button type="button" class="bouton-secondaire" (click)="seConnecter()">J'ai déjà un compte — Se connecter</button>
+      <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:12px;max-width:420px">
+        <p style="color:var(--text3);margin:0">Connectez-vous ou créez votre compte pour prendre rendez-vous. Vous choisirez le téléphone (code SMS) ou l'e-mail à l'étape suivante.</p>
+        <button type="button" class="bouton" (click)="seConnecter()">Se connecter / Créer un compte</button>
       </div>
       <div *ngIf="connecte()">
         <p>Connecté en tant que <b>{{ moi()?.nom }}</b></p>

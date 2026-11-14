@@ -203,8 +203,8 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
             <h3>{{ resultats().length }} médecin(s) trouvé(s) près de vous</h3>
             <p>Créez un compte gratuit pour voir les médecins disponibles et prendre rendez-vous.</p>
             <div class="docs-gate__btns">
-              <a class="bouton" routerLink="/moi">Créer un compte</a>
-              <a class="bouton-secondaire" (click)="seConnecter()" tabindex="0" role="button">Se connecter</a>
+              <a class="bouton" (click)="seConnecter()" tabindex="0" role="button" style="cursor:pointer">Créer un compte</a>
+              <a class="bouton-secondaire" (click)="seConnecter()" tabindex="0" role="button" style="cursor:pointer">Se connecter</a>
             </div>
           </div>
         </div>
