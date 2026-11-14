@@ -41,7 +41,8 @@ export const routes: Routes = [
   { path: '', component: AnnuaireComponent },
   // Page publique de presentation pour les praticiens (« Vous etes praticien ? »), sans connexion.
   { path: 'praticien', component: PraticienComponent },
-  { path: 'medecins/:id', component: FicheMedecinComponent },
+  // Fiche medecin reservee aux comptes connectes (annuaire prive : cohérent avec le cadenas de l'accueil).
+  { path: 'medecins/:id', canActivate: [connecteGuard], component: FicheMedecinComponent },
   { path: 'mes-rendez-vous', component: MesRendezVousComponent },
   { path: 'mes-ordonnances', component: MesOrdonnancesComponent },
   { path: 'ordonnances/:id', component: OrdonnanceDetailComponent },

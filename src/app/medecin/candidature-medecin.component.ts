@@ -169,7 +169,7 @@ export class CandidatureMedecinComponent implements OnInit {
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux médecins.');
+          this.erreur.set('Accès refusé. Connectez-vous pour envoyer votre demande.');
         } else {
           this.erreur.set(e.error?.erreur ?? 'Impossible de charger votre candidature.');
         }
@@ -207,7 +207,7 @@ export class CandidatureMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Seul un compte médecin peut déposer une candidature.');
+          this.erreur.set("Accès refusé. Votre demande n'a pas pu être envoyée.");
         } else if (e.status === 409) {
           // Une candidature est deja en attente ou validee : on l'affiche avec le motif renvoye.
           this.erreur.set(e.error?.erreur ?? 'Une candidature est déjà en attente ou validée.');
