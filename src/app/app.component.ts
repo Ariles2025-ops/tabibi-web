@@ -54,7 +54,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
 
           <div class="side__account">
             <ng-container *ngIf="!connecte()">
-              <a class="side__pro" routerLink="/medecin/candidature">Vous êtes médecin ?</a>
+              <a class="side__pro" routerLink="/praticien">Vous êtes praticien ?</a>
               <a class="side__help" href="#aide">Centre d'aide</a>
               <a class="side__login" (click)="seConnecter()" tabindex="0" role="button">Se connecter</a>
               <a class="side__signup" routerLink="/moi">Créer un compte</a>
@@ -102,7 +102,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
                 <a href="/legal/cgu.html">Conditions d'utilisation</a>
                 <a href="/legal/confidentialite.html">Confidentialité</a>
                 <a href="mailto:contact@tabibi.doctor">Nous contacter</a>
-                <a routerLink="/medecin/candidature">Vous êtes médecin ?</a>
+                <a routerLink="/praticien">Vous êtes praticien ?</a>
               </div>
               <div class="siteft__col">
                 <h4>Spécialités</h4>

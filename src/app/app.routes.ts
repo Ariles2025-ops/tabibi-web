@@ -13,6 +13,7 @@ import { MesAvisComponent } from './avis/mes-avis.component';
 import { MesDemandesComponent } from './dawini/mes-demandes.component';
 import { ReponsesDemandeComponent } from './dawini/reponses-demande.component';
 import { FicheMedecinComponent } from './fiche-medecin/fiche-medecin.component';
+import { PraticienComponent } from './praticien/praticien.component';
 import { MesListesAttenteComponent } from './liste-attente/mes-listes-attente.component';
 import { AgendaMedecinComponent } from './medecin/agenda-medecin.component';
 import { AvisMedecinComponent } from './medecin/avis-medecin.component';
@@ -38,6 +39,8 @@ import { ProfilComponent } from './moi/profil.component';
 
 export const routes: Routes = [
   { path: '', component: AnnuaireComponent },
+  // Page publique de presentation pour les praticiens (« Vous etes praticien ? »), sans connexion.
+  { path: 'praticien', component: PraticienComponent },
   { path: 'medecins/:id', component: FicheMedecinComponent },
   { path: 'mes-rendez-vous', component: MesRendezVousComponent },
   { path: 'mes-ordonnances', component: MesOrdonnancesComponent },

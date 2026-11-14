@@ -94,7 +94,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       </div>
 
       <a routerLink="/medecin/candidature" *ngIf="!enRecherche" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:12px 14px;background:#fff;border:1.5px dashed var(--pastille-bd);border-radius:var(--r12);color:var(--ink);text-decoration:none;font-size:13px">
-        <span><i class="fa fa-user-doctor" style="margin-right:6px;color:var(--blue)"></i> Vous êtes médecin ? Réclamez votre fiche</span>
+        <span><i class="fa fa-user-doctor" style="margin-right:6px;color:var(--vert)"></i> Vous êtes praticien ? Réclamez votre fiche</span>
         <i class="fa fa-arrow-right" style="opacity:.7"></i>
       </a>
     </section>
@@ -262,7 +262,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       <div style="padding:0 var(--gutter)">
         <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);padding:24px;text-align:center;box-shadow:var(--s1)">
           <div style="font-size:24px;margin-bottom:10px;color:var(--vert)"><i class="fa fa-user-doctor"></i></div>
-          <h2 style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px">Vous êtes médecin ?</h2>
+          <h2 style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px">Vous êtes praticien ?</h2>
           <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Réclamez votre fiche sur Tabibi et recevez vos rendez-vous en ligne.</p>
           <a class="btn btn-primary btn-lg" routerLink="/medecin/candidature"><i class="fa fa-user-plus"></i> <span>Réclamer ma fiche</span></a>
         </div>
