@@ -14,7 +14,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
       <aside class="side">
         <a class="side__brand" routerLink="/">tabibi<i>.</i></a>
         <nav class="side__nav">
-          <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
+          <a class="side__home" routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
           <a *ngIf="estPatient()" routerLink="/mes-rendez-vous" routerLinkActive="actif">Mes rendez-vous</a>
           <a *ngIf="estPatient()" routerLink="/mes-ordonnances" routerLinkActive="actif">Mes ordonnances</a>
           <a *ngIf="estPatient()" routerLink="/teleconsultations" routerLinkActive="actif">Mes téléconsultations</a>
@@ -22,7 +22,6 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
           <a *ngIf="estPatient()" routerLink="/mes-avis" routerLinkActive="actif">Mes avis</a>
           <a *ngIf="estPatient()" routerLink="/dawini" routerLinkActive="actif">Dawini</a>
           <a *ngIf="estPatient()" routerLink="/liste-attente" routerLinkActive="actif">Mes listes d'attente</a>
-          <a routerLink="/verifier" routerLinkActive="actif">Vérifier une ordonnance</a>
 
           <div *ngIf="estMedecin()" class="side__group">
             <div class="side__grouptitle">Espace médecin</div>
@@ -54,19 +53,82 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
           </div>
 
           <div class="side__account">
-            <a routerLink="/moi" routerLinkActive="actif">Mon compte</a>
-            <app-cloche-notifications *ngIf="connecte()" />
+            <ng-container *ngIf="!connecte()">
+              <a class="side__pro" routerLink="/medecin/candidature">Vous êtes médecin ?</a>
+              <a class="side__help" href="#aide">Centre d'aide</a>
+              <a class="side__login" (click)="seConnecter()" tabindex="0" role="button">Se connecter</a>
+              <a class="side__signup" routerLink="/moi">Créer un compte</a>
+            </ng-container>
+            <ng-container *ngIf="connecte()">
+              <a class="side__help" href="#aide">Centre d'aide</a>
+              <app-cloche-notifications />
+              <a routerLink="/moi" routerLinkActive="actif">Mon compte</a>
+            </ng-container>
           </div>
         </nav>
       </aside>
 
       <div class="content">
         <router-outlet />
-        <footer class="pied">
-          <a href="/legal/mentions-legales.html">Mentions légales</a>
-          <a href="/legal/cgu.html">Conditions d'utilisation</a>
-          <a href="/legal/confidentialite.html">Confidentialité</a>
-          <a href="mailto:contact@tabibi.doctor">contact&#64;tabibi.doctor</a>
+        <footer class="siteft" id="aide">
+          <div class="siteft__in">
+            <div class="siteft__top">
+              <div class="siteft__q">
+                <b>Des questions ?</b>
+                <span>Consultez notre aide ou contactez-nous.</span>
+              </div>
+              <a class="siteft__contact" href="mailto:contact@tabibi.doctor">Nous contacter</a>
+            </div>
+
+            <div class="siteft__apps">
+              <span class="siteft__appslbl">Téléchargez l'application Tabibi</span>
+              <div class="siteft__badges">
+                <a class="storebadge" href="#" aria-label="Télécharger dans l'App Store">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 2c.1 1-.3 2-1 2.7-.7.8-1.8 1.4-2.8 1.3-.1-1 .4-2 .9-2.6.7-.8 1.9-1.3 2.9-1.4zM19.6 17.3c-.5 1.2-.8 1.7-1.5 2.8-1 1.5-2.3 3.3-4 3.3-1.5 0-1.9-1-3.9-1-2 0-2.4 1-3.9 1-1.7 0-2.9-1.6-3.9-3.1-2.8-4.2-3.1-9.1-1.4-11.7C2.3 6.3 4 5.3 5.6 5.3c1.6 0 2.7 1 4 1 1.3 0 2-1 3.9-1 1.4 0 2.9.8 4 2.1-3.5 1.9-2.9 6.9 2.1 8.9z"/></svg>
+                  <span><small>Télécharger dans</small>App Store</span>
+                </a>
+                <a class="storebadge" href="#" aria-label="Disponible sur Google Play">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 2.3c-.2.2-.3.5-.3 1v17.4c0 .5.1.8.3 1l9.3-9.7L3.6 2.3zm10.4 8.3 2.8-2.9L5.6 1.3c-.3-.2-.6-.2-.9-.1l9.3 9.4zm0 2.8L4.7 22.8c.3.1.6.1.9-.1l11.2-6.4-2.8-2.9zm6.1-3.5-2.4-1.4-3 3.1 3 3.1 2.4-1.4c.9-.5.9-2.5 0-3z"/></svg>
+                  <span><small>Disponible sur</small>Google Play</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="siteft__cols">
+              <div class="siteft__col">
+                <h4>Tabibi</h4>
+                <a routerLink="/verifier">Vérifier une ordonnance</a>
+                <a href="/legal/mentions-legales.html">Mentions légales</a>
+                <a href="/legal/cgu.html">Conditions d'utilisation</a>
+                <a href="/legal/confidentialite.html">Confidentialité</a>
+                <a href="mailto:contact@tabibi.doctor">Nous contacter</a>
+                <a routerLink="/medecin/candidature">Vous êtes médecin ?</a>
+              </div>
+              <div class="siteft__col">
+                <h4>Spécialités</h4>
+                <a routerLink="/">Médecin généraliste</a>
+                <a routerLink="/">Cardiologue</a>
+                <a routerLink="/">Dentiste</a>
+                <a routerLink="/">Pédiatre</a>
+                <a routerLink="/">Gynécologue</a>
+                <a routerLink="/">Dermatologue</a>
+              </div>
+              <div class="siteft__col">
+                <h4>Villes</h4>
+                <a routerLink="/">Alger</a>
+                <a routerLink="/">Oran</a>
+                <a routerLink="/">Constantine</a>
+                <a routerLink="/">Annaba</a>
+                <a routerLink="/">Blida</a>
+                <a routerLink="/">Sétif</a>
+              </div>
+            </div>
+
+            <div class="siteft__bottom">
+              <span class="siteft__logo">tabibi<i>.</i></span>
+              <span class="siteft__copy">© 2026 Tabibi — Tous droits réservés.</span>
+            </div>
+          </div>
         </footer>
       </div>
     </div>
@@ -93,6 +155,9 @@ export class AppComponent implements OnInit {
   estPatient = computed(() =>
     this.connecte() && !this.estMedecin() && !this.estAdmin() && !this.estPharmacie() && !this.estSecretaire(),
   );
+
+  /** Lance la connexion Keycloak (bouton « Se connecter » de la barre de navigation). */
+  seConnecter() { this.auth.seConnecter(); }
 
   /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()), puis roles. */
   async ngOnInit() {

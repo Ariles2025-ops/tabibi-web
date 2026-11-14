@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Subject, Subscription, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { AnnuaireService, Medecin } from './annuaire.service';
+import { AuthService } from '../auth/auth.service';
 
 /** Une wilaya du referentiel (assets/referentiel.json) : code officiel + libelle FR. */
 interface OptionWilaya { code: string; nom: string; }
@@ -28,33 +29,40 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
           <div class="hero-badge"><span class="hero-dot" aria-hidden="true"></span><span>75 000+ médecins référencés en Algérie</span></div>
           <h1 class="hero-title">Votre santé ne devrait jamais attendre.</h1>
           <p class="hero-sub">Prenez rendez-vous avec un médecin partout en Algérie — 69 wilayas, 24h/24.</p>
-          <div class="hero-search-wrap" style="position:relative">
-            <i class="hero-si fa fa-search" aria-hidden="true"></i>
-            <input class="hero-search" type="search" [(ngModel)]="q" (input)="surSaisie()" (focus)="surFocus()" (blur)="masquerBientot()"
-                   placeholder="Dr. Benali, Cardiologie, Alger..." autocomplete="off" aria-label="Rechercher un médecin"
-                   role="combobox" aria-autocomplete="list" aria-controls="ac-suggestions" [attr.aria-expanded]="suggestionsVisibles() && suggestions().length > 0">
-            <ul id="ac-suggestions" class="ac-liste" role="listbox" *ngIf="suggestionsVisibles() && suggestions().length">
-              <li *ngFor="let s of suggestions()" role="option">
-                <a class="ac-item" [routerLink]="['/medecins', s.id]" (click)="choisirSuggestion()">
-                  <span class="ac-nom" dir="auto">{{ s.nomComplet }}</span>
-                  <span class="ac-meta">{{ s.specialiteFr }} · {{ s.wilayaFr }}</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div class="rech-filtres">
-            <label class="rf-field">
-              <span class="rf-ic" aria-hidden="true"><i class="fa fa-stethoscope"></i></span>
-              <select class="rf-select" [(ngModel)]="specialite" (change)="surFiltre()" aria-label="Filtrer par spécialité">
-                <option value="">Toutes les spécialités</option>
-                <option *ngFor="let s of specialites()" [value]="s.slug">{{ s.nom }}</option>
+          <div class="dl-search" role="search">
+            <div class="dl-field dl-field--text" style="position:relative">
+              <i class="fa fa-magnifying-glass dl-ic" aria-hidden="true"></i>
+              <input class="dl-input" type="search" [(ngModel)]="q" (input)="surSaisie()" (focus)="surFocus()" (blur)="masquerBientot()"
+                     (keyup.enter)="lancerRecherche()"
+                     placeholder="Nom, spécialité, établissement…" autocomplete="off" aria-label="Nom, spécialité ou établissement"
+                     role="combobox" aria-autocomplete="list" aria-controls="ac-suggestions" [attr.aria-expanded]="suggestionsVisibles() && suggestions().length > 0">
+              <ul id="ac-suggestions" class="ac-liste" role="listbox" *ngIf="connecte() && suggestionsVisibles() && suggestions().length">
+                <li *ngFor="let s of suggestions()" role="option">
+                  <a class="ac-item" [routerLink]="['/medecins', s.id]" (click)="choisirSuggestion()">
+                    <span class="ac-nom" dir="auto">{{ s.nomComplet }}</span>
+                    <span class="ac-meta">{{ s.specialiteFr }} · {{ s.wilayaFr }}</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="dl-sep" aria-hidden="true"></div>
+            <label class="dl-field dl-field--wil">
+              <i class="fa fa-location-dot dl-ic" aria-hidden="true"></i>
+              <select class="dl-select" [(ngModel)]="wilaya" (change)="surFiltre()" aria-label="Où ?">
+                <option value="">Où ?</option>
+                <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.nom }}</option>
               </select>
             </label>
-            <label class="rf-field">
-              <span class="rf-ic" aria-hidden="true"><i class="fa fa-location-dot"></i></span>
-              <select class="rf-select" [(ngModel)]="wilaya" (change)="surFiltre()" aria-label="Filtrer par wilaya">
-                <option value="">Toutes les wilayas</option>
-                <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.nom }}</option>
+            <button type="button" class="dl-btn" (click)="lancerRecherche()" aria-label="Rechercher">
+              <span>Rechercher</span><i class="fa fa-arrow-right" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="dl-refine">
+            <label class="dl-chip">
+              <i class="fa fa-stethoscope" aria-hidden="true"></i>
+              <select [(ngModel)]="specialite" (change)="surFiltre()" aria-label="Spécialité">
+                <option value="">Toutes les spécialités</option>
+                <option *ngFor="let s of specialites()" [value]="s.slug">{{ s.nom }}</option>
               </select>
             </label>
           </div>
@@ -125,10 +133,43 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       </div>
     </section>
 
-    <section class="section" id="sec-docs">
+    <section class="section" *ngIf="!enRecherche" style="padding-top:8px">
+      <div style="padding:0 var(--gutter)">
+        <h2 class="sec-title" style="text-align:center;margin-bottom:18px">Votre compagnon santé au quotidien</h2>
+        <div class="dl-feats">
+          <div class="dl-feat">
+            <span class="dl-feat__ic"><i class="fa fa-calendar-check" aria-hidden="true"></i></span>
+            <h3>Réservez en ligne</h3>
+            <p>Trouvez un médecin vérifié et prenez rendez-vous en 30 secondes, 24h/24.</p>
+          </div>
+          <div class="dl-feat">
+            <span class="dl-feat__ic"><i class="fa fa-comment-medical" aria-hidden="true"></i></span>
+            <h3>Suivi et rappels</h3>
+            <p>Un rappel SMS automatique avant chaque rendez-vous, pour ne jamais l'oublier.</p>
+          </div>
+          <div class="dl-feat">
+            <span class="dl-feat__ic"><i class="fa fa-shield-halved" aria-hidden="true"></i></span>
+            <h3>Vos données protégées</h3>
+            <p>Vos informations de santé sont chiffrées et protégées (loi 18-07).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" *ngIf="!enRecherche" style="padding-top:0">
+      <div style="padding:0 var(--gutter)">
+        <div class="dl-stats">
+          <div class="dl-stat"><div class="dl-stat__n">130 000+</div><div class="dl-stat__l">Patients accompagnés</div></div>
+          <div class="dl-stat"><div class="dl-stat__n">75 000+</div><div class="dl-stat__l">Médecins référencés</div></div>
+          <div class="dl-stat"><div class="dl-stat__n">69</div><div class="dl-stat__l">Wilayas couvertes</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="sec-docs" *ngIf="enRecherche">
       <div class="sec-head" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 var(--gutter);margin-bottom:14px">
-        <h2 class="sec-title">Médecins référencés en Algérie</h2>
-        <span style="color:var(--text3);font-size:13px;font-weight:600" *ngIf="!charge() && resultats().length">{{ resultats().length }} affiché(s)</span>
+        <h2 class="sec-title">Résultats de votre recherche</h2>
+        <span style="color:var(--text3);font-size:13px;font-weight:600" *ngIf="!charge() && resultats().length">{{ resultats().length }} médecin(s)</span>
       </div>
 
       <p *ngIf="charge()" style="padding:0 var(--gutter);color:var(--text3)">Recherche…</p>
@@ -137,21 +178,36 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
         <button type="button" (click)="rechercher()" style="margin-left:8px;background:none;border:0;color:var(--vert);font-weight:700;text-decoration:underline;cursor:pointer;font:inherit;padding:0">Réessayer</button>
       </p>
 
-      <div id="docs-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;padding:0 var(--gutter)">
-        <article class="doc-card fu" *ngFor="let m of resultats()" [routerLink]="['/medecins', m.id]" tabindex="0">
-          <div class="doc-row">
-            <div class="doc-ava">{{ initiales(m) }}</div>
-            <div style="flex:1;min-width:0">
-              <div class="doc-name" dir="auto">{{ m.nomComplet }}</div>
-              <div class="doc-spec"><i class="fa fa-stethoscope fa-xs"></i>{{ m.specialiteFr }}</div>
-              <div class="doc-loc"><i class="fa fa-location-dot fa-xs"></i>{{ m.ville || m.wilayaFr }} ({{ m.wilayaFr }})</div>
+      <div class="docs-wrap">
+        <div id="docs-list" [class.docs-flou]="!connecte()" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;padding:0 var(--gutter)">
+          <article class="doc-card fu" *ngFor="let m of resultats()" [routerLink]="connecte() ? ['/medecins', m.id] : null" [attr.tabindex]="connecte() ? 0 : -1" [attr.aria-hidden]="!connecte()">
+            <div class="doc-row">
+              <div class="doc-ava">{{ initiales(m) }}</div>
+              <div style="flex:1;min-width:0">
+                <div class="doc-name" dir="auto">{{ m.nomComplet }}</div>
+                <div class="doc-spec"><i class="fa fa-stethoscope fa-xs"></i>{{ m.specialiteFr }}</div>
+                <div class="doc-loc"><i class="fa fa-location-dot fa-xs"></i>{{ m.ville || m.wilayaFr }} ({{ m.wilayaFr }})</div>
+              </div>
+            </div>
+            <div class="doc-footer">
+              <span></span>
+              <span class="btn btn-sm doc-btn-ghost"><i class="fa fa-arrow-right"></i> Voir la fiche</span>
+            </div>
+          </article>
+        </div>
+
+        <!-- Cadenas : hors connexion, les resultats sont floutes et on invite a creer un compte. -->
+        <div class="docs-gate" *ngIf="!connecte() && !charge() && !erreur() && resultats().length">
+          <div class="docs-gate__card">
+            <span class="docs-gate__ic"><i class="fa fa-lock" aria-hidden="true"></i></span>
+            <h3>{{ resultats().length }} médecin(s) trouvé(s) près de vous</h3>
+            <p>Créez un compte gratuit pour voir les médecins disponibles et prendre rendez-vous.</p>
+            <div class="docs-gate__btns">
+              <a class="bouton" routerLink="/moi">Créer un compte</a>
+              <a class="bouton-secondaire" (click)="seConnecter()" tabindex="0" role="button">Se connecter</a>
             </div>
           </div>
-          <div class="doc-footer">
-            <span></span>
-            <span class="btn btn-sm doc-btn-ghost"><i class="fa fa-arrow-right"></i> Voir la fiche</span>
-          </div>
-        </article>
+        </div>
       </div>
 
       <p *ngIf="!charge() && !erreur() && resultats().length === 0" style="text-align:center;color:var(--text3);padding:32px var(--gutter)">
@@ -202,19 +258,10 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       </div>
     </section>
 
-    <section class="section" *ngIf="!enRecherche">
-      <div style="padding:0 var(--gutter)">
-        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;box-shadow:var(--s1)">
-          <div style="text-align:center"><div style="font-size:28px;font-weight:800;color:var(--blue)">75 000+</div><div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">Médecins référencés</div></div>
-          <div style="text-align:center;border-left:1px solid var(--border)"><div style="font-size:28px;font-weight:800;color:var(--blue)">69</div><div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600">Wilayas</div></div>
-        </div>
-      </div>
-    </section>
-
     <section class="section" style="padding-bottom:8px" *ngIf="!enRecherche">
       <div style="padding:0 var(--gutter)">
         <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);padding:24px;text-align:center;box-shadow:var(--s1)">
-          <div style="font-size:24px;margin-bottom:10px;color:var(--blue)"><i class="fa fa-user-doctor"></i></div>
+          <div style="font-size:24px;margin-bottom:10px;color:var(--vert)"><i class="fa fa-user-doctor"></i></div>
           <h2 style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px">Vous êtes médecin ?</h2>
           <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Réclamez votre fiche sur Tabibi et recevez vos rendez-vous en ligne.</p>
           <a class="btn btn-primary btn-lg" routerLink="/medecin/candidature"><i class="fa fa-user-plus"></i> <span>Réclamer ma fiche</span></a>
@@ -256,12 +303,80 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     [dir="rtl"] .rf-select { padding:14px 40px 14px 38px; background-position:left 14px center; }
     .rf-select:focus { outline:none; border-color:var(--vert); box-shadow:0 0 0 3px rgba(15,117,96,.14); }
     @media (max-width:640px) { .rech-filtres { flex-direction:column; } }
+
+    /* Barre de recherche unifiee facon Doctolib : nom/specialite + specialite + lieu + bouton, sur une pilule blanche. */
+    .dl-search { display:flex; align-items:stretch; gap:0; background:#fff; border-radius:999px;
+      box-shadow:0 8px 24px rgba(16,40,34,.10), 0 2px 6px rgba(16,40,34,.05);
+      padding:6px; max-width:880px; margin-top:16px; }
+    .dl-field { position:relative; display:flex; align-items:center; flex:1 1 0; min-width:0; }
+    .dl-field--text { flex:1.5 1 0; }
+    .dl-ic { position:absolute; left:18px; top:50%; transform:translateY(-50%); color:var(--vert); font-size:15px; line-height:1; pointer-events:none; }
+    [dir="rtl"] .dl-ic { left:auto; right:18px; }
+    .dl-input, .dl-select { width:100%; border:0; background:transparent; font:inherit; font-size:15px; color:var(--ink);
+      padding:15px 14px 15px 46px; outline:none; }
+    [dir="rtl"] .dl-input, [dir="rtl"] .dl-select { padding:15px 46px 15px 14px; }
+    .dl-input::placeholder { color:var(--text3); }
+    .dl-select { appearance:none; -webkit-appearance:none; cursor:pointer; padding-right:34px;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="%23D4A437" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+      background-repeat:no-repeat; background-position:right 16px center; }
+    [dir="rtl"] .dl-select { padding:15px 34px 15px 46px; background-position:left 16px center; }
+    .dl-sep { width:1px; background:var(--border); margin:10px 0; flex:0 0 auto; }
+    .dl-btn { flex:0 0 auto; display:inline-flex; align-items:center; gap:8px; background:var(--vert); color:#fff;
+      border:0; border-radius:999px; padding:0 26px; font:inherit; font-weight:700; font-size:15px; cursor:pointer;
+      transition:background .15s, transform .05s; }
+    .dl-btn:hover { background:#0a4d3e; }
+    .dl-btn:active { transform:scale(.97); }
+    .dl-btn:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(15,117,96,.35); }
+    .dl-field--text { flex:2 1 0; }
+    /* Affinage : petit chip blanc (specialite) sous la barre, lisible sur fond vert comme sur fond clair. */
+    .dl-refine { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+    .dl-chip { display:inline-flex; align-items:center; gap:8px; height:42px; padding:0 8px 0 14px;
+      background:#fff; border-radius:999px; box-shadow:var(--s1); position:relative; }
+    .dl-chip > i { color:var(--vert); font-size:14px; line-height:1; }
+    .dl-chip select { border:0; background:transparent; font:inherit; font-size:14px; color:var(--ink);
+      padding:0 26px 0 2px; outline:none; cursor:pointer; appearance:none; -webkit-appearance:none;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="%23D4A437" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+      background-repeat:no-repeat; background-position:right 6px center; }
+    [dir="rtl"] .dl-chip select { padding:0 2px 0 26px; background-position:left 6px center; }
+    /* Section « compagnon santé » : 3 cartes a icone (charte verte). */
+    .dl-feats { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    .dl-feat { background:#fff; border:1px solid var(--border); border-radius:var(--r16); padding:22px; text-align:center; box-shadow:var(--s1); }
+    .dl-feat__ic { display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:16px; background:#e7f3ef; color:var(--vert); font-size:20px; margin-bottom:12px; }
+    .dl-feat h3 { margin:0 0 6px; font-size:16px; font-weight:700; color:var(--ink); }
+    .dl-feat p { margin:0; font-size:13px; color:var(--text3); line-height:1.5; }
+    /* Bande de statistiques (degrade de marque). */
+    .dl-stats { display:grid; grid-template-columns:repeat(3,1fr); background:linear-gradient(155deg,var(--vert) 0%,#0a4d3e 100%); border-radius:var(--r16); padding:24px 12px; color:#fff; box-shadow:var(--s2); }
+    .dl-stat { text-align:center; padding:0 6px; }
+    .dl-stat + .dl-stat { border-inline-start:1px solid rgba(255,255,255,.2); }
+    .dl-stat__n { font-size:28px; font-weight:800; letter-spacing:-.02em; }
+    .dl-stat__l { font-size:12px; opacity:.9; margin-top:4px; font-weight:600; }
+    @media (max-width:640px) { .dl-feats { grid-template-columns:1fr; } .dl-stat__n { font-size:21px; } }
+
+    /* Resultats verrouilles : floutes hors connexion, avec un cadenas invitant a creer un compte. */
+    .docs-wrap { position:relative; }
+    .docs-flou { filter:blur(6px); pointer-events:none; user-select:none; }
+    .docs-gate { position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; padding:24px var(--gutter); }
+    .docs-gate__card { background:#fff; border:1px solid var(--border); border-radius:var(--r16); box-shadow:var(--s3); padding:28px 24px; text-align:center; max-width:380px; width:100%; }
+    .docs-gate__ic { display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:16px; background:#e7f3ef; color:var(--vert); font-size:20px; margin-bottom:12px; }
+    .docs-gate__card h3 { margin:0 0 6px; font-size:18px; font-weight:800; color:var(--ink); line-height:1.25; }
+    .docs-gate__card p { margin:0 0 16px; font-size:13px; color:var(--text3); line-height:1.5; }
+    .docs-gate__btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+    @media (max-width:760px) {
+      .dl-search { flex-direction:column; border-radius:20px; padding:8px; gap:6px; margin-top:14px; }
+      .dl-sep { display:none; }
+      .dl-field { width:100%; border:1px solid var(--border); border-radius:12px; }
+      .dl-btn { width:100%; justify-content:center; padding:14px; border-radius:12px; }
+    }
   `],
 })
 export class AnnuaireComponent implements OnInit, OnDestroy {
   private service = inject(AnnuaireService);
   private http = inject(HttpClient);
+  private auth = inject(AuthService);
   private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
+  /** Etat de connexion : hors connexion, les resultats sont floutes et on invite a creer un compte. */
+  connecte = signal(false);
   q = ''; specialite = ''; wilaya = '';
   /** Listes du referentiel (assets/referentiel.json) qui alimentent les deux <select>. */
   wilayas = signal<OptionWilaya[]>([]);
@@ -291,7 +406,9 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
         this.wilayas.set(ref?.wilayas ?? []);
         this.specialites.set(ref?.specialites ?? []);
       });
-    this.rechercher();
+    // Pas de chargement par defaut : l'accueil n'affiche aucun medecin tant qu'on ne cherche pas.
+    // Etat de connexion : determine si les resultats sont visibles ou floutes.
+    this.auth.pret().then(() => this.connecte.set(this.auth.estConnecte()));
     // L'autocompletion n'est active que dans le navigateur : cote serveur (SSR), aucun flux debounce ne doit tourner.
     if (!this.navigateur) return;
     this.abonnementAuto = this.saisie
@@ -348,6 +465,18 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   surFiltre() {
     this.suggestionsVisibles.set(false);
     this.rechercher();
+  }
+
+  /** Bouton « Se connecter » du cadenas sur les resultats floutes. */
+  seConnecter() { this.auth.seConnecter(); }
+
+  /** Clic sur le bouton « Rechercher » : lance la recherche et fait defiler vers la liste des resultats. */
+  lancerRecherche() {
+    this.suggestionsVisibles.set(false);
+    this.rechercher();
+    if (this.navigateur) {
+      setTimeout(() => document.getElementById('sec-docs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    }
   }
 
   /** Attend un court instant apres la frappe avant de lancer la recherche. */
