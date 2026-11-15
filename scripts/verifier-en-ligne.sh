@@ -30,13 +30,15 @@ nbar="$(curl -fsS "$SITE/ar/specialites/medecin-generaliste/alger?$cb" | grep -o
 [ "${nbar:-0}" -gt 0 ] && ok "page arabe : $nbar medecins rendus" || ko "aucun medecin rendu sur /ar/specialites/medecin-generaliste/alger"
 
 # 3b2. L'accueil arabe est rendu cote serveur.
-curl -fsS "$SITE/ar?$cb" | grep -q 'lang="ar"' && ok "accueil arabe (/ar)" || ko "accueil arabe absent"
+accueil_ar="$(curl -fsS "$SITE/ar?$cb")"   # pas de « curl | grep -q » : avec pipefail, grep -q coupe curl (SIGPIPE) = faux echec
+case "$accueil_ar" in *'lang="ar"'*) ok "accueil arabe (/ar)" ;; *) ko "accueil arabe absent" ;; esac
 
 # 3c. Anti-copie : la liste complete des fiches n'est pas publique.
 code="$(curl -s -o /dev/null -w '%{http_code}' "https://api.tabibi.doctor/api/medecins/plan?$cb")"
 [ "$code" = "404" ] && ok "liste complete des fiches fermee au public (404)" || ko "liste complete des fiches accessible depuis Internet (HTTP $code)"
 
 # 4. Plan du site joignable.
-curl -fsS "$SITE/sitemap.xml?$cb" | grep -q "<sitemapindex" && ok "plan du site" || ko "plan du site indisponible"
+plan="$(curl -fsS "$SITE/sitemap.xml?$cb")"
+case "$plan" in *"<sitemapindex"*) ok "plan du site" ;; *) ko "plan du site indisponible" ;; esac
 
 [ $echec -eq 0 ] && echo "PORTE VERTE" || { echo "PORTE ROUGE"; exit 1; }
