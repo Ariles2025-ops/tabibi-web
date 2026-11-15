@@ -6,7 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
 import { TeleconsultationService } from '../teleconsultation/teleconsultation.service';
-import { ActionEnCours, peutHonorer, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
+import { ActionEnCours, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
 import { MedecinService } from './medecin.service';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from './patients.service';
 
@@ -42,6 +42,9 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
       <p *ngIf="honore() as r" style="color:var(--blue)">
         Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }} marqué honoré.
       </p>
+      <p *ngIf="absent() as r" style="color:var(--blue)">
+        Patient signalé absent au rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }}.
+      </p>
 
       <section *ngFor="let j of jours()" style="margin:0 0 20px">
         <h2 style="font-size:.95rem;margin:0 0 8px;color:var(--text2);text-transform:capitalize">{{ j.debut | date:'EEEE d MMMM yyyy' }}</h2>
@@ -50,7 +53,8 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
               style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <strong style="color:var(--ink)"><i class="fa fa-clock fa-xs" style="color:var(--blue)"></i> {{ r.debut | date:'HH:mm' }}</strong>
-              <span style="display:inline-block;background:var(--blue-l);color:var(--blue-d);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span><br>
+              <span class="badge-statut" [style.background]="r.statut === 'ABSENT' ? 'var(--red-l)' : 'var(--blue-l)'" [style.color]="r.statut === 'ABSENT' ? 'var(--red)' : 'var(--blue-d)'"
+                    style="display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span><br>
               <span style="color:var(--text2)"><i class="fa fa-user fa-xs"></i> {{ nom(r.patientId) }}</span>
               <a *ngIf="telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">
                 <i class="fa fa-phone fa-xs"></i> {{ tel }}
@@ -65,9 +69,20 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
               <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">Non</button>
             </div>
 
-            <div *ngIf="aConfirmer() !== r.id" style="display:flex;gap:8px;flex-wrap:wrap">
+            <div *ngIf="absentAConfirmer() === r.id" class="confirmation-absent" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span style="color:var(--text2);font-size:.9rem">Signaler le patient absent à ce rendez-vous ?</span>
+              <button type="button" class="bouton" (click)="marquerAbsent(r)" [disabled]="enCours() !== null">
+                {{ estEnCours(r, 'absent') ? 'Enregistrement…' : 'Oui' }}
+              </button>
+              <button type="button" class="bouton-secondaire" (click)="absentAConfirmer.set(null)" [disabled]="enCours() !== null">Non</button>
+            </div>
+
+            <div *ngIf="aConfirmer() !== r.id && absentAConfirmer() !== r.id" style="display:flex;gap:8px;flex-wrap:wrap">
               <button *ngIf="peutHonorer(r)" type="button" class="bouton" (click)="honorer(r)" [disabled]="enCours() !== null">
                 {{ estEnCours(r, 'honorer') ? 'Enregistrement…' : 'Marquer honoré' }}
+              </button>
+              <button *ngIf="peutMarquerAbsent(r)" type="button" class="bouton-secondaire" (click)="demanderAbsent(r)" [disabled]="enCours() !== null">
+                Patient absent
               </button>
               <button *ngIf="peutProposer(r)" type="button" class="bouton-secondaire" (click)="proposerTeleconsultation(r)"
                       [disabled]="enCours() !== null">
@@ -77,7 +92,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
                       style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
                 Annuler
               </button>
-              <a *ngIf="r.statut !== 'ANNULE'" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
+              <a *ngIf="r.statut !== 'ANNULE' && r.statut !== 'ABSENT'" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
                  [queryParams]="{ patientId: r.patientId, rendezVousId: r.id }">Rédiger une ordonnance</a>
             </div>
           </li>
@@ -119,6 +134,9 @@ export class AgendaMedecinComponent implements OnInit {
   teleconsultationProposee = signal<RendezVous | null>(null);
   annule = signal<RendezVous | null>(null);
   honore = signal<RendezVous | null>(null);
+  /** Rendez-vous dont le signalement « patient absent » attend la confirmation (Oui / Non). */
+  absentAConfirmer = signal<string | null>(null);
+  absent = signal<RendezVous | null>(null);
   erreur = signal('');
 
   ngOnInit() {
@@ -161,6 +179,10 @@ export class AgendaMedecinComponent implements OnInit {
     return peutHonorer(r, Date.now());
   }
 
+  peutMarquerAbsent(r: RendezVous): boolean {
+    return peutMarquerAbsent(r, Date.now());
+  }
+
   peutProposer(r: RendezVous): boolean {
     return peutProposerTeleconsultation(r, Date.now());
   }
@@ -196,7 +218,37 @@ export class AgendaMedecinComponent implements OnInit {
   }
 
   demanderAnnulation(rdv: RendezVous) {
+    this.absentAConfirmer.set(null);
     this.aConfirmer.set(rdv.id);
+  }
+
+  demanderAbsent(rdv: RendezVous) {
+    this.aConfirmer.set(null);
+    this.absentAConfirmer.set(rdv.id);
+  }
+
+  /** Signale le patient absent (apres « Oui ») ; 409 si le rendez-vous n'est plus confirme : motif affiche et agenda recharge. */
+  marquerAbsent(rdv: RendezVous) {
+    this.demarrer(rdv, 'absent');
+    this.service.marquerAbsent(rdv.id).subscribe({
+      next: () => {
+        this.enCours.set(null);
+        this.absentAConfirmer.set(null);
+        this.absent.set(rdv);
+        this.charger();
+      },
+      error: (e: HttpErrorResponse) => {
+        this.enCours.set(null);
+        this.absentAConfirmer.set(null);
+        if (e.status === 401) {
+          this.auth.seConnecter();
+        } else if (e.status === 409) {
+          this.charger(e.error?.erreur ?? "Ce rendez-vous ne peut pas être marqué absent.");
+        } else {
+          this.erreur.set(e.error?.erreur ?? 'La mise à jour du rendez-vous a échoué, veuillez réessayer.');
+        }
+      },
+    });
   }
 
   /**
@@ -257,5 +309,6 @@ export class AgendaMedecinComponent implements OnInit {
     this.teleconsultationProposee.set(null);
     this.annule.set(null);
     this.honore.set(null);
+    this.absent.set(null);
   }
 }

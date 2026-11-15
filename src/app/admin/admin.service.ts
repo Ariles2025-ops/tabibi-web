@@ -24,6 +24,12 @@ export interface Candidature {
   traiteeLe: string | null;
   /** Fiche de l'annuaire reclamee par le medecin ; null (ou absente) pour une nouvelle fiche. */
   ficheReclamee?: string | null;
+  /** E-mail du compte qui a depose la candidature ; null s'il est inconnu. */
+  compteEmail?: string | null;
+  /** Nom affiche sur la fiche reclamee ; null pour une nouvelle fiche. */
+  ficheReclameeNom?: string | null;
+  /** Nombre d'autres candidatures portant le meme numero d'ordre. */
+  doublonsNumeroOrdre?: number;
 }
 
 /** Donnees du depot d'une candidature (POST /api/medecin/candidature, role MEDECIN). */

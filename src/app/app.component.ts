@@ -86,20 +86,6 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
               <a class="siteft__contact" href="mailto:contact@tabibi.doctor">Nous contacter</a>
             </div>
 
-            <div class="siteft__apps">
-              <span class="siteft__appslbl">Téléchargez l'application Tabibi</span>
-              <div class="siteft__badges">
-                <a class="storebadge" href="#" aria-label="Télécharger dans l'App Store">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 2c.1 1-.3 2-1 2.7-.7.8-1.8 1.4-2.8 1.3-.1-1 .4-2 .9-2.6.7-.8 1.9-1.3 2.9-1.4zM19.6 17.3c-.5 1.2-.8 1.7-1.5 2.8-1 1.5-2.3 3.3-4 3.3-1.5 0-1.9-1-3.9-1-2 0-2.4 1-3.9 1-1.7 0-2.9-1.6-3.9-3.1-2.8-4.2-3.1-9.1-1.4-11.7C2.3 6.3 4 5.3 5.6 5.3c1.6 0 2.7 1 4 1 1.3 0 2-1 3.9-1 1.4 0 2.9.8 4 2.1-3.5 1.9-2.9 6.9 2.1 8.9z"/></svg>
-                  <span><small>Télécharger dans</small>App Store</span>
-                </a>
-                <a class="storebadge" href="#" aria-label="Disponible sur Google Play">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 2.3c-.2.2-.3.5-.3 1v17.4c0 .5.1.8.3 1l9.3-9.7L3.6 2.3zm10.4 8.3 2.8-2.9L5.6 1.3c-.3-.2-.6-.2-.9-.1l9.3 9.4zm0 2.8L4.7 22.8c.3.1.6.1.9-.1l11.2-6.4-2.8-2.9zm6.1-3.5-2.4-1.4-3 3.1 3 3.1 2.4-1.4c.9-.5.9-2.5 0-3z"/></svg>
-                  <span><small>Disponible sur</small>Google Play</span>
-                </a>
-              </div>
-            </div>
-
             <div class="siteft__cols">
               <div class="siteft__col">
                 <h4>Tabibi</h4>
@@ -112,21 +98,21 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
               </div>
               <div class="siteft__col">
                 <h4>Spécialités</h4>
-                <a routerLink="/">Médecin généraliste</a>
-                <a routerLink="/">Cardiologue</a>
-                <a routerLink="/">Dentiste</a>
-                <a routerLink="/">Pédiatre</a>
-                <a routerLink="/">Gynécologue</a>
-                <a routerLink="/">Dermatologue</a>
+                <a routerLink="/" [queryParams]="{ specialite: 'medecin-generaliste' }">Médecin généraliste</a>
+                <a routerLink="/" [queryParams]="{ specialite: 'cardiologue' }">Cardiologue</a>
+                <a routerLink="/" [queryParams]="{ specialite: 'dentiste' }">Dentiste</a>
+                <a routerLink="/" [queryParams]="{ specialite: 'pediatre' }">Pédiatre</a>
+                <a routerLink="/" [queryParams]="{ specialite: 'gynecologue' }">Gynécologue</a>
+                <a routerLink="/" [queryParams]="{ specialite: 'dermatologue' }">Dermatologue</a>
               </div>
               <div class="siteft__col">
                 <h4>Villes</h4>
-                <a routerLink="/">Alger</a>
-                <a routerLink="/">Oran</a>
-                <a routerLink="/">Constantine</a>
-                <a routerLink="/">Annaba</a>
-                <a routerLink="/">Blida</a>
-                <a routerLink="/">Sétif</a>
+                <a routerLink="/" [queryParams]="{ wilaya: '16' }">Alger</a>
+                <a routerLink="/" [queryParams]="{ wilaya: '31' }">Oran</a>
+                <a routerLink="/" [queryParams]="{ wilaya: '25' }">Constantine</a>
+                <a routerLink="/" [queryParams]="{ wilaya: '23' }">Annaba</a>
+                <a routerLink="/" [queryParams]="{ wilaya: '9' }">Blida</a>
+                <a routerLink="/" [queryParams]="{ wilaya: '19' }">Sétif</a>
               </div>
             </div>
 

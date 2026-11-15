@@ -7,6 +7,18 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { Besoin, DawiniService, Reponse } from '../dawini/dawini.service';
 import { EspacePharmacieComponent } from './espace-pharmacie.component';
+import { Profil, ProfilService } from '../moi/profil.service';
+import { OrdonnanceService } from '../ordonnances/ordonnance.service';
+
+const PROFIL: Profil = {
+  utilisateurId: 'ph1',
+  nomComplet: 'Pharmacie El Amel',
+  telephone: '0550123456',
+  dateNaissance: null,
+  wilayaCode: '16',
+  langue: 'fr',
+  misAJourLe: '2026-09-18T10:00:00Z',
+};
 
 const CLE = 'tabibi.pharmacie.nom';
 
@@ -40,6 +52,8 @@ const REFERENTIEL = { wilayas: [{ code: '9', nom: 'Blida' }, { code: '16', nom: 
 describe('EspacePharmacieComponent', () => {
   let fixture: ComponentFixture<EspacePharmacieComponent>;
   let service: jasmine.SpyObj<DawiniService>;
+  let profils: jasmine.SpyObj<ProfilService>;
+  let ordonnances: jasmine.SpyObj<OrdonnanceService>;
 
   /** Le stockage local est un confort : les tests ne dependent pas de sa disponibilite. */
   function memoriser(nom: string | null) {
@@ -64,11 +78,17 @@ describe('EspacePharmacieComponent', () => {
     memoriser(null);
     service = jasmine.createSpyObj<DawiniService>('DawiniService', ['besoinsOuverts', 'repondre']);
     service.besoinsOuverts.and.returnValue(of([BESOIN]));
+    profils = jasmine.createSpyObj<ProfilService>('ProfilService', ['monProfil', 'enregistrer']);
+    // Par defaut : profil jamais renseigne (404).
+    profils.monProfil.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404, error: { erreur: 'Profil introuvable.' } })));
+    ordonnances = jasmine.createSpyObj<OrdonnanceService>('OrdonnanceService', ['verifier', 'delivrer']);
 
     TestBed.configureTestingModule({
       imports: [EspacePharmacieComponent],
       providers: [
         { provide: DawiniService, useValue: service },
+        { provide: ProfilService, useValue: profils },
+        { provide: OrdonnanceService, useValue: ordonnances },
         { provide: AuthService, useValue: { seConnecter: jasmine.createSpy('seConnecter') } },
         { provide: LOCALE_ID, useValue: 'fr' },
         { provide: HttpClient, useValue: { get: () => of(REFERENTIEL) } },
@@ -229,5 +249,89 @@ describe('EspacePharmacieComponent', () => {
     service.besoinsOuverts.and.returnValue(of([]));
     await chercher('9');
     expect(texte()).toContain('Aucune demande ouverte dans cette wilaya.');
+  });
+
+  it('sans profil, propose le formulaire nom + wilaya puis l enregistre et charge les demandes de la wilaya', async () => {
+    profils.enregistrer.and.returnValue(of(PROFIL));
+    await afficher();
+
+    expect(texte()).toContain('Renseignez le nom et la wilaya de votre pharmacie');
+    await saisir('profilNom', ' Pharmacie El Amel ');
+    await saisir('profilTelephone', '0550 12 34 56');
+    await saisir('profilWilaya', '16');
+    fixture.nativeElement.querySelector('form.formulaire-profil').dispatchEvent(new Event('submit'));
+    await afficher();
+
+    expect(profils.enregistrer).toHaveBeenCalledWith({
+      nomComplet: 'Pharmacie El Amel', telephone: '0550123456', dateNaissance: null, wilayaCode: '16', langue: 'fr',
+    });
+    expect(texte()).not.toContain('Renseignez le nom et la wilaya de votre pharmacie');
+    expect(service.besoinsOuverts).toHaveBeenCalledWith('16');
+  });
+
+  it('avec un profil, preremplit le nom, charge directement la wilaya et masque les demandes deja repondues', async () => {
+    profils.monProfil.and.returnValue(of(PROFIL));
+    service.besoinsOuverts.and.returnValue(of([BESOIN, { ...BESOIN, id: 'b2', medicament: 'Doliprane', dejaRepondu: true }]));
+    await afficher();
+
+    expect(service.besoinsOuverts).toHaveBeenCalledWith('16');
+    expect(texte()).not.toContain('Renseignez le nom et la wilaya');
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.length).toBe(2);
+    const doliprane = items.find((li) => li.textContent?.includes('Doliprane'))!;
+    expect(doliprane.textContent).toContain('Déjà répondu');
+    expect(doliprane.querySelector('form')).toBeNull();
+    const amox = items.find((li) => li.textContent?.includes('Amoxicilline'))!;
+    const nom: HTMLInputElement = amox.querySelector('form input:not([type="radio"]):not([type="number"])')!;
+    expect(nom.value).toBe('Pharmacie El Amel');
+  });
+
+  it('verifie un code puis marque l ordonnance comme delivree', async () => {
+    ordonnances.verifier.and.returnValue(of({ valide: true, emiseLe: '2026-09-18T10:00:00Z', statut: 'EMISE' }));
+    ordonnances.delivrer.and.returnValue(of({ statut: 'DELIVREE', delivreeLe: '2026-09-19T09:30:00Z' }));
+    await afficher();
+
+    await saisir('codeOrdonnance', 'ab12cd34');
+    fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+    await afficher();
+    expect(ordonnances.verifier).toHaveBeenCalledWith('AB12CD34');
+    expect(texte()).toContain('Ordonnance valide');
+
+    const bouton: HTMLButtonElement = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find((b) => b.textContent?.includes('Marquer comme délivrée'))!;
+    bouton.click();
+    await afficher();
+
+    expect(ordonnances.delivrer).toHaveBeenCalledWith('AB12CD34');
+    expect(texte()).toContain('Ordonnance marquée comme délivrée.');
+    expect(texte()).toContain('Déjà délivrée');
+    expect(texte()).not.toContain('Marquer comme délivrée');
+  });
+
+  it('affiche le { erreur } d un 409 a la delivrance', async () => {
+    ordonnances.verifier.and.returnValue(of({ valide: true, emiseLe: '2026-09-18T10:00:00Z', statut: 'EMISE' }));
+    ordonnances.delivrer.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Ordonnance deja delivree.' } })),
+    );
+    await afficher();
+    await saisir('codeOrdonnance', 'AB12CD34');
+    fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+    await afficher();
+    (Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find((b) => b.textContent?.includes('Marquer comme délivrée'))!).click();
+    await afficher();
+
+    expect(texte()).toContain('Ordonnance deja delivree.');
+  });
+
+  it('signale une ordonnance annulee ou deja delivree sans proposer la delivrance', async () => {
+    ordonnances.verifier.and.returnValue(of({ valide: true, emiseLe: '2026-09-18T10:00:00Z', statut: 'ANNULEE' }));
+    await afficher();
+    await saisir('codeOrdonnance', 'AB12CD34');
+    fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+    await afficher();
+
+    expect(texte()).toContain('Annulée par le médecin');
+    expect(texte()).not.toContain('Marquer comme délivrée');
   });
 });

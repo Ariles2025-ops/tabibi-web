@@ -79,4 +79,9 @@ export class SecretaireService {
   annuler(rendezVousId: string): Observable<RendezVous> {
     return this.http.post<RendezVous>(`${this.base}/api/secretaire/rendezvous/${rendezVousId}/annuler`, null);
   }
+  /** Signale un patient absent a un rendez-vous confirme deja commence ; renvoie le rendez-vous mis a jour. */
+  marquerAbsent(rendezVousId: string): Observable<RendezVous> {
+    return this.http.post<RendezVous>(`${this.base}/api/secretaire/rendezvous/${rendezVousId}/absent`, null);
+  }
+
 }

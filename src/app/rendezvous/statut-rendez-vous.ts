@@ -4,6 +4,7 @@ const LIBELLES_STATUT_RENDEZ_VOUS: Partial<Record<string, string>> = {
   RESERVE: 'Réservé',
   HONORE: 'Honoré',
   ANNULE: 'Annulé',
+  ABSENT: 'Absent',
 };
 
 export function libelleStatutRendezVous(statut: string): string {

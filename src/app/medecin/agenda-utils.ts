@@ -51,6 +51,11 @@ export function peutHonorer(r: RendezVous, maintenant = Date.now()): boolean {
   return r.statut === 'CONFIRME' && Date.parse(r.debut) <= maintenant;
 }
 
+/** Un patient ne peut etre signale absent que sur un rendez-vous confirme deja commence (memes regles que « honore »). */
+export function peutMarquerAbsent(r: RendezVous, maintenant = Date.now()): boolean {
+  return peutHonorer(r, maintenant);
+}
+
 /** Une teleconsultation ne se propose que sur un rendez-vous confirme qui n'a pas encore commence. */
 export function peutProposerTeleconsultation(r: RendezVous, maintenant = Date.now()): boolean {
   return r.statut === 'CONFIRME' && Date.parse(r.debut) > maintenant;

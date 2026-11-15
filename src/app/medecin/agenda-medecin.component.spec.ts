@@ -48,7 +48,7 @@ describe('AgendaMedecinComponent', () => {
 
   beforeEach(() => {
     registerLocaleData(localeFr);
-    medecinService = jasmine.createSpyObj<MedecinService>('MedecinService', ['agenda', 'honorer', 'annulerRendezVous']);
+    medecinService = jasmine.createSpyObj<MedecinService>('MedecinService', ['agenda', 'honorer', 'annulerRendezVous', 'marquerAbsent']);
     medecinService.agenda.and.returnValue(of([CONFIRME, HONORE]));
     teleconsultations = jasmine.createSpyObj<TeleconsultationService>('TeleconsultationService', ['planifier']);
     const patients = jasmine.createSpyObj<PatientsService>('PatientsService', ['patientsDuMedecin']);
@@ -196,5 +196,35 @@ describe('AgendaMedecinComponent', () => {
     expect(texte()).toContain('Seul un rendez-vous confirme peut etre annule.');
     expect(texte()).not.toContain('le patient est prévenu');
     expect(medecinService.agenda).toHaveBeenCalledTimes(2);
+  });
+
+  it('« Patient absent » n apparait que sur un rendez-vous commence, demande confirmation puis enregistre', () => {
+    medecinService.agenda.and.returnValue(of([COMMENCE, CONFIRME]));
+    medecinService.marquerAbsent.and.returnValue(of({ ...COMMENCE, statut: 'ABSENT' }));
+    fixture.detectChanges();
+
+    const boutonsAbsent = (Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[])
+      .filter((b) => b.textContent?.trim() === 'Patient absent');
+    expect(boutonsAbsent.length).toBe(1);
+
+    boutonsAbsent[0].click();
+    fixture.detectChanges();
+    expect(texte()).toContain('Signaler le patient absent');
+    expect(medecinService.marquerAbsent).not.toHaveBeenCalled();
+    bouton('Oui')!.click();
+    fixture.detectChanges();
+
+    expect(medecinService.marquerAbsent).toHaveBeenCalledWith('r3');
+    expect(texte()).toContain('Patient signalé absent');
+    expect(medecinService.agenda).toHaveBeenCalledTimes(2);
+  });
+
+  it('libelle un rendez-vous ABSENT « Absent »', () => {
+    medecinService.agenda.and.returnValue(of([{ ...HONORE, statut: 'ABSENT' }]));
+    fixture.detectChanges();
+    bouton('Passés')!.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('li .badge-statut').textContent.trim()).toBe('Absent');
   });
 });

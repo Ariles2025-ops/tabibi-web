@@ -25,10 +25,20 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
       </form>
 
       <ng-container *ngIf="resultat() as r">
-        <p *ngIf="r.valide" style="color:var(--vert);font-weight:600">
-          Ordonnance authentique, émise le {{ r.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}<ng-container *ngIf="r.statut"> ({{ libelleStatut(r.statut) }})</ng-container>.
-        </p>
-        <p *ngIf="!r.valide" style="color:#b3261e;font-weight:600">Code inconnu.</p>
+        <ng-container [ngSwitch]="r.statut">
+          <p *ngSwitchCase="'DELIVREE'" class="verif-delivree" style="color:var(--red);font-weight:600">
+            Déjà délivrée<ng-container *ngIf="r.delivreeLe"> le {{ r.delivreeLe | date:'d MMMM yyyy' }}</ng-container> : cette ordonnance ne peut pas être délivrée une nouvelle fois.
+          </p>
+          <p *ngSwitchCase="'ANNULEE'" class="verif-annulee" style="color:var(--red);font-weight:600">
+            Annulée : cette ordonnance a été annulée par le médecin et ne doit pas être délivrée.
+          </p>
+          <ng-container *ngSwitchDefault>
+            <p *ngIf="r.valide" style="color:var(--vert);font-weight:600">
+              Ordonnance authentique, émise le {{ r.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}<ng-container *ngIf="r.statut"> ({{ libelleStatut(r.statut) }})</ng-container>.
+            </p>
+            <p *ngIf="!r.valide" style="color:#b3261e;font-weight:600">Code inconnu.</p>
+          </ng-container>
+        </ng-container>
       </ng-container>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
     </main>

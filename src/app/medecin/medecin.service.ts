@@ -52,6 +52,16 @@ export class MedecinService {
     return this.http.get<Ordonnance[]>(`${this.base}/api/medecin/ordonnances`);
   }
 
+  /** Annule une ordonnance EMISE (motif facultatif) ; renvoie l'ordonnance mise a jour (409 si deja delivree ou annulee). */
+  annulerOrdonnance(ordonnanceId: string, motif: string): Observable<Ordonnance> {
+    return this.http.post<Ordonnance>(`${this.base}/api/medecin/ordonnances/${ordonnanceId}/annuler`, { motif });
+  }
+
+  /** Signale un patient absent a un rendez-vous confirme deja commence ; renvoie le rendez-vous mis a jour. */
+  marquerAbsent(rendezVousId: string): Observable<RendezVous> {
+    return this.http.post<RendezVous>(`${this.base}/api/medecin/rendezvous/${rendezVousId}/absent`, null);
+  }
+
   /** Depot d'une candidature a l'annuaire (201 ; 400 si incomplete ; 409 si une candidature est en attente ou validee). */
   deposerCandidature(demande: DemandeCandidature): Observable<Candidature> {
     return this.http.post<Candidature>(`${this.base}/api/medecin/candidature`, demande);

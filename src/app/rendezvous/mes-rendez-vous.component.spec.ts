@@ -116,4 +116,13 @@ describe('MesRendezVousComponent (avis)', () => {
     expect(avis.mes).not.toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).not.toContain('Donner mon avis');
   });
+
+  it('range un rendez-vous ABSENT dans « Passés », libelle « Absent », meme a une date future', async () => {
+    rendezVous.mes.and.returnValue(of([{ ...CONFIRME, id: 'r8', debut: '2099-01-06T09:00:00Z', statut: 'ABSENT' }]));
+    await afficher();
+
+    expect(fixture.nativeElement.textContent).toContain('Passés');
+    const statut = fixture.nativeElement.querySelector('li.mr-carte--passe .mr-statut') as HTMLElement;
+    expect(statut.textContent?.trim()).toBe('Absent');
+  });
 });

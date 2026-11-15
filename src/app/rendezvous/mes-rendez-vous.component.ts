@@ -83,7 +83,7 @@ import { libelleStatutRendezVous } from './statut-rendez-vous';
                 <div class="mr-corps">
                   <span class="mr-quand"><span class="mr-cap">{{ r.debut | date:'EEEE d MMMM y' }}</span> à {{ r.debut | date:'HH:mm' }}</span>
                   <a [routerLink]="['/medecins', r.medecinId]" class="mr-doc">{{ noms()[r.medecinId] ?? 'Voir le praticien' }}</a>
-                  <span class="mr-statut" [class.mr-statut--annule]="r.statut === 'ANNULE'">{{ libelleStatutPasse(r) }}</span>
+                  <span class="mr-statut" [class.mr-statut--annule]="r.statut === 'ANNULE' || r.statut === 'ABSENT'">{{ libelleStatutPasse(r) }}</span>
                 </div>
                 <div class="mr-actions">
                   <a *ngIf="r.statut === 'HONORE' && !avisDonne(r)" class="mr-btn mr-btn--sec" [routerLink]="['/avis/nouveau', r.id]"><i class="fa fa-star fa-xs"></i> Donner mon avis</a>
@@ -236,12 +236,12 @@ export class MesRendezVousComponent implements OnInit {
   }
 
   private estAVenir(rdv: RendezVous): boolean {
-    return rdv.statut !== 'ANNULE' && rdv.statut !== 'HONORE' && Date.parse(rdv.debut) >= Date.now();
+    return rdv.statut !== 'ANNULE' && rdv.statut !== 'HONORE' && rdv.statut !== 'ABSENT' && Date.parse(rdv.debut) >= Date.now();
   }
 
-  /** Un rendez-vous deja annule ou deja honore (consultation passee) ne s'annule plus. */
+  /** Un rendez-vous deja annule, honore ou marque absent (consultation passee) ne s'annule plus. */
   peutAnnuler(rdv: RendezVous): boolean {
-    return rdv.statut !== 'ANNULE' && rdv.statut !== 'HONORE';
+    return rdv.statut !== 'ANNULE' && rdv.statut !== 'HONORE' && rdv.statut !== 'ABSENT';
   }
 
   libelleStatut(statut: string): string {

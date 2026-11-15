@@ -20,6 +20,8 @@ export interface Besoin {
   publieLe: string;
   clotureLe: string | null;
   nombreReponses: number;
+  /** Vrai si la pharmacie connectee a deja repondu a cette demande (GET /api/dawini/besoins). */
+  dejaRepondu?: boolean;
 }
 
 /** Donnees de publication d'un besoin (POST /api/dawini/besoins, role PATIENT) ; commune et precision facultatives. */

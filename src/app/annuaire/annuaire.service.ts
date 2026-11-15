@@ -11,6 +11,8 @@ export interface Medecin {
   wilayaCode: string;
   wilayaFr: string;
   ville: string;
+  /** Vrai si le medecin a des creneaux libres a venir (le serveur trie ces medecins en premier). */
+  reservable?: boolean;
 }
 
 /** Creneau de consultation propose par un medecin. */

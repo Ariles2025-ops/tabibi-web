@@ -20,6 +20,9 @@ const EN_ATTENTE: Candidature = {
   ville: 'Alger',
   numeroOrdre: 'ORD-123',
   telephone: '0550000000',
+  compteEmail: 'amina@exemple.dz',
+  ficheReclameeNom: null,
+  doublonsNumeroOrdre: 0,
   statut: 'EN_ATTENTE',
   motifRefus: null,
   deposeeLe: '2026-09-18T10:00:00Z',
@@ -132,6 +135,16 @@ describe('CandidaturesAdminComponent', () => {
 
     bouton('Valider')!.click();
     await afficher();
+    // Panneau de confirmation recapitulatif : rien n'est envoye avant « Oui, valider ».
+    expect(service.valider).not.toHaveBeenCalled();
+    const panneau: HTMLElement = fixture.nativeElement.querySelector('.confirmation-candidature');
+    expect(panneau.textContent).toContain('Dr Amina Belkacem');
+    expect(panneau.textContent).toContain('Cardiologue');
+    expect(panneau.textContent).toContain('Alger');
+    expect(panneau.textContent).toContain('ORD-123');
+    expect(panneau.textContent).toContain('amina@exemple.dz');
+    bouton('Oui, valider')!.click();
+    await afficher();
 
     expect(service.valider).toHaveBeenCalledWith('c1');
     expect(texte()).toContain('Candidature de Dr Amina Belkacem validée');
@@ -146,6 +159,10 @@ describe('CandidaturesAdminComponent', () => {
     expect(bouton('Refuser')!.disabled).toBeFalse();
 
     bouton('Refuser')!.click();
+    await afficher();
+    expect(service.refuser).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.confirmation-candidature').textContent).toContain('Numéro d’ordre introuvable.');
+    bouton('Oui, refuser')!.click();
     await afficher();
 
     expect(service.refuser).toHaveBeenCalledWith('c1', 'Numéro d’ordre introuvable.');
@@ -173,6 +190,8 @@ describe('CandidaturesAdminComponent', () => {
 
     bouton('Valider')!.click();
     await afficher();
+    bouton('Oui, valider')!.click();
+    await afficher();
 
     expect(texte()).toContain('Seule une candidature en attente peut etre validee.');
     expect(service.candidatures).toHaveBeenCalledTimes(2);
@@ -186,6 +205,8 @@ describe('CandidaturesAdminComponent', () => {
 
     await saisirMotif('x');
     bouton('Refuser')!.click();
+    await afficher();
+    bouton('Oui, refuser')!.click();
     await afficher();
 
     expect(texte()).toContain('Le motif du refus est obligatoire.');
@@ -204,5 +225,33 @@ describe('CandidaturesAdminComponent', () => {
     await afficher();
 
     expect(texte()).toContain("Cette page est réservée à l'administrateur.");
+  });
+
+  it('« Non » ferme la confirmation sans rien envoyer', async () => {
+    await afficher();
+    bouton('Valider')!.click();
+    await afficher();
+    bouton('Non')!.click();
+    await afficher();
+
+    expect(fixture.nativeElement.querySelector('.confirmation-candidature')).toBeNull();
+    expect(service.valider).not.toHaveBeenCalled();
+  });
+
+  it('affiche l e-mail du compte, la fiche reclamee et l alerte de doublon de n° d ordre', async () => {
+    service.candidatures.and.returnValue(of([
+      { ...EN_ATTENTE, ficheReclamee: 'f1', ficheReclameeNom: 'Dr A. Belkacem', doublonsNumeroOrdre: 2 },
+    ]));
+    await afficher();
+
+    expect(texte()).toContain('amina@exemple.dz');
+    expect(texte()).toContain('Réclame la fiche :');
+    expect(texte()).toContain('Dr A. Belkacem');
+    expect(fixture.nativeElement.querySelector('.alerte-doublon').textContent).toContain("N° d'ordre déjà utilisé par 2 autre(s) candidature(s)");
+  });
+
+  it('n affiche pas d alerte sans doublon', async () => {
+    await afficher();
+    expect(fixture.nativeElement.querySelector('.alerte-doublon')).toBeNull();
   });
 });

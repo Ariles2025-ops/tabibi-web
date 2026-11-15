@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angu
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject, Subscription, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { AnnuaireService, Medecin } from './annuaire.service';
 import { AuthService } from '../auth/auth.service';
@@ -188,7 +188,8 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
             </div>
           </div>
           <div class="doc-footer">
-            <span></span>
+            <span *ngIf="m.reservable" class="badge-reservable" style="display:inline-flex;align-items:center;gap:6px;background:var(--green-l);color:var(--green);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px"><i class="fa fa-calendar-check fa-xs" aria-hidden="true"></i>Réservable en ligne</span>
+            <span *ngIf="!m.reservable"></span>
             <span class="btn btn-sm doc-btn-ghost"><i class="fa fa-arrow-right"></i> Voir la fiche</span>
           </div>
         </article>
@@ -372,6 +373,7 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   private service = inject(AnnuaireService);
   private http = inject(HttpClient);
   private auth = inject(AuthService);
+  private route = inject(ActivatedRoute);
   private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
   /** Etat de connexion : hors connexion, les resultats sont floutes et on invite a creer un compte. */
   connecte = signal(false);
@@ -390,6 +392,8 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   /** Frappes successives dans le champ, pour l'autocompletion differee (debounce). */
   private saisie = new Subject<string>();
   private abonnementAuto: Subscription | null = null;
+  /** Filtres passes dans l'URL (?specialite=…&wilaya=…), par exemple depuis les liens du pied de page. */
+  private abonnementParams: Subscription | null = null;
   private masquage: any;
 
   /** Vrai des que l'utilisateur a saisi un texte ou choisi un filtre : on masque le marketing pour montrer les resultats tout de suite. */
@@ -407,6 +411,18 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
     // Pas de chargement par defaut : l'accueil n'affiche aucun medecin tant qu'on ne cherche pas.
     // Etat de connexion : determine si les resultats sont visibles ou floutes.
     this.auth.pret().then(() => this.connecte.set(this.auth.estConnecte()));
+    // Filtres de l'URL : appliques a l'arrivee et a chaque changement (liens « Spécialités » / « Villes » du pied de page).
+    this.abonnementParams = this.route.queryParamMap.subscribe((p) => {
+      const specialite = p.get('specialite');
+      const wilaya = p.get('wilaya');
+      if (!specialite && !wilaya) return;
+      this.specialite = specialite ?? '';
+      this.wilaya = wilaya ?? '';
+      this.auth.pret().then(() => {
+        this.connecte.set(this.auth.estConnecte());
+        this.lancerRecherche();
+      });
+    });
     // L'autocompletion n'est active que dans le navigateur : cote serveur (SSR), aucun flux debounce ne doit tourner.
     if (!this.navigateur) return;
     this.abonnementAuto = this.saisie
@@ -432,6 +448,8 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.abonnementAuto?.unsubscribe();
     this.abonnementAuto = null;
+    this.abonnementParams?.unsubscribe();
+    this.abonnementParams = null;
     clearTimeout(this.minuteur);
     clearTimeout(this.masquage);
   }

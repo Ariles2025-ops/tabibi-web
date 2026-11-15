@@ -46,6 +46,7 @@ describe('EspaceSecretaireComponent', () => {
       'ouvrirCreneau',
       'honorer',
       'annuler',
+      'marquerAbsent',
       'creneaux',
       'supprimerCreneau',
     ]);
@@ -143,7 +144,29 @@ describe('EspaceSecretaireComponent', () => {
 
     expect(lignes().length).toBe(1);
     expect(bouton('Marquer honoré')).toBeUndefined();
+    expect(bouton('Patient absent')).toBeUndefined();
     expect(bouton('Annuler')).toBeDefined();
+  });
+
+  it('signale un patient absent apres confirmation dans la page, puis recharge l agenda', async () => {
+    service.marquerAbsent.and.returnValue(of({ ...CONFIRME, statut: 'ABSENT' }));
+    await afficher();
+
+    bouton('Patient absent')!.click();
+    await afficher();
+    expect(texte()).toContain('Signaler le patient absent');
+    bouton('Non')!.click();
+    await afficher();
+    expect(service.marquerAbsent).not.toHaveBeenCalled();
+
+    bouton('Patient absent')!.click();
+    await afficher();
+    bouton('Oui')!.click();
+    await afficher();
+
+    expect(service.marquerAbsent).toHaveBeenCalledWith('r1');
+    expect(texte()).toContain('Patient signalé absent');
+    expect(service.agenda).toHaveBeenCalledTimes(2);
   });
 
   it('propose le choix du medecin quand il y a plusieurs cabinets, puis charge son agenda', async () => {

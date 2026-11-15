@@ -8,11 +8,12 @@ import { RoleService } from '../auth/role.service';
 import { ProfilService } from '../moi/profil.service';
 import { Ordonnance, OrdonnanceService } from './ordonnance.service';
 import { libelleStatutOrdonnance } from './statut-ordonnance';
+import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.component';
 
 @Component({
   selector: 'app-ordonnance-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, BadgeStatutOrdonnanceComponent],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <p class="sans-impression" style="margin:0 0 16px">
@@ -28,8 +29,10 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
           <div>
             <h1 style="color:var(--vert);margin:0 0 4px">Ordonnance</h1>
             <p style="color:var(--text3);margin:0">
-              Émise le {{ o.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }} · {{ libelleStatut(o.statut) }}
+              Émise le {{ o.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }} · <app-badge-statut-ordonnance [statut]="o.statut" />
             </p>
+            <p *ngIf="o.statut === 'ANNULEE'" style="color:var(--red);margin:4px 0 0">Annulée par le médecin<ng-container *ngIf="o.motifAnnulation"> : {{ o.motifAnnulation }}</ng-container></p>
+            <p *ngIf="o.statut === 'DELIVREE'" style="color:var(--text2);margin:4px 0 0">Délivrée en pharmacie<ng-container *ngIf="o.delivreeLe"> le {{ o.delivreeLe | date:'d MMMM yyyy' }}</ng-container></p>
             <p style="color:var(--text3);margin:4px 0 0">
               Praticien : {{ medecin()?.nomComplet ?? 'Votre médecin' }}
               <ng-container *ngIf="nomPatient()"><br>Patient : {{ nomPatient() }}</ng-container>

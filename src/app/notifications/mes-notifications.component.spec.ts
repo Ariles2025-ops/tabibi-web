@@ -3,6 +3,7 @@ import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { of } from 'rxjs';
+import { Router, provideRouter } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { MesNotificationsComponent } from './mes-notifications.component';
 import { Notification, NotificationService } from './notification.service';
@@ -46,6 +47,7 @@ describe('MesNotificationsComponent', () => {
         { provide: NotificationService, useValue: service },
         { provide: AuthService, useValue: auth },
         { provide: LOCALE_ID, useValue: 'fr' },
+        provideRouter([]),
       ],
     });
     fixture = TestBed.createComponent(MesNotificationsComponent);
@@ -122,5 +124,28 @@ describe('MesNotificationsComponent', () => {
 
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.mesNotifications).not.toHaveBeenCalled();
+  });
+
+  it('une notification avec lien est cliquable : elle est marquee lue puis ouvre la page', async () => {
+    const avecLien: Notification = { ...NON_LUE, lien: '/mes-rendez-vous' };
+    service.mesNotifications.and.returnValue(of([avecLien, LUE]));
+    service.marquerLue.and.returnValue(of({ ...avecLien, lue: true }));
+    const router = TestBed.inject(Router);
+    const navigation = spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    await afficher();
+
+    expect(lignes()[0].textContent).toContain('Voir');
+    expect(lignes()[1].textContent).not.toContain('Voir');
+
+    lignes()[0].click();
+    fixture.detectChanges();
+
+    expect(service.marquerLue).toHaveBeenCalledWith('n1');
+    expect(navigation).toHaveBeenCalledWith('/mes-rendez-vous');
+
+    // Sans lien, le clic ne navigue pas.
+    navigation.calls.reset();
+    lignes()[1].click();
+    expect(navigation).not.toHaveBeenCalled();
   });
 });

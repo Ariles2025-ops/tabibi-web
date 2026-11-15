@@ -4,7 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
-import { ActionEnCours, peutHonorer, rendezVousAVenir, rendezVousPasses, styleOnglet } from '../medecin/agenda-utils';
+import { ActionEnCours, peutHonorer, peutMarquerAbsent, rendezVousAVenir, rendezVousPasses, styleOnglet } from '../medecin/agenda-utils';
 import { GestionCreneauxComponent, SourceCreneaux } from '../medecin/gestion-creneaux.component';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from '../medecin/patients.service';
 import { abregerIdentifiant } from '../messagerie/messagerie.service';
@@ -15,7 +15,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
 /**
  * Espace secretaire (role SECRETAIRE) : choix du medecin parmi mes rattachements (GET /api/secretaire/medecins),
  * puis son agenda (GET /api/secretaire/medecins/{id}/rendezvous) a venir ou passe, par jour, avec le nom des
- * patients, « Marquer honoré » (rendez-vous commence) et « Annuler » confirme dans la page
+ * patients, « Marquer honoré » ou « Patient absent » (rendez-vous commence) et « Annuler » confirme dans la page
  * (POST /api/secretaire/rendezvous/{id}/honorer | annuler), et la gestion des creneaux du medecin (ouverture,
  * liste a venir, suppression des creneaux libres).
  */
@@ -64,7 +64,8 @@ import { Rattachement, SecretaireService } from './secretaire.service';
                 style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:var(--r12);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
               <div>
                 <strong style="color:var(--ink)">{{ r.debut | date:'HH:mm' }}</strong>
-                <span style="display:inline-block;background:var(--blue-l);color:var(--blue-d);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span><br>
+                <span class="badge-statut" [style.background]="r.statut === 'ABSENT' ? 'var(--red-l)' : 'var(--blue-l)'" [style.color]="r.statut === 'ABSENT' ? 'var(--red)' : 'var(--blue-d)'"
+                      style="display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span><br>
                 <span style="color:var(--text2)">{{ nom(r.patientId) }}</span>
                 <a *ngIf="telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">{{ tel }}</a>
               </div>
@@ -75,11 +76,22 @@ import { Rattachement, SecretaireService } from './secretaire.service';
                 </button>
                 <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">Non</button>
               </div>
-              <div *ngIf="r.statut === 'CONFIRME' && aConfirmer() !== r.id" style="display:flex;gap:8px;flex-wrap:wrap">
+              <div *ngIf="r.statut === 'CONFIRME' && absentAConfirmer() === r.id" class="confirmation-absent" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <span style="color:var(--text2);font-size:.9rem">Signaler le patient absent à ce rendez-vous ?</span>
+                <button type="button" class="bouton" (click)="marquerAbsent(r)" [disabled]="enCours() !== null">
+                  {{ estEnCours(r, 'absent') ? 'Enregistrement…' : 'Oui' }}
+                </button>
+                <button type="button" class="bouton-secondaire" (click)="absentAConfirmer.set(null)" [disabled]="enCours() !== null">Non</button>
+              </div>
+              <div *ngIf="r.statut === 'CONFIRME' && aConfirmer() !== r.id && absentAConfirmer() !== r.id" style="display:flex;gap:8px;flex-wrap:wrap">
                 <button *ngIf="peutHonorer(r)" type="button" class="bouton" (click)="honorer(r)" [disabled]="enCours() !== null">
                   {{ estEnCours(r, 'honorer') ? 'Enregistrement…' : 'Marquer honoré' }}
                 </button>
-                <button type="button" (click)="aConfirmer.set(r.id)" [disabled]="enCours() !== null"
+                <button *ngIf="peutMarquerAbsent(r)" type="button" class="bouton-secondaire" (click)="aConfirmer.set(null); absentAConfirmer.set(r.id)"
+                        [disabled]="enCours() !== null">
+                  Patient absent
+                </button>
+                <button type="button" (click)="absentAConfirmer.set(null); aConfirmer.set(r.id)" [disabled]="enCours() !== null"
                         style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
                   Annuler
                 </button>
@@ -124,6 +136,8 @@ export class EspaceSecretaireComponent implements OnInit {
   enCours = signal<ActionEnCours | null>(null);
   /** Rendez-vous dont l'annulation attend la confirmation (Oui / Non). */
   aConfirmer = signal<string | null>(null);
+  /** Rendez-vous dont le signalement « patient absent » attend la confirmation (Oui / Non). */
+  absentAConfirmer = signal<string | null>(null);
   succes = signal('');
   erreur = signal('');
   erreurAgenda = signal('');
@@ -169,6 +183,7 @@ export class EspaceSecretaireComponent implements OnInit {
     this.succes.set('');
     this.erreurAgenda.set('');
     this.aConfirmer.set(null);
+    this.absentAConfirmer.set(null);
     if (!medecinId) return;
     this.chargerAgenda();
     this.patients.patientsDuCabinet(medecinId).subscribe({
@@ -193,6 +208,10 @@ export class EspaceSecretaireComponent implements OnInit {
 
   peutHonorer(r: RendezVous): boolean {
     return peutHonorer(r, Date.now());
+  }
+
+  peutMarquerAbsent(r: RendezVous): boolean {
+    return peutMarquerAbsent(r, Date.now());
   }
 
   estEnCours(r: RendezVous, action: string): boolean {
@@ -238,6 +257,11 @@ export class EspaceSecretaireComponent implements OnInit {
     this.agir(rdv, 'annuler', this.service.annuler(rdv.id), `Rendez-vous du ${this.formaterDate(rdv.debut)} annulé : le patient est prévenu.`);
   }
 
+  /** Patient absent, apres « Oui » (POST /api/secretaire/rendezvous/{id}/absent). */
+  marquerAbsent(rdv: RendezVous) {
+    this.agir(rdv, 'absent', this.service.marquerAbsent(rdv.id), `Patient signalé absent au rendez-vous du ${this.formaterDate(rdv.debut)}.`);
+  }
+
   libelleStatut(statut: string): string {
     return libelleStatutRendezVous(statut);
   }
@@ -251,12 +275,14 @@ export class EspaceSecretaireComponent implements OnInit {
       next: () => {
         this.enCours.set(null);
         this.aConfirmer.set(null);
+        this.absentAConfirmer.set(null);
         this.succes.set(message);
         this.chargerAgenda();
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
         this.aConfirmer.set(null);
+        this.absentAConfirmer.set(null);
         if (e.status === 409 || e.status === 404) {
           this.chargerAgenda(e.error?.erreur ?? "Ce rendez-vous n'est plus confirmé.");
         } else if (e.status === 401) {
