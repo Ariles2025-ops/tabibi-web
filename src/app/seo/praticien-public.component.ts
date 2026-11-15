@@ -3,7 +3,7 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
-import { SPECIALITES_SEO, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
+import { SPECIALITES_SEO, liensLangues, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
 
 /**
  * Page publique et referencee d'un praticien : /praticiens/:id/:slug (une page par fiche de l'annuaire).
@@ -15,67 +15,71 @@ import { SPECIALITES_SEO, lienPraticien, slugifier, wilayaParCode } from './refe
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <main class="pp">
-      <p *ngIf="charge()" class="pp-muet">Chargement…</p>
+    <main class="pp" [attr.dir]="ar ? 'rtl' : null" [attr.lang]="ar ? 'ar' : 'fr'">
+      <p *ngIf="charge()" class="pp-muet">{{ ar ? 'جارٍ التحميل…' : 'Chargement…' }}</p>
 
       <ng-container *ngIf="!charge() && !medecin()">
-        <h1>Praticien introuvable</h1>
-        <p class="pp-muet">Cette fiche n'existe plus. <a routerLink="/specialites">Parcourir l'annuaire</a></p>
+        <h1>{{ ar ? 'الطبيب غير موجود' : 'Praticien introuvable' }}</h1>
+        <p class="pp-muet">{{ ar ? 'هذه الصفحة لم تعد موجودة.' : "Cette fiche n'existe plus." }}
+          <a [routerLink]="p + '/specialites'">{{ ar ? 'تصفّح الدليل' : "Parcourir l'annuaire" }}</a></p>
       </ng-container>
 
       <ng-container *ngIf="medecin() as m">
-        <nav class="pp-fil" aria-label="Fil d'Ariane">
-          <a routerLink="/">Accueil</a><span>›</span>
-          <a routerLink="/specialites">Annuaire</a>
-          <ng-container *ngIf="specialiteConnue"><span>›</span>
-            <a [routerLink]="['/specialites', m.specialiteSlug]">{{ m.specialiteFr }}</a></ng-container>
-          <ng-container *ngIf="specialiteConnue && wilayaSlug"><span>›</span>
-            <a [routerLink]="['/specialites', m.specialiteSlug, wilayaSlug]">{{ m.wilayaFr }}</a></ng-container>
-        </nav>
+        <div class="pp-haut">
+          <nav class="pp-fil" [attr.aria-label]="ar ? 'مسار التصفح' : 'Fil d’Ariane'">
+            <a routerLink="/">{{ ar ? 'الرئيسية' : 'Accueil' }}</a><span>›</span>
+            <a [routerLink]="p + '/specialites'">{{ ar ? 'دليل الأطباء' : 'Annuaire' }}</a>
+            <ng-container *ngIf="specialiteConnue"><span>›</span>
+              <a [routerLink]="[p + '/specialites', m.specialiteSlug]">{{ specialite }}</a></ng-container>
+            <ng-container *ngIf="specialiteConnue && wilayaSlug"><span>›</span>
+              <a [routerLink]="[p + '/specialites', m.specialiteSlug, wilayaSlug]">{{ wilaya }}</a></ng-container>
+          </nav>
+          <a class="pp-langue" [routerLink]="lienAutreLangue" [attr.hreflang]="ar ? 'fr' : 'ar'" [attr.lang]="ar ? 'fr' : 'ar'">{{ ar ? 'Français' : 'العربية' }}</a>
+        </div>
 
         <section class="pp-carte">
           <div class="pp-id">
             <span class="pp-ava" aria-hidden="true">{{ initiales(m) }}</span>
             <div class="pp-id__txt">
               <h1 dir="auto">{{ m.nomComplet }}</h1>
-              <p>{{ m.specialiteFr }}<ng-container *ngIf="lieu"> · {{ lieu }}</ng-container></p>
-              <span *ngIf="m.reservable" class="pp-resa">Réservable en ligne</span>
+              <p>{{ specialite }}<ng-container *ngIf="lieu"> · {{ lieu }}</ng-container></p>
+              <span *ngIf="m.reservable" class="pp-resa">{{ ar ? 'الحجز متاح عبر الإنترنت' : 'Réservable en ligne' }}</span>
             </div>
           </div>
           <div class="pp-action">
-            <a class="bouton pp-btn" [routerLink]="['/medecins', m.id]">Prendre rendez-vous</a>
-            <small>Disponibilités et réservation avec un compte Tabibi gratuit. Paiement au cabinet.</small>
+            <a class="bouton pp-btn" [routerLink]="['/medecins', m.id]">{{ ar ? 'احجز موعدًا' : 'Prendre rendez-vous' }}</a>
+            <small>{{ ar ? 'المواعيد المتاحة والحجز بحساب طبيبي مجاني. الدفع في العيادة.' : 'Disponibilités et réservation avec un compte Tabibi gratuit. Paiement au cabinet.' }}</small>
           </div>
         </section>
 
         <section class="pp-bloc">
-          <h2>Informations</h2>
+          <h2>{{ ar ? 'معلومات' : 'Informations' }}</h2>
           <dl class="pp-infos">
-            <div><dt>Spécialité</dt><dd>{{ m.specialiteFr }}</dd></div>
-            <div *ngIf="m.ville"><dt>Ville</dt><dd>{{ m.ville }}</dd></div>
-            <div *ngIf="m.wilayaFr"><dt>Wilaya</dt><dd>{{ m.wilayaFr }}</dd></div>
-            <div><dt>Paiement</dt><dd>Au cabinet (espèces ou carte Chifa selon le praticien)</dd></div>
+            <div><dt>{{ ar ? 'التخصص' : 'Spécialité' }}</dt><dd>{{ specialite }}</dd></div>
+            <div *ngIf="m.ville && !ar"><dt>Ville</dt><dd>{{ m.ville }}</dd></div>
+            <div *ngIf="wilaya"><dt>{{ ar ? 'الولاية' : 'Wilaya' }}</dt><dd>{{ wilaya }}</dd></div>
+            <div><dt>{{ ar ? 'الدفع' : 'Paiement' }}</dt><dd>{{ ar ? 'في العيادة (نقدًا أو ببطاقة الشفاء حسب الطبيب)' : 'Au cabinet (espèces ou carte Chifa selon le praticien)' }}</dd></div>
           </dl>
         </section>
 
         <section class="pp-bloc" *ngIf="confreres().length">
-          <h2>Autres praticiens : {{ m.specialiteFr }}<ng-container *ngIf="m.wilayaFr"> à {{ m.wilayaFr }}</ng-container></h2>
+          <h2>{{ ar ? 'أطباء آخرون' : 'Autres praticiens' }} : {{ specialite }}<ng-container *ngIf="wilaya"> {{ ar ? 'في' : 'à' }} {{ wilaya }}</ng-container></h2>
           <ul class="pp-confreres">
             <li *ngFor="let c of confreres()">
-              <a [routerLink]="lien(c)"><strong dir="auto">{{ c.nomComplet }}</strong><small>{{ c.ville || c.wilayaFr }}</small></a>
+              <a [routerLink]="lien(c)"><strong dir="auto">{{ c.nomComplet }}</strong><small dir="auto">{{ ar ? wilaya : (c.ville || c.wilayaFr) }}</small></a>
             </li>
           </ul>
           <p *ngIf="specialiteConnue && wilayaSlug" class="pp-plus">
-            <a [routerLink]="['/specialites', m.specialiteSlug, wilayaSlug]">Voir tous : {{ m.specialiteFr }} à {{ m.wilayaFr }} →</a>
+            <a [routerLink]="[p + '/specialites', m.specialiteSlug, wilayaSlug]">{{ ar ? 'عرض الكل' : 'Voir tous' }} : {{ specialite }} {{ ar ? 'في' : 'à' }} {{ wilaya }} {{ ar ? '←' : '→' }}</a>
           </p>
         </section>
 
         <section class="pp-bloc" *ngIf="wilayaSlug">
-          <h2>Trouver un autre praticien</h2>
+          <h2>{{ ar ? 'ابحث عن طبيب آخر' : 'Trouver un autre praticien' }}</h2>
           <div class="pp-liens">
-            <a [routerLink]="['/wilayas', wilayaSlug]">Tous les médecins à {{ m.wilayaFr }}</a>
-            <a *ngIf="specialiteConnue" [routerLink]="['/specialites', m.specialiteSlug]">{{ m.specialiteFr }} en Algérie</a>
-            <a routerLink="/specialites">Toutes les spécialités</a>
+            <a [routerLink]="[p + '/wilayas', wilayaSlug]">{{ ar ? 'جميع الأطباء في ' + wilaya : 'Tous les médecins à ' + wilaya }}</a>
+            <a *ngIf="specialiteConnue" [routerLink]="[p + '/specialites', m.specialiteSlug]">{{ specialite }} {{ ar ? 'في الجزائر' : 'en Algérie' }}</a>
+            <a [routerLink]="p + '/specialites'">{{ ar ? 'جميع التخصصات' : 'Toutes les spécialités' }}</a>
           </div>
         </section>
       </ng-container>
@@ -84,6 +88,9 @@ import { SPECIALITES_SEO, lienPraticien, slugifier, wilayaParCode } from './refe
   styles: [`
     .pp { max-width:960px; margin:0 auto; padding:24px var(--gutter, 16px) 48px; color:var(--ink); }
     .pp-muet { color:var(--text3); }
+    .pp-haut { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+    .pp-haut .pp-fil { margin-bottom:0; }
+    .pp-langue { padding:6px 14px; border:1px solid var(--border); border-radius:999px; background:#fff; color:var(--vert); font-weight:700; font-size:13px; text-decoration:none; }
     .pp-fil { display:flex; flex-wrap:wrap; gap:6px; font-size:13px; color:var(--text3); margin-bottom:18px; }
     .pp-fil a { color:var(--vert); text-decoration:none; font-weight:600; }
     .pp-carte { display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow:var(--s2); padding:24px; margin-bottom:28px; }
@@ -123,16 +130,25 @@ export class PraticienPublicComponent implements OnInit {
   confreres = signal<Medecin[]>([]);
   charge = signal(true);
   specialiteConnue = false;
+  /** Langue de la page (donnee de route) : prefixe '' en francais, '/ar' en arabe. */
+  ar = false;
+  p = '';
+  specialite = '';
+  wilaya = '';
+  lienAutreLangue = '/';
   wilayaSlug: string | null = null;
   lieu = '';
 
   ngOnInit() {
+    this.ar = this.route.snapshot.data['langue'] === 'ar';
+    this.p = this.ar ? '/ar' : '';
     const abonnement = this.route.paramMap.subscribe((p) => this.charger(p.get('id') || ''));
     this.destroyRef.onDestroy(() => abonnement.unsubscribe());
   }
 
   lien(m: Medecin) {
-    return lienPraticien(m);
+    const l = lienPraticien(m);
+    return this.ar ? ['/ar' + l[0], ...l.slice(1)] : l;
   }
 
   private charger(id: string) {
@@ -143,9 +159,15 @@ export class PraticienPublicComponent implements OnInit {
       next: (m) => {
         this.medecin.set(m);
         this.charge.set(false);
-        this.specialiteConnue = SPECIALITES_SEO.some((s) => s.slug === m.specialiteSlug);
-        this.wilayaSlug = wilayaParCode(m.wilayaCode)?.slug ?? null;
-        this.lieu = m.ville && m.wilayaFr && m.ville !== m.wilayaFr ? `${m.ville} (${m.wilayaFr})` : (m.ville || m.wilayaFr || '');
+        const spec = SPECIALITES_SEO.find((s) => s.slug === m.specialiteSlug);
+        const wil = wilayaParCode(m.wilayaCode);
+        this.specialiteConnue = !!spec;
+        this.wilayaSlug = wil?.slug ?? null;
+        this.specialite = spec ? (this.ar ? spec.nomAr : spec.nom) : m.specialiteFr;
+        this.wilaya = wil ? (this.ar ? wil.nomAr : wil.nom) : (m.wilayaFr || '');
+        this.lieu = this.ar
+          ? this.wilaya
+          : (m.ville && m.wilayaFr && m.ville !== m.wilayaFr ? `${m.ville} (${m.wilayaFr})` : (m.ville || m.wilayaFr || ''));
         this.referencer(m);
         this.annuaire.rechercher(m.specialiteSlug, m.wilayaCode).subscribe({
           next: (liste) => this.confreres.set(liste.filter((c) => c.id !== m.id).slice(0, 12)),
@@ -161,10 +183,17 @@ export class PraticienPublicComponent implements OnInit {
   }
 
   private referencer(m: Medecin) {
-    const ou = this.lieu ? ` à ${this.lieu}` : '';
-    const titre = `${m.nomComplet} — ${m.specialiteFr}${ou}`;
-    const description = `${m.nomComplet}, ${m.specialiteFr}${ou}. Consultez la fiche et prenez rendez-vous en ligne avec Tabibi. Paiement au cabinet.`;
-    const url = `https://tabibi.doctor/praticiens/${m.id}/${slugifier(m.nomComplet)}`;
+    const ou = this.lieu ? (this.ar ? ` في ${this.lieu}` : ` à ${this.lieu}`) : '';
+    const titre = `${m.nomComplet} — ${this.specialite}${ou}`;
+    const description = this.ar
+      ? `${m.nomComplet}، ${this.specialite}${ou}. اطّلع على صفحة الطبيب واحجز موعدك عبر الإنترنت مع طبيبي. الدفع في العيادة.`
+      : `${m.nomComplet}, ${this.specialite}${ou}. Consultez la fiche et prenez rendez-vous en ligne avec Tabibi. Paiement au cabinet.`;
+    const chemin = `/praticiens/${m.id}/${slugifier(m.nomComplet)}`;
+    const url = `https://tabibi.doctor${this.p}${chemin}`;
+    this.lienAutreLangue = (this.ar ? '' : '/ar') + chemin;
+    liensLangues(this.document, chemin);
+    this.document.documentElement.setAttribute('lang', this.ar ? 'ar' : 'fr');
+    this.meta.updateTag({ property: 'og:locale', content: this.ar ? 'ar_DZ' : 'fr_DZ' });
     this.title.setTitle(`${titre} | Tabibi`);
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ name: 'robots', content: 'index, follow' });
@@ -185,7 +214,8 @@ export class PraticienPublicComponent implements OnInit {
       '@context': 'https://schema.org',
       '@type': 'Physician',
       name: m.nomComplet,
-      medicalSpecialty: m.specialiteFr,
+      medicalSpecialty: this.specialite,
+      inLanguage: this.ar ? 'ar' : 'fr',
       url,
       address: { '@type': 'PostalAddress', addressLocality: m.ville || m.wilayaFr, addressRegion: m.wilayaFr, addressCountry: 'DZ' },
     };
