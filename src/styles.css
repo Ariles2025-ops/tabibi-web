@@ -1,277 +1,159 @@
-/* ======================================================================
-   Charte Tabibi — port fidèle de l'app déployée (tabibi.doctor)
-   Source : dist/styles/tokens-v2.css + components-v2.css
-   Vert #0F7560 + Or #D4A437 · Plus Jakarta Sans · IBM Plex Sans Arabic
-   ========================================================================= */
-:root {
-  /* Marque (valeurs EXACTES tokens-v2) */
-  --vert:          #0F7560;   /* PRIMARY — boutons d'action */
-  --vert-fonce:    #0a4d3e;   /* hover / pressed */
-  --vert-800:      #0c5e4d;
-  --vert-clair:    #e7f3ef;   /* pastille verte pâle */
-  --vert-clair-bd: #d4e9e1;
-  --vert-tres-clair:#f0fdf4;
-  --vert-500:      #2E8B57;   /* succès / vérifié */
+/* Styles propres a l'application (hors accueil, qui reprend legacy-accueil.css de l'ancien site).
+   Les variables de couleur viennent de legacy-accueil.css (tabibi-ui.css). */
+:root { --vert:#0F7560; }
 
-  --or:            #D4A437;   /* ACCENT — premium */
-  --or-fonce:      #a17a1f;   /* hover */
-  --or-clair:      #fef3c7;
-  --or-texte:      #a17a1f;
+button:disabled { opacity:.6; cursor:default; }
 
-  --rouge:         #D21010;
-  --rouge-clair:   #fff0f0;
-  --ambre:         #F59E0B;
+/* « 75 000+ » doit tenir sur une seule ligne dans les tuiles stats (sinon coupure « 75 / 000+ »). */
+.hero-stat .hs-n { white-space:nowrap; font-size:clamp(16px,4.8vw,20px); }
 
-  /* Neutres, texte, fonds (canon slate) */
-  --ink:       #0F2A24;   /* encre titres héro */
-  --texte:     #0f172a;   /* texte principal */
-  --texte-doux:#475569;   /* texte courant */
-  --texte-3:   #64748b;   /* métadonnées */
-  --texte-4:   #94a3b8;   /* placeholders */
+/* Coquille : menu lateral vert a gauche sur PC, barre en haut sur telephone. */
+.side { background:var(--vert); color:#fff; }
+.side__brand { display:block; font-size:1.3rem; font-weight:800; color:#fff; text-decoration:none; padding:10px 16px 0; letter-spacing:-.02em; }
+.side__brand i { color:var(--or); font-style:normal; }
+.side__nav { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 16px; }
+.side__nav a { color:#fff; text-decoration:none; opacity:.92; }
+.side__nav a:hover { opacity:1; }
+.side__nav a.actif { opacity:1; font-weight:700; }
+.side__group { display:contents; }
+.side__grouptitle { color:#cfe7e0; font-size:.85rem; width:100%; }
+.side__account { margin-left:auto; display:flex; align-items:center; gap:12px; }
+.content { min-width:0; }
 
-  --bg:      #f8fafc;
-  --bg2:     #f1f5f9;
-  --bg3:     #e2e8f0;
-  --surface: #ffffff;
-  --bord:    #e2e8f0;
-  --bord-fort:#cbd5e1;
-
-  /* Formes */
-  --r8:  8px;
-  --r12: 12px;
-  --r16: 16px;
-  --r20: 20px;
-  --rfull:999px;
-  --rayon:   12px;
-  --rayon-lg:16px;
-
-  /* Ombres (exactes) */
-  --s1: 0 1px 3px rgba(0,0,0,.04);
-  --s2: 0 4px 12px rgba(0,0,0,.06);
-  --s3: 0 12px 36px rgba(0,0,0,.08);
-  --ombre:        var(--s2);
-  --ombre-forte:  var(--s3);
-  --ombre-carte:  0 2px 8px rgba(16,40,34,.06), 0 20px 40px rgba(16,40,34,.10);
-  --ombre-recherche: 0 8px 24px rgba(16,40,34,.10), 0 2px 6px rgba(16,40,34,.05);
-  --ombre-primaire:  0 4px 14px rgba(15,117,96,.24);
-  --anneau-primaire: 0 0 0 3px rgba(15,117,96,.18);
-
-  /* Dégradés de marque */
-  --grad-brand: linear-gradient(155deg, #0F7560 0%, #0a4d3e 100%);
-  --grad-hero:  linear-gradient(180deg, #f0f7f4 0%, #f8fafc 100%);
-
-  /* Typographie — Plus Jakarta Sans PARTOUT (comme l'app déployée) */
-  --police:       'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --police-titre: var(--police);
-  --police-texte: var(--police);
-  --police-ar:    'IBM Plex Sans Arabic', 'Cairo', 'Segoe UI Arabic', sans-serif;
+@media (min-width:960px) {
+  .shell { display:grid; grid-template-columns:264px 1fr; align-items:start; min-height:100vh; }
+  .side { position:sticky; top:0; align-self:stretch; min-height:100vh; display:flex; flex-direction:column; padding:20px 14px; }
+  .side__brand { display:block; font-size:1.6rem; font-weight:800; color:#fff; text-decoration:none; padding:6px 12px 20px; letter-spacing:-.02em; }
+  .side__brand i { color:var(--or); font-style:normal; }
+  .side__nav { flex-direction:column; align-items:stretch; gap:3px; padding:0; }
+  .side__nav a { display:block; padding:10px 12px; border-radius:10px; }
+  .side__nav a:hover { background:rgba(255,255,255,.12); }
+  .side__nav a.actif { background:rgba(255,255,255,.18); font-weight:700; }
+  .side__group { display:block; margin-top:14px; border-top:1px solid rgba(255,255,255,.18); padding-top:10px; }
+  .side__grouptitle { text-transform:uppercase; letter-spacing:.05em; font-size:.72rem; padding:4px 12px; opacity:.85; width:auto; }
+  .side__account { margin:auto 0 0; padding-top:14px; border-top:1px solid rgba(255,255,255,.18); flex-direction:column; align-items:stretch; gap:3px; }
+  .side__account a { display:block; padding:10px 12px; border-radius:10px; }
+  .side__account a:hover { background:rgba(255,255,255,.12); }
 }
 
-* { box-sizing: border-box; }
+/* Champs et boutons des formulaires internes. */
+.champ { padding:10px 12px; border:1.5px solid #E7E0D2; border-radius:12px; font:inherit; box-sizing:border-box; background:#fff; }
+.champ:focus { outline:none; border-color:var(--vert); box-shadow:0 0 0 3px rgba(15,117,96,.14); }
+.bouton { padding:11px 18px; background:var(--vert); color:#fff; border:0; border-radius:999px; font:inherit; font-weight:700; cursor:pointer; text-decoration:none; display:inline-block; }
+.bouton:hover { background:#0a4d3e; }
+.bouton-secondaire { padding:11px 18px; background:#fff; color:#0F7560; border:1.5px solid #E7E0D2; border-radius:999px; font:inherit; font-weight:700; cursor:pointer; text-decoration:none; display:inline-block; }
 
-body {
-  font-family: var(--police);
-  margin: 0;
-  color: var(--texte);
-  background: var(--bg);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  line-height: 1.55;
-}
-
-[dir='rtl'] body,
-[lang='ar'] body { font-family: var(--police-ar); }
-
-h1, h2, h3, h4 {
-  font-family: var(--police-titre);
-  color: var(--texte);
-  line-height: 1.15;
-  letter-spacing: -.02em;
-  text-wrap: balance;
-}
-h1 { font-weight: 800; }
-h2, h3 { font-weight: 700; }
-
-a { color: var(--vert); }
-
-/* Navigation (bandeau vert) : liens clairs */
-nav a { color:#d7ece5; text-decoration:none; font-weight:600; font-size:.95rem; transition:color .15s; }
-nav a:hover { color:#fff; }
-nav a.actif { color:#fff; }
-nav a.actif::after {
-  content:""; display:block; height:2px; border-radius:2px;
-  background:var(--or); margin-top:3px;
-}
-
-button:disabled { opacity:.55; cursor:not-allowed; }
-
-/* ── Champs de formulaire (= .form-control) ── */
-.champ, input:not([type=checkbox]):not([type=radio]):not([type=range]).champ, select.champ, textarea.champ {
-  width:100%; height:48px; padding:0 14px;
-  border:1.5px solid var(--bord); border-radius:var(--r12);
-  font:inherit; font-size:15px; color:var(--texte); background:var(--surface);
-  transition:border-color .15s, box-shadow .15s; outline:none; appearance:none;
-}
-textarea.champ { height:auto; min-height:96px; padding:12px 14px; resize:vertical; line-height:1.45; }
-.champ:hover:not(:focus) { border-color:var(--bord-fort); }
-.champ:focus { border-color:var(--vert); box-shadow:var(--anneau-primaire); }
-.champ::placeholder { color:var(--texte-4); }
-
-/* ── Boutons (= .btn / .btn-primary / .btn-secondary) ── */
-.bouton, .bouton-secondaire, .bouton-or {
-  display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  height:44px; padding:0 20px; border-radius:var(--r12);
-  font:inherit; font-weight:600; font-size:14px; line-height:1;
-  border:1.5px solid transparent; cursor:pointer; text-decoration:none;
-  white-space:nowrap; user-select:none;
-  transition:background-color .2s, border-color .2s, color .2s, box-shadow .2s, transform .2s;
-}
-.bouton:active, .bouton-secondaire:active, .bouton-or:active { transform:scale(.97); }
-
-.bouton { background:var(--vert); color:#fff; border-color:var(--vert); }
-.bouton:hover { background:var(--vert-fonce); border-color:var(--vert-fonce); box-shadow:var(--ombre-primaire); }
-
-.bouton-secondaire { background:var(--surface); color:var(--vert); border-color:var(--vert); }
-.bouton-secondaire:hover { background:var(--vert-clair); }
-
-.bouton-or { background:var(--or); color:#1A1A1A; border-color:var(--or); font-weight:700; }
-.bouton-or:hover { background:var(--or-fonce); border-color:var(--or-fonce); color:#fff; }
-
-/* ── Carte (= .card) ── */
-.carte {
-  background:var(--surface); border:1px solid var(--bord); border-radius:var(--r16);
-  box-shadow:var(--s1); padding:20px;
-  transition:box-shadow .2s, transform .2s, border-color .2s;
-}
-.carte-cliquable { cursor:pointer; }
-.carte-cliquable:hover { border-color:var(--vert); box-shadow:var(--ombre-primaire); }
-
-/* ── Badge doré (pilule) = .badge-gold ── */
-.badge-or {
-  display:inline-flex; align-items:center; gap:6px;
-  background:var(--or-clair); color:var(--or-texte);
-  font-weight:700; padding:5px 14px; border-radius:var(--rfull); font-size:12px;
-  letter-spacing:.2px;
-}
-.badge-or::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--or); }
-
-.badge-vert {
-  display:inline-flex; align-items:center; gap:4px;
-  background:var(--vert-tres-clair); color:var(--vert);
-  font-weight:700; padding:3px 12px; border-radius:var(--rfull); font-size:11px;
-}
-
-/* ══ HERO de marque (dégradé vert, signature Tabibi) ══ */
-.hero {
-  position:relative; overflow:hidden;
-  background:var(--grad-brand);
-  border-radius:var(--r20);
-  padding:40px 28px 44px;
-  color:#fff; text-align:center;
-  box-shadow:var(--ombre-carte);
-}
-.hero::before {
-  content:''; position:absolute; inset:0; pointer-events:none;
-  background:
-    radial-gradient(circle at 82% 12%, rgba(255,255,255,.09) 0%, transparent 45%),
-    radial-gradient(circle at 8% 88%, rgba(255,255,255,.06) 0%, transparent 42%);
-}
-.hero > * { position:relative; }
-.hero-badge {
-  display:inline-flex; align-items:center; gap:7px;
-  background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.22);
-  color:#fff; padding:5px 14px; border-radius:var(--rfull);
-  font-size:12px; font-weight:700; letter-spacing:.3px; margin-bottom:16px;
-}
-.hero-dot { width:7px; height:7px; background:#4ade80; border-radius:50%; flex:none; animation:pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-.hero h1 { color:#fff; font-size:clamp(1.9rem,5vw,2.6rem); margin:0 auto 10px; max-width:16ch; }
-.hero h1 em { color:#86efac; font-style:normal; }
-.hero-sous { color:rgba(255,255,255,.82); font-size:1.02rem; max-width:48ch; margin:0 auto 24px; line-height:1.6; }
-
-/* Barre de recherche unifiée (blanche, sur le hero) */
-.recherche-barre {
-  display:flex; align-items:center; gap:8px;
-  background:#fff; border-radius:var(--r16);
-  padding:7px 7px 7px 18px; max-width:600px; margin:0 auto;
-  box-shadow:var(--ombre-recherche);
-}
-.recherche-barre input {
-  flex:1; min-width:0; border:0; outline:none;
-  font:inherit; font-size:1rem; color:var(--texte); background:transparent;
-}
-.recherche-barre input::placeholder { color:var(--texte-4); }
-
-/* Note de paiement */
-.hero-paiement {
-  display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  color:rgba(255,255,255,.85); margin:18px 0 0; font-size:.95rem;
-}
-
-/* Tuiles de stats sur le hero */
-.hero-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:26px; }
-.hero-stat {
-  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
-  border-radius:var(--r12); padding:14px 8px; text-align:center;
-}
-.hero-stat-val { font-family:var(--police-titre); font-weight:800; font-size:1.6rem; color:#fff; }
-.hero-stat-lib { color:rgba(255,255,255,.78); font-size:.82rem; margin-top:2px; }
-
-/* ── Cartes médecin (liste résultats) ── */
-.medecin-carte { padding:0; }
-.medecin-lien {
-  display:flex; align-items:center; gap:14px; padding:16px;
-  color:inherit; text-decoration:none;
-}
-.medecin-avatar {
-  flex:none; width:48px; height:48px; border-radius:50%;
-  background:var(--vert-clair); color:var(--vert);
-  display:flex; align-items:center; justify-content:center;
-  font-weight:700; font-size:1.05rem; font-family:var(--police-titre);
-}
-.medecin-nom { color:var(--texte); font-family:var(--police-titre); font-weight:700; font-size:1.02rem; }
-.medecin-meta { color:var(--texte-doux); font-size:.92rem; }
-
-/* Notifications */
-.notification-non-lue { background:var(--vert-tres-clair); }
+/* Notifications. */
+.notification-non-lue { background:#f3faf7; }
 .notification-non-lue strong { color:var(--vert); }
-.notification-lue { color:var(--texte-doux); }
+.notification-lue { color:#566b64; }
 
-/* Messagerie */
-.conversation-non-lue { background:var(--vert-tres-clair); }
+/* Messagerie. */
+.conversation-non-lue { background:#f3faf7; }
 .conversation-non-lue strong { color:var(--vert); }
 .message-moi, .message-autre { max-width:80%; padding:10px 12px; border-radius:12px; }
-.message-moi { justify-self:end; background:var(--vert-clair); }
-.message-autre { justify-self:start; background:var(--bg2); }
+.message-moi { justify-self:end; background:#e3f3ee; }
+.message-autre { justify-self:start; background:#f1f3f2; }
 
-/* Avis : note 1 à 5 */
-.note { position:relative; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1.5px solid var(--vert); border-radius:var(--r12); color:var(--vert); font-weight:700; cursor:pointer; }
+/* Avis : note de 1 a 5. */
+.note { position:relative; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--vert); border-radius:12px; color:var(--vert); font-weight:600; cursor:pointer; background:#fff; }
 .note input { position:absolute; opacity:0; width:0; height:0; margin:0; }
-.note:focus-within { outline:2px solid var(--texte); outline-offset:2px; }
+.note:focus-within { outline:2px solid #10241F; outline-offset:2px; }
 .note-choisie { background:var(--vert); color:#fff; }
 
-/* Impression (ordonnance) */
+/* Impression (ordonnance). */
 @media print {
-  nav, header, .sans-impression { display:none !important; }
+  nav, .sans-impression { display:none !important; }
   body { color:#000; background:#fff; }
   main { max-width:none !important; margin:0 !important; padding:0 !important; }
 }
 
-/* Sélecteur de langue (pilules) */
-.pousser-fin { margin-inline-start: auto; }
-.selecteur-langue { display:inline-flex; gap:3px; align-items:center; background:rgba(255,255,255,.14); border-radius:var(--rfull); padding:3px; }
-.selecteur-langue button { background:none; border:0; padding:4px 11px; border-radius:var(--rfull); color:#d7ece5; font:inherit; font-size:.82rem; cursor:pointer; font-weight:700; transition:all .15s; }
-.selecteur-langue button.actif { color:var(--vert); background:#fff; }
+/* Pied de page. */
+.pied { max-width:760px; margin:56px auto 0; padding:22px 16px 36px; border-top:1px solid #E7E0D2; display:flex; flex-wrap:wrap; gap:8px 20px; font-size:.9rem; }
+.pied a { color:#5C6B63; text-decoration:none; }
+.pied a:hover { color:#0F7560; }
 
-/* RTL (arabe) */
-[dir='rtl'] .message-moi { justify-self:start; }
-[dir='rtl'] .message-autre { justify-self:end; }
-[dir='rtl'] ol, [dir='rtl'] ul { padding-inline-start:0; padding-inline-end:0; }
-[dir='rtl'] .liste-numerotee { padding-inline-start:0; padding-inline-end:24px; }
-[dir='rtl'] code { direction:ltr; unicode-bidi:embed; display:inline-block; }
-[dir='rtl'] .recherche-barre { padding:7px 18px 7px 7px; }
+/* ===== Navigation facon Doctolib : barre horizontale en haut (logo gauche, actions droite), version Tabibi ===== */
+/* Boutons d'action de la barre (toutes tailles). Le vert porte l'action -> pastille blanche sur barre verte. */
+.side__pro { color:#fff; opacity:.92; white-space:nowrap; }
+.side__pro:hover { opacity:1; }
+.side__login { color:#fff; opacity:.95; cursor:pointer; font-weight:600; white-space:nowrap; }
+/* Sur petit ecran, on garde l'essentiel : Se connecter + Creer un compte (le lien medecin passe en pied / espace medecin). */
 
-@media (max-width:560px) {
-  .hero { padding:30px 18px 34px; }
-  .hero-stats { gap:8px; }
+.side .side__signup, .side__account .side__signup { background:#fff; color:var(--vert); font-weight:700; padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap; }
+.side .side__signup:hover { background:#f0f7f4; color:var(--vert); }
+
+/* Desktop : on annule la colonne de gauche, la nav devient une barre du haut pleine largeur. */
+@media (min-width:960px) {
+  .shell { display:block; min-height:100vh; }
+  .side { position:sticky; top:0; z-index:30; min-height:0; flex-direction:row; align-items:center; gap:22px; padding:12px 28px; box-shadow:0 1px 0 rgba(0,0,0,.06); }
+  .side__brand { padding:0; font-size:1.5rem; }
+  .side__nav { flex-direction:row; align-items:center; flex-wrap:wrap; gap:4px; padding:0; flex:1 1 auto; min-width:0; }
+  .side__nav a { display:inline-block; padding:8px 12px; border-radius:999px; }
+  .side__nav a:hover { background:rgba(255,255,255,.14); }
+  .side__nav a.actif { background:rgba(255,255,255,.2); font-weight:700; }
+  .side__group { display:contents; margin:0; border:0; padding:0; }
+  .side__grouptitle { display:none; }
+  .side__account { margin-inline-start:auto; flex-direction:row; align-items:center; gap:14px; padding-top:0; border-top:0; }
+  .side__account a { padding:8px 4px; border-radius:999px; }
+  .side__account .side__signup { padding:9px 18px; }
+  .content { max-width:1200px; margin:0 auto; width:100%; box-sizing:border-box; }
 }
+
+/* Mobile : barre sur une seule ligne (logo + actions). « Accueil » est redondant avec le logo -> masque. */
+/* Telephone / tablette : logo + bouton « 3 barres » ; le menu complet s'ouvre en dessous au clic. */
+.side__burger { display:none; }
+@media (max-width:959px) {
+  .side { position:sticky; top:0; z-index:30; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0; padding:12px 16px; }
+  .side__brand { padding:0; }
+  .side__burger { display:inline-grid; place-items:center; width:44px; height:44px; border-radius:12px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.08); color:#fff; font-size:20px; cursor:pointer; }
+  .side__burger:hover { background:rgba(255,255,255,.16); }
+  .side__nav { display:none; order:3; flex-basis:100%; flex-direction:column; align-items:stretch; flex-wrap:nowrap; gap:2px; padding:12px 0 4px; margin-top:12px; border-top:1px solid rgba(255,255,255,.18); max-height:calc(100vh - 80px); overflow-y:auto; }
+  .side__nav.ouvert { display:flex; }
+  .side__nav a { display:block; padding:12px 12px; border-radius:10px; font-size:16px; }
+  .side__nav a:hover { background:rgba(255,255,255,.12); }
+  .side__nav a.actif { background:rgba(255,255,255,.18); font-weight:700; }
+  .side__group { display:block; margin-top:10px; border-top:1px solid rgba(255,255,255,.18); padding-top:8px; }
+  .side__grouptitle { display:block; text-transform:uppercase; letter-spacing:.05em; font-size:.72rem; padding:4px 12px; opacity:.85; width:auto; }
+  .side__account { margin:10px 0 0; padding-top:10px; border-top:1px solid rgba(255,255,255,.18); flex-direction:column; align-items:stretch; gap:2px; }
+  .side__account a { display:block; padding:12px; }
+  .side__account .side__pro, .side__account .side__help { display:block; }
+  .side__account .side__signup { text-align:center; margin-top:6px; padding:12px 18px; }
+}
+
+/* Centre d'aide dans la barre du haut */
+.side__help { color:#fff; opacity:.92; white-space:nowrap; }
+.side__help:hover { opacity:1; }
+
+
+/* ===== Grand pied de page « Aide et information » facon Doctolib, version Tabibi ===== */
+.siteft { background:#f1f5f9; border-top:1px solid var(--border); margin-top:44px; }
+.siteft__in { max-width:1200px; margin:0 auto; padding:32px var(--gutter) 28px; box-sizing:border-box; }
+.siteft__top { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-bottom:20px; border-bottom:1px solid var(--border); }
+.siteft__q b { color:var(--ink); }
+.siteft__q span { color:var(--text3); margin-inline-start:6px; }
+.siteft__contact { background:var(--vert); color:#fff; font-weight:700; padding:10px 18px; border-radius:999px; text-decoration:none; white-space:nowrap; }
+.siteft__contact:hover { background:#0a4d3e; }
+.siteft__apps { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:20px 0; }
+.siteft__appslbl { font-weight:700; color:var(--ink); }
+.siteft__badges { display:flex; gap:12px; flex-wrap:wrap; }
+.storebadge { display:inline-flex; align-items:center; gap:10px; background:#111827; color:#fff; border-radius:12px; padding:8px 16px; text-decoration:none; }
+.storebadge svg { width:22px; height:22px; fill:#fff; flex:none; }
+.storebadge span { display:flex; flex-direction:column; line-height:1.12; font-weight:700; font-size:15px; }
+.storebadge small { font-weight:500; font-size:10px; opacity:.85; }
+.siteft__cols { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; padding:24px 0; border-top:1px solid var(--border); }
+.siteft__col h4 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--text3); }
+.siteft__col a { display:block; color:var(--text2,#475569); text-decoration:none; padding:5px 0; font-size:14px; }
+.siteft__col a:hover { color:var(--vert); }
+.siteft__col a.siteft__tout { color:var(--vert); font-weight:700; }
+.siteft__bottom { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding-top:20px; border-top:1px solid var(--border); }
+.siteft__logo { font-weight:800; color:var(--vert); font-size:1.2rem; letter-spacing:-.02em; }
+.siteft__logo i { color:var(--or); font-style:normal; }
+.siteft__copy { color:var(--text3); font-size:13px; }
+@media (max-width:640px) { .siteft__cols { grid-template-columns:1fr 1fr; } }
+
+/* Pre-lancement : bandeau « Lancement prochainement » en haut de toutes les pages. */
+.lancement-bandeau { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 10px; padding:12px max(16px, env(safe-area-inset-left, 0px)); background:#D4A437; color:#10241F; text-align:center; font-size:15px; line-height:1.35; }
+.lancement-bandeau strong { font-size:17px; font-weight:800; letter-spacing:-.01em; }
+.lancement-bandeau__pastille { background:#10241F; color:#F6E7BF; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; padding:3px 10px; border-radius:999px; }
+@media (max-width:640px) { .lancement-bandeau__txt { display:none; } }

@@ -1,5 +1,5 @@
 {
   "apiUrl": "http://localhost:8080",
-  "keycloakIssuer": "http://localhost:8081/realms/tabibi",
+  "keycloakIssuer": "https://auth.tabibi.doctor/realms/tabibi",
   "keycloakClientId": "tabibi-web"
 }

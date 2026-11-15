@@ -1,9 +1,10 @@
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, NgZone, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { ConfigService } from '../config/config.service';
 import { creerAuthConfig } from './auth.config';
+import { connexionFermee } from '../lancement';
 
 /**
  * Fin wrapper d'OAuthService (Keycloak) : initialisation unique de l'OIDC
@@ -20,6 +21,11 @@ export class AuthService {
   private config = inject(ConfigService);
   private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
   private initialisation: Promise<void> | null = null;
+  private zone = inject(NgZone);
+  private derniereActivite = Date.now();
+
+  /** Donnees de sante : deconnexion automatique apres 15 minutes sans aucune action. */
+  static readonly INACTIVITE_MAX_MS = 15 * 60 * 1000;
 
   /**
    * Attend la configuration (issuer et client Keycloak lus dans assets/config.json ; deja chargee par
@@ -34,9 +40,10 @@ export class AuthService {
         : this.config
             .charger()
             .then(() => {
-              this.oauth.configure(creerAuthConfig(this.config, window.location.origin));
+              this.oauth.configure(creerAuthConfig(this.config));
               return this.oauth.loadDiscoveryDocumentAndTryLogin();
             })
+            .then(() => this.garderLaSession())
             .then(() => this.revenirApresConnexion())
             .catch((e) => console.error('Initialisation OIDC impossible', e));
     }
@@ -58,25 +65,87 @@ export class AuthService {
    */
   async seConnecter(retour: string = this.router.url): Promise<void> {
     if (!this.navigateur) return;
+    // Pre-lancement : pas de connexion, page « Lancement prochainement ».
+    if (connexionFermee()) { this.router.navigateByUrl('/bientot'); return; }
     await this.initialiser();
-    this.oauth.initCodeFlow(retour);
+    // Mot de passe exige a chaque connexion, meme si une session Keycloak existe encore dans ce navigateur.
+    this.oauth.initCodeFlow(retour, { prompt: 'login' });
   }
 
   /**
-   * Redirige vers la page d'inscription Keycloak (meme flux OIDC que la connexion, mais vers
-   * l'endpoint /registrations). Apres creation du compte, l'utilisateur revient sur `retour`.
+   * Inscription par e-mail : redirige directement vers le formulaire d'inscription Keycloak
+   * (endpoint /registrations au lieu de /auth), avec les memes parametres OIDC (dont PKCE).
+   * initCodeFlow part de `loginUrl` ; on le pointe sur l'endpoint d'inscription juste avant la redirection
+   * (la page quitte aussitot vers Keycloak, l'etat n'a pas besoin d'etre restaure).
    */
-  async sInscrire(retour: string = this.router.url): Promise<void> {
+  async sInscrireParEmail(retour: string = this.router.url): Promise<void> {
     if (!this.navigateur) return;
+    if (connexionFermee()) { this.router.navigateByUrl('/bientot'); return; }
     await this.initialiser();
-    const base = (this.oauth.issuer || '').replace(/\/$/, '');
-    if (base) (this.oauth as unknown as { loginUrl: string }).loginUrl = base + '/protocol/openid-connect/registrations';
+    const urlAuth = this.oauth.loginUrl || '';
+    // Cibler l'endpoint precis (pas le "/auth" present dans l'hote auth.tabibi.doctor).
+    if (urlAuth.includes('/openid-connect/auth')) {
+      this.oauth.loginUrl = urlAuth.replace('/openid-connect/auth', '/openid-connect/registrations');
+    }
     this.oauth.initCodeFlow(retour);
+  }
+
+  /** Relit les roles apres un changement cote serveur (ex. invitation de secretaire acceptee) via le jeton de rafraichissement. */
+  async actualiserRoles(): Promise<void> {
+    if (!this.navigateur || !this.oauth.getRefreshToken()) return;
+    try {
+      await this.oauth.refreshToken();
+    } catch {
+      // Les nouveaux roles seront pris a la prochaine connexion.
+    }
   }
 
   seDeconnecter(): void {
     if (!this.navigateur) return;
     this.oauth.logOut();
+  }
+
+  /**
+   * Le jeton d'acces Keycloak ne vit que 5 minutes : sans renouvellement, l'utilisateur serait renvoye vers la
+   * connexion en pleine saisie. On renouvelle un jeton expire au chargement (jeton de rafraichissement), puis
+   * automatiquement avant chaque expiration, tant que la session Keycloak est active.
+   */
+  private async garderLaSession(): Promise<void> {
+    const rafraichissable = !!this.oauth.getRefreshToken();
+    if (rafraichissable && !this.oauth.hasValidAccessToken()) {
+      try {
+        await this.oauth.refreshToken();
+      } catch {
+        // Session Keycloak terminee : l'utilisateur se reconnectera a sa prochaine action.
+      }
+    }
+    if (rafraichissable) {
+      this.oauth.setupAutomaticSilentRefresh();
+    }
+    this.surveillerInactivite();
+  }
+
+  /**
+   * Le renouvellement automatique garderait la session ouverte indefiniment sur un onglet oublie (ordinateur
+   * partage, cybercafe) : sans clic, frappe, defilement ni toucher pendant 15 minutes, on deconnecte.
+   */
+  private surveillerInactivite(): void {
+    const marquer = () => (this.derniereActivite = Date.now());
+    this.zone.runOutsideAngular(() => {
+      for (const evt of ['click', 'keydown', 'scroll', 'touchstart', 'mousemove']) {
+        window.addEventListener(evt, marquer, { passive: true });
+      }
+      // Onglet en veille ou ordinateur mis en veille : verifier aussi au retour sur l'onglet.
+      document.addEventListener('visibilitychange', () => this.verifierInactivite());
+      setInterval(() => this.verifierInactivite(), 30_000);
+    });
+  }
+
+  private verifierInactivite(): void {
+    if (!this.oauth.getRefreshToken() && !this.oauth.hasValidAccessToken()) return;
+    if (Date.now() - this.derniereActivite > AuthService.INACTIVITE_MAX_MS) {
+      this.zone.run(() => this.seDeconnecter());
+    }
   }
 
   /** Apres un retour de Keycloak, reprend la navigation vers la page demandee avant la connexion. */

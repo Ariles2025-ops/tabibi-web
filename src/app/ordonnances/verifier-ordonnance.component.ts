@@ -3,10 +3,6 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { DateLocalePipe } from '../i18n/date-locale.pipe';
-import { TPipe } from '../i18n/t.pipe';
-import { TraductionService } from '../i18n/traduction.service';
-import { SeoService } from '../seo/seo.service';
 import { OrdonnanceService, Verification } from './ordonnance.service';
 import { libelleStatutOrdonnance } from './statut-ordonnance';
 
@@ -14,25 +10,35 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
 @Component({
   selector: 'app-verifier-ordonnance',
   standalone: true,
-  imports: [CommonModule, FormsModule, TPipe, DateLocalePipe],
+  imports: [CommonModule, FormsModule],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'verifier.titre' | t }}</h1>
-      <p style="color:#566b64;margin:0 0 20px">{{ 'verifier.consigne' | t }}</p>
+      <h1 style="color:var(--vert);margin:0 0 8px">Vérifier une ordonnance</h1>
+      <p style="color:var(--text3);margin:0 0 20px">Saisissez le code de vérification imprimé sur l'ordonnance.</p>
 
       <form (ngSubmit)="verifier()" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px">
-        <input class="champ" [(ngModel)]="code" name="code" [placeholder]="'verifier.code' | t" autocomplete="off"
+        <input class="champ" [(ngModel)]="code" name="code" placeholder="Code de vérification" autocomplete="off"
                style="flex:1;min-width:200px;letter-spacing:.1em">
         <button type="submit" class="bouton" [disabled]="charge() || !code.trim()">
-          {{ (charge() ? 'verifier.verification' : 'verifier.verifier') | t }}
+          {{ charge() ? 'Vérification…' : 'Vérifier' }}
         </button>
       </form>
 
       <ng-container *ngIf="resultat() as r">
-        <p *ngIf="r.valide" style="color:var(--vert);font-weight:600">
-          {{ 'verifier.authentique' | t:{ date: (r.emiseLe | dateLocale:'jourDateHeure') } }}<ng-container *ngIf="r.statut"> ({{ libelleStatut(r.statut) }})</ng-container>.
-        </p>
-        <p *ngIf="!r.valide" style="color:#b3261e;font-weight:600">{{ 'verifier.inconnu' | t }}</p>
+        <ng-container [ngSwitch]="r.statut">
+          <p *ngSwitchCase="'DELIVREE'" class="verif-delivree" style="color:var(--red);font-weight:600">
+            Déjà délivrée<ng-container *ngIf="r.delivreeLe"> le {{ r.delivreeLe | date:'d MMMM yyyy' }}</ng-container> : cette ordonnance ne peut pas être délivrée une nouvelle fois.
+          </p>
+          <p *ngSwitchCase="'ANNULEE'" class="verif-annulee" style="color:var(--red);font-weight:600">
+            Annulée : cette ordonnance a été annulée par le médecin et ne doit pas être délivrée.
+          </p>
+          <ng-container *ngSwitchDefault>
+            <p *ngIf="r.valide" style="color:var(--vert);font-weight:600">
+              Ordonnance authentique, émise le {{ r.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}<ng-container *ngIf="r.statut"> ({{ libelleStatut(r.statut) }})</ng-container>.
+            </p>
+            <p *ngIf="!r.valide" style="color:#b3261e;font-weight:600">Code inconnu.</p>
+          </ng-container>
+        </ng-container>
       </ng-container>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
     </main>
@@ -41,8 +47,6 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
 export class VerifierOrdonnanceComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private service = inject(OrdonnanceService);
-  private seo = inject(SeoService);
-  private i18n = inject(TraductionService);
 
   code = '';
   charge = signal(false);
@@ -51,7 +55,6 @@ export class VerifierOrdonnanceComponent implements OnInit {
 
   /** Un lien /verifier?code=... (depuis le detail d'une ordonnance) lance la verification directement. */
   ngOnInit() {
-    this.seo.definir({ titre: 'seo.verifier.titre', description: 'seo.verifier.description', canonique: '/verifier' });
     this.route.queryParamMap.subscribe((params) => {
       const code = params.get('code');
       if (code) {
@@ -78,13 +81,13 @@ export class VerifierOrdonnanceComponent implements OnInit {
           // Code absent : l'API peut repondre 404 plutot que { valide: false }.
           this.resultat.set({ valide: false, emiseLe: null, statut: null });
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('verifier.echec'));
+          this.erreur.set(e.error?.erreur ?? 'La vérification a échoué, veuillez réessayer.');
         }
       },
     });
   }
 
   libelleStatut(statut: string | null): string {
-    return libelleStatutOrdonnance(statut, this.i18n.t.bind(this.i18n));
+    return libelleStatutOrdonnance(statut);
   }
 }

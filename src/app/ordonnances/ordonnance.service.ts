@@ -22,8 +22,12 @@ export interface Ordonnance {
   emiseLe: string;
   /** Code imprime sur l'ordonnance, a saisir sur /verifier. */
   codeVerification: string;
-  /** Statut renvoye par l'API (ex. EMISE). */
+  /** Statut renvoye par l'API : EMISE, ANNULEE ou DELIVREE. */
   statut: string;
+  /** Motif saisi par le medecin a l'annulation (statut ANNULEE), s'il y en a un. */
+  motifAnnulation?: string | null;
+  /** Date de delivrance en pharmacie au format ISO 8601 (statut DELIVREE). */
+  delivreeLe?: string | null;
 }
 
 /** Donnees d'emission d'une ordonnance (POST /api/ordonnances, role MEDECIN). */
@@ -38,6 +42,15 @@ export interface Verification {
   valide: boolean;
   emiseLe: string | null;
   statut: string | null;
+  /** Date de delivrance (statut DELIVREE), si l'API la renvoie. */
+  delivreeLe?: string | null;
+}
+
+/** Reponse de POST /api/pharmacie/ordonnances/{code}/delivrer. */
+export interface Delivrance {
+  statut: string;
+  /** Date de delivrance au format ISO 8601. */
+  delivreeLe: string;
 }
 
 /** Ordonnances : consultation (PATIENT), emission (MEDECIN) et verification publique d'un code. */
@@ -60,14 +73,6 @@ export class OrdonnanceService {
     return this.http.get<Ordonnance>(`${this.base}/api/ordonnances/${id}`);
   }
 
-  /**
-   * Version imprimable (PDF) d'une ordonnance : `GET /api/ordonnances/{id}/pdf` (PATIENT ou MEDECIN, le Bearer est
-   * ajoute par l'intercepteur), reponse `application/pdf` recue telle quelle (`responseType: 'blob'`).
-   */
-  pdf(id: string): Observable<Blob> {
-    return this.http.get(`${this.base}/api/ordonnances/${id}/pdf`, { responseType: 'blob' });
-  }
-
   /** Verification d'un code, sans connexion (l'intercepteur joint le JWT s'il existe, l'API n'en a pas besoin). */
   verifier(code: string): Observable<Verification> {
     return this.http.get<Verification>(`${this.base}/api/ordonnances/verifier/${encodeURIComponent(code)}`);
@@ -76,5 +81,10 @@ export class OrdonnanceService {
   /** Emission d'une ordonnance par le medecin connecte (201 Created, renvoie l'ordonnance creee). */
   emettre(ordonnance: NouvelleOrdonnance): Observable<Ordonnance> {
     return this.http.post<Ordonnance>(`${this.base}/api/ordonnances`, ordonnance);
+  }
+
+  /** Marque l'ordonnance comme delivree par la pharmacie connectee (409 { erreur } si deja delivree ou annulee). */
+  delivrer(code: string): Observable<Delivrance> {
+    return this.http.post<Delivrance>(`${this.base}/api/pharmacie/ordonnances/${encodeURIComponent(code)}/delivrer`, null);
   }
 }

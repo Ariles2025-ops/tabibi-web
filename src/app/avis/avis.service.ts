@@ -3,8 +3,10 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
 
-// Bornes et libelles : module pur (`./avis.formats`), reexporte pour les imports existants.
-export { LONGUEUR_MAX_COMMENTAIRE, NOTE_MAX, NOTE_MIN, formaterMoyenne, libelleStatutAvis } from './avis.formats';
+/** Bornes de la note et du commentaire, identiques aux regles du domaine backend (400 au-dela). */
+export const NOTE_MIN = 1;
+export const NOTE_MAX = 5;
+export const LONGUEUR_MAX_COMMENTAIRE = 500;
 
 /** Avis tel que le voient son patient (GET /api/avis/mes) et le medecin qui le signale : sans patientId. */
 export interface Avis {
@@ -40,6 +42,24 @@ export interface SyntheseAvis {
 /** Vue complete d'un avis pour l'administrateur (GET /api/admin/avis). */
 export interface AvisAdmin extends Avis {
   patientId: string;
+}
+
+/** Libelles francais des statuts d'avis connus ; un statut inconnu est affiche tel quel. */
+const LIBELLES_STATUT_AVIS: Partial<Record<string, string>> = {
+  PUBLIE: 'Publié',
+  SIGNALE: 'Signalé',
+  MASQUE: 'Masqué',
+};
+
+export function libelleStatutAvis(statut: string | null | undefined): string {
+  if (!statut) return '';
+  return LIBELLES_STATUT_AVIS[statut] ?? statut;
+}
+
+/** « 4,5 / 5 (12 avis) » au format francais (virgule decimale), ou « Aucun avis pour le moment ». */
+export function formaterMoyenne(moyenne: number | null, nombre: number): string {
+  if (moyenne === null || nombre === 0) return 'Aucun avis pour le moment';
+  return `${moyenne.toFixed(1).replace('.', ',')} / 5 (${nombre} avis)`;
 }
 
 /**

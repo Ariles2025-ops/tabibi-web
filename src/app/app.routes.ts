@@ -1,3 +1,4 @@
+import { connecteGuard } from './auth/connecte.guard';
 import { Routes } from '@angular/router';
 import { CandidaturesAdminComponent } from './admin/candidatures-admin.component';
 import { ModerationAvisComponent } from './admin/moderation-avis.component';
@@ -12,6 +13,7 @@ import { MesAvisComponent } from './avis/mes-avis.component';
 import { MesDemandesComponent } from './dawini/mes-demandes.component';
 import { ReponsesDemandeComponent } from './dawini/reponses-demande.component';
 import { FicheMedecinComponent } from './fiche-medecin/fiche-medecin.component';
+import { PraticienComponent } from './praticien/praticien.component';
 import { MesListesAttenteComponent } from './liste-attente/mes-listes-attente.component';
 import { AgendaMedecinComponent } from './medecin/agenda-medecin.component';
 import { AvisMedecinComponent } from './medecin/avis-medecin.component';
@@ -33,12 +35,18 @@ import { EspaceSecretaireComponent } from './secretaire/espace-secretaire.compon
 import { VerifierOrdonnanceComponent } from './ordonnances/verifier-ordonnance.component';
 import { MesTeleconsultationsComponent } from './teleconsultation/mes-teleconsultations.component';
 import { MoiComponent } from './moi/moi.component';
-import { PageIntrouvableComponent } from './page-introuvable/page-introuvable.component';
 import { ProfilComponent } from './moi/profil.component';
+import { InvitationsComponent } from './secretaire/invitations.component';
+import { BientotComponent } from './bientot.component';
+import { AnnuaireSeoComponent } from './seo/annuaire-seo.component';
+import { PraticienPublicComponent } from './seo/praticien-public.component';
 
 export const routes: Routes = [
   { path: '', component: AnnuaireComponent },
-  { path: 'medecins/:id', component: FicheMedecinComponent },
+  // Page publique de presentation pour les praticiens (« Vous etes praticien ? »), sans connexion.
+  { path: 'praticien', component: PraticienComponent },
+  // Fiche medecin reservee aux comptes connectes (annuaire prive : cohérent avec le cadenas de l'accueil).
+  { path: 'medecins/:id', canActivate: [connecteGuard], component: FicheMedecinComponent },
   { path: 'mes-rendez-vous', component: MesRendezVousComponent },
   { path: 'mes-ordonnances', component: MesOrdonnancesComponent },
   { path: 'ordonnances/:id', component: OrdonnanceDetailComponent },
@@ -69,6 +77,12 @@ export const routes: Routes = [
     component: EspaceSecretaireComponent,
   },
   {
+    // Candidature ou reclamation de fiche : ouverte a toute personne connectee (le role MEDECIN vient a la validation).
+    path: 'medecin/candidature',
+    canActivate: [connecteGuard],
+    component: CandidatureMedecinComponent,
+  },
+  {
     // Espace medecin : reserve au role MEDECIN (medecinGuard), sinon retour a l'accueil.
     path: 'medecin',
     canActivate: [medecinGuard],
@@ -78,7 +92,6 @@ export const routes: Routes = [
       { path: 'ordonnances', component: OrdonnancesRedigeesComponent },
       { path: 'ordonnance/nouvelle', component: NouvelleOrdonnanceComponent },
       { path: 'teleconsultations', component: TeleconsultationsMedecinComponent },
-      { path: 'candidature', component: CandidatureMedecinComponent },
       { path: 'avis', component: AvisMedecinComponent },
       { path: 'liste-attente', component: ListeAttenteMedecinComponent },
       { path: 'secretaires', component: SecretairesComponent },
@@ -95,9 +108,19 @@ export const routes: Routes = [
       { path: 'avis', component: ModerationAvisComponent },
     ],
   },
+  { path: 'bientot', component: BientotComponent },
+  { path: 'invitations', component: InvitationsComponent },
+  // Pages de referencement de l'annuaire (publiques), liees depuis le pied de page.
+  { path: 'specialites', component: AnnuaireSeoComponent },
+  { path: 'specialites/:specialite', component: AnnuaireSeoComponent },
+  { path: 'specialites/:specialite/:wilaya', component: AnnuaireSeoComponent },
+  { path: 'wilayas/:wilaya', component: AnnuaireSeoComponent },
+  // Page publique de chaque praticien (une par fiche), pour le referencement.
+  { path: 'praticiens/:id', component: PraticienPublicComponent },
+  { path: 'praticiens/:id/:slug', component: PraticienPublicComponent },
   { path: 'moi', component: MoiComponent },
   // Mon profil (utilisateur connecte, tous roles : la page redirige vers la connexion).
   { path: 'moi/profil', component: ProfilComponent },
-  // Toute autre URL : page introuvable (statut 404 au rendu serveur, voir PageIntrouvableComponent).
-  { path: '**', component: PageIntrouvableComponent },
+  // Toute adresse inconnue (lien obsolete, faute de frappe) revient a l'accueil plutot qu'une page vide.
+  { path: '**', redirectTo: '' },
 ];

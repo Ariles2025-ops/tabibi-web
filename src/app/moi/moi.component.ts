@@ -1,58 +1,76 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
-import { TPipe } from '../i18n/t.pipe';
-import { TraductionService } from '../i18n/traduction.service';
-import { SeoService } from '../seo/seo.service';
+
+/** Libelles francais des roles metier ; tout autre role (technique) n'est pas affiche. */
+const LIBELLES_ROLES: Partial<Record<string, string>> = {
+  PATIENT: 'Patient',
+  MEDECIN: 'Médecin',
+  SECRETAIRE: 'Secrétaire',
+  PHARMACIE: 'Pharmacie',
+  ADMIN: 'Administrateur',
+};
 
 /**
- * Mon compte : utilisateur connecte, roles, identifiant du compte (sujet du jeton Keycloak, a communiquer par une
- * secretaire au medecin qui la rattache) avec copie dans le presse-papiers, lien vers le profil, deconnexion.
+ * Mon compte : utilisateur connecte, role en francais, identifiant du compte pour les seules secretaires (sujet du
+ * jeton Keycloak, a communiquer au medecin qui la rattache) avec copie, acces rapides, deconnexion.
  */
 @Component({
   selector: 'app-moi',
   standalone: true,
-  imports: [CommonModule, RouterLink, TPipe],
+  imports: [CommonModule, RouterLink],
   template: `
     <main style="max-width:640px;margin:40px auto;padding:0 16px">
-      <h1 style="color:var(--vert)">{{ 'moi.titre' | t }}</h1>
-      <button *ngIf="!connecte()" type="button" class="bouton" (click)="seConnecter()">{{ 'moi.seConnecter' | t }}</button>
+      <h1 style="color:var(--vert)">Mon compte</h1>
+      <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:12px;max-width:420px">
+        <p style="color:var(--text3);margin:0">Connectez-vous ou créez votre compte pour prendre rendez-vous. Vous choisirez le téléphone (code SMS) ou l'e-mail à l'étape suivante.</p>
+        <button type="button" class="bouton" (click)="seConnecter()">Se connecter / Créer un compte</button>
+      </div>
       <div *ngIf="connecte()">
-        <p>{{ 'moi.connecteEnTantQue' | t }} <b>{{ moi()?.nom }}</b></p>
-        <p>{{ 'moi.roles' | t:{ roles: moi()?.roles?.join(', ') } }}</p>
+        <p>Connecté en tant que <b>{{ moi()?.nom }}</b></p>
+        <p *ngIf="rolesAffiches().length">{{ rolesAffiches().length > 1 ? 'Rôles' : 'Rôle' }} : {{ rolesAffiches().join(', ') }}</p>
+        <ng-container *ngIf="estSecretaire()">
         <p *ngIf="moi()?.sujet as sujet" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span>{{ 'moi.identifiant' | t }} <code style="font-size:.95rem">{{ sujet }}</code></span>
-          <button type="button" class="bouton-secondaire" style="padding:6px 12px" (click)="copier(sujet)">{{ 'moi.copier' | t }}</button>
-          <span *ngIf="copie()" style="color:var(--vert)">{{ 'moi.copie' | t }}</span>
+          <span>Identifiant du compte : <code style="font-size:.95rem">{{ sujet }}</code></span>
+          <button type="button" class="bouton-secondaire" style="padding:6px 12px" (click)="copier(sujet)">Copier</button>
+          <span *ngIf="copie()" style="color:var(--vert)">Identifiant copié.</span>
           <span *ngIf="erreurCopie()" style="color:#b3261e">{{ erreurCopie() }}</span>
         </p>
-        <p style="color:#566b64;font-size:.9rem">
-          {{ 'moi.identifiantSecretaire' | t }}
+        <p style="color:var(--text3);font-size:.9rem">
+          Communiquez cet identifiant au médecin qui vous rattache à son cabinet.
         </p>
+        </ng-container>
+        <nav aria-label="Accès rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0">
+          <a class="bouton" routerLink="/moi/profil">Mon profil</a>
+          <a class="bouton-secondaire" routerLink="/mes-rendez-vous">Mes rendez-vous</a>
+          <a class="bouton-secondaire" routerLink="/notifications">Notifications</a>
+        </nav>
         <p style="display:flex;gap:8px;flex-wrap:wrap">
-          <a class="bouton" routerLink="/moi/profil">{{ 'moi.monProfil' | t }}</a>
-          <button type="button" class="bouton-secondaire" (click)="seDeconnecter()">{{ 'moi.seDeconnecter' | t }}</button>
+          <button type="button" class="bouton-secondaire" (click)="seDeconnecter()">Se déconnecter</button>
         </p>
       </div>
     </main>
   `,
 })
 export class MoiComponent implements OnInit {
-  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
-  private i18n = inject(TraductionService);
   connecte = signal(false);
   /** Profil /api/moi, lu depuis le cache de RoleService (une seule requete par chargement de page). */
   moi = this.roleService.moi;
   /** Vrai une fois l'identifiant copie dans le presse-papiers. */
   copie = signal(false);
+  /** Roles metier en francais ; les roles techniques de Keycloak (default-roles-tabibi, offline_access...) sont masques. */
+  rolesAffiches = computed(() =>
+    (this.moi()?.roles ?? []).map((r) => LIBELLES_ROLES[r.toUpperCase()]).filter((l): l is string => !!l),
+  );
+  /** L'identifiant du compte ne sert qu'aux secretaires (rattachement a un cabinet). */
+  estSecretaire = computed(() => (this.moi()?.roles ?? []).some((r) => r.toUpperCase() === 'SECRETAIRE'));
   erreurCopie = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('seo.monCompte');
     await this.auth.pret();
     if (this.auth.estConnecte()) {
       this.connecte.set(true);
@@ -61,6 +79,7 @@ export class MoiComponent implements OnInit {
   }
 
   seConnecter() { this.auth.seConnecter(); }
+  sInscrireParEmail() { this.auth.sInscrireParEmail(); }
   seDeconnecter() { this.auth.seDeconnecter(); this.connecte.set(false); }
 
   /** Copie l'identifiant ; le presse-papiers peut etre refuse (contexte non securise, permission) : message de repli. */
@@ -71,7 +90,7 @@ export class MoiComponent implements OnInit {
       await navigator.clipboard.writeText(sujet);
       this.copie.set(true);
     } catch {
-      this.erreurCopie.set(this.i18n.t('moi.copieImpossible'));
+      this.erreurCopie.set("Copie impossible : sélectionnez l'identifiant et copiez-le.");
     }
   }
 }

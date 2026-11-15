@@ -7,10 +7,6 @@ import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RendezVous, RendezVousService } from '../rendezvous/rendezvous.service';
 import { AvisService, LONGUEUR_MAX_COMMENTAIRE, NOTE_MAX, NOTE_MIN } from './avis.service';
-import { SeoService } from '../seo/seo.service';
-import { DateLocalePipe } from '../i18n/date-locale.pipe';
-import { TPipe } from '../i18n/t.pipe';
-import { TraductionService } from '../i18n/traduction.service';
 
 /** Notes proposees, de 1 a 5. */
 const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN + i);
@@ -18,50 +14,55 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
 /**
  * Depot d'un avis par le patient sur un rendez-vous honore (POST /api/avis) : note de 1 a 5 par cinq boutons
  * radio stylises, commentaire facultatif (500 caracteres au plus). Le rendez-vous et le praticien sont rappeles
- * s'ils sont retrouves dans mes rendez-vous. 409 : avis deja donne (ou rendez-vous non honore).
+ * s'ils sont retrouves dans mes rendez-vous ; un rendez-vous retrouve mais non honore masque le formulaire.
+ * 409 : le motif { erreur } du backend est affiche (avis deja donne, rendez-vous non honore...).
  */
 @Component({
   selector: 'app-deposer-avis',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TPipe, DateLocalePipe],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <p style="margin:0 0 16px"><a routerLink="/mes-rendez-vous" style="color:var(--vert)">{{ 'avis.retourRendezVous' | t }}</a></p>
-      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'avis.donnerMonAvis' | t }}</h1>
+      <p style="margin:0 0 16px"><a routerLink="/mes-rendez-vous" style="color:var(--vert)">Retour à mes rendez-vous</a></p>
+      <h1 style="color:var(--vert);margin:0 0 8px">Donner mon avis</h1>
 
-      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="rendezVous() as r" style="color:#566b64;margin:0 0 20px">
-          {{ 'avis.rendezVousDu' | t:{ date: (r.debut | dateLocale:'jourHeure') } }}<ng-container *ngIf="nomMedecin() as nom"> {{ 'avis.avecPraticien' | t:{ nom } }}</ng-container>.
-          {{ 'avis.publieSansNom' | t }}
+        <p *ngIf="rendezVous() as r" style="color:var(--text3);margin:0 0 20px">
+          Rendez-vous du {{ r.debut | date:'EEEE d MMMM y à HH:mm' }}<ng-container *ngIf="nomMedecin()"> avec {{ nomMedecin() }}</ng-container>.
+          Votre avis est publié sans votre nom.
         </p>
 
         <p *ngIf="succes()" style="color:var(--vert)">
-          {{ succes() }} <a routerLink="/mes-avis" style="color:var(--vert)">{{ 'avis.voirMesAvis' | t }}</a>
+          {{ succes() }} <a routerLink="/mes-avis" style="color:var(--vert)">Voir mes avis</a>
         </p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
-        <form *ngIf="!succes()" (ngSubmit)="deposer()" style="display:grid;gap:16px">
+        <p *ngIf="nonHonore()" role="alert" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin:0">
+          Vous pourrez donner votre avis une fois la consultation effectuée : le médecin doit d'abord indiquer que
+          ce rendez-vous a bien eu lieu.
+        </p>
+
+        <form *ngIf="!succes() && !nonHonore()" (ngSubmit)="deposer()" style="display:grid;gap:16px">
           <fieldset style="border:0;padding:0;margin:0">
-            <legend style="color:#566b64;font-size:.9rem;margin:0 0 6px">{{ 'avis.note' | t }}</legend>
+            <legend style="color:var(--text3);font-size:.9rem;margin:0 0 6px">Note *</legend>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <label *ngFor="let n of notes" class="note" [class.note-choisie]="note === n" [attr.aria-label]="'avis.noteAria' | t:{ n }">
+              <label *ngFor="let n of notes" class="note" [class.note-choisie]="note === n" [attr.aria-label]="'Note ' + n + ' sur 5'">
                 <input type="radio" name="note" [value]="n" [(ngModel)]="note">{{ n }}
               </label>
-              <span style="color:#566b64;font-size:.9rem;margin-inline-start:4px">{{ note !== null ? ('avis.sur5' | t:{ note }) : ('avis.choisirNote' | t) }}</span>
+              <span style="color:var(--text3);font-size:.9rem;margin-left:4px">{{ note !== null ? note + ' / 5' : 'Choisissez une note de 1 à 5' }}</span>
             </div>
           </fieldset>
 
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            {{ 'avis.commentaire' | t }}
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
+            Commentaire (facultatif)
             <textarea class="champ" [(ngModel)]="commentaire" name="commentaire" rows="4" style="color:#10241F;font-size:1rem;resize:vertical"></textarea>
-            <span [style.color]="commentaireTropLong() ? '#b3261e' : '#566b64'">{{ commentaire.length }} / {{ maxCommentaire }}</span>
+            <span [style.color]="commentaireTropLong() ? '#b3261e' : 'var(--text3)'">{{ commentaire.length }} / {{ maxCommentaire }}</span>
           </label>
 
           <div>
             <button type="submit" class="bouton" [disabled]="enCours() || commentaireTropLong()">
-              {{ (enCours() ? 'commun.envoi' : 'avis.envoyer') | t }}
+              {{ enCours() ? 'Envoi…' : 'Envoyer mon avis' }}
             </button>
           </div>
         </form>
@@ -70,13 +71,11 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
   `,
 })
 export class DeposerAvisComponent implements OnInit {
-  private seo = inject(SeoService);
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
   private service = inject(AvisService);
   private rendezVousService = inject(RendezVousService);
   private annuaire = inject(AnnuaireService);
-  private i18n = inject(TraductionService);
 
   private rendezVousId = '';
   /** null tant que l'etat de connexion n'est pas connu. */
@@ -94,7 +93,6 @@ export class DeposerAvisComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('seo.donnerMonAvis');
     this.rendezVousId = this.route.snapshot.paramMap.get('rendezVousId') ?? '';
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
@@ -109,11 +107,11 @@ export class DeposerAvisComponent implements OnInit {
   deposer() {
     this.succes.set('');
     if (this.note === null) {
-      this.erreur.set(this.i18n.t('avis.noteObligatoire'));
+      this.erreur.set('Choisissez une note de 1 à 5.');
       return;
     }
     if (this.commentaireTropLong()) {
-      this.erreur.set(this.i18n.t('avis.commentaireTropLong', { max: LONGUEUR_MAX_COMMENTAIRE }));
+      this.erreur.set(`Le commentaire ne peut pas dépasser ${LONGUEUR_MAX_COMMENTAIRE} caractères.`);
       return;
     }
     const commentaire = this.commentaire.trim();
@@ -122,23 +120,29 @@ export class DeposerAvisComponent implements OnInit {
     this.service.deposer(this.rendezVousId, this.note, commentaire || null).subscribe({
       next: () => {
         this.enCours.set(false);
-        this.succes.set(this.i18n.t('avis.merci'));
+        this.succes.set('Merci, votre avis a été enregistré.');
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 409) {
-          this.erreur.set(this.i18n.t('avis.dejaDonne'));
+          this.erreur.set(e.error?.erreur ?? 'Vous avez déjà donné votre avis pour ce rendez-vous.');
         } else if (e.status === 403) {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('avis.seulPatient'));
+          this.erreur.set(e.error?.erreur ?? 'Seul le patient du rendez-vous peut donner son avis.');
         } else if (e.status === 404) {
-          this.erreur.set(this.i18n.t('avis.rendezVousIntrouvable'));
+          this.erreur.set('Rendez-vous introuvable.');
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('avis.envoiEchec'));
+          this.erreur.set(e.error?.erreur ?? "L'envoi de l'avis a échoué, veuillez réessayer.");
         }
       },
     });
+  }
+
+  /** Vrai si le rendez-vous est retrouve et n'est pas encore honore : l'avis n'est pas encore possible. */
+  nonHonore(): boolean {
+    const r = this.rendezVous();
+    return r !== null && r.statut !== 'HONORE';
   }
 
   commentaireTropLong(): boolean {

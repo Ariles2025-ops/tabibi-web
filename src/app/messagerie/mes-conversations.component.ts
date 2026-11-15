@@ -6,10 +6,6 @@ import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { Conversation, MessagerieService, abregerIdentifiant } from './messagerie.service';
-import { SeoService } from '../seo/seo.service';
-import { DateLocalePipe } from '../i18n/date-locale.pipe';
-import { TPipe } from '../i18n/t.pipe';
-import { TraductionService } from '../i18n/traduction.service';
 
 /**
  * Mes conversations (GET /api/conversations), la plus recente activite d'abord. L'interlocuteur est le
@@ -19,35 +15,34 @@ import { TraductionService } from '../i18n/traduction.service';
 @Component({
   selector: 'app-mes-conversations',
   standalone: true,
-  imports: [CommonModule, RouterLink, TPipe, DateLocalePipe],
+  imports: [CommonModule, RouterLink],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 16px">{{ 'messagerie.titre' | t }}</h1>
+      <h1 style="color:var(--vert);margin:0 0 16px">Messagerie</h1>
 
-      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
+        <p *ngIf="charge()">Chargement…</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-          <li *ngFor="let c of conversations()" style="border:1px solid #e4e9e7;border-radius:12px"
+          <li *ngFor="let c of conversations()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px"
               [class.conversation-non-lue]="c.nonLus > 0">
             <a [routerLink]="['/messagerie', c.id]"
                style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px;color:inherit;text-decoration:none">
               <span>
                 <strong>{{ interlocuteur(c) }}</strong><br>
-                <span style="color:#566b64">{{ 'messagerie.derniereActivite' | t:{ date: (c.dernierMessageLe | dateLocale:'jourHeure') } }}</span>
+                <span style="color:var(--text3)">Dernière activité le {{ c.dernierMessageLe | date:'EEEE d MMMM à HH:mm' }}</span>
               </span>
-              <span *ngIf="c.nonLus > 0" style="color:var(--vert);font-weight:600">{{ 'messagerie.nonLus' | t:{ n: c.nonLus } }}</span>
+              <span *ngIf="c.nonLus > 0" style="color:var(--vert);font-weight:600">{{ c.nonLus }} non lus</span>
             </a>
           </li>
         </ul>
         <p *ngIf="!charge() && !erreur() && conversations().length === 0">
-          {{ 'messagerie.aucune' | t }}
+          Aucune conversation pour le moment.
           <ng-container *ngIf="!estMedecin()">
-            {{ 'messagerie.ecrireDepuisFiche' | t }}
-            <a routerLink="/" style="color:var(--vert)">{{ 'commun.trouverPraticien' | t }}</a>
+            Vous pouvez écrire à un médecin depuis sa fiche, une fois un rendez-vous pris.
+            <a routerLink="/" style="color:var(--vert)">Trouver un praticien</a>
           </ng-container>
         </p>
       </ng-container>
@@ -55,12 +50,10 @@ import { TraductionService } from '../i18n/traduction.service';
   `,
 })
 export class MesConversationsComponent implements OnInit {
-  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   private service = inject(MessagerieService);
   private annuaire = inject(AnnuaireService);
-  private i18n = inject(TraductionService);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -74,7 +67,6 @@ export class MesConversationsComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('seo.messagerie');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -102,9 +94,9 @@ export class MesConversationsComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.i18n.t('commun.reservePatientsMedecins'));
+          this.erreur.set('Cette page est réservée aux patients et aux médecins.');
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('messagerie.erreurChargement'));
+          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos conversations.');
         }
       },
     });
@@ -113,9 +105,9 @@ export class MesConversationsComponent implements OnInit {
   /** Libelle de l'autre participant : le medecin (nom de l'annuaire) si je suis le patient, sinon le patient abrege. */
   interlocuteur(c: Conversation): string {
     if (this.jeSuisLePatient(c)) {
-      return this.noms()[c.medecinId] ?? this.i18n.t('commun.medecin');
+      return this.noms()[c.medecinId] ?? 'Médecin';
     }
-    return this.i18n.t('commun.patient', { id: abregerIdentifiant(c.patientId) });
+    return `Patient ${abregerIdentifiant(c.patientId)}`;
   }
 
   /** Vrai si je suis le patient de la conversation ; a defaut d'identifiant connu, on se fie au role. */

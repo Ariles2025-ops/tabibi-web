@@ -1,14 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { catchError, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
-import { SeoService } from '../seo/seo.service';
-import { DateLocalePipe } from '../i18n/date-locale.pipe';
-import { TPipe } from '../i18n/t.pipe';
-import { Traducteur } from '../i18n/traducteur';
-import { TraductionService } from '../i18n/traduction.service';
 import {
   ANNEE_NAISSANCE_MIN,
   DemandeProfil,
@@ -36,56 +32,60 @@ function formulaireVide(): DemandeProfil {
 @Component({
   selector: 'app-profil',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TPipe, DateLocalePipe],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <main style="max-width:640px;margin:32px auto;padding:0 16px">
-      <p style="margin:0 0 16px"><a routerLink="/moi" style="color:var(--vert)">{{ 'profil.retourCompte' | t }}</a></p>
-      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'profil.titre' | t }}</h1>
-      <p style="color:#566b64;margin:0 0 20px">{{ 'profil.intro' | t }}</p>
+      <p style="margin:0 0 16px"><a routerLink="/moi" style="color:var(--vert)">Retour à mon compte</a></p>
+      <h1 style="color:var(--vert);margin:0 0 8px">Mon profil</h1>
+      <p style="color:var(--text3);margin:0 0 20px">
+        Ces informations servent aux praticiens et aux rappels de rendez-vous. Seul le nom complet est obligatoire.
+      </p>
 
-      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
+        <p *ngIf="charge()">Chargement…</p>
         <p *ngIf="erreurChargement()" style="color:#b3261e">{{ erreurChargement() }}</p>
 
         <form *ngIf="!charge() && !erreurChargement()" (ngSubmit)="enregistrer()" style="display:grid;gap:12px">
-          <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-            {{ 'profil.nomComplet' | t }}
+          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
+            Nom complet *
             <input class="champ" [(ngModel)]="formulaire.nomComplet" name="nomComplet" required [maxlength]="longueurMaxNom"
-                   [placeholder]="'profil.nomPlaceholder' | t" style="color:#10241F;font-size:1rem">
+                   placeholder="Ex. Amina Belkacem" style="color:#10241F;font-size:1rem">
           </label>
           <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              {{ 'profil.telephone' | t }}
-              <input class="champ" [(ngModel)]="formulaire.telephone" name="telephone" type="tel" [placeholder]="'profil.telephonePlaceholder' | t"
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
+              Téléphone
+              <input class="champ" [(ngModel)]="formulaire.telephone" name="telephone" type="tel" placeholder="Ex. 0550 12 34 56"
                      style="color:#10241F;font-size:1rem">
             </label>
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              {{ 'profil.dateNaissance' | t }}
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
+              Date de naissance
               <input class="champ" [(ngModel)]="formulaire.dateNaissance" name="dateNaissance" type="date" [max]="hier" [min]="dateMin"
                      style="color:#10241F;font-size:1rem">
             </label>
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              {{ 'profil.wilaya' | t }}
-              <input class="champ" [(ngModel)]="formulaire.wilayaCode" name="wilayaCode" [maxlength]="longueurMaxWilaya" [placeholder]="'profil.wilayaPlaceholder' | t"
-                     style="color:#10241F;font-size:1rem">
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
+              Wilaya
+              <select class="champ" [(ngModel)]="formulaire.wilayaCode" name="wilayaCode" style="color:#10241F;font-size:1rem">
+                <option value="">Non renseignée</option>
+                <option *ngIf="wilayaHorsListe()" [value]="formulaire.wilayaCode">{{ formulaire.wilayaCode }}</option>
+                <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.code }} — {{ w.nom }}</option>
+              </select>
             </label>
-            <label style="display:grid;gap:4px;color:#566b64;font-size:.9rem">
-              {{ 'profil.langue' | t }}
+            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
+              Langue
               <select class="champ" [(ngModel)]="formulaire.langue" name="langue" style="color:#10241F;font-size:1rem">
                 <option *ngFor="let l of langues" [value]="l.code">{{ l.libelle }}</option>
               </select>
             </label>
           </div>
-          <p style="color:#566b64;font-size:.9rem;margin:0">{{ 'commun.champObligatoire' | t }}</p>
+          <p style="color:var(--text3);font-size:.9rem;margin:0">* Champ obligatoire.</p>
           <p *ngIf="succes()" style="color:var(--vert);margin:0">{{ succes() }}</p>
           <p *ngIf="erreur()" style="color:#b3261e;margin:0">{{ erreur() }}</p>
           <div>
-            <button type="submit" class="bouton" [disabled]="enCours()">{{ (enCours() ? 'commun.enregistrement' : 'profil.enregistrer') | t }}</button>
+            <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? 'Enregistrement…' : 'Enregistrer' }}</button>
           </div>
-          <p *ngIf="profil() as p" style="color:#566b64;font-size:.9rem;margin:0">
-            {{ 'profil.derniereMaj' | t:{ date: (p.misAJourLe | dateLocale:'dateHeure') } }}
+          <p *ngIf="profil() as p" style="color:var(--text3);font-size:.9rem;margin:0">
+            Dernière mise à jour le {{ p.misAJourLe | date:'d MMMM yyyy à HH:mm' }}.
           </p>
         </form>
       </ng-container>
@@ -93,12 +93,9 @@ function formulaireVide(): DemandeProfil {
   `,
 })
 export class ProfilComponent implements OnInit {
-  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(ProfilService);
-  private i18n = inject(TraductionService);
-  /** Traducteur de la langue courante, passe a la validation du formulaire. */
-  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
+  private http = inject(HttpClient);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -108,6 +105,8 @@ export class ProfilComponent implements OnInit {
   langues = LANGUES;
   longueurMaxNom = LONGUEUR_MAX_NOM;
   longueurMaxWilaya = LONGUEUR_MAX_WILAYA;
+  /** Wilayas du referentiel (assets/referentiel.json) : code attendu par l'API + libelle FR. */
+  wilayas = signal<{ code: string; nom: string }[]>([]);
   /** Bornes du selecteur de date : la veille (date passee) et le 1er janvier suivant l'annee minimale. */
   hier = dateLocaleIso(new Date(Date.now() - 24 * 60 * 60 * 1000));
   dateMin = `${ANNEE_NAISSANCE_MIN + 1}-01-01`;
@@ -119,7 +118,10 @@ export class ProfilComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('seo.monProfil');
+    this.http
+      .get<{ wilayas?: { code: string; nom: string }[] }>('/assets/referentiel.json')
+      .pipe(catchError(() => of({ wilayas: [] })))
+      .subscribe((ref) => this.wilayas.set(ref?.wilayas ?? []));
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -147,7 +149,7 @@ export class ProfilComponent implements OnInit {
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreurChargement.set(e.error?.erreur ?? this.i18n.t('profil.erreurChargement'));
+          this.erreurChargement.set(e.error?.erreur ?? 'Impossible de charger votre profil.');
         }
       },
     });
@@ -156,7 +158,7 @@ export class ProfilComponent implements OnInit {
   enregistrer() {
     const demande = nettoyerProfil(this.formulaire);
     this.succes.set('');
-    const motif = validerProfil(demande, new Date(), this.traduire);
+    const motif = validerProfil(demande);
     if (motif) {
       this.erreur.set(motif);
       return;
@@ -167,16 +169,16 @@ export class ProfilComponent implements OnInit {
       next: (p) => {
         this.enCours.set(false);
         this.afficher(p);
-        this.succes.set(this.i18n.t('profil.enregistre'));
+        this.succes.set('Profil enregistré.');
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 400) {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('profil.invalide'));
+          this.erreur.set(e.error?.erreur ?? 'Le profil est invalide.');
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('profil.echec'));
+          this.erreur.set(e.error?.erreur ?? "L'enregistrement du profil a échoué, veuillez réessayer.");
         }
       },
     });
@@ -192,5 +194,11 @@ export class ProfilComponent implements OnInit {
       wilayaCode: p.wilayaCode ?? '',
       langue: p.langue || LANGUE_PAR_DEFAUT,
     };
+  }
+
+  /** Vrai si le code enregistre n'est pas dans le referentiel : on le garde selectionnable pour ne pas le perdre. */
+  wilayaHorsListe(): boolean {
+    const code = (this.formulaire.wilayaCode ?? '').trim();
+    return !!code && this.wilayas().length > 0 && !this.wilayas().some((w) => w.code === code);
   }
 }

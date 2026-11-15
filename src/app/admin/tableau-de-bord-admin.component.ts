@@ -4,9 +4,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { AdminService, StatistiquesAdministration, libelleRappels } from './admin.service';
-import { SeoService } from '../seo/seo.service';
-import { TPipe } from '../i18n/t.pipe';
-import { TraductionService } from '../i18n/traduction.service';
 
 /**
  * Tableau de bord de l'administrateur : nombre de candidatures par statut (GET /api/admin/statistiques) et
@@ -15,38 +12,41 @@ import { TraductionService } from '../i18n/traduction.service';
 @Component({
   selector: 'app-tableau-de-bord-admin',
   standalone: true,
-  imports: [CommonModule, RouterLink, TPipe],
+  imports: [CommonModule, RouterLink],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 16px">{{ 'admin.titre' | t }}</h1>
+      <h1 style="color:var(--vert);margin:0 0 16px">Administration</h1>
 
-      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
+      <p *ngIf="charge()">Chargement…</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
       <ul *ngIf="statistiques() as s" style="list-style:none;padding:0;margin:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
-        <li style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
-          <span style="display:block;color:#566b64;font-size:.9rem">{{ 'admin.candidaturesEnAttente' | t }}</span>
-          <strong style="display:block;font-size:2rem;font-weight:600">{{ s.candidaturesEnAttente }}</strong>
+        <li style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px">
+          <span style="display:block;color:var(--text3);font-size:.9rem">Candidatures en attente</span>
+          <strong style="display:block;font-size:2rem;font-weight:800;color:var(--blue)">{{ s.candidaturesEnAttente }}</strong>
         </li>
-        <li style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
-          <span style="display:block;color:#566b64;font-size:.9rem">{{ 'admin.candidaturesValidees' | t }}</span>
-          <strong style="display:block;font-size:2rem;font-weight:600">{{ s.candidaturesValidees }}</strong>
+        <li style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px">
+          <span style="display:block;color:var(--text3);font-size:.9rem">Candidatures validées</span>
+          <strong style="display:block;font-size:2rem;font-weight:800;color:var(--blue)">{{ s.candidaturesValidees }}</strong>
         </li>
-        <li style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
-          <span style="display:block;color:#566b64;font-size:.9rem">{{ 'admin.candidaturesRefusees' | t }}</span>
-          <strong style="display:block;font-size:2rem;font-weight:600">{{ s.candidaturesRefusees }}</strong>
+        <li style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px">
+          <span style="display:block;color:var(--text3);font-size:.9rem">Candidatures refusées</span>
+          <strong style="display:block;font-size:2rem;font-weight:800;color:var(--blue)">{{ s.candidaturesRefusees }}</strong>
         </li>
       </ul>
 
       <p style="margin:24px 0 0">
-        <a class="bouton" routerLink="/admin/candidatures">{{ 'admin.examiner' | t }}</a>
+        <a class="bouton" routerLink="/admin/candidatures">Examiner les candidatures</a>
       </p>
 
-      <section style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;margin:32px 0 0">
-        <h2 style="font-size:1.1rem;margin:0 0 6px">{{ 'admin.rappelsTitre' | t }}</h2>
-        <p style="color:#566b64;margin:0 0 12px">{{ 'admin.rappelsTexte' | t }}</p>
+      <section style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px;margin:32px 0 0">
+        <h2 style="font-size:1.1rem;margin:0 0 6px">Rappels de rendez-vous</h2>
+        <p style="color:var(--text3);margin:0 0 12px">
+          Les patients reçoivent un rappel la veille de chaque rendez-vous confirmé (envoi automatique toutes les
+          heures, un seul rappel par rendez-vous). Lancez l'envoi maintenant pour vérifier ou rattraper une exécution.
+        </p>
         <button type="button" class="bouton-secondaire" (click)="executerRappels()" [disabled]="rappelsEnCours()">
-          {{ (rappelsEnCours() ? 'commun.envoi' : 'admin.rappelsExecuter') | t }}
+          {{ rappelsEnCours() ? 'Envoi…' : 'Exécuter les rappels maintenant' }}
         </button>
         <p *ngIf="rappels()" style="color:var(--vert);margin:12px 0 0">{{ rappels() }}</p>
         <p *ngIf="erreurRappels()" style="color:#b3261e;margin:12px 0 0">{{ erreurRappels() }}</p>
@@ -55,10 +55,8 @@ import { TraductionService } from '../i18n/traduction.service';
   `,
 })
 export class TableauDeBordAdminComponent implements OnInit {
-  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(AdminService);
-  private i18n = inject(TraductionService);
 
   statistiques = signal<StatistiquesAdministration | null>(null);
   charge = signal(false);
@@ -69,7 +67,6 @@ export class TableauDeBordAdminComponent implements OnInit {
   erreurRappels = signal('');
 
   ngOnInit() {
-    this.seo.definirPrivee('seo.administration');
     this.charge.set(true);
     this.service.statistiques().subscribe({
       next: (s) => {
@@ -81,9 +78,9 @@ export class TableauDeBordAdminComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.i18n.t('commun.reserveAdmin'));
+          this.erreur.set("Cette page est réservée à l'administrateur.");
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('admin.erreurStatistiques'));
+          this.erreur.set(e.error?.erreur ?? 'Impossible de charger les statistiques.');
         }
       },
     });
@@ -97,16 +94,16 @@ export class TableauDeBordAdminComponent implements OnInit {
     this.service.executerRappels().subscribe({
       next: (nombre) => {
         this.rappelsEnCours.set(false);
-        this.rappels.set(libelleRappels(nombre, (cle, params) => this.i18n.t(cle, params)));
+        this.rappels.set(libelleRappels(nombre));
       },
       error: (e: HttpErrorResponse) => {
         this.rappelsEnCours.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreurRappels.set(this.i18n.t('commun.actionReserveAdmin'));
+          this.erreurRappels.set("Cette action est réservée à l'administrateur.");
         } else {
-          this.erreurRappels.set(e.error?.erreur ?? this.i18n.t('admin.rappelsEchec'));
+          this.erreurRappels.set(e.error?.erreur ?? "L'envoi des rappels a échoué, veuillez réessayer.");
         }
       },
     });

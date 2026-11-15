@@ -5,10 +5,6 @@ import { RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { InscriptionAttente, ListeAttenteService } from './liste-attente.service';
-import { SeoService } from '../seo/seo.service';
-import { DateLocalePipe } from '../i18n/date-locale.pipe';
-import { TPipe } from '../i18n/t.pipe';
-import { TraductionService } from '../i18n/traduction.service';
 
 /**
  * Mes listes d'attente (role PATIENT) : inscriptions du patient (GET /api/liste-attente/mes), les plus anciennes
@@ -17,45 +13,53 @@ import { TraductionService } from '../i18n/traduction.service';
 @Component({
   selector: 'app-mes-listes-attente',
   standalone: true,
-  imports: [CommonModule, RouterLink, TPipe, DateLocalePipe],
+  imports: [CommonModule, RouterLink],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'listeAttente.titre' | t }}</h1>
-      <p style="color:#566b64;margin:0 0 20px">{{ 'listeAttente.intro' | t }}</p>
+      <h1 style="color:var(--vert);margin:0 0 8px">Mes listes d'attente</h1>
+      <p style="color:var(--text3);margin:0 0 20px">
+        Vous serez notifié dès qu'un créneau se libère chez l'un de ces praticiens.
+      </p>
 
-      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
+        <p *ngIf="charge()">Chargement…</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let i of inscriptions()"
-              style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+              style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
-              <a [routerLink]="['/medecins', i.medecinId]" style="color:var(--vert);font-weight:600">{{ noms()[i.medecinId] ?? ('commun.voirPraticien' | t) }}</a><br>
-              <span style="color:#566b64">{{ 'listeAttente.inscritLe' | t:{ date: (i.inscritLe | dateLocale:'dateHeure') } }}</span>
+              <a [routerLink]="['/medecins', i.medecinId]" style="color:var(--vert);font-weight:600">{{ noms()[i.medecinId] ?? 'Voir le praticien' }}</a><br>
+              <span style="color:var(--text3)">Inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
             </div>
-            <button type="button" (click)="retirer(i)" [disabled]="enCours() !== null"
+            <button *ngIf="aConfirmer() !== i.id" type="button" (click)="aConfirmer.set(i.id)" [disabled]="enCours() !== null"
                     style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
-              {{ (enCours() === i.id ? 'commun.retrait' : 'listeAttente.meRetirer') | t }}
+              Me retirer
             </button>
+            <div *ngIf="aConfirmer() === i.id" role="group" aria-label="Confirmer le retrait"
+                 style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span style="font-weight:600">Vous retirer de cette liste d'attente ?</span>
+              <button type="button" (click)="retirer(i)" [disabled]="enCours() !== null"
+                      style="padding:10px 16px;background:#b3261e;color:#fff;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
+                {{ enCours() === i.id ? 'Retrait…' : 'Oui, me retirer' }}
+              </button>
+              <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">Non, rester inscrit</button>
+            </div>
           </li>
         </ul>
         <p *ngIf="!charge() && !erreur() && inscriptions().length === 0">
-          {{ 'listeAttente.aucune' | t }}
-          <a routerLink="/" style="color:var(--vert)">{{ 'commun.trouverPraticien' | t }}</a>
+          Vous n'êtes inscrit sur aucune liste d'attente.
+          <a routerLink="/" style="color:var(--vert)">Trouver un praticien</a>
         </p>
       </ng-container>
     </main>
   `,
 })
 export class MesListesAttenteComponent implements OnInit {
-  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(ListeAttenteService);
   private annuaire = inject(AnnuaireService);
-  private i18n = inject(TraductionService);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -65,10 +69,11 @@ export class MesListesAttenteComponent implements OnInit {
   charge = signal(false);
   /** Identifiant de l'inscription dont le retrait est en cours. */
   enCours = signal<string | null>(null);
+  /** Inscription dont le retrait attend la confirmation du patient (confirmation dans la page). */
+  aConfirmer = signal<string | null>(null);
   erreur = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('seo.mesListesAttente');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -93,9 +98,9 @@ export class MesListesAttenteComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.i18n.t('commun.reservePatients'));
+          this.erreur.set('Cette page est réservée aux patients.');
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('listeAttente.erreurChargement'));
+          this.erreur.set(e.error?.erreur ?? "Impossible de charger vos listes d'attente.");
         }
       },
     });
@@ -107,17 +112,19 @@ export class MesListesAttenteComponent implements OnInit {
     this.service.retirer(inscription.id).subscribe({
       next: () => {
         this.enCours.set(null);
+        this.aConfirmer.set(null);
         this.inscriptions.update((liste) => liste.filter((i) => i.id !== inscription.id));
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
+        this.aConfirmer.set(null);
         if (e.status === 404) {
           // Deja retiree (autre onglet) : la liste est rechargee.
           this.charger();
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('listeAttente.retraitEchec'));
+          this.erreur.set(e.error?.erreur ?? 'Le retrait a échoué, veuillez réessayer.');
         }
       },
     });

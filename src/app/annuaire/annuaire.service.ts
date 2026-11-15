@@ -11,6 +11,8 @@ export interface Medecin {
   wilayaCode: string;
   wilayaFr: string;
   ville: string;
+  /** Vrai si le medecin a des creneaux libres a venir (le serveur trie ces medecins en premier). */
+  reservable?: boolean;
 }
 
 /** Creneau de consultation propose par un medecin. */
@@ -43,6 +45,11 @@ export class AnnuaireService {
 
   medecin(id: string): Observable<Medecin> {
     return this.http.get<Medecin>(`${this.base}/api/medecins/${id}`);
+  }
+
+  /** Vrai si la fiche n'appartient encore a aucun compte : son praticien peut la reclamer. */
+  reclamable(id: string): Observable<{ reclamable: boolean }> {
+    return this.http.get<{ reclamable: boolean }>(`${this.base}/api/medecins/${id}/reclamable`);
   }
 
   creneaux(medecinId: string): Observable<Creneau[]> {

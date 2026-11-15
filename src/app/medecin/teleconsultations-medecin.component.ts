@@ -6,76 +6,85 @@ import { AuthService } from '../auth/auth.service';
 import { libelleStatutTeleconsultation } from '../teleconsultation/statut-teleconsultation';
 import { Teleconsultation, TeleconsultationService, salleAccessible } from '../teleconsultation/teleconsultation.service';
 import { MedecinService } from './medecin.service';
-import { SeoService } from '../seo/seo.service';
-import { DateLocalePipe } from '../i18n/date-locale.pipe';
-import { TPipe } from '../i18n/t.pipe';
-import { Traducteur } from '../i18n/traducteur';
-import { TraductionService } from '../i18n/traduction.service';
+import { PatientsService, RepertoirePatients, nomPatient } from './patients.service';
+
+/** Le medecin peut demarrer une teleconsultation a partir de 15 minutes avant l'heure du rendez-vous. */
+export const AVANCE_DEMARRAGE_MS = 15 * 60_000;
 
 /** Action de pilotage en cours sur une teleconsultation (libelle du bouton pendant l'appel). */
 type Action = 'demarrer' | 'terminer' | 'annuler';
 
 /**
- * Teleconsultations du medecin connecte (GET /api/medecin/teleconsultations) : demarrage (uniquement apres le
- * consentement du patient), cloture, annulation et lien de la salle video.
+ * Teleconsultations du medecin connecte (GET /api/medecin/teleconsultations), avec le nom du patient :
+ * demarrage (apres le consentement du patient, a partir de 15 min avant le rendez-vous), cloture (le rendez-vous
+ * est alors marque honore par l'API), annulation confirmee dans la page et lien de la salle video.
  */
 @Component({
   selector: 'app-teleconsultations-medecin',
   standalone: true,
-  imports: [CommonModule, RouterLink, TPipe, DateLocalePipe],
+  imports: [CommonModule, RouterLink],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 16px">{{ 'teleconsultationMedecin.titre' | t }}</h1>
+      <h1 style="color:var(--blue);margin:0 0 16px">Téléconsultations</h1>
 
-      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
-      <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
+      <p *ngIf="charge()" style="color:var(--text3)">Chargement…</p>
+      <p *ngIf="erreur()" role="alert" style="color:var(--red)">{{ erreur() }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let t of teleconsultations()"
-            style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:var(--r12);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div>
-            <strong *ngIf="datesRendezVous()[t.rendezVousId] as debut">{{ 'teleconsultation.rendezVousDu' | t:{ date: (debut | dateLocale:'jourHeure') } }}</strong>
-            <strong *ngIf="!datesRendezVous()[t.rendezVousId]">{{ 'teleconsultationMedecin.proposeeLe' | t:{ date: (t.creeLe | dateLocale:'jourHeure') } }}</strong>
-            <span style="color:#566b64"> · {{ libelleStatut(t.statut) }}</span><br>
-            <span style="color:#566b64">{{ 'commun.patientId' | t:{ id: t.patientId } }}</span>
-            <span *ngIf="t.consentementPatientLe as consentement" style="color:#566b64"> · {{ 'teleconsultation.consentementDonneLe' | t:{ date: (consentement | dateLocale:'courtHeure') } }}</span>
-            <span *ngIf="t.statut === 'PLANIFIEE' && !t.consentementPatientLe" style="color:#b3261e"> · {{ 'teleconsultationMedecin.enAttenteConsentement' | t }}</span>
+            <strong *ngIf="datesRendezVous()[t.rendezVousId] as debut" style="color:var(--ink)">Rendez-vous du {{ debut | date:'EEEE d MMMM à HH:mm' }}</strong>
+            <strong *ngIf="!datesRendezVous()[t.rendezVousId]" style="color:var(--ink)">Proposée le {{ t.creeLe | date:'EEEE d MMMM à HH:mm' }}</strong>
+            <span style="display:inline-block;background:var(--blue-l);color:var(--blue-d);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(t.statut) }}</span><br>
+            <span style="color:var(--text2)"><i class="fa fa-user fa-xs"></i> {{ nom(t.patientId) }}</span>
+            <span *ngIf="t.consentementPatientLe" style="color:var(--text3)"> · consentement donné le {{ t.consentementPatientLe | date:'d MMMM à HH:mm' }}</span>
+            <span *ngIf="t.statut === 'PLANIFIEE' && !t.consentementPatientLe" style="color:var(--red)"> · En attente du consentement du patient</span>
+            <span *ngIf="t.statut === 'PLANIFIEE' && t.consentementPatientLe && !demarrable(t)" style="display:block;color:var(--text3);font-size:.9rem;margin-top:4px">
+              Démarrage possible 15 minutes avant le rendez-vous.
+            </span>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+
+          <div *ngIf="aConfirmer() === t.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span style="color:var(--text2);font-size:.9rem">Annuler cette téléconsultation ?</span>
+            <button type="button" class="bouton" (click)="annuler(t)" [disabled]="enCours() !== null">
+              {{ enCours() === t.id && action() === 'annuler' ? 'Annulation…' : 'Oui' }}
+            </button>
+            <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">Non</button>
+          </div>
+
+          <div *ngIf="aConfirmer() !== t.id" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <a *ngIf="salleAccessible(t)" class="bouton-secondaire" [href]="t.lienSalle" target="_blank" rel="noopener">
-              {{ 'teleconsultationMedecin.ouvrirSalle' | t }}
+              Ouvrir la salle
             </a>
             <button *ngIf="t.statut === 'PLANIFIEE'" type="button" class="bouton" (click)="demarrer(t)"
-                    [disabled]="!t.consentementPatientLe || enCours() !== null"
-                    [title]="t.consentementPatientLe ? '' : ('teleconsultationMedecin.enAttenteConsentement' | t)">
-              {{ (enCours() === t.id && action() === 'demarrer' ? 'teleconsultationMedecin.demarrage' : 'teleconsultationMedecin.demarrer') | t }}
+                    [disabled]="!t.consentementPatientLe || !demarrable(t) || enCours() !== null"
+                    [title]="!t.consentementPatientLe ? 'En attente du consentement du patient' : !demarrable(t) ? 'Disponible 15 minutes avant le rendez-vous' : ''">
+              {{ enCours() === t.id && action() === 'demarrer' ? 'Démarrage…' : 'Démarrer' }}
             </button>
             <button *ngIf="t.statut === 'EN_COURS'" type="button" class="bouton" (click)="terminer(t)"
                     [disabled]="enCours() !== null">
-              {{ (enCours() === t.id && action() === 'terminer' ? 'teleconsultationMedecin.cloture' : 'teleconsultationMedecin.terminer') | t }}
+              {{ enCours() === t.id && action() === 'terminer' ? 'Clôture…' : 'Terminer' }}
             </button>
-            <button *ngIf="t.statut === 'PLANIFIEE'" type="button" (click)="annuler(t)" [disabled]="enCours() !== null"
-                    style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
-              {{ (enCours() === t.id && action() === 'annuler' ? 'commun.annulation' : 'commun.annuler') | t }}
+            <button *ngIf="t.statut === 'PLANIFIEE'" type="button" (click)="aConfirmer.set(t.id)" [disabled]="enCours() !== null"
+                    style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
+              Annuler
             </button>
           </div>
         </li>
       </ul>
       <p *ngIf="!charge() && !erreur() && teleconsultations().length === 0">
-        {{ 'teleconsultationMedecin.aucune' | t }}
-        <a routerLink="/medecin/agenda" style="color:var(--vert)">{{ 'teleconsultationMedecin.proposerDepuisAgenda' | t }}</a>
+        Aucune téléconsultation pour le moment.
+        <a routerLink="/medecin/agenda" style="color:var(--blue)">Proposer une téléconsultation depuis l'agenda</a>
       </p>
     </main>
   `,
 })
 export class TeleconsultationsMedecinComponent implements OnInit {
-  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(TeleconsultationService);
   private medecinService = inject(MedecinService);
-  private i18n = inject(TraductionService);
-  /** Traducteur de la langue courante, passe aux fonctions de libelles de statut. */
-  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
+  private patients = inject(PatientsService);
 
   teleconsultations = signal<Teleconsultation[]>([]);
   /** Date de debut des rendez-vous de l'agenda, par identifiant de rendez-vous. */
@@ -84,11 +93,24 @@ export class TeleconsultationsMedecinComponent implements OnInit {
   /** Identifiant de la teleconsultation en cours de mise a jour, et l'action lancee. */
   enCours = signal<string | null>(null);
   action = signal<Action | null>(null);
+  /** Teleconsultation dont l'annulation attend la confirmation (Oui / Non). */
+  aConfirmer = signal<string | null>(null);
+  repertoire = signal<RepertoirePatients>(new Map());
   erreur = signal('');
 
   ngOnInit() {
-    this.seo.definirPrivee('seo.teleconsultations');
     this.charger();
+    this.patients.patientsDuMedecin().subscribe({ next: (r) => this.repertoire.set(r), error: () => undefined });
+  }
+
+  nom(patientId: string): string {
+    return nomPatient(this.repertoire(), patientId);
+  }
+
+  /** Demarrable a partir de 15 min avant le rendez-vous ; si sa date est inconnue, le serveur tranche. */
+  demarrable(t: Teleconsultation): boolean {
+    const debut = this.datesRendezVous()[t.rendezVousId];
+    return !debut || Date.now() >= Date.parse(debut) - AVANCE_DEMARRAGE_MS;
   }
 
   /** Recharge la liste ; `motif` est un message d'erreur a conserver a l'ecran (etat depasse apres un 409). */
@@ -107,26 +129,25 @@ export class TeleconsultationsMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.i18n.t('commun.reserveMedecins'));
+          this.erreur.set('Cette page est réservée aux médecins.');
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('teleconsultationMedecin.erreurChargement'));
+          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos téléconsultations.');
         }
       },
     });
   }
 
   demarrer(t: Teleconsultation) {
-    if (!t.consentementPatientLe) return;
-    this.piloter(t, 'demarrer', this.service.demarrer(t.id), this.i18n.t('teleconsultationMedecin.pasDeConsentement'));
+    if (!t.consentementPatientLe || !this.demarrable(t)) return;
+    this.piloter(t, 'demarrer', this.service.demarrer(t.id), "Le patient n'a pas encore donné son consentement.");
   }
 
   terminer(t: Teleconsultation) {
-    this.piloter(t, 'terminer', this.service.terminer(t.id), this.i18n.t('teleconsultationMedecin.pasEnCours'));
+    this.piloter(t, 'terminer', this.service.terminer(t.id), "Cette téléconsultation n'est pas en cours.");
   }
 
   annuler(t: Teleconsultation) {
-    if (!confirm(this.i18n.t('teleconsultationMedecin.confirmerAnnulation'))) return;
-    this.piloter(t, 'annuler', this.service.annuler(t.id), this.i18n.t('teleconsultationMedecin.plusAnnulable'));
+    this.piloter(t, 'annuler', this.service.annuler(t.id), "Cette téléconsultation ne peut plus être annulée.");
   }
 
   salleAccessible(t: Teleconsultation): boolean {
@@ -134,7 +155,7 @@ export class TeleconsultationsMedecinComponent implements OnInit {
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutTeleconsultation(statut, this.traduire);
+    return libelleStatutTeleconsultation(statut);
   }
 
   /** Lance une transition ; la vue renvoyee remplace la ligne ; un 409 (etat depasse) affiche le motif et recharge. */
@@ -146,17 +167,19 @@ export class TeleconsultationsMedecinComponent implements OnInit {
       next: (misAJour) => {
         this.enCours.set(null);
         this.action.set(null);
+        this.aConfirmer.set(null);
         this.teleconsultations.update((liste) => liste.map((x) => (x.id === misAJour.id ? misAJour : x)));
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
         this.action.set(null);
+        this.aConfirmer.set(null);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 409) {
           this.charger(e.error?.erreur ?? motif409);
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('teleconsultationMedecin.majEchec'));
+          this.erreur.set(e.error?.erreur ?? 'La mise à jour de la téléconsultation a échoué, veuillez réessayer.');
         }
       },
     });

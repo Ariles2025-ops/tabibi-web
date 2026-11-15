@@ -17,12 +17,12 @@
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
-            "assets": ["src/assets"],
-            "styles": ["src/styles.css"],
+            "assets": ["src/assets", { "glob": "**/*", "input": "src/legal", "output": "legal" }, { "glob": "*", "input": "src/seo-static", "output": "/" }],
+            "styles": ["src/legacy-accueil.css", "src/styles.css"],
             "outputHashing": "all",
             "optimization": {
               "scripts": true,
-              "fonts": true,
+              "fonts": false,
               "styles": { "minify": true, "inlineCritical": false }
             },
             "server": "src/main.server.ts",
@@ -33,6 +33,16 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": { "buildTarget": "tabibi-web:build", "port": 4200 }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "polyfills": ["zone.js", "zone.js/testing"],
+            "tsConfig": "tsconfig.spec.json",
+            "karmaConfig": "karma.conf.js",
+            "assets": ["src/assets"],
+            "styles": ["src/styles.css"]
+          }
         }
       }
     }

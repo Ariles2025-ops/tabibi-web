@@ -32,6 +32,16 @@ export class MedecinService {
     return this.http.post<Creneau>(`${this.base}/api/medecin/creneaux`, { debut, dureeMinutes });
   }
 
+  /** Creneaux a venir du medecin connecte, libres et reserves, du plus proche au plus lointain. */
+  creneaux(): Observable<Creneau[]> {
+    return this.http.get<Creneau[]>(`${this.base}/api/medecin/creneaux`);
+  }
+
+  /** Supprime un creneau libre (204 ; 409 s'il est reserve, 403 s'il est a un autre medecin). */
+  supprimerCreneau(creneauId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/medecin/creneaux/${creneauId}`);
+  }
+
   /** Marque un rendez-vous comme honore (le patient est venu en consultation). */
   honorer(rendezVousId: string): Observable<void> {
     return this.http.post<void>(`${this.base}/api/rendezvous/${rendezVousId}/honorer`, null);
@@ -40,6 +50,16 @@ export class MedecinService {
   /** Ordonnances emises par le medecin connecte. */
   ordonnancesRedigees(): Observable<Ordonnance[]> {
     return this.http.get<Ordonnance[]>(`${this.base}/api/medecin/ordonnances`);
+  }
+
+  /** Annule une ordonnance EMISE (motif facultatif) ; renvoie l'ordonnance mise a jour (409 si deja delivree ou annulee). */
+  annulerOrdonnance(ordonnanceId: string, motif: string): Observable<Ordonnance> {
+    return this.http.post<Ordonnance>(`${this.base}/api/medecin/ordonnances/${ordonnanceId}/annuler`, { motif });
+  }
+
+  /** Signale un patient absent a un rendez-vous confirme deja commence ; renvoie le rendez-vous mis a jour. */
+  marquerAbsent(rendezVousId: string): Observable<RendezVous> {
+    return this.http.post<RendezVous>(`${this.base}/api/medecin/rendezvous/${rendezVousId}/absent`, null);
   }
 
   /** Depot d'une candidature a l'annuaire (201 ; 400 si incomplete ; 409 si une candidature est en attente ou validee). */
@@ -65,9 +85,12 @@ export class MedecinService {
     return this.http.get<Rattachement[]>(`${this.base}/api/medecin/secretaires`);
   }
 
-  /** Rattache une secretaire par l'identifiant de son compte Keycloak (201 ; 400 si soi-meme, 409 si deja rattachee) ; elle est prevenue. */
-  rattacherSecretaire(secretaireId: string): Observable<Rattachement> {
-    return this.http.post<Rattachement>(`${this.base}/api/medecin/secretaires`, { secretaireId });
+  /**
+   * Rattache une secretaire par l'adresse e-mail de son compte Tabibi (201 ; 400 si aucun compte ou soi-meme,
+   * 409 si deja rattachee) ; elle est prevenue.
+   */
+  rattacherSecretaire(email: string): Observable<Rattachement> {
+    return this.http.post<Rattachement>(`${this.base}/api/medecin/secretaires`, { email });
   }
 
   /** Retire une secretaire du cabinet (204 sans corps ; 404 si inconnu, 403 si le rattachement est a un autre medecin). */

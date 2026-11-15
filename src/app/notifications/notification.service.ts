@@ -14,6 +14,8 @@ export interface Notification {
   lue: boolean;
   /** Date de creation au format ISO 8601. */
   creeLe: string;
+  /** Route relative de l'application a ouvrir au clic (ex. « /mes-rendez-vous »), ou null. */
+  lien?: string | null;
 }
 
 /** Corps des compteurs de l'API : { "nombre": n }. */

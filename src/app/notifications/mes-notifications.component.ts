@@ -1,58 +1,59 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { Notification, NotificationService } from './notification.service';
-import { SeoService } from '../seo/seo.service';
-import { DateLocalePipe } from '../i18n/date-locale.pipe';
-import { TPipe } from '../i18n/t.pipe';
-import { TraductionService } from '../i18n/traduction.service';
 
 /** Boite de reception de l'utilisateur connecte (GET /api/notifications/mes), avec marquage lu. */
 @Component({
   selector: 'app-mes-notifications',
   standalone: true,
-  imports: [CommonModule, TPipe, DateLocalePipe],
+  imports: [CommonModule],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
-        <h1 style="color:var(--vert);margin:0">{{ 'notifications.titre' | t }}</h1>
+        <h1 style="color:var(--vert);margin:0">Mes notifications</h1>
         <button *ngIf="connecte()" type="button" class="bouton-secondaire" (click)="toutMarquerLu()"
                 [disabled]="nombreNonLues() === 0 || enCours() !== null">
-          {{ (enCours() === 'toutes' ? 'commun.enregistrement' : 'notifications.toutMarquerLu') | t }}
+          {{ enCours() === 'toutes' ? 'Enregistrement…' : 'Tout marquer comme lu' }}
         </button>
       </div>
 
-      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
+        <p *ngIf="charge()">Chargement…</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let n of notifications()" [class.notification-lue]="n.lue" [class.notification-non-lue]="!n.lue"
-              style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+              [class.notification-cliquable]="!!n.lien" [style.cursor]="n.lien ? 'pointer' : null"
+              [attr.role]="n.lien ? 'link' : null" [attr.tabindex]="n.lien ? 0 : null"
+              (click)="ouvrir(n)" (keydown.enter)="ouvrir(n)"
+              style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <strong>{{ n.sujet }}</strong>
-              <span style="color:#566b64"> · {{ n.creeLe | dateLocale:'jourDateHeure' }}</span><br>
+              <span style="color:var(--text3)"> · {{ n.creeLe | date:'EEEE d MMMM yyyy à HH:mm' }}</span><br>
               <span>{{ n.message }}</span>
             </div>
-            <button *ngIf="!n.lue" type="button" class="bouton-secondaire" (click)="marquerLue(n)"
-                    [disabled]="enCours() !== null">
-              {{ (enCours() === n.id ? 'commun.enregistrement' : 'notifications.marquerLue') | t }}
-            </button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <button *ngIf="!n.lue" type="button" class="bouton-secondaire" (click)="$event.stopPropagation(); marquerLue(n)"
+                      (keydown.enter)="$event.stopPropagation()" [disabled]="enCours() !== null">
+                {{ enCours() === n.id ? 'Enregistrement…' : 'Marquer comme lue' }}
+              </button>
+              <span *ngIf="n.lien" class="notification-voir" style="color:var(--blue);font-weight:600">Voir →</span>
+            </div>
           </li>
         </ul>
-        <p *ngIf="!charge() && !erreur() && notifications().length === 0">{{ 'notifications.aucune' | t }}</p>
+        <p *ngIf="!charge() && !erreur() && notifications().length === 0">Aucune notification pour le moment.</p>
       </ng-container>
     </main>
   `,
 })
 export class MesNotificationsComponent implements OnInit {
-  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(NotificationService);
-  private i18n = inject(TraductionService);
+  private router = inject(Router);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -64,7 +65,6 @@ export class MesNotificationsComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('seo.mesNotifications');
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -89,7 +89,7 @@ export class MesNotificationsComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('notifications.erreurChargement'));
+          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos notifications.');
         }
       },
     });
@@ -105,9 +105,21 @@ export class MesNotificationsComponent implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
-        this.erreur.set(e.error?.erreur ?? this.i18n.t('notifications.marquageEchec'));
+        this.erreur.set(e.error?.erreur ?? 'Le marquage de la notification a échoué, veuillez réessayer.');
       },
     });
+  }
+
+  /** Clic sur une notification qui porte un lien : la marque lue (si besoin) puis ouvre la page cible. */
+  ouvrir(notification: Notification) {
+    if (!notification.lien) return;
+    if (!notification.lue) {
+      this.service.marquerLue(notification.id).subscribe({
+        next: (lue) => this.notifications.update((liste) => liste.map((n) => (n.id === lue.id ? lue : n))),
+        error: () => undefined,
+      });
+    }
+    this.router.navigateByUrl(notification.lien);
   }
 
   toutMarquerLu() {
@@ -120,7 +132,7 @@ export class MesNotificationsComponent implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
-        this.erreur.set(e.error?.erreur ?? this.i18n.t('notifications.marquageEchecToutes'));
+        this.erreur.set(e.error?.erreur ?? 'Le marquage des notifications a échoué, veuillez réessayer.');
       },
     });
   }

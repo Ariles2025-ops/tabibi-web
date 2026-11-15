@@ -2,9 +2,11 @@ node_modules/
 dist/
 .angular/
 out-tsc/
+coverage/
 .DS_Store
-# Tests (Playwright)
+
+# Playwright (captures et resultats de test, non versionnes)
+e2e/captures/
 test-results/
 playwright-report/
-blob-report/
-playwright/.cache/
+src/assets/version.txt

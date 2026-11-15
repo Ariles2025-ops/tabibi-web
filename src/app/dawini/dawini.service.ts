@@ -3,9 +3,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
 
-// Libelles et formats : module pur (`./dawini.formats`), reexporte pour les imports existants.
-export { formaterPrix, libelleReponses, libelleStatutBesoin } from './dawini.formats';
-
 /**
  * Besoin de medicament publie par un patient (Dawini). `patientId` vaut null dans la vue remise aux pharmacies ;
  * `clotureLe` vaut null tant que le besoin est ouvert.
@@ -23,6 +20,8 @@ export interface Besoin {
   publieLe: string;
   clotureLe: string | null;
   nombreReponses: number;
+  /** Vrai si la pharmacie connectee a deja repondu a cette demande (GET /api/dawini/besoins). */
+  dejaRepondu?: boolean;
 }
 
 /** Donnees de publication d'un besoin (POST /api/dawini/besoins, role PATIENT) ; commune et precision facultatives. */
@@ -51,6 +50,28 @@ export interface DemandeReponse {
   disponible: boolean;
   prixDa?: number | null;
   commentaire?: string | null;
+}
+
+/** Libelles francais des statuts de besoin connus ; un statut inconnu est affiche tel quel. */
+const LIBELLES_STATUT_BESOIN: Partial<Record<string, string>> = {
+  OUVERT: 'Ouverte',
+  CLOTURE: 'Clôturée',
+};
+
+export function libelleStatutBesoin(statut: string | null | undefined): string {
+  if (!statut) return '';
+  return LIBELLES_STATUT_BESOIN[statut] ?? statut;
+}
+
+/** « 850 DA », « 1 250 DA » (milliers separes par une espace) ; chaine vide si le prix n'est pas renseigne. */
+export function formaterPrix(prixDa: number | null | undefined): string {
+  if (prixDa === null || prixDa === undefined) return '';
+  return `${Math.trunc(prixDa).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} DA`;
+}
+
+/** « 0 réponse », « 1 réponse », « 3 réponses ». */
+export function libelleReponses(nombre: number): string {
+  return `${nombre} ${nombre > 1 ? 'réponses' : 'réponse'}`;
 }
 
 /**

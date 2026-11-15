@@ -5,8 +5,6 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CONFIGURATION_PAR_DEFAUT, ConfigurationApplication, configurationDepuisEnvironnement } from './src/app/config/config.service';
-import { LANGUE_SERVEUR } from './src/app/i18n/langue-serveur';
-import { REPONSE_SERVEUR, ReponseServeur } from './src/app/seo/reponse-serveur';
 import bootstrap from './src/main.server';
 
 /**
@@ -18,38 +16,6 @@ import bootstrap from './src/main.server';
 
 /** Au-dela de ce delai (API lente), la page est envoyee sans rendu serveur : le navigateur la rend lui-meme. */
 const DELAI_RENDU_MS = Number(process.env['TABIBI_SSR_DELAI_MS'] || 10_000);
-
-/** Duree de vie du plan du site en memoire (l'annuaire est relu a l'API au plus une fois par heure). */
-const DUREE_CACHE_SITEMAP_MS = 60 * 60 * 1000;
-
-/** Delai maximal accorde a l'API pour la liste des praticiens du plan du site, avant repli sur les pages fixes. */
-const DELAI_SITEMAP_MS = 5_000;
-
-/** Pages publiques, toujours presentes dans le plan du site (meme si l'API ne repond pas). */
-export const PAGES_PUBLIQUES = ['/', '/verifier'];
-
-/**
- * Espaces reserves aux utilisateurs connectes (le serveur y rend l'etat « non connecte ») : exclus des robots.
- * Un `Disallow` est un prefixe : `/medecin/` et `/medecin$` (fin d'URL) ecartent l'espace medecin sans toucher aux
- * fiches publiques `/medecins/...` ; `/mes-` couvre mes rendez-vous, mes ordonnances, mes avis. Les pages
- * elles-memes portent aussi `robots noindex` (SeoService.definirPrivee).
- */
-export const CHEMINS_PRIVES = [
-  '/moi',
-  '/mes-',
-  '/ordonnances/',
-  '/medecin/',
-  '/medecin$',
-  '/admin',
-  '/secretaire',
-  '/pharmacie',
-  '/messagerie',
-  '/notifications',
-  '/dawini',
-  '/avis',
-  '/liste-attente',
-  '/teleconsultations',
-];
 
 /** Origine (schema://hote[:port]) d'une URL pour la directive connect-src de la CSP ; vide si ce n'est pas une URL. */
 function origine(url: string): string {
@@ -78,60 +44,8 @@ export function entetesSecurite(config: Partial<ConfigurationApplication>): Reco
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     'Content-Security-Policy':
       `default-src 'self'; connect-src ${connectSrc.join(' ')}; frame-ancestors 'none'; img-src 'self' data:; ` +
-      "style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'",
-  };
-}
-
-/**
- * Origine publique du site (schema://hote), pour les URL absolues de robots.txt et du plan du site : `DOMAINE`
- * (le `.env` de docker-compose.prod.yml, Caddy servant https://DOMAINE), sinon l'origine de la requete
- * (`trust proxy` : schema et hote lus dans X-Forwarded-*).
- */
-export function origineSite(req: Pick<Request, 'protocol' | 'headers'>, env: Record<string, string | undefined> = process.env): string {
-  const domaine = env['DOMAINE']?.trim();
-  return domaine ? `https://${domaine}` : `${req.protocol}://${req.headers.host}`;
-}
-
-/** Contenu de robots.txt : tout est permis sauf les espaces prives ; renvoie vers le plan du site. */
-export function robotsTxt(origine: string): string {
-  return ['User-agent: *', ...CHEMINS_PRIVES.map((c) => `Disallow: ${c}`), `Sitemap: ${origine}/sitemap.xml`, ''].join('\n');
-}
-
-/** Plan du site XML a partir des chemins publics (pages fixes puis fiches des praticiens). */
-export function sitemapXml(origine: string, chemins: string[]): string {
-  const urls = chemins.map((c) => `  <url><loc>${echapperXml(origine + c)}</loc></url>`);
-  return ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">', ...urls, '</urlset>', ''].join('\n');
-}
-
-function echapperXml(texte: string): string {
-  return texte.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-}
-
-/**
- * Chemins des fiches des praticiens (`GET /api/medecins`, sans jeton), en memoire pendant une heure ; si l'API
- * ne repond pas (ou pas a temps), le plan du site se limite aux pages fixes et la prochaine demande reessaie.
- */
-function creerListeFiches(apiUrl: string): () => Promise<string[]> {
-  let cache: { chemins: string[]; expire: number } | null = null;
-  return async () => {
-    if (cache && cache.expire > Date.now()) return cache.chemins;
-    try {
-      const reponse = await fetch(`${apiUrl}/api/medecins`, {
-        headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(DELAI_SITEMAP_MS),
-      });
-      if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
-      const medecins = (await reponse.json()) as { id?: unknown }[];
-      const chemins = medecins
-        .map((m) => m.id)
-        .filter((id): id is string => typeof id === 'string' && id.length > 0)
-        .map((id) => `/medecins/${encodeURIComponent(id)}`);
-      cache = { chemins, expire: Date.now() + DUREE_CACHE_SITEMAP_MS };
-      return chemins;
-    } catch (erreur) {
-      console.error('Plan du site : liste des praticiens indisponible, pages fixes seulement.', erreur);
-      return [];
-    }
+      "style-src 'self' 'unsafe-inline'; font-src 'self'; " +
+      "script-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'",
   };
 }
 
@@ -154,9 +68,7 @@ export function app(): express.Express {
   const cheminCsr = [join(browserDistFolder, 'index.csr.html'), join(browserDistFolder, 'index.html')].find((c) => existsSync(c));
   const pageCsr = cheminCsr ? readFileSync(cheminCsr, 'utf-8') : '';
   const commonEngine = new CommonEngine();
-  const configuration = configurationDepuisEnvironnement(process.env);
-  const entetes = entetesSecurite(configuration);
-  const listeFiches = creerListeFiches(configuration.apiUrl || CONFIGURATION_PAR_DEFAUT.apiUrl);
+  const entetes = entetesSecurite(configurationDepuisEnvironnement(process.env));
 
   server.disable('x-powered-by');
   // Derriere Caddy : schema et adresse du client lus dans les en-tetes X-Forwarded-*.
@@ -166,13 +78,45 @@ export function app(): express.Express {
     next();
   });
 
-  // Robots et plan du site, generes (avant les fichiers statiques : ils n'existent pas dans le build).
-  server.get('/robots.txt', (req: Request, res: Response) => {
-    res.set('Cache-Control', 'public, max-age=3600').type('text/plain').send(robotsTxt(origineSite(req)));
-  });
-  server.get('/sitemap.xml', async (req: Request, res: Response) => {
-    const fiches = await listeFiches();
-    res.set('Cache-Control', 'public, max-age=3600').type('application/xml').send(sitemapXml(origineSite(req), [...PAGES_PUBLIQUES, ...fiches]));
+  // Plans du site pour les moteurs de recherche : un index, les pages fixes (fichier du build) et une page publique
+  // par praticien, tiree de l'API (GET /api/medecins/plan, 5 000 fiches par fichier) et gardee 12 h en memoire.
+  const site = 'https://' + (process.env['DOMAINE']?.trim() || 'tabibi.doctor');
+  const api = (configurationDepuisEnvironnement(process.env).apiUrl || CONFIGURATION_PAR_DEFAUT.apiUrl).replace(/\/$/, '');
+  const cachePlans = new Map<string, { xml: string; le: number }>();
+  const DUREE_CACHE_MS = 12 * 3600 * 1000;
+  const lirePlan = async (page: number) => {
+    const r = await fetch(`${api}/api/medecins/plan?page=${page}`);
+    if (!r.ok) throw new Error(`API ${r.status}`);
+    return (await r.json()) as { total: number; taille: number; medecins: { id: string; nomComplet: string }[] };
+  };
+  const slug = (t: string) => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'praticien';
+  const echapper = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const envoyerXml = async (res: Response, cle: string, produire: () => Promise<string>) => {
+    try {
+      const enCache = cachePlans.get(cle);
+      const xml = enCache && Date.now() - enCache.le < DUREE_CACHE_MS ? enCache.xml : await produire();
+      cachePlans.set(cle, { xml, le: Date.now() });
+      res.set('Cache-Control', 'public, max-age=3600').type('application/xml').send(xml);
+    } catch (e) {
+      console.error('Plan du site indisponible', e);
+      res.status(503).type('text').send('Plan du site momentanement indisponible');
+    }
+  };
+  server.get('/sitemap.xml', (_req, res) => envoyerXml(res, 'index', async () => {
+    const { total, taille } = await lirePlan(0);
+    const fichiers = ['sitemap-pages.xml', ...Array.from({ length: Math.ceil(total / taille) }, (_, i) => `sitemap-praticiens-${i}.xml`)];
+    return '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+      + fichiers.map((f) => `  <sitemap><loc>${site}/${f}</loc></sitemap>\n`).join('') + '</sitemapindex>\n';
+  }));
+  server.get(/^\/sitemap-praticiens-(\d+)\.xml$/, (req, res) => {
+    const page = Number((req.params as unknown as string[])[0]);
+    return envoyerXml(res, `praticiens-${page}`, async () => {
+      const { medecins } = await lirePlan(page);
+      return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + medecins.map((m) => `  <url><loc>${site}/praticiens/${m.id}/${echapper(slug(m.nomComplet))}</loc></url>\n`).join('')
+        + '</urlset>\n';
+    });
   });
 
   // Fichiers du build (chemins avec extension) : bundles a empreinte en cache long, index et config jamais.
@@ -192,8 +136,6 @@ export function app(): express.Express {
   server.get('**', (req: Request, res: Response) => {
     const { protocol, originalUrl, baseUrl, headers } = req;
     res.set('Cache-Control', 'no-store');
-    // La page rendue depend de la langue demandee (libelles, `<html lang dir>`) : les caches intermediaires le savent.
-    res.set('Vary', 'Accept-Language');
     let repondu = false;
     const secours = (motif: string, detail?: unknown) => {
       if (repondu) return;
@@ -202,8 +144,6 @@ export function app(): express.Express {
       res.type('html').send(pageCsr);
     };
     const delai = setTimeout(() => secours(`plus de ${DELAI_RENDU_MS} ms`), DELAI_RENDU_MS);
-    // Statut de la reponse, que l'application peut changer pendant le rendu (404 d'une page introuvable).
-    const reponse: ReponseServeur = { statut: 200 };
 
     commonEngine
       .render({
@@ -213,18 +153,13 @@ export function app(): express.Express {
         publicPath: browserDistFolder,
         // Pas de CSS critique inline : l'attribut onload qu'il ajoute serait bloque par script-src 'self'.
         inlineCriticalCss: false,
-        providers: [
-          { provide: APP_BASE_HREF, useValue: baseUrl },
-          { provide: REPONSE_SERVEUR, useValue: reponse },
-          // Langue de la page rendue : celle que le navigateur demande (`<html lang dir>` et libelles traduits).
-          { provide: LANGUE_SERVEUR, useValue: headers['accept-language'] ?? '' },
-        ],
+        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
       })
       .then((html) => {
         clearTimeout(delai);
         if (repondu) return;
         repondu = true;
-        res.status(reponse.statut).type('html').send(html);
+        res.type('html').send(html);
       })
       .catch((erreur) => {
         clearTimeout(delai);

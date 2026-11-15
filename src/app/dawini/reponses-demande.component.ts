@@ -4,69 +4,63 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } from './dawini.service';
-import { SeoService } from '../seo/seo.service';
-import { DateLocalePipe } from '../i18n/date-locale.pipe';
-import { TPipe } from '../i18n/t.pipe';
-import { Traducteur } from '../i18n/traducteur';
-import { TraductionService } from '../i18n/traduction.service';
 
 /**
  * Reponses des pharmacies a l'une de mes demandes (GET /api/dawini/besoins/{id}/reponses, les plus anciennes
  * d'abord) : pharmacie, disponibilite, prix en dinars, commentaire, date ; « Clôturer la demande » tant qu'elle est
- * ouverte (POST .../cloturer). La demande elle-meme est retrouvee dans mes demandes (pas de lecture unitaire cote API).
+ * ouverte, apres confirmation dans la page (POST .../cloturer). La demande elle-meme est retrouvee dans mes demandes (pas de lecture unitaire cote API).
  */
 @Component({
   selector: 'app-reponses-demande',
   standalone: true,
-  imports: [CommonModule, RouterLink, TPipe, DateLocalePipe],
+  imports: [CommonModule, RouterLink],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <p style="margin:0 0 16px"><a routerLink="/dawini" style="color:var(--vert)">{{ 'demande.retour' | t }}</a></p>
-      <h1 style="color:var(--vert);margin:0 0 8px">{{ besoin()?.medicament ?? ('demande.titreDefaut' | t) }}</h1>
+      <p style="margin:0 0 16px"><a routerLink="/dawini" style="color:var(--vert)">Retour à mes demandes</a></p>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ besoin()?.medicament ?? 'Ma demande' }}</h1>
 
-      <p *ngIf="connecte() === false">{{ 'commun.redirectionConnexion' | t }}</p>
 
       <ng-container *ngIf="connecte()">
         <ng-container *ngIf="besoin() as b">
-          <p style="color:#566b64;margin:0 0 16px">
-            {{ libelleStatut(b.statut) }} · {{ 'dawini.wilayaLigne' | t:{ code: b.wilayaCode } }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
-            · {{ 'dawini.publieeLe' | t:{ date: (b.publieLe | dateLocale:'courtHeure') } }}<ng-container *ngIf="b.clotureLe as cloture"> · {{ 'demande.clotureeLe' | t:{ date: (cloture | dateLocale:'courtHeure') } }}</ng-container>
+          <p style="color:var(--text3);margin:0 0 16px">
+            {{ libelleStatut(b.statut) }} · Wilaya {{ b.wilayaCode }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
+            · publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}<ng-container *ngIf="b.clotureLe"> · clôturée le {{ b.clotureLe | date:'d MMMM à HH:mm' }}</ng-container>
             <ng-container *ngIf="b.precision"><br>{{ b.precision }}</ng-container>
           </p>
-          <p *ngIf="b.statut === 'OUVERT'" style="margin:0 0 16px">
-            <button type="button" class="bouton-secondaire" (click)="cloturer()" [disabled]="enCours()">
-              {{ (enCours() ? 'demande.cloture' : 'demande.cloturer') | t }}
-            </button>
+          <p *ngIf="b.statut === 'OUVERT' && !aConfirmer()" style="margin:0 0 16px">
+            <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(true)" [disabled]="enCours()">Clôturer la demande</button>
           </p>
+          <div *ngIf="b.statut === 'OUVERT' && aConfirmer()" role="group" aria-label="Confirmer la clôture"
+               style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 16px">
+            <span style="font-weight:600">Clôturer cette demande ? Les pharmacies ne la verront plus.</span>
+            <button type="button" class="bouton" (click)="cloturer()" [disabled]="enCours()">{{ enCours() ? 'Clôture…' : 'Oui, clôturer' }}</button>
+            <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(false)" [disabled]="enCours()">Non</button>
+          </div>
         </ng-container>
 
         <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
-        <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
+        <p *ngIf="charge()">Chargement…</p>
 
-        <h2 style="font-size:1.1rem;margin:0 0 12px">{{ 'demande.reponsesPharmacies' | t }}</h2>
+        <h2 style="font-size:1.1rem;margin:0 0 12px">Réponses des pharmacies</h2>
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-          <li *ngFor="let r of reponses()" style="border:1px solid #e4e9e7;border-radius:12px;padding:14px">
+          <li *ngFor="let r of reponses()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
             <strong>{{ r.nomPharmacie }}</strong>
-            <span [style.color]="r.disponible ? 'var(--vert)' : '#b3261e'"> · {{ (r.disponible ? 'demande.disponible' : 'demande.indisponible') | t }}</span>
-            <span *ngIf="r.prixDa !== null" style="color:#566b64"> · {{ prix(r.prixDa) }}</span>
-            <span style="color:#566b64"> · {{ r.repondueLe | dateLocale:'courtHeure' }}</span>
+            <span [style.color]="r.disponible ? 'var(--vert)' : '#b3261e'"> · {{ r.disponible ? 'Disponible' : 'Indisponible' }}</span>
+            <span *ngIf="r.prixDa !== null" style="color:var(--text3)"> · {{ prix(r.prixDa) }}</span>
+            <span style="color:var(--text3)"> · {{ r.repondueLe | date:'d MMMM à HH:mm' }}</span>
             <p *ngIf="r.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ r.commentaire }}</p>
           </li>
         </ul>
-        <p *ngIf="!charge() && !erreur() && reponses().length === 0">{{ 'demande.aucuneReponse' | t }}</p>
+        <p *ngIf="!charge() && !erreur() && reponses().length === 0">Aucune réponse pour le moment.</p>
       </ng-container>
     </main>
   `,
 })
 export class ReponsesDemandeComponent implements OnInit {
-  private seo = inject(SeoService);
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
   private service = inject(DawiniService);
-  private i18n = inject(TraductionService);
-  /** Traducteur de la langue courante, passe aux fonctions de libelles du service. */
-  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
 
   private besoinId = '';
   /** null tant que l'etat de connexion n'est pas connu. */
@@ -76,11 +70,12 @@ export class ReponsesDemandeComponent implements OnInit {
   reponses = signal<Reponse[]>([]);
   charge = signal(false);
   enCours = signal(false);
+  /** Vrai pendant la confirmation dans la page de la cloture (« Oui, clôturer » / « Non »). */
+  aConfirmer = signal(false);
   succes = signal('');
   erreur = signal('');
 
   async ngOnInit() {
-    this.seo.definirPrivee('seo.reponsesPharmacies');
     this.besoinId = this.route.snapshot.paramMap.get('id') ?? '';
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
@@ -107,11 +102,11 @@ export class ReponsesDemandeComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.i18n.t('demande.nAppartientPas'));
+          this.erreur.set('Cette demande ne vous appartient pas.');
         } else if (e.status === 404) {
-          this.erreur.set(this.i18n.t('demande.introuvable'));
+          this.erreur.set('Demande introuvable.');
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('demande.erreurChargement'));
+          this.erreur.set(e.error?.erreur ?? 'Impossible de charger les réponses.');
         }
       },
     });
@@ -125,29 +120,31 @@ export class ReponsesDemandeComponent implements OnInit {
     this.service.cloturer(this.besoinId).subscribe({
       next: (b) => {
         this.enCours.set(false);
+        this.aConfirmer.set(false);
         this.besoin.set(b);
-        this.succes.set(this.i18n.t('demande.cloturee'));
+        this.succes.set('Demande clôturée : les pharmacies ne la voient plus.');
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
+        this.aConfirmer.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 409) {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('demande.dejaCloturee'));
+          this.erreur.set(e.error?.erreur ?? 'Cette demande est déjà clôturée.');
           this.chargerBesoin();
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('demande.clotureEchec'));
+          this.erreur.set(e.error?.erreur ?? 'La clôture a échoué, veuillez réessayer.');
         }
       },
     });
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutBesoin(statut, this.traduire);
+    return libelleStatutBesoin(statut);
   }
 
   prix(prixDa: number | null): string {
-    return formaterPrix(prixDa, this.traduire);
+    return formaterPrix(prixDa);
   }
 
   /** Retrouve la demande dans mes demandes (statut, bouton de cloture) ; a defaut, seules les reponses s'affichent. */

@@ -5,9 +5,6 @@ import { Creneau } from '../annuaire/annuaire.service';
 import { ConfigService } from '../config/config.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 
-// Bornes et validation : module pur (`./secretaire.formats`), reexporte pour les imports existants.
-export { DUREE_MAX_MINUTES, DUREE_MIN_MINUTES, estUuid } from './secretaire.formats';
-
 /** Rattachement d'une secretaire au cabinet d'un medecin, tel que renvoye par l'API (au medecin comme a la secretaire). */
 export interface Rattachement {
   id: string;
@@ -16,6 +13,29 @@ export interface Rattachement {
   secretaireId: string;
   /** Date de rattachement au format ISO 8601. */
   creeLe: string;
+  /** Nom et e-mail du compte de la secretaire, s'ils sont connus. */
+  secretaireNom?: string | null;
+  secretaireEmail?: string | null;
+  /** Faux tant que la secretaire n'a pas accepte l'invitation (aucun acces d'ici la). Absent = ancien rattachement, actif. */
+  accepte?: boolean;
+}
+
+/** Invitation recue d'un medecin, en attente de reponse. */
+export interface Invitation {
+  id: string;
+  medecinId: string;
+  creeLe: string;
+}
+
+/** Bornes de la duree d'un creneau, celles du backend (CreneauService). */
+export const DUREE_MIN_MINUTES = 5;
+export const DUREE_MAX_MINUTES = 120;
+
+/** Un UUID Keycloak (sujet du jeton), sans espaces ni accolades ; la casse est indifferente. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function estUuid(valeur: string): boolean {
+  return UUID.test(valeur);
 }
 
 /**
@@ -34,6 +54,21 @@ export class SecretaireService {
     return this.config.apiUrl;
   }
 
+  /** Invitations a rejoindre un cabinet, en attente, adressees au compte connecte (tout role). */
+  invitations(): Observable<Invitation[]> {
+    return this.http.get<Invitation[]>(`${this.base}/api/moi/invitations-cabinet`);
+  }
+
+  /** Accepte : acces a l'agenda du medecin et role SECRETAIRE (403 si l'invitation est pour un autre compte). */
+  accepterInvitation(id: string): Observable<Rattachement> {
+    return this.http.post<Rattachement>(`${this.base}/api/moi/invitations-cabinet/${id}/accepter`, {});
+  }
+
+  /** Refuse : l'invitation disparait, le medecin est prevenu. */
+  refuserInvitation(id: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/api/moi/invitations-cabinet/${id}/refuser`, {});
+  }
+
   /** Cabinets auxquels la secretaire connectee est rattachee. */
   mesMedecins(): Observable<Rattachement[]> {
     return this.http.get<Rattachement[]>(`${this.base}/api/secretaire/medecins`);
@@ -49,6 +84,16 @@ export class SecretaireService {
     return this.http.post<Creneau>(`${this.base}/api/secretaire/medecins/${medecinId}/creneaux`, { debut, dureeMinutes });
   }
 
+  /** Creneaux a venir du medecin, libres et reserves (403 sans rattachement). */
+  creneaux(medecinId: string): Observable<Creneau[]> {
+    return this.http.get<Creneau[]>(`${this.base}/api/secretaire/medecins/${medecinId}/creneaux`);
+  }
+
+  /** Supprime un creneau libre du medecin (204 ; 409 s'il est reserve). */
+  supprimerCreneau(medecinId: string, creneauId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/secretaire/medecins/${medecinId}/creneaux/${creneauId}`);
+  }
+
   /** Le patient est venu : le rendez-vous passe HONORE (409 s'il n'est pas confirme). */
   honorer(rendezVousId: string): Observable<RendezVous> {
     return this.http.post<RendezVous>(`${this.base}/api/secretaire/rendezvous/${rendezVousId}/honorer`, null);
@@ -58,4 +103,9 @@ export class SecretaireService {
   annuler(rendezVousId: string): Observable<RendezVous> {
     return this.http.post<RendezVous>(`${this.base}/api/secretaire/rendezvous/${rendezVousId}/annuler`, null);
   }
+  /** Signale un patient absent a un rendez-vous confirme deja commence ; renvoie le rendez-vous mis a jour. */
+  marquerAbsent(rendezVousId: string): Observable<RendezVous> {
+    return this.http.post<RendezVous>(`${this.base}/api/secretaire/rendezvous/${rendezVousId}/absent`, null);
+  }
+
 }

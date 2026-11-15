@@ -4,54 +4,60 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { InscriptionAttente, ListeAttenteService } from '../liste-attente/liste-attente.service';
-import { abregerIdentifiant } from '../messagerie/messagerie.service';
-import { SeoService } from '../seo/seo.service';
-import { DateLocalePipe } from '../i18n/date-locale.pipe';
-import { TPipe } from '../i18n/t.pipe';
-import { TraductionService } from '../i18n/traduction.service';
+import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from './patients.service';
 
 /**
  * Liste d'attente du medecin (GET /api/medecin/liste-attente) : patients inscrits, du plus ancien au plus recent,
- * designes par un identifiant abrege et leur date d'inscription. Ils sont prevenus par l'API des qu'un creneau
+ * designes par leur nom (et telephone) et leur date d'inscription. Ils sont prevenus par l'API des qu'un creneau
  * s'ouvre ou se libere.
  */
 @Component({
   selector: 'app-liste-attente-medecin',
   standalone: true,
-  imports: [CommonModule, RouterLink, TPipe, DateLocalePipe],
+  imports: [CommonModule, RouterLink],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">{{ 'listeAttenteMedecin.titre' | t }}</h1>
-      <p style="color:#566b64;margin:0 0 20px">{{ 'listeAttenteMedecin.intro' | t }}</p>
+      <h1 style="color:var(--blue);margin:0 0 8px">Liste d'attente</h1>
+      <p style="color:var(--text3);margin:0 0 20px">
+        Patients qui attendent un créneau chez vous, du plus ancien au plus récent. Ils sont prévenus dès que vous
+        ouvrez un créneau ou qu'un rendez-vous est annulé.
+      </p>
 
-      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
-      <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
+      <p *ngIf="charge()" style="color:var(--text3)">Chargement…</p>
+      <p *ngIf="erreur()" role="alert" style="color:var(--red)">{{ erreur() }}</p>
 
-      <ol class="liste-numerotee" style="padding-inline-start:24px;margin:0;display:grid;gap:10px">
-        <li *ngFor="let i of inscriptions()" style="padding:4px 0">
-          <strong>{{ 'commun.patient' | t:{ id: abreger(i.patientId) } }}</strong>
-          <span style="color:#566b64"> · {{ 'listeAttenteMedecin.inscritLe' | t:{ date: (i.inscritLe | dateLocale:'dateHeure') } }}</span>
+      <ol style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
+        <li *ngFor="let i of inscriptions(); let n = index"
+            style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1);padding:12px 16px;display:flex;align-items:center;gap:12px">
+          <span style="flex:none;width:28px;height:28px;border-radius:999px;background:var(--blue-l);color:var(--blue-d);display:grid;place-items:center;font-weight:700;font-size:.85rem">{{ n + 1 }}</span>
+          <span>
+            <strong style="color:var(--ink)">{{ nom(i.patientId) }}</strong>
+            <a *ngIf="telephone(i.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">
+              <i class="fa fa-phone fa-xs"></i> {{ tel }}
+            </a><br>
+            <span style="color:var(--text3);font-size:.9rem">Inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
+          </span>
         </li>
       </ol>
       <p *ngIf="!charge() && !erreur() && inscriptions().length === 0">
-        {{ 'listeAttenteMedecin.aucun' | t }}
-        <a routerLink="/medecin/disponibilites" style="color:var(--vert)">{{ 'commun.ouvrirCreneaux' | t }}</a>
+        Aucun patient en liste d'attente pour le moment.
+        <a routerLink="/medecin/disponibilites" style="color:var(--blue)">Ouvrir des créneaux</a>
       </p>
     </main>
   `,
 })
 export class ListeAttenteMedecinComponent implements OnInit {
-  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(ListeAttenteService);
-  private i18n = inject(TraductionService);
+  private patients = inject(PatientsService);
 
   inscriptions = signal<InscriptionAttente[]>([]);
   charge = signal(false);
+  repertoire = signal<RepertoirePatients>(new Map());
   erreur = signal('');
 
   ngOnInit() {
-    this.seo.definirPrivee('seo.listeAttente');
+    this.patients.patientsDuMedecin().subscribe({ next: (r) => this.repertoire.set(r), error: () => undefined });
     this.charge.set(true);
     this.service.duMedecin().subscribe({
       next: (liste) => {
@@ -63,15 +69,19 @@ export class ListeAttenteMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.i18n.t('commun.reserveMedecins'));
+          this.erreur.set('Cette page est réservée aux médecins.');
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('listeAttenteMedecin.erreurChargement'));
+          this.erreur.set(e.error?.erreur ?? "Impossible de charger la liste d'attente.");
         }
       },
     });
   }
 
-  abreger(id: string): string {
-    return abregerIdentifiant(id);
+  nom(patientId: string): string {
+    return nomPatient(this.repertoire(), patientId);
+  }
+
+  telephone(patientId: string): string {
+    return telephonePatient(this.repertoire(), patientId);
   }
 }

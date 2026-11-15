@@ -44,90 +44,18 @@ Le build est le meme partout : l'application lit **`assets/config.json`** au dem
   avec les memes valeurs par defaut.
 
 ## Tester
-**Un seul outil de test dans tout le depot : Playwright.** Aucun `*.spec.ts` ne subsiste sous `src/` ; tous les
-tests vivent dans `tests/`, et `playwright.config.ts` porte deux projets.
-
-| Projet | Dossier | Execution | Ce qu'on y met |
-| --- | --- | --- | --- |
-| `logique` | `tests/logique/` | node, aucun navigateur | modules TypeScript **sans import Angular** : dictionnaires i18n, fonctions pures de formatage, de validation et de bornes (`*.formats.ts`) |
-| `navigateur` | `tests/navigateur/` et `tests/parcours/` | Chromium | tout le reste : composants, appels HTTP, gardes de role, SEO, i18n rendue, parcours de bout en bout |
-
-Playwright transpile le TypeScript et l'execute dans node : un module qui importe `@angular/core` (ou tout paquet
-Angular, publie en ESM) ne s'y charge pas. Avant de mettre un module dans `logique`, verifier ses imports
-(`grep -n "^import" <fichier>`) ; sinon, il se teste dans le navigateur.
-
+Tests unitaires Karma / Jasmine (`*.spec.ts` a cote de chaque fichier ; services avec `HttpTestingController`,
+composants avec un service factice) :
 ```bash
-npm run build && npm test          # le build de production, puis les deux projets
-npm test                           # les tests seuls (le build de dist/ doit exister)
-npm run test:logique               # les modules purs, en quelques secondes, sans navigateur
-npm run test:navigateur            # Chromium seulement
-npm run test:ui                    # mode interactif : rejouer un test pas a pas, inspecter le DOM
-npx playwright test tests/navigateur/avis.spec.ts   # un seul fichier
-npx playwright show-report         # rapport HTML (CI : joint au workflow en cas d'echec)
-npx playwright show-trace test-results/<dossier>/trace.zip   # trace d'un echec (DOM, reseau, console)
-CHROME_BIN=/chemin/vers/chrome npm test              # Chrome deja installe, au lieu du Chromium de Playwright
-npx playwright install chromium                      # sinon, une fois (--with-deps en CI)
-npm run verif:tests                # echoue s'il reste une spec sous src/ ou une dependance karma / jasmine
-npm run verif:i18n                 # aucun libelle francais litteral dans un template
+npx ng test                                                    # Chrome, mode veille
+npx ng test --watch=false --browsers=ChromeHeadless            # une passe, Chrome headless
+npx ng test --watch=false --browsers=ChromeHeadlessCI          # idem sans bac a sable (CI, conteneur, execution en root)
+CHROME_BIN=/chemin/vers/chrome npx ng test --watch=false --browsers=ChromeHeadlessCI   # Chrome hors du PATH
 ```
-
-### Comment un test navigateur est ecrit
-Le build de production est servi par `server.ts` (rendu cote serveur, port 4300) face a une **API simulee**
-(`tests/api-simulee.ts`, petit serveur http node : deux praticiens, creneaux, avis, reservation 201, `/api/moi`,
-notifications, verification d'ordonnance — code valide `TBB-2026-0001`) qui tient aussi lieu d'**issuer OIDC simule**
-(document de decouverte et page « Connexion simulée »). `playwright.config.ts` declare le `webServer` ;
-`globalSetup` (`tests/global-setup.ts`) reecrit `dist/tabibi-web/browser/assets/config.json` vers cette API (comme
-`docker/entrypoint.sh` au deploiement) et demarre l'API simulee, arretee a la fin.
-
-Les aides de `tests/outils/` remplacent ce que faisaient `TestBed` et `HttpTestingController` :
-- `ouvrir(page, url)` : navigue et attend l'hydratation (`app-root` sans attribut `ngh`) avant toute interaction,
-  sinon une saisie faite sur le HTML du serveur est perdue.
-- `connecter(page, { sujet, roles })` : **connexion simulee, sans Keycloak reel**. `AuthService.estConnecte()` se
-  reduit a `OAuthService.hasValidAccessToken()`, qui lit le stockage de session : un `access_token` quelconque et un
-  `expires_at` futur suffisent a rendre l'application connectee. Les roles ne viennent pas du jeton mais de
-  `GET /api/moi`, stubbe par l'aide. A appeler avant `ouvrir`.
-- `stub(page, motif, reponse)` : repond a la place de l'API (200, 400, 403, 404, 409...), avec les en-tetes CORS
-  qu'exige l'origine distincte de l'API simulee. Le dernier stub pose l'emporte : un test peut preciser un cas
-  particulier apres un stub general.
-- `requetes(page)` : journal des appels `/api/...` (methode, URL, parametres, corps, en-tetes) — c'est ainsi qu'on
-  verifie « le service appelle la bonne URL avec le bon corps ». `attendre(motif, methode)` patiente jusqu'a l'appel.
-- `accepterConfirmations(page)` / `refuserConfirmations(page)` : plusieurs actions destructrices passent par
-  `confirm()`, que Playwright refuse par defaut.
-
-Regle de conversion : chaque assertion doit avoir son equivalent **observable** a l'ecran ou dans la requete envoyee.
-« 409 → message X » devient : stub 409, clic, `await expect(page.getByText('...')).toBeVisible()` ; « le service POST
-`/api/avis` avec `{ note }` » devient : capture de la requete et `expect(corps.note).toBe(4)` ; « la garde renvoie a
-l'accueil » devient : connexion avec un role insuffisant, navigation, `await expect(page).toHaveURL('/')`.
-
-Deux pieges a connaitre :
-- **Cache de transfert.** Les appels `GET` faits pendant le rendu serveur sont transmis au navigateur, qui ne les
-  rejoue pas : sur une page publique, le premier chargement n'est pas interceptable. Pour tester une page publique
-  avec des donnees choisies, l'atteindre par un clic depuis une autre page (navigation cote client) — voir
-  `tests/navigateur/fiche-medecin.spec.ts`. Les pages privees ne sont pas concernees : le serveur les rend
-  « non connecte » et n'appelle donc pas l'API.
-- **Liaisons `[name]`.** Un nom calcule (`[name]="'nom-' + id"`) est pose en propriete, pas en attribut : le
-  selecteur CSS `input[name=...]` ne le trouve pas. Reperer le champ par son libelle (`getByLabel`).
-
-Les minuteries (relecture du fil toutes les 30 s, du compteur de notifications toutes les 60 s) sont avancees avec
-`page.clock`, sans attendre reellement.
-
-### Fichiers de test
-- `tests/logique/` : `i18n.spec.ts` (dictionnaires : memes cles, aucun libelle vide, memes parametres
-  d'interpolation ; `interpoler`, `traduireFr`, `langueDepuisCode`, `langueDepuisAcceptLanguage`),
-  `config.spec.ts` (`normaliserConfiguration`, `configurationDepuisEnvironnement`), `auth-config.spec.ts`,
-  `libelles.spec.ts` (statuts, moyennes, prix, accords, bornes, `estUuid`, `salleAccessible`), `profil.spec.ts`
-  (`nettoyerProfil`, `validerProfil`, `dateLocaleIso`, `libelleLangue`).
-- `tests/navigateur/` : un fichier par domaine (annuaire, fiche du praticien, rendez-vous, ordonnances, avis,
-  messagerie, notifications, teleconsultation, dawini, listes d'attente, moi, profil, medecin, secretaire, admin),
-  plus `barre-navigation`, `gardes`, `authentification`, `config`, `seo`, `i18n` et `page-introuvable`.
-- `tests/parcours/` : les parcours publics de bout en bout (recherche, verification d'ordonnance, navigation et SEO,
-  langues), qui ne stubbent rien et parlent a l'API simulee.
-
-L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, `npm run verif:tests`,
-`npx playwright install --with-deps chromium`, `npm run build` et `npx playwright test` ; le rapport HTML est joint
-au workflow en cas d'echec, et le job `image` attend ce job. `test-results/` et `playwright-report/` sont ignores par
-git et Docker. `package-lock.json` est versionne pour la reproductibilite. Le journal des versions est dans
-`docs/JOURNAL.md`.
+Le lanceur `ChromeHeadlessCI` (`ChromeHeadless` + `--no-sandbox --disable-gpu`) est defini dans `karma.conf.js`.
+L'integration continue (`.github/workflows/ci.yml`, Node 20) enchaine `npm ci`, `ng build` et `ng test` headless
+(job `build-test`, sur chaque pull request et push) ; `package-lock.json` est versionne pour la reproductibilite.
+Le journal des versions est dans `docs/JOURNAL.md`.
 
 ## Deploiement
 
@@ -149,7 +77,6 @@ lance node au premier plan. Le meme build sert donc en recette et en production.
 | `DOMAINE` | (aucun) | domaine public, celui du `.env` de `docker-compose.prod.yml` (tabibi-backend) : en derive les deux URL ci-dessus, avec les hotes `api.` et `auth.` du Caddyfile |
 | `PORT` | `80` dans l'image (`4000` hors image) | port d'ecoute du serveur node |
 | `TABIBI_SSR_DELAI_MS` | `10000` | au-dela, la page est envoyee sans rendu serveur (voir « Rendu cote serveur ») |
-| `DOMAINE` (bis) | (aucun) | sert aussi d'origine publique (`https://DOMAINE`) aux URL absolues de `robots.txt` et `sitemap.xml` ; sinon l'origine de la requete (`X-Forwarded-*`) |
 
 Les valeurs sont nettoyees (espaces, barre oblique finale) et echappees pour le JSON ; une valeur qui n'est pas une
 URL `http(s)://` est signalee dans le journal du conteneur (l'application ne joindrait alors ni l'API ni Keycloak).
@@ -158,10 +85,8 @@ URL `http(s)://` est signalee dans le journal du conteneur (l'application ne joi
 - fichiers du build (chemins avec extension) : `no-store` sur `index.csr.html` et `assets/config.json` (remplaces a
   chaque deploiement), un an et `immutable` sur les bundles a empreinte (`main-XXXXXXXX.js`, `styles-XXXXXXXX.css`),
   une heure sur le reste de `assets/` ; fichier introuvable → 404 (pas de page rendue pour un favicon absent) ;
-- `/robots.txt` et `/sitemap.xml` : generes (voir « Referencement (SEO) ») ;
 - toute autre URL : page rendue par Angular (`no-store`), ou page sans rendu (`index.csr.html`, l'application se rend
-  dans le navigateur comme avant) si le rendu echoue ou depasse `TABIBI_SSR_DELAI_MS` ; statut 404 quand la page
-  rendue est introuvable (route `**`, praticien inconnu) ;
+  dans le navigateur comme avant) si le rendu echoue ou depasse `TABIBI_SSR_DELAI_MS` ;
 - en-tetes de securite sur toutes les reponses : `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
   `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`
   (la teleconsultation s'ouvre dans un autre onglet, sur Jitsi) et une `Content-Security-Policy` compatible Angular et
@@ -240,78 +165,17 @@ Comment (Angular 18, `@angular/ssr`, `@angular/platform-server`, express) :
 
 Limites :
 - Angular 18 n'a pas de mode de rendu par route : toutes les URL passent par le serveur, y compris les pages privees,
-  qui rendent leur etat « non connecte » (sans donnee, avec `robots noindex`) ; une URL inconnue rend la page
-  « Page introuvable » en 404 (route `**`).
+  qui rendent leur etat « non connecte » (sans donnee) ; une URL inconnue rend la coquille en 200 (pas de route `**`).
 - Le serveur appelle l'API avec la meme URL publique que le navigateur (`TABIBI_API_URL`) : c'est ce qui permet le
   cache de transfert (cle = URL). L'hote `api.DOMAINE` doit donc etre joignable depuis le conteneur ; le rendu attend
   l'API, avec le secours `TABIBI_SSR_DELAI_MS`.
 - Les dates sont rendues avec le fuseau du serveur (UTC dans l'image) puis re-rendues par le navigateur dans le sien :
   l'hydratation ne compare pas le texte, aucune erreur, mais un court changement d'affichage est possible.
-- Sous un garde de role (`/medecin/...`, `/admin/...`, `/secretaire`, `/pharmacie`), aucun composant n'est rendu cote
-  serveur : la page garde le titre « Tabibi » sans `noindex` ; ces chemins sont exclus par `robots.txt`.
-
-## Referencement (SEO)
-- `SeoService` (`seo/seo.service.ts`, `Title` + `Meta` d'Angular) : `definir({ titre, description?, canonique?, privee? })`
-  pose `<title>` (suffixe « | Tabibi »), `<meta name="description">` (description par defaut sinon),
-  `<link rel="canonical">` (origine du document + chemin) et, pour une page privee, `<meta name="robots"
-  content="noindex, nofollow">` ; `definirPrivee(titre)` ; `introuvable(titre?)` ajoute le statut HTTP 404 au rendu
-  serveur via le jeton `REPONSE_SERVEUR` (`seo/reponse-serveur.ts`, objet `{ statut }` fourni par `server.ts` a chaque
-  rendu puis relu apres ; Angular 18 n'expose pas la reponse express, `@angular/ssr/tokens` n'existe qu'en 19).
-- Chaque composant de page appelle le service dans `ngOnInit` : annuaire « Trouver un médecin en Algérie »,
-  verification « Vérifier une ordonnance », fiche « Dr <nom>, <spécialité> à <ville> » avec description (« Fiche du
-  praticien » en attendant la reponse de l'API ; praticien inconnu → « Praticien introuvable », `noindex`, 404) ;
-  toutes les pages reservees (mes rendez-vous, espaces medecin, secretaire, pharmacie, administration, messagerie,
-  notifications, Dawini, avis, listes d'attente, teleconsultations, mon compte) sont `noindex`.
-- Route `**` → `PageIntrouvableComponent` (`page-introuvable/`) : « Page introuvable », liens vers l'annuaire et la
-  verification, 404 au rendu serveur.
-- `server.ts` : `GET /robots.txt` (genere : `Disallow` des espaces prives — `/moi`, `/mes-`, `/ordonnances/`,
-  `/medecin/` et `/medecin$` (les fiches `/medecins/...` restent permises), `/admin`, `/secretaire`, `/pharmacie`,
-  `/messagerie`, `/notifications`, `/dawini`, `/avis`, `/liste-attente`, `/teleconsultations` — et
-  `Sitemap: <origine>/sitemap.xml`) ; `GET /sitemap.xml` (`/`, `/verifier` puis `/medecins/<id>` pour chaque praticien
-  de `GET ${apiUrl}/api/medecins`, liste gardee une heure en memoire, delai de 5 s ; si l'API ne repond pas, pages
-  fixes seulement et nouvel essai a la demande suivante) ; les deux en `Cache-Control: public, max-age=3600`.
-  L'origine des URL absolues est `https://DOMAINE` si la variable est definie, sinon celle de la requete.
-- Verifie en SSR : `curl /` → `<title>Trouver un médecin en Algérie | Tabibi</title>`, description et canonique ;
-  `/medecins/m1` → « Dr Amina Belkacem, Généraliste à Alger | Tabibi » ; `/medecins/inconnu-xyz` et
-  `/page-inexistante` → statut 404, `noindex` ; `/mes-rendez-vous` → `noindex` ; `/robots.txt` et `/sitemap.xml`.
-
-## Langues (francais, arabe, anglais)
-L'interface est traduite **a l'execution** : un seul build sert les trois langues, rien n'est reconstruit par langue
-et aucun rechargement n'est necessaire pour changer.
-- `i18n/traduction.service.ts` : signal `langue` (`fr` | `ar` | `en`), `t(cle, params?)` (interpolation `{nom}`),
-  `locale()` (locale Angular des dates : `fr`, `ar-DZ`, `en`), `dir()` (`rtl` en arabe). A chaque changement, le
-  service pose `lang` et `dir` sur `<html>`, dans le navigateur comme au rendu serveur.
-- Dictionnaires `i18n/fr.ts` (reference, ses cles definissent le type `ClesTraduction`), `i18n/ar.ts`, `i18n/en.ts` :
-  les trois portent exactement les memes cles — le compilateur le verifie (`Record<ClesTraduction, string>`) et un
-  test le verifie aussi (cles, libelles non vides, memes parametres d'interpolation).
-- Choix initial : le choix memorise (`localStorage`, cle `tabibi.langue`, lu en try/catch) ; sinon, au rendu serveur,
-  l'en-tete `Accept-Language` de la requete (jeton `LANGUE_SERVEUR` fourni par `server.ts`, `Vary: Accept-Language`
-  sur les pages rendues) ; sinon `navigator.language` (`ar-*` → arabe, `en-*` → anglais, sinon francais).
-- Selecteur dans la barre de navigation (**Français / العربية / English**) : le choix y est memorise. Apres connexion,
-  la langue du profil (`GET /api/moi/profil`) initialise l'interface **si** l'utilisateur n'a pas choisi lui-meme
-  (`choisieManuellement()`) ; une langue de profil non prise en charge (`kab`) laisse la langue detectee.
-- Dans les templates : pipe standalone `t` (`{{ 'nav.annuaire' | t }}`, `{{ 'commun.minutes' | t:{ n: 30 } }}`) et
-  pipe `dateLocale` (`{{ iso | dateLocale:'jourHeure' }}`, formats nommes `jourDateHeure`, `jourHeure`, `dateHeure`,
-  `date`, `courtHeure`, eux-memes traduits). Les deux sont **impurs** : ils suivent le signal de langue. Dans le code,
-  `TraductionService.t(...)` ; les fonctions de libelles partagees (statuts, compteurs : `libelleStatutRendezVous`,
-  `libelleRappels`, `formaterMoyenne`, `formaterPrix`, `libelleReponses`, `validerProfil`…) prennent un `Traducteur`
-  en dernier parametre, avec le francais par defaut.
-- Ce qui n'est **pas** traduit : les donnees de l'API (nom du praticien, commentaire d'un avis, medicament) et les
-  messages d'erreur `{ erreur }` renvoyes par le backend, affiches tels quels.
-- Ecriture de droite a gauche : `styles.css` adapte les marges (proprietes logiques `margin-inline-start`,
-  `padding-inline-start`) et inverse les bulles de la messagerie sous `[dir='rtl']` ; les identifiants et codes
-  restent en `direction: ltr`.
-- Referencement : les titres et descriptions passent par les cles `seo.*` ; `SeoService` reapplique la derniere
-  definition a chaque changement de langue, et le serveur rend `<html lang="ar" dir="rtl">` avec le titre arabe quand
-  le navigateur demande l'arabe.
-- Controle : `npm run verif:i18n` (`outils/verifier-i18n.mjs`) echoue si un libelle francais litteral (lettre
-  accentuee hors interpolation) reste dans le template d'un composant.
+- Pas encore de `<title>` ni de `<meta name="description">` par page (fiche du praticien) : a faire pour le SEO.
 
 ## Prochaines etapes
 - Nom du patient dans l'agenda et sur l'ordonnance (l'API n'expose que l'identifiant).
-- Tests de bout en bout des parcours connectes (Keycloak de test ou jeton de developpement accepte par l'API).
-- Traduction des messages d'erreur du backend (ils arrivent en francais dans `{ erreur }`) et langue kabyle (`kab`),
-  proposee dans le profil mais pas encore dans l'interface.
+- SEO : titre et description par page (fiche du praticien), route `**` (404) et `robots.txt`.
 
 ## v0.2.0 — Annuaire (web)
 - Ecran d'accueil public : recherche de praticiens (specialite, wilaya, nom) via `GET /api/medecins`.
@@ -333,10 +197,7 @@ et aucun rechargement n'est necessaire pour changer.
   vérification et statut, les plus récentes d'abord ; chaque ligne mène au détail. Redirige vers la connexion si besoin.
 - `/ordonnances/:id` : détail (`GET /api/ordonnances/{id}`) — praticien (nom lu dans l'annuaire), patient, lignes
   (médicament, posologie, durée), code de vérification affiché en grand et bouton « Imprimer » (`window.print()` ;
-  la barre de navigation et les boutons sont masqués à l'impression). Depuis la v0.22.0, bouton « Télécharger le
-  PDF » : `OrdonnanceService.pdf(id)` (`GET /api/ordonnances/{id}/pdf`, `responseType: 'blob'`, PATIENT ou MEDECIN)
-  puis lien de téléchargement `ordonnance-<code>.pdf` (URL objet libérée ensuite) ; en cas d'échec, motif
-  `{ erreur }` de l'API ou « Impossible de générer le PDF de cette ordonnance. » ; navigateur seulement (garde SSR).
+  la barre de navigation et les boutons sont masqués à l'impression).
 - `/verifier` : page publique — saisie d'un code (`GET /api/ordonnances/verifier/{code}`) → « Ordonnance authentique,
   émise le … » ou « Code inconnu ». Accepte `?code=…` (lien depuis le détail d'une ordonnance).
 - `OrdonnanceService` (`mes`, `parId`, `verifier`, `emettre`) ; composant `app-liste-ordonnances` partagé.
@@ -370,9 +231,9 @@ et aucun rechargement n'est necessaire pour changer.
   « Tout marquer comme lu » (`POST /api/notifications/toutes-lues`) ; état vide « Aucune notification pour le
   moment. ». Redirige vers la connexion si l'utilisateur n'est pas connecté.
 - `NotificationService` (`mesNotifications`, `nombreNonLues`, `marquerLue`, `toutMarquerLu`, flux `changements$`).
-- Infrastructure de test de l'époque (Karma / Jasmine, `karma.conf.js`, cible `test` d'`angular.json`) : specs du
-  service, des deux composants et test de fumée d'`AppComponent` ; workflow GitHub Actions.
-  **Retirée en v0.24.0** : tous les tests sont passés à Playwright, voir la section « Tester ».
+- Infrastructure de test : Karma / Jasmine (`tsconfig.spec.json`, cible `test` d'`angular.json`, `karma.conf.js`
+  avec le lanceur `ChromeHeadlessCI`), specs du service, des deux composants et test de fumée d'`AppComponent` ;
+  workflow GitHub Actions.
 
 ## v0.7.0 — Téléconsultation
 - `/teleconsultations` : téléconsultations du patient (`GET /api/teleconsultations/mes`, rôle PATIENT), les plus
@@ -595,11 +456,3 @@ et aucun rechargement n'est necessaire pour changer.
   image Docker `node:20-alpine` executant `server.mjs` sur le port 80 sous l'utilisateur `node` (nginx retire).
 - `ng serve` : `buildTarget` manquant dans `angular.json` (npm start echouait), corrige.
 - Voir les sections « Rendu cote serveur (SSR) » et « Deploiement ».
-
-## v0.20.0 a v0.22.0
-- Voir `docs/JOURNAL.md` (referencement, tests de bout en bout Playwright, ordonnance en PDF).
-
-## v0.23.0 — Interface en francais, arabe et anglais (RTL)
-- Traduction a l'execution des ecrans patient, medecin, secretaire, pharmacie et administration ; selecteur de langue
-  dans la barre de navigation ; arabe de droite a gauche (`dir="rtl"`), au rendu serveur comme dans le navigateur.
-- Voir la section « Langues (francais, arabe, anglais) » ci-dessus.

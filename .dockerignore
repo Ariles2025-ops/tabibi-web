@@ -2,11 +2,7 @@
 node_modules/
 dist/
 .angular/
-tests/
-playwright.config.ts
-outils/
-test-results/
-playwright-report/
+coverage/
 out-tsc/
 .git/
 .github/

@@ -3,9 +3,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ConfigService } from '../config/config.service';
 
-// Libelles de statut et de compteur : module pur (`./admin.formats`), reexporte pour les imports existants.
-export { libelleRappels, libelleStatutCandidature } from './admin.formats';
-
 /** Candidature d'un medecin a figurer dans l'annuaire, telle que renvoyee par l'API (au medecin comme a l'administrateur). */
 export interface Candidature {
   id: string;
@@ -25,6 +22,14 @@ export interface Candidature {
   /** Dates au format ISO 8601 ; traiteeLe est null tant que la candidature est en attente. */
   deposeeLe: string;
   traiteeLe: string | null;
+  /** Fiche de l'annuaire reclamee par le medecin ; null (ou absente) pour une nouvelle fiche. */
+  ficheReclamee?: string | null;
+  /** E-mail du compte qui a depose la candidature ; null s'il est inconnu. */
+  compteEmail?: string | null;
+  /** Nom affiche sur la fiche reclamee ; null pour une nouvelle fiche. */
+  ficheReclameeNom?: string | null;
+  /** Nombre d'autres candidatures portant le meme numero d'ordre. */
+  doublonsNumeroOrdre?: number;
 }
 
 /** Donnees du depot d'une candidature (POST /api/medecin/candidature, role MEDECIN). */
@@ -37,6 +42,8 @@ export interface DemandeCandidature {
   ville: string;
   numeroOrdre: string;
   telephone: string;
+  /** Fiche de l'annuaire que le medecin reclame (absente pour une nouvelle fiche). */
+  ficheReclamee?: string | null;
 }
 
 /** Tableau de bord de l'administrateur (GET /api/admin/statistiques). */
@@ -44,6 +51,23 @@ export interface StatistiquesAdministration {
   candidaturesEnAttente: number;
   candidaturesValidees: number;
   candidaturesRefusees: number;
+}
+
+/** Libelles francais des statuts de candidature connus ; un statut inconnu est affiche tel quel. */
+const LIBELLES_STATUT_CANDIDATURE: Partial<Record<string, string>> = {
+  EN_ATTENTE: 'En attente',
+  VALIDEE: 'Validée',
+  REFUSEE: 'Refusée',
+};
+
+export function libelleStatutCandidature(statut: string | null | undefined): string {
+  if (!statut) return '';
+  return LIBELLES_STATUT_CANDIDATURE[statut] ?? statut;
+}
+
+/** « 0 rappel envoyé », « 1 rappel envoyé », « 3 rappels envoyés ». */
+export function libelleRappels(nombre: number): string {
+  return `${nombre} ${nombre > 1 ? 'rappels envoyés' : 'rappel envoyé'}`;
 }
 
 /** Corps des compteurs de l'API : { "nombre": n }. */

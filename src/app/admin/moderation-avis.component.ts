@@ -4,20 +4,16 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AvisAdmin, AvisService, libelleStatutAvis } from '../avis/avis.service';
-import { SeoService } from '../seo/seo.service';
-import { DateLocalePipe } from '../i18n/date-locale.pipe';
-import { ClesTraduction } from '../i18n/fr';
-import { TPipe } from '../i18n/t.pipe';
-import { Traducteur } from '../i18n/traducteur';
-import { TraductionService } from '../i18n/traduction.service';
+import { PatientsService, RepertoirePatients, nomPatient } from '../medecin/patients.service';
 
-/** Filtre par statut de la liste ; '' = tous. Le libelle est une cle de traduction. */
-const STATUTS_FILTRE: ReadonlyArray<{ valeur: string; libelle: ClesTraduction }> = [
-  { valeur: 'SIGNALE', libelle: 'moderation.filtreSignales' },
-  { valeur: 'PUBLIE', libelle: 'moderation.filtrePublies' },
-  { valeur: 'MASQUE', libelle: 'moderation.filtreMasques' },
-  { valeur: '', libelle: 'moderation.filtreTous' },
+/** Filtre par statut de la liste ; '' = tous. */
+const STATUTS_FILTRE = [
+  { valeur: 'SIGNALE', libelle: 'Signalés' },
+  { valeur: 'PUBLIE', libelle: 'Publiés' },
+  { valeur: 'MASQUE', libelle: 'Masqués' },
+  { valeur: '', libelle: 'Tous' },
 ];
 
 /**
@@ -27,59 +23,57 @@ const STATUTS_FILTRE: ReadonlyArray<{ valeur: string; libelle: ClesTraduction }>
 @Component({
   selector: 'app-moderation-avis',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TPipe, DateLocalePipe],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
-        <h1 style="color:var(--vert);margin:0">{{ 'moderation.titre' | t }}</h1>
-        <label style="display:flex;align-items:center;gap:8px;color:#566b64;font-size:.9rem">
-          {{ 'commun.statut' | t }}
-          <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:#10241F;font-size:1rem">
-            <option *ngFor="let s of statuts" [value]="s.valeur">{{ s.libelle | t }}</option>
+        <h1 style="color:var(--blue);margin:0">Modération des avis</h1>
+        <label style="display:flex;align-items:center;gap:8px;color:var(--text3);font-size:.9rem">
+          Statut
+          <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:var(--ink);font-size:1rem">
+            <option *ngFor="let s of statuts" [value]="s.valeur">{{ s.libelle }}</option>
           </select>
         </label>
       </div>
 
-      <p *ngIf="charge()">{{ 'commun.chargement' | t }}</p>
-      <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
-      <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
+      <p *ngIf="charge()">Chargement…</p>
+      <p *ngIf="succes()" style="color:var(--blue)">{{ succes() }}</p>
+      <p *ngIf="erreur()" role="alert" style="color:var(--red)">{{ erreur() }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let a of avis()"
-            style="border:1px solid #e4e9e7;border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div>
-            <strong>{{ 'avis.sur5' | t:{ note: a.note } }}</strong>
-            <span style="color:#566b64"> · {{ libelleStatut(a.statut) }} · {{ 'moderation.deposeLe' | t:{ date: (a.deposeLe | dateLocale:'dateHeure') } }}</span>
+            <strong>{{ a.note }} / 5</strong>
+            <span style="color:var(--text3)"> · {{ libelleStatut(a.statut) }} · déposé le {{ a.deposeLe | date:'d MMMM yyyy à HH:mm' }}</span>
             <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
-            <p *ngIf="!a.commentaire" style="margin:6px 0 0;color:#566b64">{{ 'moderation.sansCommentaire' | t }}</p>
-            <span style="display:block;margin:6px 0 0;color:#566b64;font-size:.85rem">
-              {{ 'moderation.references' | t:{ medecinId: a.medecinId, patientId: a.patientId, rendezVousId: a.rendezVousId } }}
+            <p *ngIf="!a.commentaire" style="margin:6px 0 0;color:var(--text3)">Sans commentaire.</p>
+            <span style="display:block;margin:6px 0 0;color:var(--text3);font-size:.85rem">
+              {{ nomMedecin(a.medecinId) }} · {{ nom(a.patientId) }}
             </span>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button *ngIf="a.statut !== 'MASQUE'" type="button" (click)="masquer(a)" [disabled]="enCours() !== null"
-                    style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
-              {{ (enCours() === a.id ? 'commun.enregistrement' : 'moderation.masquer') | t }}
+                    style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
+              {{ enCours() === a.id ? 'Enregistrement…' : 'Masquer' }}
             </button>
             <button *ngIf="a.statut !== 'PUBLIE'" type="button" class="bouton" (click)="retablir(a)" [disabled]="enCours() !== null">
-              {{ (enCours() === a.id ? 'commun.enregistrement' : 'moderation.retablir') | t }}
+              {{ enCours() === a.id ? 'Enregistrement…' : 'Rétablir' }}
             </button>
           </div>
         </li>
       </ul>
-      <p *ngIf="!charge() && !erreur() && avis().length === 0">{{ 'moderation.aucun' | t }}</p>
+      <p *ngIf="!charge() && !erreur() && avis().length === 0">Aucun avis pour ce filtre.</p>
 
-      <p style="margin:24px 0 0"><a routerLink="/admin" style="color:var(--vert)">{{ 'candidatures.retourTableau' | t }}</a></p>
+      <p style="margin:24px 0 0"><a routerLink="/admin" style="color:var(--blue)">Retour au tableau de bord</a></p>
     </main>
   `,
 })
 export class ModerationAvisComponent implements OnInit {
-  private seo = inject(SeoService);
   private auth = inject(AuthService);
   private service = inject(AvisService);
-  private i18n = inject(TraductionService);
-  /** Traducteur de la langue courante, passe aux fonctions de libelles du service. */
-  private traduire: Traducteur = (cle, params) => this.i18n.t(cle, params);
+  private patients = inject(PatientsService);
+  private annuaire = inject(AnnuaireService);
 
   statuts = STATUTS_FILTRE;
   /** Statut filtre ('' = tous) ; les avis signales d'abord. */
@@ -90,9 +84,11 @@ export class ModerationAvisComponent implements OnInit {
   enCours = signal<string | null>(null);
   succes = signal('');
   erreur = signal('');
+  /** Noms des patients et des medecins des avis affiches ; a defaut « Patient » / « Médecin ». */
+  repertoire = signal<RepertoirePatients>(new Map());
+  nomsMedecins = signal<Partial<Record<string, string>>>({});
 
   ngOnInit() {
-    this.seo.definirPrivee('seo.moderationAvis');
     this.charger();
   }
 
@@ -110,30 +106,55 @@ export class ModerationAvisComponent implements OnInit {
       next: (liste) => {
         this.avis.set(liste);
         this.charge.set(false);
+        this.chargerNoms(liste);
       },
       error: (e: HttpErrorResponse) => {
         this.charge.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.i18n.t('commun.reserveAdmin'));
+          this.erreur.set("Cette page est réservée à l'administrateur.");
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('moderation.erreurChargement'));
+          this.erreur.set(e.error?.erreur ?? 'Impossible de charger les avis.');
         }
       },
     });
   }
 
   masquer(a: AvisAdmin) {
-    this.traiter(a, this.service.masquer(a.id), this.i18n.t('moderation.masque'));
+    this.traiter(a, this.service.masquer(a.id), 'Avis masqué : il ne figure plus sur la fiche du praticien.');
   }
 
   retablir(a: AvisAdmin) {
-    this.traiter(a, this.service.retablir(a.id), this.i18n.t('moderation.retabli'));
+    this.traiter(a, this.service.retablir(a.id), 'Avis rétabli : il figure de nouveau sur la fiche du praticien.');
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutAvis(statut, this.traduire);
+    return libelleStatutAvis(statut);
+  }
+
+  nom(patientId: string): string {
+    return nomPatient(this.repertoire(), patientId);
+  }
+
+  nomMedecin(medecinId: string): string {
+    return this.nomsMedecins()[medecinId] ?? 'Médecin';
+  }
+
+  /** Noms des patients (GET /api/admin/patients?ids=) et des medecins (annuaire) absents du cache ; un echec laisse le libelle generique. */
+  private chargerNoms(liste: AvisAdmin[]) {
+    const patientsInconnus = liste.map((a) => a.patientId).filter((id) => !this.repertoire().has(id));
+    this.patients.patientsParIds(patientsInconnus).subscribe({
+      next: (r) => this.repertoire.update((actuel) => new Map([...actuel, ...r])),
+      error: () => undefined,
+    });
+    for (const id of new Set(liste.map((a) => a.medecinId))) {
+      if (this.nomsMedecins()[id] !== undefined) continue;
+      this.annuaire.medecin(id).subscribe({
+        next: (m) => this.nomsMedecins.update((noms) => ({ ...noms, [id]: m.nomComplet })),
+        error: () => undefined,
+      });
+    }
   }
 
   /** Applique une decision puis recharge la liste ; 409 / 404 (deja traite, disparu) affichent le motif et rechargent. */
@@ -152,9 +173,9 @@ export class ModerationAvisComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 409 || e.status === 404) {
-          this.charger(e.error?.erreur ?? this.i18n.t('moderation.dejaTraite'));
+          this.charger(e.error?.erreur ?? 'Cet avis a déjà été traité.');
         } else {
-          this.erreur.set(e.error?.erreur ?? this.i18n.t('moderation.traitementEchec'));
+          this.erreur.set(e.error?.erreur ?? "Le traitement de l'avis a échoué, veuillez réessayer.");
         }
       },
     });
