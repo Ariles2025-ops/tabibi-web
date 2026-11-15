@@ -118,6 +118,13 @@ export const routes: Routes = [
   // Page publique de chaque praticien (une par fiche), pour le referencement.
   { path: 'praticiens/:id', component: PraticienPublicComponent },
   { path: 'praticiens/:id/:slug', component: PraticienPublicComponent },
+  // Versions arabes des pages publiques (memes composants, langue en donnee de route).
+  { path: 'ar/specialites', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
+  { path: 'ar/specialites/:specialite', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
+  { path: 'ar/specialites/:specialite/:wilaya', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
+  { path: 'ar/wilayas/:wilaya', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
+  { path: 'ar/praticiens/:id', component: PraticienPublicComponent, data: { langue: 'ar' } },
+  { path: 'ar/praticiens/:id/:slug', component: PraticienPublicComponent, data: { langue: 'ar' } },
   { path: 'moi', component: MoiComponent },
   // Mon profil (utilisateur connecte, tous roles : la page redirige vers la connexion).
   { path: 'moi/profil', component: ProfilComponent },

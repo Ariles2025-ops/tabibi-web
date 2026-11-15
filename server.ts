@@ -105,16 +105,20 @@ export function app(): express.Express {
   };
   server.get('/sitemap.xml', (_req, res) => envoyerXml(res, 'index', async () => {
     const { total, taille } = await lirePlan(0);
-    const fichiers = ['sitemap-pages.xml', ...Array.from({ length: Math.ceil(total / taille) }, (_, i) => `sitemap-praticiens-${i}.xml`)];
+    const pages = Math.ceil(total / taille);
+    const fichiers = ['sitemap-pages.xml', 'sitemap-pages-ar.xml',
+      ...Array.from({ length: pages }, (_, i) => `sitemap-praticiens-${i}.xml`),
+      ...Array.from({ length: pages }, (_, i) => `sitemap-praticiens-ar-${i}.xml`)];
     return '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
       + fichiers.map((f) => `  <sitemap><loc>${site}/${f}</loc></sitemap>\n`).join('') + '</sitemapindex>\n';
   }));
-  server.get(/^\/sitemap-praticiens-(\d+)\.xml$/, (req, res) => {
-    const page = Number((req.params as unknown as string[])[0]);
-    return envoyerXml(res, `praticiens-${page}`, async () => {
+  server.get(/^\/sitemap-praticiens-(ar-)?(\d+)\.xml$/, (req, res) => {
+    const prefixe = (req.params as unknown as string[])[0] ? '/ar' : '';
+    const page = Number((req.params as unknown as string[])[1]);
+    return envoyerXml(res, `praticiens${prefixe}-${page}`, async () => {
       const { medecins } = await lirePlan(page);
       return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        + medecins.map((m) => `  <url><loc>${site}/praticiens/${m.id}/${echapper(slug(m.nomComplet))}</loc></url>\n`).join('')
+        + medecins.map((m) => `  <url><loc>${site}${prefixe}/praticiens/${m.id}/${echapper(slug(m.nomComplet))}</loc></url>\n`).join('')
         + '</urlset>\n';
     });
   });

@@ -3,6 +3,8 @@ import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
+import { TEXTES_SEO, TextesSeo } from './textes-seo';
+import { liensLangues } from './referentiel-seo';
 import {
   SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo, lienPraticien,
 } from './referentiel-seo';
@@ -21,14 +23,17 @@ import {
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <main class="seo">
-      <nav class="seo-fil" aria-label="Fil d'Ariane">
-        <a routerLink="/">Accueil</a><span>›</span>
-        <a routerLink="/specialites">Annuaire</a>
-        <ng-container *ngIf="specialite"><span>›</span>
-          <a [routerLink]="['/specialites', specialite.slug]">{{ specialite.nom }}</a></ng-container>
-        <ng-container *ngIf="wilaya"><span>›</span><span aria-current="page">{{ wilaya.nom }}</span></ng-container>
-      </nav>
+    <main class="seo" [attr.dir]="ar ? 'rtl' : null" [attr.lang]="ar ? 'ar' : 'fr'">
+      <div class="seo-haut">
+        <nav class="seo-fil" [attr.aria-label]="t.fil">
+          <a routerLink="/">{{ t.accueil }}</a><span>›</span>
+          <a [routerLink]="p + '/specialites'">{{ t.annuaire }}</a>
+          <ng-container *ngIf="specialite"><span>›</span>
+            <a [routerLink]="[p + '/specialites', specialite.slug]">{{ nomS(specialite) }}</a></ng-container>
+          <ng-container *ngIf="wilaya"><span>›</span><span aria-current="page">{{ nomW(wilaya) }}</span></ng-container>
+        </nav>
+        <a class="seo-langue" [routerLink]="lienAutreLangue" [attr.hreflang]="ar ? 'fr' : 'ar'" [attr.lang]="ar ? 'fr' : 'ar'">{{ ar ? 'Français' : 'العربية' }}</a>
+      </div>
 
       <header class="seo-tete">
         <h1>{{ titre }}</h1>
@@ -38,18 +43,18 @@ import {
       <!-- Index : toutes les specialites et toutes les wilayas -->
       <ng-container *ngIf="index">
         <section class="seo-bloc">
-          <h2>Spécialités <small>{{ specialitesAlpha.length }}</small></h2>
+          <h2>{{ t.specialites }} <small>{{ specialitesAlpha.length }}</small></h2>
           <div class="seo-cartes">
-            <a *ngFor="let s of specialitesAlpha" [routerLink]="['/specialites', s.slug]" class="seo-carte">
-              <span class="seo-carte__ic" aria-hidden="true"><i class="fa fa-stethoscope"></i></span>{{ s.nom }}
+            <a *ngFor="let s of specialitesAlpha" [routerLink]="[p + '/specialites', s.slug]" class="seo-carte">
+              <span class="seo-carte__ic" aria-hidden="true"><i class="fa fa-stethoscope"></i></span>{{ nomS(s) }}
             </a>
           </div>
         </section>
         <section class="seo-bloc">
-          <h2>Wilayas <small>{{ wilayasAlpha.length }}</small></h2>
+          <h2>{{ t.wilayas }} <small>{{ wilayasAlpha.length }}</small></h2>
           <div class="seo-colonnes">
-            <a *ngFor="let w of wilayasAlpha" [routerLink]="['/wilayas', w.slug]" [attr.title]="'Médecins à ' + w.nom">
-              {{ w.nom }}<span class="seo-code">{{ w.code }}</span></a>
+            <a *ngFor="let w of wilayasAlpha" [routerLink]="[p + '/wilayas', w.slug]" [attr.title]="t.medecinsA(nomW(w))">
+              {{ nomW(w) }}<span class="seo-code">{{ w.code }}</span></a>
           </div>
         </section>
       </ng-container>
@@ -59,63 +64,62 @@ import {
         <div class="seo-entete">
           <h2>{{ sousTitre }}</h2>
           <span *ngIf="!charge() && medecins().length" class="seo-nb">
-            {{ medecins().length >= 50 ? '50 premiers résultats' : medecins().length + (medecins().length > 1 ? ' praticiens' : ' praticien') }}
+            {{ t.nombre(medecins().length) }}
           </span>
         </div>
-        <p *ngIf="charge()" class="seo-muet">Chargement des praticiens…</p>
-        <p *ngIf="!charge() && erreur()" class="seo-muet">La liste n'a pas pu être chargée. Réessayez dans un instant.</p>
-        <p *ngIf="!charge() && !erreur() && medecins().length === 0" class="seo-muet">
-          Aucun praticien référencé pour le moment. Consultez les wilayas ou spécialités voisines ci-dessous.
-        </p>
+        <p *ngIf="charge()" class="seo-muet">{{ t.chargement }}</p>
+        <p *ngIf="!charge() && erreur()" class="seo-muet">{{ t.erreur }}</p>
+        <p *ngIf="!charge() && !erreur() && medecins().length === 0" class="seo-muet">{{ t.aucun }}</p>
         <ul class="seo-medecins">
           <li *ngFor="let m of medecins()">
             <a [routerLink]="lien(m)" class="seo-med">
               <span class="seo-ava" aria-hidden="true">{{ initiales(m) }}</span>
               <span class="seo-med__txt">
                 <strong dir="auto">{{ m.nomComplet }}</strong>
-                <small>{{ m.specialiteFr }} · {{ m.ville || m.wilayaFr }}<ng-container *ngIf="m.ville && m.wilayaFr && m.ville !== m.wilayaFr"> ({{ m.wilayaFr }})</ng-container></small>
+                <small>{{ specialiteDe(m) }} · {{ lieuDe(m) }}</small>
               </span>
-              <span *ngIf="m.reservable" class="seo-resa">Réservable en ligne</span>
+              <span *ngIf="m.reservable" class="seo-resa">{{ t.reservable }}</span>
             </a>
           </li>
         </ul>
-        <p class="seo-note">La fiche complète et la prise de rendez-vous sont accessibles avec un compte Tabibi gratuit.</p>
+        <p class="seo-note">{{ t.note }}</p>
       </section>
 
-      <p *ngIf="introuvable" class="seo-muet">Cette page n'existe pas. <a routerLink="/specialites">Voir toutes les spécialités</a></p>
+      <p *ngIf="introuvable" class="seo-muet">{{ t.introuvable }} <a [routerLink]="p + '/specialites'">{{ t.voirTout }}</a></p>
 
       <!-- Maillage : autres wilayas pour cette specialite -->
       <section class="seo-bloc" *ngIf="specialite && !introuvable">
-        <h2>{{ specialite.nom }} dans une autre wilaya</h2>
+        <h2>{{ t.autreWilaya(nomS(specialite)) }}</h2>
         <div class="seo-colonnes">
-          <a *ngFor="let w of wilayasAlpha" [routerLink]="['/specialites', specialite.slug, w.slug]"
-             [class.actif]="w.slug === wilaya?.slug" [attr.title]="specialite.nom + ' à ' + w.nom">
-            {{ w.nom }}<span class="seo-code">{{ w.code }}</span></a>
+          <a *ngFor="let w of wilayasAlpha" [routerLink]="[p + '/specialites', specialite.slug, w.slug]"
+             [class.actif]="w.slug === wilaya?.slug" [attr.title]="t.specA(nomS(specialite), nomW(w))">
+            {{ nomW(w) }}<span class="seo-code">{{ w.code }}</span></a>
         </div>
       </section>
 
       <!-- Maillage : autres specialites dans cette wilaya -->
       <section class="seo-bloc" *ngIf="wilaya && !introuvable">
-        <h2>{{ specialite ? 'Autres spécialités' : 'Spécialités' }} à {{ wilaya.nom }}</h2>
+        <h2>{{ t.specialitesA(nomW(wilaya), !!specialite) }}</h2>
         <div class="seo-colonnes">
-          <a *ngFor="let s of specialitesAlpha" [routerLink]="['/specialites', s.slug, wilaya.slug]"
-             [class.actif]="s.slug === specialite?.slug" [attr.title]="s.nom + ' à ' + wilaya.nom">{{ s.nom }}</a>
+          <a *ngFor="let s of specialitesAlpha" [routerLink]="[p + '/specialites', s.slug, wilaya.slug]"
+             [class.actif]="s.slug === specialite?.slug" [attr.title]="t.specA(nomS(s), nomW(wilaya))">{{ nomS(s) }}</a>
         </div>
       </section>
 
       <section class="seo-faq" *ngIf="!index && !introuvable">
-        <h2>Questions fréquentes</h2>
-        <details><summary>Comment prendre rendez-vous {{ cible }} ?</summary>
-          <p>Créez un compte Tabibi gratuit, ouvrez la fiche du praticien et choisissez un créneau disponible. La confirmation est immédiate.</p></details>
-        <details><summary>Faut-il payer en ligne ?</summary>
-          <p>Non. La consultation se règle au cabinet, en espèces ou avec la carte Chifa selon le praticien. Aucun prépaiement n'est demandé.</p></details>
-        <details><summary>Je suis praticien, comment apparaître ici ?</summary>
-          <p>Rendez-vous sur <a routerLink="/praticien">Vous êtes praticien ?</a> pour retrouver votre fiche et créer votre compte.</p></details>
+        <h2>{{ t.faq }}</h2>
+        <details><summary>{{ t.q1(cible) }}</summary><p>{{ t.r1 }}</p></details>
+        <details><summary>{{ t.q2 }}</summary><p>{{ t.r2 }}</p></details>
+        <details><summary>{{ t.q3 }}</summary>
+          <p>{{ t.r3 }} <a routerLink="/praticien">{{ t.praticien }}</a></p></details>
       </section>
     </main>
   `,
   styles: [`
     .seo { max-width:1100px; margin:0 auto; padding:24px var(--gutter, 16px) 48px; color:var(--ink); }
+    .seo-haut { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+    .seo-haut .seo-fil { margin-bottom:0; }
+    .seo-langue { padding:6px 14px; border:1px solid var(--border); border-radius:999px; background:#fff; color:var(--vert); font-weight:700; font-size:13px; text-decoration:none; }
     .seo-fil { display:flex; flex-wrap:wrap; gap:6px; font-size:13px; color:var(--text3); margin-bottom:18px; }
     .seo-fil a { color:var(--vert); text-decoration:none; font-weight:600; }
     .seo-tete h1 { margin:0 0 8px; font-size:clamp(1.6rem,3vw,2.2rem); font-weight:800; letter-spacing:-.02em; text-wrap:balance; }
@@ -165,8 +169,30 @@ export class AnnuaireSeoComponent implements OnInit {
   readonly wilayas: WilayaSeo[] = trierAvecPrincipales(WILAYAS_SEO, (w) => w.code, WILAYAS_PRINCIPALES);
 
   /** Listes completes, par ordre alphabetique (maillage lisible). */
-  readonly specialitesAlpha = [...SPECIALITES_SEO].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
-  readonly wilayasAlpha = [...WILAYAS_SEO].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  specialitesAlpha: SpecialiteSeo[] = [];
+  wilayasAlpha: WilayaSeo[] = [];
+
+  /** Langue de la page (donnee de route) : '' en francais, '/ar' en arabe. */
+  ar = false;
+  p = '';
+  t: TextesSeo = TEXTES_SEO.fr;
+  lienAutreLangue = '/';
+
+  nomS(s: SpecialiteSeo) { return this.ar ? s.nomAr : s.nom; }
+  nomW(w: WilayaSeo) { return this.ar ? w.nomAr : w.nom; }
+
+  /** Specialite d'un praticien dans la langue de la page (slug connu), sinon le libelle de la base. */
+  specialiteDe(m: Medecin): string {
+    const s = SPECIALITES_SEO.find((x) => x.slug === m.specialiteSlug);
+    return s ? this.nomS(s) : m.specialiteFr;
+  }
+
+  lieuDe(m: Medecin): string {
+    const w = WILAYAS_SEO.find((x) => x.code === m.wilayaCode);
+    const wil = w ? this.nomW(w) : m.wilayaFr;
+    if (this.ar) return wil || m.ville;
+    return m.ville && m.wilayaFr && m.ville !== m.wilayaFr ? `${m.ville} (${m.wilayaFr})` : (m.ville || m.wilayaFr);
+  }
 
   specialite: SpecialiteSeo | null = null;
   wilaya: WilayaSeo | null = null;
@@ -182,6 +208,12 @@ export class AnnuaireSeoComponent implements OnInit {
   erreur = signal(false);
 
   ngOnInit() {
+    this.ar = this.route.snapshot.data['langue'] === 'ar';
+    this.p = this.ar ? '/ar' : '';
+    this.t = TEXTES_SEO[this.ar ? 'ar' : 'fr'];
+    const tri = this.ar ? 'ar' : 'fr';
+    this.specialitesAlpha = [...SPECIALITES_SEO].sort((a, b) => this.nomS(a).localeCompare(this.nomS(b), tri));
+    this.wilayasAlpha = [...WILAYAS_SEO].sort((a, b) => this.nomW(a).localeCompare(this.nomW(b), tri));
     const abonnement = this.route.paramMap.subscribe((p) => this.afficher(p.get('specialite'), p.get('wilaya')));
     this.destroyRef.onDestroy(() => abonnement.unsubscribe());
   }
@@ -195,46 +227,51 @@ export class AnnuaireSeoComponent implements OnInit {
     // Page de liste : « Chargement » des le rendu serveur (sinon « Aucun praticien » s'afficherait un instant).
     this.charge.set(!(!specSlug && !wilSlug));
 
-    const s = this.specialite, w = this.wilaya;
+    const s = this.specialite, w = this.wilaya, t = this.t;
+    const ns = s ? this.nomS(s) : '', nw = w ? this.nomW(w) : '';
     let chemin = '/specialites';
     let description: string;
     if (this.introuvable) {
-      this.titre = 'Page introuvable';
+      this.titre = t.pageIntrouvable;
       this.intro = '';
-      description = "Cette page de l'annuaire Tabibi n'existe pas.";
+      description = t.descIntrouvable;
     } else if (this.index) {
-      this.titre = 'Annuaire des médecins en Algérie';
-      this.intro = 'Retrouvez les praticiens référencés sur Tabibi par spécialité ou par wilaya, puis prenez rendez-vous en ligne gratuitement.';
-      description = "Annuaire Tabibi : toutes les spécialités médicales et les 69 wilayas d'Algérie. Trouvez un médecin et prenez rendez-vous en ligne.";
+      this.titre = t.titreIndex;
+      this.intro = t.introIndex;
+      description = t.descIndex;
     } else if (s && w) {
       chemin = `/specialites/${s.slug}/${w.slug}`;
-      this.titre = `${s.nom} à ${w.nom}`;
-      this.cible = `avec un ${s.nom.toLowerCase()} à ${w.nom}`;
-      this.sousTitre = `Praticiens : ${s.nom} à ${w.nom}`;
-      this.intro = `Trouvez un ${s.nom.toLowerCase()} à ${w.nom} et prenez rendez-vous en ligne avec Tabibi. Paiement au cabinet, rappel avant le rendez-vous.`;
-      description = `${s.nom} à ${w.nom} : liste des praticiens référencés sur Tabibi. Prenez rendez-vous en ligne, paiement au cabinet.`;
+      this.titre = t.titreSpecWil(ns, nw);
+      this.cible = t.cibleSpecWil(ns, nw);
+      this.sousTitre = t.sousTitreSpecWil(ns, nw);
+      this.intro = t.introSpecWil(ns, nw);
+      description = t.descSpecWil(ns, nw);
     } else if (s) {
       chemin = `/specialites/${s.slug}`;
-      this.titre = `${s.nom} en Algérie`;
-      this.cible = `avec un ${s.nom.toLowerCase()}`;
-      this.sousTitre = `Praticiens : ${s.nom}`;
-      this.intro = `Trouvez un ${s.nom.toLowerCase()} près de chez vous, dans toutes les wilayas d'Algérie, et prenez rendez-vous en ligne avec Tabibi.`;
-      description = `${s.nom} en Algérie : praticiens référencés sur Tabibi dans les 69 wilayas. Choisissez votre wilaya et prenez rendez-vous en ligne.`;
+      this.titre = t.titreSpec(ns);
+      this.cible = t.cibleSpec(ns);
+      this.sousTitre = t.sousTitreSpec(ns);
+      this.intro = t.introSpec(ns);
+      description = t.descSpec(ns);
     } else {
       chemin = `/wilayas/${w!.slug}`;
-      this.titre = `Médecins à ${w!.nom}`;
-      this.cible = `avec un médecin à ${w!.nom}`;
-      this.sousTitre = `Praticiens à ${w!.nom}`;
-      this.intro = `Généralistes, spécialistes et dentistes à ${w!.nom} : trouvez un praticien et prenez rendez-vous en ligne avec Tabibi.`;
-      description = `Médecins à ${w!.nom} : praticiens référencés sur Tabibi, toutes spécialités. Prenez rendez-vous en ligne, paiement au cabinet.`;
+      this.titre = t.titreWil(nw);
+      this.cible = t.cibleWil(nw);
+      this.sousTitre = t.sousTitreWil(nw);
+      this.intro = t.introWil(nw);
+      description = t.descWil(nw);
     }
 
-    this.title.setTitle(`${this.titre} — prendre rendez-vous | Tabibi`);
+    this.lienAutreLangue = (this.ar ? '' : '/ar') + chemin;
+    this.title.setTitle(`${this.titre} — ${t.suffixeTitre} | Tabibi`);
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Tabibi` });
     this.meta.updateTag({ property: 'og:description', content: description });
+    this.meta.updateTag({ property: 'og:locale', content: this.ar ? 'ar_DZ' : 'fr_DZ' });
     this.meta.updateTag({ name: 'robots', content: this.introuvable ? 'noindex' : 'index, follow' });
-    this.lienCanonique(`https://tabibi.doctor${chemin}`);
+    this.lienCanonique(`https://tabibi.doctor${this.p}${chemin}`);
+    liensLangues(this.document, chemin);
+    this.document.documentElement.setAttribute('lang', this.ar ? 'ar' : 'fr');
 
     // La liste vient de l API publique ; elle est aussi rendue cote serveur pour les moteurs de recherche.
     if (!this.index && !this.introuvable) {
@@ -258,7 +295,8 @@ export class AnnuaireSeoComponent implements OnInit {
   }
 
   lien(m: Medecin) {
-    return lienPraticien(m);
+    const l = lienPraticien(m);
+    return this.ar ? ['/ar' + l[0], ...l.slice(1)] : l;
   }
 
   initiales(m: Medecin): string {
