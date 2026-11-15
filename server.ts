@@ -78,6 +78,47 @@ export function app(): express.Express {
     next();
   });
 
+  // Plans du site pour les moteurs de recherche : un index, les pages fixes (fichier du build) et une page publique
+  // par praticien, tiree de l'API (GET /api/medecins/plan, 5 000 fiches par fichier) et gardee 12 h en memoire.
+  const site = 'https://' + (process.env['DOMAINE']?.trim() || 'tabibi.doctor');
+  const api = (configurationDepuisEnvironnement(process.env).apiUrl || CONFIGURATION_PAR_DEFAUT.apiUrl).replace(/\/$/, '');
+  const cachePlans = new Map<string, { xml: string; le: number }>();
+  const DUREE_CACHE_MS = 12 * 3600 * 1000;
+  const lirePlan = async (page: number) => {
+    const r = await fetch(`${api}/api/medecins/plan?page=${page}`);
+    if (!r.ok) throw new Error(`API ${r.status}`);
+    return (await r.json()) as { total: number; taille: number; medecins: { id: string; nomComplet: string }[] };
+  };
+  const slug = (t: string) => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'praticien';
+  const echapper = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const envoyerXml = async (res: Response, cle: string, produire: () => Promise<string>) => {
+    try {
+      const enCache = cachePlans.get(cle);
+      const xml = enCache && Date.now() - enCache.le < DUREE_CACHE_MS ? enCache.xml : await produire();
+      cachePlans.set(cle, { xml, le: Date.now() });
+      res.set('Cache-Control', 'public, max-age=3600').type('application/xml').send(xml);
+    } catch (e) {
+      console.error('Plan du site indisponible', e);
+      res.status(503).type('text').send('Plan du site momentanement indisponible');
+    }
+  };
+  server.get('/sitemap.xml', (_req, res) => envoyerXml(res, 'index', async () => {
+    const { total, taille } = await lirePlan(0);
+    const fichiers = ['sitemap-pages.xml', ...Array.from({ length: Math.ceil(total / taille) }, (_, i) => `sitemap-praticiens-${i}.xml`)];
+    return '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+      + fichiers.map((f) => `  <sitemap><loc>${site}/${f}</loc></sitemap>\n`).join('') + '</sitemapindex>\n';
+  }));
+  server.get(/^\/sitemap-praticiens-(\d+)\.xml$/, (req, res) => {
+    const page = Number((req.params as unknown as string[])[0]);
+    return envoyerXml(res, `praticiens-${page}`, async () => {
+      const { medecins } = await lirePlan(page);
+      return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + medecins.map((m) => `  <url><loc>${site}/praticiens/${m.id}/${echapper(slug(m.nomComplet))}</loc></url>\n`).join('')
+        + '</urlset>\n';
+    });
+  });
+
   // Fichiers du build (chemins avec extension) : bundles a empreinte en cache long, index et config jamais.
   // Un fichier introuvable est un 404, pas une page rendue (favicon, sondes de robots).
   server.get(

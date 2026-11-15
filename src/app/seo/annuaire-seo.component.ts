@@ -4,7 +4,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import {
-  SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo,
+  SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo, lienPraticien,
 } from './referentiel-seo';
 
 /**
@@ -66,7 +66,7 @@ import {
         </p>
         <ul class="seo-medecins">
           <li *ngFor="let m of medecins()">
-            <a [routerLink]="['/medecins', m.id]" class="seo-med">
+            <a [routerLink]="lien(m)" class="seo-med">
               <span class="seo-ava" aria-hidden="true">{{ initiales(m) }}</span>
               <span class="seo-med__txt">
                 <strong dir="auto">{{ m.nomComplet }}</strong>
@@ -219,8 +219,8 @@ export class AnnuaireSeoComponent implements OnInit {
     this.meta.updateTag({ name: 'robots', content: this.introuvable ? 'noindex' : 'index, follow' });
     this.lienCanonique(`https://tabibi.doctor${chemin}`);
 
-    // La liste vient de l'API publique, chargee dans le navigateur (Google execute aussi le JavaScript).
-    if (!this.index && !this.introuvable && this.navigateur) {
+    // La liste vient de l API publique ; elle est aussi rendue cote serveur pour les moteurs de recherche.
+    if (!this.index && !this.introuvable) {
       this.charge.set(true);
       this.erreur.set(false);
       this.annuaire.rechercher(s?.slug, w?.code).subscribe({
@@ -238,6 +238,10 @@ export class AnnuaireSeoComponent implements OnInit {
       this.document.head.appendChild(lien);
     }
     lien.setAttribute('href', url);
+  }
+
+  lien(m: Medecin) {
+    return lienPraticien(m);
   }
 
   initiales(m: Medecin): string {

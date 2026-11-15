@@ -38,6 +38,7 @@ import { MoiComponent } from './moi/moi.component';
 import { ProfilComponent } from './moi/profil.component';
 import { InvitationsComponent } from './secretaire/invitations.component';
 import { AnnuaireSeoComponent } from './seo/annuaire-seo.component';
+import { PraticienPublicComponent } from './seo/praticien-public.component';
 
 export const routes: Routes = [
   { path: '', component: AnnuaireComponent },
@@ -112,6 +113,9 @@ export const routes: Routes = [
   { path: 'specialites/:specialite', component: AnnuaireSeoComponent },
   { path: 'specialites/:specialite/:wilaya', component: AnnuaireSeoComponent },
   { path: 'wilayas/:wilaya', component: AnnuaireSeoComponent },
+  // Page publique de chaque praticien (une par fiche), pour le referencement.
+  { path: 'praticiens/:id', component: PraticienPublicComponent },
+  { path: 'praticiens/:id/:slug', component: PraticienPublicComponent },
   { path: 'moi', component: MoiComponent },
   // Mon profil (utilisateur connecte, tous roles : la page redirige vers la connexion).
   { path: 'moi/profil', component: ProfilComponent },

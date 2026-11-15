@@ -489,3 +489,20 @@ export const WILAYAS_SEO: WilayaSeo[] = [
 /** Specialites et wilayas mises en avant (pied de page, haut des pages). */
 export const SPECIALITES_PRINCIPALES = ['medecin-generaliste', 'cardiologue', 'dentiste', 'pediatre', 'gynecologue', 'dermatologue', 'ophtalmologue', 'ORL', 'psychiatre', 'radiologue'];
 export const WILAYAS_PRINCIPALES = ['16', '31', '25', '23', '9', '19', '6', '15', '5', '13'];
+
+/** Partie lisible d'une adresse : minuscules sans accents, mots separes par des tirets. */
+export function slugifier(texte: string): string {
+  return (texte || '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'praticien';
+}
+
+/** Adresse publique (referencee) de la fiche d'un praticien. */
+export function lienPraticien(m: { id: string; nomComplet: string }): string[] {
+  return ['/praticiens', m.id, slugifier(m.nomComplet)];
+}
+
+export function wilayaParCode(code: string | null | undefined): WilayaSeo | undefined {
+  return WILAYAS_SEO.find((w) => w.code === code);
+}
