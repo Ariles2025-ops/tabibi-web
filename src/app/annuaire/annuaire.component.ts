@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { liensLangues } from '../seo/referentiel-seo';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -373,6 +374,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
   `],
 })
 export class AnnuaireComponent implements OnInit, OnDestroy {
+  private doc = inject(DOCUMENT);
   private service = inject(AnnuaireService);
   private http = inject(HttpClient);
   private auth = inject(AuthService);
@@ -403,6 +405,9 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   get enRecherche(): boolean { return this.q.trim().length > 0 || !!this.specialite || !!this.wilaya; }
 
   ngOnInit() {
+    // Accueil francais <-> arabe (/ar) pour les moteurs de recherche.
+    liensLangues(this.doc, '');
+    this.doc.documentElement.setAttribute('lang', 'fr');
     // Charge le referentiel wilayas/specialites. URL relative : SSR-safe, et catchError evite tout plantage si le fichier est indisponible.
     this.http
       .get<Referentiel>('/assets/referentiel.json')
