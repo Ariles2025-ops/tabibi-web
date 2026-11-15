@@ -4,7 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { ClocheNotificationsComponent } from './notifications/cloche-notifications.component';
-import { PRELANCEMENT } from './lancement';
+import { PRELANCEMENT, VISIO_ACTIVE } from './lancement';
 import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
 @Component({
@@ -29,7 +29,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
           <a class="side__home" [routerLink]="ar() ? '/ar' : '/'" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">{{ ar() ? 'الرئيسية' : 'Accueil' }}</a>
           <a *ngIf="estPatient()" routerLink="/mes-rendez-vous" routerLinkActive="actif">Mes rendez-vous</a>
           <a *ngIf="estPatient()" routerLink="/mes-ordonnances" routerLinkActive="actif">Mes ordonnances</a>
-          <a *ngIf="estPatient()" routerLink="/teleconsultations" routerLinkActive="actif">Mes téléconsultations</a>
+          <a *ngIf="estPatient()" routerLink="/teleconsultations" routerLinkActive="actif">Mes téléconsultations<span *ngIf="!visio" class="pastille-bientot">Bientôt</span></a>
           <a *ngIf="estPatient()" routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
           <a *ngIf="estPatient()" routerLink="/mes-avis" routerLinkActive="actif">Mes avis</a>
           <a *ngIf="estPatient()" routerLink="/dawini" routerLinkActive="actif">Dawini</a>
@@ -40,7 +40,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
             <a routerLink="/medecin/agenda" routerLinkActive="actif">Agenda</a>
             <a routerLink="/medecin/disponibilites" routerLinkActive="actif">Disponibilités</a>
             <a routerLink="/medecin/ordonnances" routerLinkActive="actif">Mes ordonnances rédigées</a>
-            <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">Téléconsultations</a>
+            <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">Téléconsultations<span *ngIf="!visio" class="pastille-bientot">Bientôt</span></a>
             <a routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
             <a routerLink="/medecin/candidature" routerLinkActive="actif">Ma candidature</a>
             <a routerLink="/medecin/avis" routerLinkActive="actif">Avis des patients</a>
@@ -128,6 +128,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 })
 export class AppComponent implements OnInit {
   readonly prelancement = PRELANCEMENT;
+  readonly visio = VISIO_ACTIVE;
   /** Pages publiques en arabe (/ar...) : menu visiteur, bandeau et pied de page en arabe. */
   ar = signal(false);
   pre = computed(() => (this.ar() ? '/ar' : ''));

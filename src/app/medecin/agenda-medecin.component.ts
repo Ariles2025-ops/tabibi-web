@@ -6,6 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
 import { TeleconsultationService } from '../teleconsultation/teleconsultation.service';
+import { VISIO_ACTIVE } from '../lancement';
 import { ActionEnCours, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
 import { MedecinService } from './medecin.service';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from './patients.service';
@@ -84,7 +85,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
               <button *ngIf="peutMarquerAbsent(r)" type="button" class="bouton-secondaire" (click)="demanderAbsent(r)" [disabled]="enCours() !== null">
                 Patient absent
               </button>
-              <button *ngIf="peutProposer(r)" type="button" class="bouton-secondaire" (click)="proposerTeleconsultation(r)"
+              <button *ngIf="visio && peutProposer(r)" type="button" class="bouton-secondaire" (click)="proposerTeleconsultation(r)"
                       [disabled]="enCours() !== null">
                 {{ estEnCours(r, 'teleconsultation') ? 'Envoi…' : 'Proposer une téléconsultation' }}
               </button>
@@ -111,6 +112,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
   `,
 })
 export class AgendaMedecinComponent implements OnInit {
+  visio = VISIO_ACTIVE;
   private auth = inject(AuthService);
   private service = inject(MedecinService);
   private patients = inject(PatientsService);

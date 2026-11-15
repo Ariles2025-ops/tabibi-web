@@ -157,3 +157,6 @@ button:disabled { opacity:.6; cursor:default; }
 .lancement-bandeau strong { font-size:17px; font-weight:800; letter-spacing:-.01em; }
 .lancement-bandeau__pastille { background:#10241F; color:#F6E7BF; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; padding:3px 10px; border-radius:999px; }
 @media (max-width:640px) { .lancement-bandeau__txt { display:none; } }
+
+/* Etiquette « Bientôt » (fonction visible mais pas encore ouverte, ex. teleconsultation). */
+.pastille-bientot { display:inline-block; margin-inline-start:6px; padding:1px 8px; border-radius:999px; background:#D4A437; color:#10241F; font-size:11px; font-weight:800; letter-spacing:.04em; vertical-align:middle; }

@@ -23,3 +23,10 @@ export function accesEquipe(): boolean {
 export function connexionFermee(): boolean {
   return PRELANCEMENT && !accesEquipe();
 }
+
+/**
+ * Teleconsultation (visio) : pas au lancement. Tant que VISIO_ACTIVE vaut false, la fonction reste VISIBLE avec
+ * l'etiquette « Bientôt » mais ne peut pas etre utilisee (pages /teleconsultations remplacees par un message,
+ * bouton « Proposer une téléconsultation » masque ; le serveur refuse aussi, TABIBI_TELECONSULTATION_ACTIVE).
+ */
+export const VISIO_ACTIVE = false;
