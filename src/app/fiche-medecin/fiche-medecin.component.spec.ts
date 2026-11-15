@@ -61,7 +61,8 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
     messagerie = jasmine.createSpyObj<MessagerieService>('MessagerieService', ['ouvrir']);
     avis = jasmine.createSpyObj<AvisService>('AvisService', ['synthese']);
     avis.synthese.and.returnValue(of(SYNTHESE));
-    listeAttente = jasmine.createSpyObj<ListeAttenteService>('ListeAttenteService', ['inscrire']);
+    listeAttente = jasmine.createSpyObj<ListeAttenteService>('ListeAttenteService', ['inscrire', 'mes']);
+    listeAttente.mes.and.returnValue(of([]));
     auth = { pret: () => Promise.resolve(), estConnecte: () => true, seConnecter: jasmine.createSpy('seConnecter') };
 
     TestBed.configureTestingModule({

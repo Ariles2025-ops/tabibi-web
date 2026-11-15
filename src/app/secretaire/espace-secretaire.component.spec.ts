@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
+import { PatientsService } from '../medecin/patients.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { EspaceSecretaireComponent } from './espace-secretaire.component';
 import { Rattachement, SecretaireService } from './secretaire.service';
@@ -19,8 +20,17 @@ const MEDECINS: Record<string, Medecin> = {
   m2: { id: 'm2', nomComplet: 'Dr Karim Haddad', specialiteSlug: 'cardiologue', specialiteFr: 'Cardiologue', wilayaCode: '31', wilayaFr: 'Oran', ville: 'Oran' },
 };
 
-const CONFIRME: RendezVous = { id: 'r1', patientId: '11111111-1111-1111-1111-111111111111', medecinId: 'm1', debut: '2026-12-07T09:00:00Z', statut: 'CONFIRME', creneauId: 'c1' };
-const HONORE: RendezVous = { ...CONFIRME, id: 'r2', debut: '2026-09-01T09:00:00Z', statut: 'HONORE' };
+const PATIENT_ID = '11111111-1111-1111-1111-111111111111';
+/** Rendez-vous confirme d'aujourd'hui, deja commence (il peut etre marque honore). */
+const CONFIRME: RendezVous = { id: 'r1', patientId: PATIENT_ID, medecinId: 'm1', debut: new Date(Date.now() - 1000).toISOString(), statut: 'CONFIRME', creneauId: 'c1' };
+/** Rendez-vous confirme dans dix jours : pas encore honorable. */
+const FUTUR: RendezVous = { ...CONFIRME, id: 'r3', debut: new Date(Date.now() + 10 * 24 * 3600_000).toISOString() };
+const HONORE: RendezVous = { ...CONFIRME, id: 'r2', debut: new Date(Date.now() - 60 * 24 * 3600_000).toISOString(), statut: 'HONORE' };
+
+const DEMAIN = new Date(Date.now() + 24 * 3600_000);
+DEMAIN.setHours(10, 0, 0, 0);
+const LIBRE = { id: 'c9', medecinId: 'm1', debut: DEMAIN.toISOString(), dureeMinutes: 30, disponible: true };
+const RESERVE = { ...LIBRE, id: 'c8', debut: new Date(DEMAIN.getTime() + 30 * 60_000).toISOString(), disponible: false };
 
 describe('EspaceSecretaireComponent', () => {
   let fixture: ComponentFixture<EspaceSecretaireComponent>;
@@ -30,9 +40,22 @@ describe('EspaceSecretaireComponent', () => {
 
   beforeEach(() => {
     registerLocaleData(localeFr);
-    service = jasmine.createSpyObj<SecretaireService>('SecretaireService', ['mesMedecins', 'agenda', 'ouvrirCreneau', 'honorer', 'annuler']);
+    service = jasmine.createSpyObj<SecretaireService>('SecretaireService', [
+      'mesMedecins',
+      'agenda',
+      'ouvrirCreneau',
+      'honorer',
+      'annuler',
+      'creneaux',
+      'supprimerCreneau',
+    ]);
     service.mesMedecins.and.returnValue(of([CABINET_1]));
     service.agenda.and.returnValue(of([CONFIRME, HONORE]));
+    service.creneaux.and.returnValue(of([]));
+    const patients = jasmine.createSpyObj<PatientsService>('PatientsService', ['patientsDuCabinet']);
+    patients.patientsDuCabinet.and.returnValue(
+      of(new Map([[PATIENT_ID, { patientId: PATIENT_ID, nomComplet: 'Lina Mansouri', telephone: '0770112233', email: null }]])),
+    );
     annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin']);
     annuaire.medecin.and.callFake((id: string) => of(MEDECINS[id]));
     auth = { seConnecter: jasmine.createSpy('seConnecter') };
@@ -43,6 +66,7 @@ describe('EspaceSecretaireComponent', () => {
         provideRouter([]),
         { provide: SecretaireService, useValue: service },
         { provide: AnnuaireService, useValue: annuaire },
+        { provide: PatientsService, useValue: patients },
         { provide: AuthService, useValue: auth },
         { provide: LOCALE_ID, useValue: 'fr' },
       ],
@@ -62,7 +86,7 @@ describe('EspaceSecretaireComponent', () => {
   }
 
   function lignes(): HTMLLIElement[] {
-    return Array.from(fixture.nativeElement.querySelectorAll('li'));
+    return Array.from(fixture.nativeElement.querySelectorAll('li.rendez-vous'));
   }
 
   function selecteur(): HTMLSelectElement | null {
@@ -71,7 +95,7 @@ describe('EspaceSecretaireComponent', () => {
 
   function bouton(libelle: string): HTMLButtonElement | undefined {
     const boutons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
-    return boutons.find((b) => b.textContent?.trim() === libelle);
+    return boutons.find((b) => b.textContent?.trim().startsWith(libelle));
   }
 
   async function saisir(nom: string, valeur: string) {
@@ -91,21 +115,34 @@ describe('EspaceSecretaireComponent', () => {
     return { local, iso: d.toISOString() };
   }
 
-  it('choisit d office l unique cabinet et affiche son agenda avec les actions sur les seuls CONFIRME', async () => {
+  it('choisit d office l unique cabinet et affiche les rendez-vous a venir avec le nom du patient', async () => {
     await afficher();
 
     expect(selecteur()!.value).toBe('m1');
     expect(texte()).toContain('Dr Amina Belkacem');
     expect(service.agenda).toHaveBeenCalledWith('m1');
     const items = lignes();
-    expect(items.length).toBe(2);
-    // Tri chronologique : honore (septembre) avant confirme (decembre).
-    expect(items[0].textContent).toContain('Honoré');
-    expect(items[0].querySelector('button')).toBeNull();
-    expect(items[1].textContent).toContain('Confirmé');
-    expect(items[1].textContent).toContain('Patient 11111111');
-    expect(items[1].textContent).not.toContain('11111111-1111');
+    expect(items.length).toBe(1);
+    expect(items[0].textContent).toContain('Confirmé');
+    expect(items[0].textContent).toContain('Lina Mansouri');
+    expect(items[0].textContent).toContain('0770112233');
+    expect(items[0].textContent).not.toContain('11111111');
     expect(bouton('Marquer honoré')).toBeDefined();
+    expect(bouton('Annuler')).toBeDefined();
+
+    bouton('Passés')!.click();
+    await afficher();
+    expect(lignes().length).toBe(1);
+    expect(lignes()[0].textContent).toContain('Honoré');
+    expect(lignes()[0].querySelector('button')).toBeNull();
+  });
+
+  it('ne propose pas « Marquer honoré » avant le debut du rendez-vous', async () => {
+    service.agenda.and.returnValue(of([FUTUR]));
+    await afficher();
+
+    expect(lignes().length).toBe(1);
+    expect(bouton('Marquer honoré')).toBeUndefined();
     expect(bouton('Annuler')).toBeDefined();
   });
 
@@ -123,8 +160,9 @@ describe('EspaceSecretaireComponent', () => {
     await afficher();
 
     expect(service.agenda).toHaveBeenCalledWith('m2');
+    expect(service.creneaux).toHaveBeenCalledWith('m2');
     expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
-    expect(lignes().length).toBe(2);
+    expect(lignes().length).toBe(1);
   });
 
   it('marque un rendez-vous honore, confirme et recharge l agenda', async () => {
@@ -136,21 +174,23 @@ describe('EspaceSecretaireComponent', () => {
 
     expect(service.honorer).toHaveBeenCalledWith('r1');
     expect(texte()).toContain('marqué honoré');
-    expect(texte()).toContain('7 décembre');
     expect(service.agenda).toHaveBeenCalledTimes(2);
   });
 
-  it('annule un rendez-vous apres confirmation ; le patient est prevenu', async () => {
-    const confirmation = spyOn(window, 'confirm').and.returnValue(false);
+  it('annule un rendez-vous apres confirmation dans la page ; le patient est prevenu', async () => {
     service.annuler.and.returnValue(of({ ...CONFIRME, statut: 'ANNULE' }));
     await afficher();
 
     bouton('Annuler')!.click();
     await afficher();
+    expect(texte()).toContain('Annuler ce rendez-vous ?');
+    bouton('Non')!.click();
+    await afficher();
     expect(service.annuler).not.toHaveBeenCalled();
 
-    confirmation.and.returnValue(true);
     bouton('Annuler')!.click();
+    await afficher();
+    bouton('Oui')!.click();
     await afficher();
 
     expect(service.annuler).toHaveBeenCalledWith('r1');
@@ -230,5 +270,26 @@ describe('EspaceSecretaireComponent', () => {
     fixture = TestBed.createComponent(EspaceSecretaireComponent);
     await afficher();
     expect(auth.seConnecter).toHaveBeenCalled();
+  });
+
+  it('liste les creneaux a venir du medecin et supprime un creneau libre apres confirmation', async () => {
+    service.creneaux.and.returnValue(of([RESERVE, LIBRE]));
+    service.supprimerCreneau.and.returnValue(of(undefined));
+    await afficher();
+
+    const creneaux: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li.creneau'));
+    expect(creneaux.length).toBe(2);
+    expect(creneaux[0].textContent).toContain('Libre');
+    expect(creneaux[1].textContent).toContain('Réservé');
+    expect(creneaux[1].querySelector('button')).toBeNull();
+
+    (creneaux[0].querySelector('button') as HTMLButtonElement).click();
+    await afficher();
+    expect(texte()).toContain('Supprimer ce créneau ?');
+    bouton('Oui')!.click();
+    await afficher();
+
+    expect(service.supprimerCreneau).toHaveBeenCalledWith('m1', 'c9');
+    expect(service.creneaux).toHaveBeenCalledTimes(2);
   });
 });

@@ -105,4 +105,16 @@ describe('SecretaireService', () => {
     expect(DUREE_MIN_MINUTES).toBe(5);
     expect(DUREE_MAX_MINUTES).toBe(120);
   });
+
+  it('liste et supprime les creneaux d un medecin sur /api/secretaire/medecins/{medecinId}/creneaux', () => {
+    service.creneaux('m1').subscribe();
+    const lecture = http.expectOne(`${BASE}/api/secretaire/medecins/m1/creneaux`);
+    expect(lecture.request.method).toBe('GET');
+    lecture.flush([]);
+
+    service.supprimerCreneau('m1', 'c1').subscribe();
+    const suppression = http.expectOne(`${BASE}/api/secretaire/medecins/m1/creneaux/c1`);
+    expect(suppression.request.method).toBe('DELETE');
+    suppression.flush(null, { status: 204, statusText: 'No Content' });
+  });
 });

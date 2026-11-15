@@ -36,12 +36,13 @@ const AVIS: Avis = {
 describe('DeposerAvisComponent', () => {
   let fixture: ComponentFixture<DeposerAvisComponent>;
   let service: jasmine.SpyObj<AvisService>;
+  let rendezVous: jasmine.SpyObj<RendezVousService>;
   let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy };
 
   beforeEach(() => {
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<AvisService>('AvisService', ['deposer']);
-    const rendezVous = jasmine.createSpyObj<RendezVousService>('RendezVousService', ['mes']);
+    rendezVous = jasmine.createSpyObj<RendezVousService>('RendezVousService', ['mes']);
     rendezVous.mes.and.returnValue(of([HONORE]));
     const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin']);
     annuaire.medecin.and.returnValue(of(MEDECIN));
@@ -151,7 +152,7 @@ describe('DeposerAvisComponent', () => {
     expect(service.deposer).toHaveBeenCalledWith('r1', 5, null);
   });
 
-  it('indique qu un avis a deja ete donne sur un 409 et garde le formulaire', async () => {
+  it('affiche le motif reel d un 409 renvoye par le backend et garde le formulaire', async () => {
     service.deposer.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Un avis a deja ete depose pour ce rendez-vous.' } })),
     );
@@ -161,8 +162,27 @@ describe('DeposerAvisComponent', () => {
     soumettre();
     await afficher();
 
-    expect(texte()).toContain('Vous avez déjà donné votre avis pour ce rendez-vous.');
+    expect(texte()).toContain('Un avis a deja ete depose pour ce rendez-vous.');
     expect(formulaire()).not.toBeNull();
+  });
+
+  it('indique un avis deja donne sur un 409 sans motif', async () => {
+    service.deposer.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+    await afficher();
+
+    await choisirNote(3);
+    soumettre();
+    await afficher();
+
+    expect(texte()).toContain('Vous avez déjà donné votre avis pour ce rendez-vous.');
+  });
+
+  it('masque le formulaire et explique pourquoi quand le rendez-vous n est pas encore honore', async () => {
+    rendezVous.mes.and.returnValue(of([{ ...HONORE, statut: 'CONFIRME' }]));
+    await afficher();
+
+    expect(formulaire()).toBeNull();
+    expect(texte()).toContain('Vous pourrez donner votre avis une fois la consultation effectuée');
   });
 
   it('affiche le { erreur } d un 400', async () => {

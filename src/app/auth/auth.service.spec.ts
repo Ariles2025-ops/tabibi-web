@@ -12,6 +12,7 @@ describe('AuthService', () => {
   function configurer(plateforme: 'browser' | 'server') {
     oauth = jasmine.createSpyObj<OAuthService>('OAuthService', [
       'configure', 'loadDiscoveryDocumentAndTryLogin', 'hasValidAccessToken', 'initCodeFlow', 'logOut',
+      'getRefreshToken', 'refreshToken', 'setupAutomaticSilentRefresh',
     ], { state: '' });
     oauth.loadDiscoveryDocumentAndTryLogin.and.resolveTo(true);
     oauth.hasValidAccessToken.and.returnValue(true);

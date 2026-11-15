@@ -8,6 +8,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { InscriptionAttente, ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { ListeAttenteMedecinComponent } from './liste-attente-medecin.component';
+import { PatientsService } from './patients.service';
 
 const RECENTE: InscriptionAttente = { id: 'i1', patientId: '11111111-1111-1111-1111-111111111111', medecinId: 'm1', inscritLe: '2026-09-18T10:00:00Z' };
 const ANCIENNE: InscriptionAttente = { id: 'i2', patientId: '22222222-2222-2222-2222-222222222222', medecinId: 'm1', inscritLe: '2026-09-10T08:30:00Z' };
@@ -21,11 +22,16 @@ describe('ListeAttenteMedecinComponent', () => {
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<ListeAttenteService>('ListeAttenteService', ['duMedecin']);
     auth = { seConnecter: jasmine.createSpy('seConnecter') };
+    const patients = jasmine.createSpyObj<PatientsService>('PatientsService', ['patientsDuMedecin']);
+    patients.patientsDuMedecin.and.returnValue(
+      of(new Map([[ANCIENNE.patientId, { patientId: ANCIENNE.patientId, nomComplet: 'Karim Ouali', telephone: '0661000000', email: null }]])),
+    );
     TestBed.configureTestingModule({
       imports: [ListeAttenteMedecinComponent],
       providers: [
         provideRouter([]),
         { provide: ListeAttenteService, useValue: service },
+        { provide: PatientsService, useValue: patients },
         { provide: AuthService, useValue: auth },
         { provide: LOCALE_ID, useValue: 'fr' },
       ],
@@ -37,17 +43,19 @@ describe('ListeAttenteMedecinComponent', () => {
     return fixture.nativeElement.textContent;
   }
 
-  it('liste les patients en attente, du plus ancien au plus recent, avec un identifiant abrege et la date', () => {
+  it('liste les patients en attente, du plus ancien au plus recent, avec leur nom (a defaut « Patient ») et la date', () => {
     service.duMedecin.and.returnValue(of([RECENTE, ANCIENNE]));
     fixture.detectChanges();
 
     const lignes: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
     expect(lignes.length).toBe(2);
-    expect(lignes[0].textContent).toContain('Patient 22222222');
-    expect(lignes[0].textContent).not.toContain('22222222-2222');
-    expect(lignes[0].textContent).toContain('inscrit le 10 septembre 2026');
-    expect(lignes[1].textContent).toContain('Patient 11111111');
-    expect(lignes[1].textContent).toContain('inscrit le 18 septembre 2026');
+    expect(lignes[0].textContent).toContain('Karim Ouali');
+    expect(lignes[0].textContent).toContain('0661000000');
+    expect(lignes[0].textContent).not.toContain('22222222');
+    expect(lignes[0].textContent).toContain('Inscrit le 10 septembre 2026');
+    expect(lignes[1].textContent).toContain('Patient');
+    expect(lignes[1].textContent).not.toContain('11111111');
+    expect(lignes[1].textContent).toContain('Inscrit le 18 septembre 2026');
   });
 
   it('affiche un etat vide avec le lien vers les disponibilites', () => {

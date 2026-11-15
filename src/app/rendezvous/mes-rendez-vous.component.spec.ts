@@ -68,16 +68,45 @@ describe('MesRendezVousComponent (avis)', () => {
   it('propose « Donner mon avis » sur les seuls rendez-vous honores sans avis, « Avis donné » sinon', async () => {
     await afficher();
 
-    // Tri chronologique : r3 (aout, deja note), r2 (septembre, honore), r1 (decembre, confirme).
+    // A venir : r1 (decembre, confirme). Passes, du plus recent au plus ancien : r2 (septembre), r3 (aout, deja note).
     const items = lignes();
     expect(items.length).toBe(3);
-    expect(items[0].textContent).toContain('Avis donné');
-    expect(items[0].querySelector('a[href="/avis/nouveau/r3"]')).toBeNull();
+    expect(items[0].textContent).not.toContain('Donner mon avis');
+    expect(items[0].querySelector('button')?.textContent).toContain('Annuler');
     expect(items[1].querySelector('a[href="/avis/nouveau/r2"]')?.textContent).toContain('Donner mon avis');
     expect(items[1].textContent).not.toContain('Avis donné');
-    expect(items[2].textContent).not.toContain('Donner mon avis');
-    expect(items[2].querySelector('button')?.textContent).toContain('Annuler');
+    expect(items[2].textContent).toContain('Avis donné');
+    expect(items[2].querySelector('a[href="/avis/nouveau/r3"]')).toBeNull();
     expect(avis.mes).toHaveBeenCalledTimes(1);
+  });
+
+  it('demande une confirmation dans la page avant d annuler, et n annule rien sur « Non, garder »', async () => {
+    rendezVous.mes.and.returnValue(of([CONFIRME]));
+    rendezVous.annuler.and.returnValue(of(void 0) as any);
+    await afficher();
+
+    const bouton = (texte: string) =>
+      (Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[]).find((b) => b.textContent?.includes(texte));
+    bouton('Annuler')!.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Annuler ce rendez-vous ?');
+    bouton('Non, garder')!.click();
+    fixture.detectChanges();
+    expect(rendezVous.annuler).not.toHaveBeenCalled();
+
+    bouton('Annuler')!.click();
+    fixture.detectChanges();
+    bouton('Oui, annuler')!.click();
+    expect(rendezVous.annuler).toHaveBeenCalledWith('r1');
+  });
+
+  it('affiche « Terminé » (et non « Confirmé ») pour un rendez-vous confirme deja passe', async () => {
+    rendezVous.mes.and.returnValue(of([{ ...CONFIRME, id: 'r9', debut: '2020-01-06T09:00:00Z' }]));
+    await afficher();
+
+    const statut = fixture.nativeElement.querySelector('li .mr-statut') as HTMLElement;
+    expect(statut.textContent?.trim()).toBe('Terminé');
+    expect(statut.classList).not.toContain('mr-statut--ok');
   });
 
   it('ne lit pas mes avis quand aucun rendez-vous n est honore', async () => {

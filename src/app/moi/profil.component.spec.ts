@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import localeFr from '@angular/common/locales/fr';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -21,6 +21,9 @@ const PROFIL: Profil = {
 
 const NON_RENSEIGNE = () => throwError(() => new HttpErrorResponse({ status: 404, error: { erreur: 'Profil non renseigne.' } }));
 
+/** Referentiel servi a la place de assets/referentiel.json (liste deroulante des wilayas). */
+const REFERENTIEL = { wilayas: [{ code: '9', nom: 'Blida' }, { code: '16', nom: 'Alger' }], specialites: [] };
+
 describe('ProfilComponent', () => {
   let fixture: ComponentFixture<ProfilComponent>;
   let service: jasmine.SpyObj<ProfilService>;
@@ -39,6 +42,7 @@ describe('ProfilComponent', () => {
         { provide: ProfilService, useValue: service },
         { provide: AuthService, useValue: auth },
         { provide: LOCALE_ID, useValue: 'fr' },
+        { provide: HttpClient, useValue: { get: () => of(REFERENTIEL) } },
       ],
     });
     fixture = TestBed.createComponent(ProfilComponent);
@@ -60,7 +64,7 @@ describe('ProfilComponent', () => {
   }
 
   function champ(nom: string): HTMLInputElement {
-    return fixture.nativeElement.querySelector(`input[name="${nom}"]`);
+    return fixture.nativeElement.querySelector(`[name="${nom}"]`);
   }
 
   function langue(): HTMLSelectElement {
@@ -71,7 +75,7 @@ describe('ProfilComponent', () => {
     for (const [nom, valeur] of Object.entries(valeurs)) {
       const c = champ(nom);
       c.value = valeur;
-      c.dispatchEvent(new Event('input'));
+      c.dispatchEvent(new Event(c.tagName === 'SELECT' ? 'change' : 'input'));
     }
     await afficher();
   }
@@ -134,7 +138,7 @@ describe('ProfilComponent', () => {
     service.enregistrer.and.returnValue(of({ ...PROFIL, telephone: null, dateNaissance: null, wilayaCode: null, langue: 'kab' }));
     await afficher();
 
-    await saisir({ nomComplet: '  Amina Belkacem ', telephone: '', dateNaissance: '', wilayaCode: ' ' });
+    await saisir({ nomComplet: '  Amina Belkacem ', telephone: '', dateNaissance: '', wilayaCode: '' });
     await choisirLangue('kab');
     soumettre();
     await afficher();

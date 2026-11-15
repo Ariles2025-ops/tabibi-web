@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Ordonnance } from './ordonnance.service';
 import { libelleStatutOrdonnance } from './statut-ordonnance';
 
-/** Liste d'ordonnances (date, code, statut) ; chaque ligne mene au detail /ordonnances/:id. */
+/** Liste d'ordonnances (date, praticien si fourni, code, statut) ; chaque ligne mene au detail /ordonnances/:id. */
 @Component({
   selector: 'app-liste-ordonnances',
   standalone: true,
@@ -17,7 +17,7 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
           <span>
             <strong style="color:var(--ink)"><i class="fa fa-file-prescription fa-xs" style="color:var(--blue)"></i> {{ o.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}</strong><br>
             <span style="color:var(--text3)">
-              <ng-container *ngIf="afficherPatient()">Patient : {{ o.patientId }} · </ng-container>{{ libelleStatut(o.statut) }}
+              <ng-container *ngIf="afficherPatient()">Patient : {{ o.patientId }} · </ng-container><ng-container *ngIf="nomsMedecins() as noms"><ng-container *ngIf="noms[o.medecinId] as nom">{{ nom }} · </ng-container></ng-container>{{ libelleStatut(o.statut) }}
             </span>
           </span>
           <code style="font-size:1rem;letter-spacing:.1em;color:var(--blue-d);background:var(--blue-l);border-radius:999px;padding:4px 12px">{{ o.codeVerification }}</code>
@@ -30,6 +30,8 @@ export class ListeOrdonnancesComponent {
   ordonnances = input.required<Ordonnance[]>();
   /** Affiche l'identifiant du patient sur chaque ligne (liste du medecin). */
   afficherPatient = input(false);
+  /** Nom des praticiens par identifiant (liste du patient) ; null : non affiche. */
+  nomsMedecins = input<Partial<Record<string, string>> | null>(null);
 
   libelleStatut(statut: string): string {
     return libelleStatutOrdonnance(statut);

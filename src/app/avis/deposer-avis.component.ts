@@ -14,7 +14,8 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
 /**
  * Depot d'un avis par le patient sur un rendez-vous honore (POST /api/avis) : note de 1 a 5 par cinq boutons
  * radio stylises, commentaire facultatif (500 caracteres au plus). Le rendez-vous et le praticien sont rappeles
- * s'ils sont retrouves dans mes rendez-vous. 409 : avis deja donne (ou rendez-vous non honore).
+ * s'ils sont retrouves dans mes rendez-vous ; un rendez-vous retrouve mais non honore masque le formulaire.
+ * 409 : le motif { erreur } du backend est affiche (avis deja donne, rendez-vous non honore...).
  */
 @Component({
   selector: 'app-deposer-avis',
@@ -28,7 +29,7 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
 
       <ng-container *ngIf="connecte()">
         <p *ngIf="rendezVous() as r" style="color:var(--text3);margin:0 0 20px">
-          Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }}<ng-container *ngIf="nomMedecin()"> avec {{ nomMedecin() }}</ng-container>.
+          Rendez-vous du {{ r.debut | date:'EEEE d MMMM y à HH:mm' }}<ng-container *ngIf="nomMedecin()"> avec {{ nomMedecin() }}</ng-container>.
           Votre avis est publié sans votre nom.
         </p>
 
@@ -37,7 +38,12 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
         </p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
-        <form *ngIf="!succes()" (ngSubmit)="deposer()" style="display:grid;gap:16px">
+        <p *ngIf="nonHonore()" role="alert" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin:0">
+          Vous pourrez donner votre avis une fois la consultation effectuée : le médecin doit d'abord indiquer que
+          ce rendez-vous a bien eu lieu.
+        </p>
+
+        <form *ngIf="!succes() && !nonHonore()" (ngSubmit)="deposer()" style="display:grid;gap:16px">
           <fieldset style="border:0;padding:0;margin:0">
             <legend style="color:var(--text3);font-size:.9rem;margin:0 0 6px">Note *</legend>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -121,7 +127,7 @@ export class DeposerAvisComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 409) {
-          this.erreur.set('Vous avez déjà donné votre avis pour ce rendez-vous.');
+          this.erreur.set(e.error?.erreur ?? 'Vous avez déjà donné votre avis pour ce rendez-vous.');
         } else if (e.status === 403) {
           this.erreur.set(e.error?.erreur ?? 'Seul le patient du rendez-vous peut donner son avis.');
         } else if (e.status === 404) {
@@ -131,6 +137,12 @@ export class DeposerAvisComponent implements OnInit {
         }
       },
     });
+  }
+
+  /** Vrai si le rendez-vous est retrouve et n'est pas encore honore : l'avis n'est pas encore possible. */
+  nonHonore(): boolean {
+    const r = this.rendezVous();
+    return r !== null && r.statut !== 'HONORE';
   }
 
   commentaireTropLong(): boolean {

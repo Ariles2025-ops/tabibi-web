@@ -1,104 +1,98 @@
-import { Component, LOCALE_ID, OnInit, inject, signal } from '@angular/core';
+import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
+import { ActionEnCours, peutHonorer, rendezVousAVenir, rendezVousPasses, styleOnglet } from '../medecin/agenda-utils';
+import { GestionCreneauxComponent, SourceCreneaux } from '../medecin/gestion-creneaux.component';
+import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from '../medecin/patients.service';
 import { abregerIdentifiant } from '../messagerie/messagerie.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
-import { DUREE_MAX_MINUTES, DUREE_MIN_MINUTES, Rattachement, SecretaireService } from './secretaire.service';
-
-/** Creneau que la secretaire vient d'ouvrir (message de confirmation). */
-interface CreneauOuvert {
-  debut: string;
-  dureeMinutes: number;
-}
+import { Rattachement, SecretaireService } from './secretaire.service';
 
 /**
  * Espace secretaire (role SECRETAIRE) : choix du medecin parmi mes rattachements (GET /api/secretaire/medecins),
- * puis son agenda (GET /api/secretaire/medecins/{id}/rendezvous) avec « Marquer honore » et « Annuler »
- * (POST /api/secretaire/rendezvous/{id}/honorer | annuler) et l'ouverture d'un creneau
- * (POST /api/secretaire/medecins/{id}/creneaux { debut, dureeMinutes }).
+ * puis son agenda (GET /api/secretaire/medecins/{id}/rendezvous) a venir ou passe, par jour, avec le nom des
+ * patients, « Marquer honoré » (rendez-vous commence) et « Annuler » confirme dans la page
+ * (POST /api/secretaire/rendezvous/{id}/honorer | annuler), et la gestion des creneaux du medecin (ouverture,
+ * liste a venir, suppression des creneaux libres).
  */
 @Component({
   selector: 'app-espace-secretaire',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GestionCreneauxComponent],
   template: `
-    <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Espace secrétaire</h1>
+    <main style="max-width:760px;margin:32px auto;padding:0 16px">
+      <h1 style="color:var(--blue);margin:0 0 8px">Espace secrétaire</h1>
       <p style="color:var(--text3);margin:0 0 20px">
         Choisissez le cabinet pour lequel vous intervenez : vous consultez son agenda, ouvrez des créneaux et marquez
         les rendez-vous honorés ou annulés. Le patient est prévenu de chaque annulation.
       </p>
 
-      <p *ngIf="charge()">Chargement…</p>
-      <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
+      <p *ngIf="charge()" style="color:var(--text3)">Chargement…</p>
+      <p *ngIf="erreur()" role="alert" style="color:var(--red)">{{ erreur() }}</p>
 
       <label *ngIf="rattachements().length > 0" style="display:grid;gap:4px;color:var(--text3);font-size:.9rem;max-width:360px;margin:0 0 24px">
         Médecin
-        <select class="champ" [ngModel]="medecinId()" (ngModelChange)="choisir($event)" name="medecinId" style="color:#10241F;font-size:1rem">
+        <select class="champ" [ngModel]="medecinId()" (ngModelChange)="choisir($event)" name="medecinId" style="color:var(--ink);font-size:1rem">
           <option value="">Choisir un médecin</option>
           <option *ngFor="let r of rattachements()" [value]="r.medecinId">{{ nomMedecin(r.medecinId) }}</option>
         </select>
       </label>
       <p *ngIf="!charge() && !erreur() && rattachements().length === 0">
-        Aucun médecin ne vous a encore rattachée à son cabinet. Communiquez-lui l'identifiant de votre compte (visible
-        dans Mon compte).
+        Aucun médecin ne vous a encore rattachée à son cabinet. Communiquez-lui l'adresse e-mail de votre compte Tabibi.
       </p>
 
       <ng-container *ngIf="medecinId()">
-        <section style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;margin:0 0 24px;background:#f8faf9">
-          <h2 style="font-size:1.1rem;margin:0 0 12px">Ouvrir un créneau</h2>
-          <form (ngSubmit)="ouvrir()" #f="ngForm" style="display:grid;gap:12px;max-width:360px">
-            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Date et heure
-              <input class="champ" type="datetime-local" [(ngModel)]="debut" name="debut" required [min]="minDebut"
-                     style="color:#10241F;font-size:1rem">
-            </label>
-            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Durée (minutes, de {{ dureeMin }} à {{ dureeMax }})
-              <input class="champ" type="number" [(ngModel)]="dureeMinutes" name="dureeMinutes" required [min]="dureeMin" [max]="dureeMax" step="5"
-                     style="color:#10241F;font-size:1rem">
-            </label>
-            <div>
-              <button type="submit" class="bouton" [disabled]="f.invalid || ouvertureEnCours()">
-                {{ ouvertureEnCours() ? 'Ouverture…' : 'Ouvrir le créneau' }}
-              </button>
-            </div>
-          </form>
-          <p *ngIf="creneauOuvert() as c" style="color:var(--vert);margin:12px 0 0">
-            Créneau ouvert le {{ c.debut | date:'EEEE d MMMM à HH:mm' }} ({{ c.dureeMinutes }} min).
-          </p>
-          <p *ngIf="erreurCreneau()" style="color:#b3261e;margin:12px 0 0">{{ erreurCreneau() }}</p>
+        <h2 style="font-size:1.1rem;margin:0 0 12px;color:var(--ink)">Agenda</h2>
+        <div role="tablist" style="display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap">
+          <button type="button" role="tab" [attr.aria-selected]="vue() === 'avenir'" (click)="vue.set('avenir')"
+                  [ngStyle]="ongletStyle(vue() === 'avenir')">À venir ({{ nombreAVenir() }})</button>
+          <button type="button" role="tab" [attr.aria-selected]="vue() === 'passes'" (click)="vue.set('passes')"
+                  [ngStyle]="ongletStyle(vue() === 'passes')">Passés ({{ nombrePasses() }})</button>
+        </div>
+        <p *ngIf="chargeAgenda()" style="color:var(--text3)">Chargement…</p>
+        <p *ngIf="erreurAgenda()" role="alert" style="color:var(--red)">{{ erreurAgenda() }}</p>
+        <p *ngIf="succes()" style="color:var(--blue)">{{ succes() }}</p>
+
+        <section *ngFor="let j of jours()" style="margin:0 0 20px">
+          <h3 style="font-size:.95rem;margin:0 0 8px;color:var(--text2);text-transform:capitalize">{{ j.debut | date:'EEEE d MMMM yyyy' }}</h3>
+          <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
+            <li *ngFor="let r of j.elements" class="rendez-vous"
+                style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:var(--r12);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+              <div>
+                <strong style="color:var(--ink)">{{ r.debut | date:'HH:mm' }}</strong>
+                <span style="display:inline-block;background:var(--blue-l);color:var(--blue-d);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span><br>
+                <span style="color:var(--text2)">{{ nom(r.patientId) }}</span>
+                <a *ngIf="telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">{{ tel }}</a>
+              </div>
+              <div *ngIf="r.statut === 'CONFIRME' && aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <span style="color:var(--text2);font-size:.9rem">Annuler ce rendez-vous ? Le patient sera prévenu.</span>
+                <button type="button" class="bouton" (click)="annuler(r)" [disabled]="enCours() !== null">
+                  {{ estEnCours(r, 'annuler') ? 'Annulation…' : 'Oui' }}
+                </button>
+                <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">Non</button>
+              </div>
+              <div *ngIf="r.statut === 'CONFIRME' && aConfirmer() !== r.id" style="display:flex;gap:8px;flex-wrap:wrap">
+                <button *ngIf="peutHonorer(r)" type="button" class="bouton" (click)="honorer(r)" [disabled]="enCours() !== null">
+                  {{ estEnCours(r, 'honorer') ? 'Enregistrement…' : 'Marquer honoré' }}
+                </button>
+                <button type="button" (click)="aConfirmer.set(r.id)" [disabled]="enCours() !== null"
+                        style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
+                  Annuler
+                </button>
+              </div>
+            </li>
+          </ul>
         </section>
+        <p *ngIf="!chargeAgenda() && !erreurAgenda() && jours().length === 0" style="color:var(--text3)">
+          {{ vue() === 'avenir' ? 'Aucun rendez-vous à venir dans cet agenda.' : 'Aucun rendez-vous passé dans cet agenda.' }}
+        </p>
 
-        <h2 style="font-size:1.1rem;margin:0 0 12px">Agenda</h2>
-        <p *ngIf="chargeAgenda()">Chargement…</p>
-        <p *ngIf="erreurAgenda()" style="color:#b3261e">{{ erreurAgenda() }}</p>
-        <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
-
-        <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
-          <li *ngFor="let r of rendezVous()"
-              style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-            <div>
-              <strong>{{ r.debut | date:'EEEE d MMMM à HH:mm' }}</strong>
-              <span style="color:var(--text3)"> · {{ libelleStatut(r.statut) }}</span><br>
-              <span style="color:var(--text3)">Patient {{ abreger(r.patientId) }}</span>
-            </div>
-            <div *ngIf="r.statut === 'CONFIRME'" style="display:flex;gap:8px;flex-wrap:wrap">
-              <button type="button" class="bouton" (click)="honorer(r)" [disabled]="enCours() !== null">
-                {{ enCours() === r.id ? 'Enregistrement…' : 'Marquer honoré' }}
-              </button>
-              <button type="button" (click)="annuler(r)" [disabled]="enCours() !== null"
-                      style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
-                {{ enCours() === r.id ? 'Annulation…' : 'Annuler' }}
-              </button>
-            </div>
-          </li>
-        </ul>
-        <p *ngIf="!chargeAgenda() && !erreurAgenda() && rendezVous().length === 0">Aucun rendez-vous dans cet agenda pour le moment.</p>
+        <h2 style="font-size:1.1rem;margin:28px 0 12px;color:var(--ink)">Créneaux</h2>
+        <app-gestion-creneaux [source]="sourceCreneaux()" message403="Ce cabinet ne vous est pas rattaché." />
       </ng-container>
     </main>
   `,
@@ -107,6 +101,7 @@ export class EspaceSecretaireComponent implements OnInit {
   private auth = inject(AuthService);
   private service = inject(SecretaireService);
   private annuaire = inject(AnnuaireService);
+  private patients = inject(PatientsService);
   private locale = inject(LOCALE_ID);
 
   rattachements = signal<Rattachement[]>([]);
@@ -115,24 +110,33 @@ export class EspaceSecretaireComponent implements OnInit {
   /** Medecin choisi ; chaine vide tant qu'aucun ne l'est. */
   medecinId = signal('');
   rendezVous = signal<RendezVous[]>([]);
+  repertoire = signal<RepertoirePatients>(new Map());
+  maintenant = signal(Date.now());
+  vue = signal<'avenir' | 'passes'>('avenir');
+  private aVenir = computed(() => rendezVousAVenir(this.rendezVous(), this.maintenant()));
+  private passes = computed(() => rendezVousPasses(this.rendezVous(), this.maintenant()));
+  jours = computed(() => (this.vue() === 'avenir' ? this.aVenir() : this.passes()));
+  nombreAVenir = computed(() => this.aVenir().reduce((n, j) => n + j.elements.length, 0));
+  nombrePasses = computed(() => this.passes().reduce((n, j) => n + j.elements.length, 0));
   charge = signal(false);
   chargeAgenda = signal(false);
-  /** Identifiant du rendez-vous en cours de mise a jour. */
-  enCours = signal<string | null>(null);
-  ouvertureEnCours = signal(false);
-  creneauOuvert = signal<CreneauOuvert | null>(null);
+  /** Action en cours : seul le bouton clique affiche « … ». */
+  enCours = signal<ActionEnCours | null>(null);
+  /** Rendez-vous dont l'annulation attend la confirmation (Oui / Non). */
+  aConfirmer = signal<string | null>(null);
   succes = signal('');
   erreur = signal('');
   erreurAgenda = signal('');
-  erreurCreneau = signal('');
 
-  /** Valeur du champ datetime-local : heure locale sans fuseau (« 2026-09-21T09:30 »). */
-  debut = '';
-  dureeMinutes = 30;
-  dureeMin = DUREE_MIN_MINUTES;
-  dureeMax = DUREE_MAX_MINUTES;
-  /** Borne basse du selecteur : maintenant, au format attendu par datetime-local. */
-  minDebut = formatDate(new Date(), "yyyy-MM-dd'T'HH:mm", this.locale);
+  /** Creneaux du medecin choisi, via les routes secretaire. */
+  sourceCreneaux = computed<SourceCreneaux>(() => {
+    const medecinId = this.medecinId();
+    return {
+      lister: () => this.service.creneaux(medecinId),
+      ouvrir: (debut, duree) => this.service.ouvrirCreneau(medecinId, debut, duree),
+      supprimer: (id) => this.service.supprimerCreneau(medecinId, id),
+    };
+  });
 
   ngOnInit() {
     this.charge.set(true);
@@ -157,19 +161,47 @@ export class EspaceSecretaireComponent implements OnInit {
     });
   }
 
-  /** Choix du medecin : l'agenda est recharge, les messages effaces. */
+  /** Choix du medecin : l'agenda et ses patients sont recharges, les messages effaces. */
   choisir(medecinId: string) {
     this.medecinId.set(medecinId);
     this.rendezVous.set([]);
+    this.repertoire.set(new Map());
     this.succes.set('');
     this.erreurAgenda.set('');
-    this.erreurCreneau.set('');
-    this.creneauOuvert.set(null);
-    if (medecinId) this.chargerAgenda();
+    this.aConfirmer.set(null);
+    if (!medecinId) return;
+    this.chargerAgenda();
+    this.patients.patientsDuCabinet(medecinId).subscribe({
+      next: (r) => {
+        if (this.medecinId() === medecinId) this.repertoire.set(r);
+      },
+      error: () => undefined,
+    });
   }
 
   nomMedecin(medecinId: string): string {
     return this.noms()[medecinId] ?? `Médecin ${abregerIdentifiant(medecinId)}`;
+  }
+
+  nom(patientId: string): string {
+    return nomPatient(this.repertoire(), patientId);
+  }
+
+  telephone(patientId: string): string {
+    return telephonePatient(this.repertoire(), patientId);
+  }
+
+  peutHonorer(r: RendezVous): boolean {
+    return peutHonorer(r, Date.now());
+  }
+
+  estEnCours(r: RendezVous, action: string): boolean {
+    const e = this.enCours();
+    return e !== null && e.id === r.id && e.action === action;
+  }
+
+  ongletStyle(actif: boolean): Record<string, string> {
+    return styleOnglet(actif);
   }
 
   /** Recharge l'agenda du medecin choisi ; `motif` est un message d'erreur a conserver (rendez-vous modifie ailleurs). */
@@ -180,7 +212,8 @@ export class EspaceSecretaireComponent implements OnInit {
     this.service.agenda(medecinId).subscribe({
       next: (liste) => {
         if (this.medecinId() !== medecinId) return; // le medecin a change entre-temps
-        this.rendezVous.set([...liste].sort((a, b) => Date.parse(a.debut) - Date.parse(b.debut)));
+        this.maintenant.set(Date.now());
+        this.rendezVous.set(liste);
         this.chargeAgenda.set(false);
       },
       error: (e: HttpErrorResponse) => {
@@ -188,7 +221,7 @@ export class EspaceSecretaireComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreurAgenda.set("Ce cabinet ne vous est pas rattaché.");
+          this.erreurAgenda.set('Ce cabinet ne vous est pas rattaché.');
         } else {
           this.erreurAgenda.set(e.error?.erreur ?? "Impossible de charger l'agenda.");
         }
@@ -197,81 +230,39 @@ export class EspaceSecretaireComponent implements OnInit {
   }
 
   honorer(rdv: RendezVous) {
-    this.agir(rdv, this.service.honorer(rdv.id), `Rendez-vous du ${this.formaterDate(rdv.debut)} marqué honoré.`);
+    this.agir(rdv, 'honorer', this.service.honorer(rdv.id), `Rendez-vous du ${this.formaterDate(rdv.debut)} marqué honoré.`);
   }
 
+  /** Annulation apres « Oui » : le creneau est remis a disposition et le patient prevenu. */
   annuler(rdv: RendezVous) {
-    if (!confirm('Annuler ce rendez-vous ? Le patient sera prévenu et le créneau de nouveau proposé.')) return;
-    this.agir(rdv, this.service.annuler(rdv.id), `Rendez-vous du ${this.formaterDate(rdv.debut)} annulé : le patient est prévenu.`);
-  }
-
-  /** Ouvre un creneau dans l'agenda du medecin choisi (heure locale convertie en ISO 8601 UTC, duree 5..120). */
-  ouvrir() {
-    const debut = new Date(this.debut);
-    const dureeMinutes = Number(this.dureeMinutes);
-    this.creneauOuvert.set(null);
-    this.erreurCreneau.set('');
-    if (!this.debut || Number.isNaN(debut.getTime())) {
-      this.erreurCreneau.set('Indiquez une date et une heure valides.');
-      return;
-    }
-    if (debut.getTime() <= Date.now()) {
-      this.erreurCreneau.set('Le créneau doit commencer dans le futur.');
-      return;
-    }
-    if (!Number.isInteger(dureeMinutes) || dureeMinutes < DUREE_MIN_MINUTES || dureeMinutes > DUREE_MAX_MINUTES) {
-      this.erreurCreneau.set(`Indiquez une durée entre ${DUREE_MIN_MINUTES} et ${DUREE_MAX_MINUTES} minutes.`);
-      return;
-    }
-    const debutIso = debut.toISOString();
-    this.ouvertureEnCours.set(true);
-    this.service.ouvrirCreneau(this.medecinId(), debutIso, dureeMinutes).subscribe({
-      next: () => {
-        this.ouvertureEnCours.set(false);
-        this.creneauOuvert.set({ debut: debutIso, dureeMinutes });
-      },
-      error: (e: HttpErrorResponse) => {
-        this.ouvertureEnCours.set(false);
-        if (e.status === 401) {
-          this.auth.seConnecter();
-        } else if (e.status === 403) {
-          this.erreurCreneau.set("Ce cabinet ne vous est pas rattaché.");
-        } else if (e.status === 400) {
-          this.erreurCreneau.set(e.error?.erreur ?? 'Le créneau est invalide.');
-        } else {
-          this.erreurCreneau.set(e.error?.erreur ?? "L'ouverture du créneau a échoué, veuillez réessayer.");
-        }
-      },
-    });
+    this.agir(rdv, 'annuler', this.service.annuler(rdv.id), `Rendez-vous du ${this.formaterDate(rdv.debut)} annulé : le patient est prévenu.`);
   }
 
   libelleStatut(statut: string): string {
     return libelleStatutRendezVous(statut);
   }
 
-  abreger(id: string): string {
-    return abregerIdentifiant(id);
-  }
-
-  /** Applique une action sur un rendez-vous puis recharge l'agenda ; 409 (plus confirme) affiche le motif et recharge. */
-  private agir(rdv: RendezVous, appel: ReturnType<SecretaireService['honorer']>, message: string) {
-    this.enCours.set(rdv.id);
+  /** Applique une action sur un rendez-vous puis recharge l'agenda ; 409 (pas encore commence, plus confirme) affiche le motif et recharge. */
+  private agir(rdv: RendezVous, action: string, appel: ReturnType<SecretaireService['honorer']>, message: string) {
+    this.enCours.set({ id: rdv.id, action });
     this.succes.set('');
     this.erreurAgenda.set('');
     appel.subscribe({
       next: () => {
         this.enCours.set(null);
+        this.aConfirmer.set(null);
         this.succes.set(message);
         this.chargerAgenda();
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
+        this.aConfirmer.set(null);
         if (e.status === 409 || e.status === 404) {
           this.chargerAgenda(e.error?.erreur ?? "Ce rendez-vous n'est plus confirmé.");
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreurAgenda.set("Ce cabinet ne vous est pas rattaché.");
+          this.erreurAgenda.set('Ce cabinet ne vous est pas rattaché.');
         } else {
           this.erreurAgenda.set(e.error?.erreur ?? 'La mise à jour du rendez-vous a échoué, veuillez réessayer.');
         }

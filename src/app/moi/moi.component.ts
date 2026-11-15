@@ -1,12 +1,21 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 
+/** Libelles francais des roles metier ; tout autre role (technique) n'est pas affiche. */
+const LIBELLES_ROLES: Partial<Record<string, string>> = {
+  PATIENT: 'Patient',
+  MEDECIN: 'Médecin',
+  SECRETAIRE: 'Secrétaire',
+  PHARMACIE: 'Pharmacie',
+  ADMIN: 'Administrateur',
+};
+
 /**
- * Mon compte : utilisateur connecte, roles, identifiant du compte (sujet du jeton Keycloak, a communiquer par une
- * secretaire au medecin qui la rattache) avec copie dans le presse-papiers, lien vers le profil, deconnexion.
+ * Mon compte : utilisateur connecte, role en francais, identifiant du compte pour les seules secretaires (sujet du
+ * jeton Keycloak, a communiquer au medecin qui la rattache) avec copie, acces rapides, deconnexion.
  */
 @Component({
   selector: 'app-moi',
@@ -21,7 +30,8 @@ import { RoleService } from '../auth/role.service';
       </div>
       <div *ngIf="connecte()">
         <p>Connecté en tant que <b>{{ moi()?.nom }}</b></p>
-        <p>Rôles : {{ moi()?.roles?.join(', ') }}</p>
+        <p *ngIf="rolesAffiches().length">{{ rolesAffiches().length > 1 ? 'Rôles' : 'Rôle' }} : {{ rolesAffiches().join(', ') }}</p>
+        <ng-container *ngIf="estSecretaire()">
         <p *ngIf="moi()?.sujet as sujet" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <span>Identifiant du compte : <code style="font-size:.95rem">{{ sujet }}</code></span>
           <button type="button" class="bouton-secondaire" style="padding:6px 12px" (click)="copier(sujet)">Copier</button>
@@ -29,10 +39,15 @@ import { RoleService } from '../auth/role.service';
           <span *ngIf="erreurCopie()" style="color:#b3261e">{{ erreurCopie() }}</span>
         </p>
         <p style="color:var(--text3);font-size:.9rem">
-          Une secrétaire communique cet identifiant au médecin qui la rattache à son cabinet.
+          Communiquez cet identifiant au médecin qui vous rattache à son cabinet.
         </p>
-        <p style="display:flex;gap:8px;flex-wrap:wrap">
+        </ng-container>
+        <nav aria-label="Accès rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0">
           <a class="bouton" routerLink="/moi/profil">Mon profil</a>
+          <a class="bouton-secondaire" routerLink="/mes-rendez-vous">Mes rendez-vous</a>
+          <a class="bouton-secondaire" routerLink="/notifications">Notifications</a>
+        </nav>
+        <p style="display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="bouton-secondaire" (click)="seDeconnecter()">Se déconnecter</button>
         </p>
       </div>
@@ -47,6 +62,12 @@ export class MoiComponent implements OnInit {
   moi = this.roleService.moi;
   /** Vrai une fois l'identifiant copie dans le presse-papiers. */
   copie = signal(false);
+  /** Roles metier en francais ; les roles techniques de Keycloak (default-roles-tabibi, offline_access...) sont masques. */
+  rolesAffiches = computed(() =>
+    (this.moi()?.roles ?? []).map((r) => LIBELLES_ROLES[r.toUpperCase()]).filter((l): l is string => !!l),
+  );
+  /** L'identifiant du compte ne sert qu'aux secretaires (rattachement a un cabinet). */
+  estSecretaire = computed(() => (this.moi()?.roles ?? []).some((r) => r.toUpperCase() === 'SECRETAIRE'));
   erreurCopie = signal('');
 
   async ngOnInit() {

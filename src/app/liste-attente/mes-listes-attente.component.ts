@@ -33,10 +33,19 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
               <a [routerLink]="['/medecins', i.medecinId]" style="color:var(--vert);font-weight:600">{{ noms()[i.medecinId] ?? 'Voir le praticien' }}</a><br>
               <span style="color:var(--text3)">Inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
             </div>
-            <button type="button" (click)="retirer(i)" [disabled]="enCours() !== null"
+            <button *ngIf="aConfirmer() !== i.id" type="button" (click)="aConfirmer.set(i.id)" [disabled]="enCours() !== null"
                     style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
-              {{ enCours() === i.id ? 'Retrait…' : 'Me retirer' }}
+              Me retirer
             </button>
+            <div *ngIf="aConfirmer() === i.id" role="group" aria-label="Confirmer le retrait"
+                 style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span style="font-weight:600">Vous retirer de cette liste d'attente ?</span>
+              <button type="button" (click)="retirer(i)" [disabled]="enCours() !== null"
+                      style="padding:10px 16px;background:#b3261e;color:#fff;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
+                {{ enCours() === i.id ? 'Retrait…' : 'Oui, me retirer' }}
+              </button>
+              <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">Non, rester inscrit</button>
+            </div>
           </li>
         </ul>
         <p *ngIf="!charge() && !erreur() && inscriptions().length === 0">
@@ -60,6 +69,8 @@ export class MesListesAttenteComponent implements OnInit {
   charge = signal(false);
   /** Identifiant de l'inscription dont le retrait est en cours. */
   enCours = signal<string | null>(null);
+  /** Inscription dont le retrait attend la confirmation du patient (confirmation dans la page). */
+  aConfirmer = signal<string | null>(null);
   erreur = signal('');
 
   async ngOnInit() {
@@ -101,10 +112,12 @@ export class MesListesAttenteComponent implements OnInit {
     this.service.retirer(inscription.id).subscribe({
       next: () => {
         this.enCours.set(null);
+        this.aConfirmer.set(null);
         this.inscriptions.update((liste) => liste.filter((i) => i.id !== inscription.id));
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
+        this.aConfirmer.set(null);
         if (e.status === 404) {
           // Deja retiree (autre onglet) : la liste est rechargee.
           this.charger();

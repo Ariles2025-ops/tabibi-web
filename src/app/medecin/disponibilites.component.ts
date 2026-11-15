@@ -1,110 +1,34 @@
-import { Component, LOCALE_ID, inject, signal } from '@angular/core';
-import { CommonModule, formatDate } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { AuthService } from '../auth/auth.service';
-import { DUREE_MAX_MINUTES, DUREE_MIN_MINUTES } from '../secretaire/secretaire.service';
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { GestionCreneauxComponent, SourceCreneaux } from './gestion-creneaux.component';
 import { MedecinService } from './medecin.service';
 
-/** Creneau que le medecin vient d'ouvrir (message de confirmation). */
-interface CreneauOuvert {
-  debut: string;
-  dureeMinutes: number;
-}
-
-/** Ouverture de creneaux de consultation par le medecin (POST /api/medecin/creneaux). */
+/**
+ * Disponibilites du medecin : ouverture de creneaux (un seul ou une serie, POST /api/medecin/creneaux) et
+ * creneaux a venir par jour (GET /api/medecin/creneaux), les libres pouvant etre supprimes
+ * (DELETE /api/medecin/creneaux/{id}).
+ */
 @Component({
   selector: 'app-disponibilites',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, GestionCreneauxComponent],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Disponibilités</h1>
+      <h1 style="color:var(--blue);margin:0 0 8px">Disponibilités</h1>
       <p style="color:var(--text3);margin:0 0 20px">
-        Ouvrez un créneau de consultation : les patients pourront le réserver depuis votre fiche.
+        Ouvrez des créneaux de consultation : les patients pourront les réserver depuis votre fiche.
       </p>
-
-      <form (ngSubmit)="ouvrir()" #f="ngForm" style="display:grid;gap:12px;max-width:380px;background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:20px">
-        <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-          Date et heure
-          <input class="champ" type="datetime-local" [(ngModel)]="debut" name="debut" required [min]="minDebut"
-                 style="color:#10241F;font-size:1rem">
-        </label>
-        <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-          Durée (minutes, de {{ dureeMin }} à {{ dureeMax }})
-          <input class="champ" type="number" [(ngModel)]="dureeMinutes" name="dureeMinutes" required [min]="dureeMin" [max]="dureeMax" step="5"
-                 style="color:#10241F;font-size:1rem">
-        </label>
-        <div>
-          <button type="submit" class="bouton" [disabled]="f.invalid || enCours()">
-            {{ enCours() ? 'Ouverture…' : 'Ouvrir le créneau' }}
-          </button>
-        </div>
-      </form>
-
-      <p *ngIf="succes() as c" style="color:var(--vert)">
-        Créneau ouvert le {{ c.debut | date:'EEEE d MMMM à HH:mm' }} ({{ c.dureeMinutes }} min).
-        <a routerLink="/medecin/agenda" style="color:var(--vert)">Voir l'agenda</a>
-      </p>
-      <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
+      <app-gestion-creneaux [source]="source" lienAgenda="/medecin/agenda"
+                            message403="Seul un compte médecin peut gérer des créneaux." />
     </main>
   `,
 })
 export class DisponibilitesComponent {
-  private auth = inject(AuthService);
   private service = inject(MedecinService);
-  private locale = inject(LOCALE_ID);
 
-  /** Valeur du champ datetime-local : heure locale sans fuseau (« 2026-09-21T09:30 »). */
-  debut = '';
-  dureeMinutes = 30;
-  /** Bornes de la duree, celles de l'API (CreneauService : 5 a 120 minutes), partagees avec l'espace secretaire. */
-  dureeMin = DUREE_MIN_MINUTES;
-  dureeMax = DUREE_MAX_MINUTES;
-  /** Borne basse du selecteur : maintenant, au format attendu par datetime-local. */
-  minDebut = formatDate(new Date(), "yyyy-MM-dd'T'HH:mm", this.locale);
-  enCours = signal(false);
-  succes = signal<CreneauOuvert | null>(null);
-  erreur = signal('');
-
-  ouvrir() {
-    // new Date('2026-09-21T09:30') interprete l'heure locale ; toISOString() la convertit en ISO 8601 UTC.
-    const debut = new Date(this.debut);
-    const dureeMinutes = Number(this.dureeMinutes);
-    this.succes.set(null);
-    this.erreur.set('');
-    if (!this.debut || Number.isNaN(debut.getTime())) {
-      this.erreur.set('Indiquez une date et une heure valides.');
-      return;
-    }
-    if (debut.getTime() <= Date.now()) {
-      this.erreur.set('Le créneau doit commencer dans le futur.');
-      return;
-    }
-    if (!Number.isInteger(dureeMinutes) || dureeMinutes < DUREE_MIN_MINUTES || dureeMinutes > DUREE_MAX_MINUTES) {
-      this.erreur.set(`Indiquez une durée entre ${DUREE_MIN_MINUTES} et ${DUREE_MAX_MINUTES} minutes.`);
-      return;
-    }
-    const debutIso = debut.toISOString();
-    this.enCours.set(true);
-    this.service.ouvrirCreneau(debutIso, dureeMinutes).subscribe({
-      next: () => {
-        this.enCours.set(false);
-        this.succes.set({ debut: debutIso, dureeMinutes });
-      },
-      error: (e: HttpErrorResponse) => {
-        this.enCours.set(false);
-        if (e.status === 401) {
-          this.auth.seConnecter();
-        } else if (e.status === 403) {
-          this.erreur.set('Seul un compte médecin peut ouvrir un créneau.');
-        } else if (e.status === 409) {
-          this.erreur.set(e.error?.erreur ?? 'Un créneau existe déjà sur cet horaire.');
-        } else {
-          this.erreur.set(e.error?.erreur ?? "L'ouverture du créneau a échoué, veuillez réessayer.");
-        }
-      },
-    });
-  }
+  source: SourceCreneaux = {
+    lister: () => this.service.creneaux(),
+    ouvrir: (debut, duree) => this.service.ouvrirCreneau(debut, duree),
+    supprimer: (id) => this.service.supprimerCreneau(id),
+  };
 }

@@ -16,7 +16,8 @@ describe('DisponibilitesComponent', () => {
 
   beforeEach(() => {
     registerLocaleData(localeFr);
-    service = jasmine.createSpyObj<MedecinService>('MedecinService', ['ouvrirCreneau']);
+    service = jasmine.createSpyObj<MedecinService>('MedecinService', ['ouvrirCreneau', 'creneaux', 'supprimerCreneau']);
+    service.creneaux.and.returnValue(of([]));
     auth = { seConnecter: jasmine.createSpy('seConnecter') };
 
     TestBed.configureTestingModule({
@@ -51,6 +52,11 @@ describe('DisponibilitesComponent', () => {
     c.value = valeur;
     c.dispatchEvent(new Event('input'));
     await afficher();
+  }
+
+  function bouton(libelle: string): HTMLButtonElement | undefined {
+    const boutons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
+    return boutons.find((b) => b.textContent?.trim().startsWith(libelle));
   }
 
   function envoyer() {
@@ -100,6 +106,8 @@ describe('DisponibilitesComponent', () => {
     expect(service.ouvrirCreneau).toHaveBeenCalledWith(iso, 120);
     expect(texte()).toContain('Créneau ouvert le');
     expect(texte()).toContain('(120 min)');
+    // La liste des creneaux est rechargee.
+    expect(service.creneaux).toHaveBeenCalledTimes(2);
   });
 
   it('affiche le motif { erreur } d un 400 de l API', async () => {
@@ -115,5 +123,125 @@ describe('DisponibilitesComponent', () => {
 
     expect(service.ouvrirCreneau).toHaveBeenCalledTimes(1);
     expect(texte()).toContain('La duree doit etre comprise entre 5 et 120 minutes.');
+  });
+
+  it('interdit de choisir une date passee (attribut min)', async () => {
+    await afficher();
+    const min = champ('debut').getAttribute('min')!;
+    expect(min).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(new Date(min).getTime()).toBeLessThanOrEqual(Date.now());
+    expect(new Date(min).getTime()).toBeGreaterThan(Date.now() - 5 * 60_000);
+  });
+
+  describe('liste des creneaux a venir', () => {
+    const demain = new Date();
+    demain.setDate(demain.getDate() + 1);
+    demain.setHours(9, 0, 0, 0);
+    const LIBRE = { id: 'c1', medecinId: 'm1', debut: demain.toISOString(), dureeMinutes: 30, disponible: true };
+    const RESERVE = { ...LIBRE, id: 'c2', debut: new Date(demain.getTime() + 30 * 60_000).toISOString(), disponible: false };
+
+    function creneaux(): HTMLLIElement[] {
+      return Array.from(fixture.nativeElement.querySelectorAll('li.creneau'));
+    }
+
+    it('regroupe les creneaux par jour avec heure, duree et badge Libre / Réservé ; seuls les libres se suppriment', async () => {
+      service.creneaux.and.returnValue(of([RESERVE, LIBRE]));
+      await afficher();
+
+      const items = creneaux();
+      expect(items.length).toBe(2);
+      expect(items[0].textContent).toContain('09:00');
+      expect(items[0].textContent).toContain('30 min');
+      expect(items[0].textContent).toContain('Libre');
+      expect(items[0].querySelector('button')?.textContent).toContain('Supprimer');
+      expect(items[1].textContent).toContain('Réservé');
+      expect(items[1].querySelector('button')).toBeNull();
+      expect(fixture.nativeElement.querySelectorAll('h3').length).toBe(1);
+    });
+
+    it('supprime un creneau libre apres « Oui » et recharge ; « Non » annule', async () => {
+      service.creneaux.and.returnValue(of([LIBRE]));
+      service.supprimerCreneau.and.returnValue(of(undefined));
+      await afficher();
+
+      bouton('Supprimer')!.click();
+      await afficher();
+      expect(texte()).toContain('Supprimer ce créneau ?');
+      bouton('Non')!.click();
+      await afficher();
+      expect(service.supprimerCreneau).not.toHaveBeenCalled();
+
+      bouton('Supprimer')!.click();
+      await afficher();
+      bouton('Oui')!.click();
+      await afficher();
+
+      expect(service.supprimerCreneau).toHaveBeenCalledWith('c1');
+      expect(service.creneaux).toHaveBeenCalledTimes(2);
+    });
+
+    it('affiche le { erreur } d un 409 (creneau reserve entre-temps)', async () => {
+      service.creneaux.and.returnValue(of([LIBRE]));
+      service.supprimerCreneau.and.returnValue(
+        throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: "Ce créneau est réservé : annulez d'abord le rendez-vous." } })),
+      );
+      await afficher();
+
+      bouton('Supprimer')!.click();
+      await afficher();
+      bouton('Oui')!.click();
+      await afficher();
+
+      expect(texte()).toContain("Ce créneau est réservé : annulez d'abord le rendez-vous.");
+    });
+  });
+
+  describe('serie de creneaux', () => {
+    function dateDansUnAn(): string {
+      const d = new Date();
+      d.setFullYear(d.getFullYear() + 1);
+      const deux = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}`;
+    }
+
+    async function remplirSerie(date: string, de: string, a: string, duree: string) {
+      bouton('Une série')!.click();
+      await afficher();
+      await saisir('serieDate', date);
+      await saisir('serieDebut', de);
+      await saisir('serieFin', a);
+      await saisir('serieDuree', duree);
+      fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
+      await afficher();
+    }
+
+    it('ouvre des creneaux consecutifs de l heure de debut a l heure de fin', async () => {
+      service.ouvrirCreneau.and.callFake((debut: string, duree: number) => of({ id: debut, medecinId: 'm1', debut, dureeMinutes: duree, disponible: true }));
+      const date = dateDansUnAn();
+      await afficher();
+
+      await remplirSerie(date, '09:00', '10:30', '30');
+
+      expect(service.ouvrirCreneau).toHaveBeenCalledTimes(3);
+      expect(service.ouvrirCreneau.calls.argsFor(0)).toEqual([new Date(`${date}T09:00`).toISOString(), 30]);
+      expect(service.ouvrirCreneau.calls.argsFor(2)).toEqual([new Date(`${date}T10:00`).toISOString(), 30]);
+      expect(texte()).toContain('3 créneaux ouverts.');
+    });
+
+    it('s arrete a la premiere erreur et l explique', async () => {
+      let appels = 0;
+      service.ouvrirCreneau.and.callFake((debut: string, duree: number) =>
+        ++appels === 2
+          ? throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: 'Ce créneau chevauche un créneau déjà ouvert à cette heure-là.' } }))
+          : of({ id: debut, medecinId: 'm1', debut, dureeMinutes: duree, disponible: true }),
+      );
+      await afficher();
+
+      await remplirSerie(dateDansUnAn(), '09:00', '11:00', '30');
+
+      expect(service.ouvrirCreneau).toHaveBeenCalledTimes(2);
+      expect(texte()).toContain("1 créneau ouvert avant l'arrêt.");
+      expect(texte()).toContain('Arrêt au créneau de 09:30 : Ce créneau chevauche un créneau déjà ouvert à cette heure-là.');
+    });
   });
 });

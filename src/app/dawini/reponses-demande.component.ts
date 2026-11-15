@@ -8,7 +8,7 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } fro
 /**
  * Reponses des pharmacies a l'une de mes demandes (GET /api/dawini/besoins/{id}/reponses, les plus anciennes
  * d'abord) : pharmacie, disponibilite, prix en dinars, commentaire, date ; « Clôturer la demande » tant qu'elle est
- * ouverte (POST .../cloturer). La demande elle-meme est retrouvee dans mes demandes (pas de lecture unitaire cote API).
+ * ouverte, apres confirmation dans la page (POST .../cloturer). La demande elle-meme est retrouvee dans mes demandes (pas de lecture unitaire cote API).
  */
 @Component({
   selector: 'app-reponses-demande',
@@ -27,11 +27,15 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } fro
             · publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}<ng-container *ngIf="b.clotureLe"> · clôturée le {{ b.clotureLe | date:'d MMMM à HH:mm' }}</ng-container>
             <ng-container *ngIf="b.precision"><br>{{ b.precision }}</ng-container>
           </p>
-          <p *ngIf="b.statut === 'OUVERT'" style="margin:0 0 16px">
-            <button type="button" class="bouton-secondaire" (click)="cloturer()" [disabled]="enCours()">
-              {{ enCours() ? 'Clôture…' : 'Clôturer la demande' }}
-            </button>
+          <p *ngIf="b.statut === 'OUVERT' && !aConfirmer()" style="margin:0 0 16px">
+            <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(true)" [disabled]="enCours()">Clôturer la demande</button>
           </p>
+          <div *ngIf="b.statut === 'OUVERT' && aConfirmer()" role="group" aria-label="Confirmer la clôture"
+               style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 16px">
+            <span style="font-weight:600">Clôturer cette demande ? Les pharmacies ne la verront plus.</span>
+            <button type="button" class="bouton" (click)="cloturer()" [disabled]="enCours()">{{ enCours() ? 'Clôture…' : 'Oui, clôturer' }}</button>
+            <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(false)" [disabled]="enCours()">Non</button>
+          </div>
         </ng-container>
 
         <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
@@ -66,6 +70,8 @@ export class ReponsesDemandeComponent implements OnInit {
   reponses = signal<Reponse[]>([]);
   charge = signal(false);
   enCours = signal(false);
+  /** Vrai pendant la confirmation dans la page de la cloture (« Oui, clôturer » / « Non »). */
+  aConfirmer = signal(false);
   succes = signal('');
   erreur = signal('');
 
@@ -114,11 +120,13 @@ export class ReponsesDemandeComponent implements OnInit {
     this.service.cloturer(this.besoinId).subscribe({
       next: (b) => {
         this.enCours.set(false);
+        this.aConfirmer.set(false);
         this.besoin.set(b);
         this.succes.set('Demande clôturée : les pharmacies ne la voient plus.');
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
+        this.aConfirmer.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 409) {

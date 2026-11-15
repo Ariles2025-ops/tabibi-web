@@ -79,6 +79,26 @@ describe('MoiComponent', () => {
     expect(texte()).toContain('Identifiant copié.');
   });
 
+  it('affiche le role en francais, masque les roles techniques et propose les acces rapides', async () => {
+    moi.set({ ...PROFIL, nom: 'patient.demo', roles: ['default-roles-tabibi', 'offline_access', 'uma_authorization', 'PATIENT'] });
+    await afficher();
+
+    expect(texte()).toContain('Rôle : Patient');
+    expect(texte()).not.toContain('offline_access');
+    expect(texte()).not.toContain('default-roles-tabibi');
+    expect(fixture.nativeElement.querySelector('a[href="/moi/profil"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/mes-rendez-vous"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/notifications"]')).not.toBeNull();
+  });
+
+  it('n affiche l identifiant du compte qu aux secretaires', async () => {
+    moi.set({ ...PROFIL, roles: ['PATIENT'] });
+    await afficher();
+
+    expect(texte()).not.toContain('Identifiant du compte');
+    expect(boutonCopier()).toBeUndefined();
+  });
+
   it('explique comment faire si le presse-papiers est refuse', async () => {
     presseCoupe.writeText.and.rejectWith(new Error('NotAllowedError'));
     await afficher();

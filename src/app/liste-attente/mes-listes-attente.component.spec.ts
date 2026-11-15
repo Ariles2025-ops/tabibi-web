@@ -59,6 +59,20 @@ describe('MesListesAttenteComponent', () => {
     return Array.from(fixture.nativeElement.querySelectorAll('li'));
   }
 
+  function boutonDe(ligne: HTMLLIElement, libelle: string): HTMLButtonElement | undefined {
+    const boutons: HTMLButtonElement[] = Array.from(ligne.querySelectorAll('button'));
+    return boutons.find((b) => b.textContent?.trim() === libelle);
+  }
+
+  /** « Me retirer » puis « Oui, me retirer » sur la premiere ligne (confirmation dans la page). */
+  async function retirerPremiere() {
+    boutonDe(lignes()[0], 'Me retirer')!.click();
+    await afficher();
+    expect(texte()).toContain("Vous retirer de cette liste d'attente ?");
+    boutonDe(lignes()[0], 'Oui, me retirer')!.click();
+    await afficher();
+  }
+
   it('liste mes inscriptions, les plus anciennes d abord, avec le nom du praticien et la date', async () => {
     await afficher();
 
@@ -75,8 +89,7 @@ describe('MesListesAttenteComponent', () => {
     service.retirer.and.returnValue(of(void 0));
     await afficher();
 
-    lignes()[0].querySelector('button')!.click();
-    await afficher();
+    await retirerPremiere();
 
     expect(service.retirer).toHaveBeenCalledWith('i2');
     expect(lignes().length).toBe(1);
@@ -84,12 +97,25 @@ describe('MesListesAttenteComponent', () => {
     expect(service.mes).toHaveBeenCalledTimes(1);
   });
 
+  it('ne retire rien sans confirmation, et « Non, rester inscrit » annule', async () => {
+    await afficher();
+
+    boutonDe(lignes()[0], 'Me retirer')!.click();
+    await afficher();
+    expect(service.retirer).not.toHaveBeenCalled();
+    boutonDe(lignes()[0], 'Non, rester inscrit')!.click();
+    await afficher();
+
+    expect(service.retirer).not.toHaveBeenCalled();
+    expect(boutonDe(lignes()[0], 'Me retirer')).toBeDefined();
+    expect(lignes().length).toBe(2);
+  });
+
   it('affiche le { erreur } d un echec de retrait et garde la ligne', async () => {
     service.retirer.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403, error: { erreur: 'Cette inscription est a un autre patient.' } })));
     await afficher();
 
-    lignes()[0].querySelector('button')!.click();
-    await afficher();
+    await retirerPremiere();
 
     expect(texte()).toContain('Cette inscription est a un autre patient.');
     expect(lignes().length).toBe(2);

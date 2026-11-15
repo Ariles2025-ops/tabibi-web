@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { catchError, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
@@ -63,9 +64,12 @@ function formulaireVide(): DemandeProfil {
                      style="color:#10241F;font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Wilaya (code)
-              <input class="champ" [(ngModel)]="formulaire.wilayaCode" name="wilayaCode" [maxlength]="longueurMaxWilaya" placeholder="Ex. 16"
-                     style="color:#10241F;font-size:1rem">
+              Wilaya
+              <select class="champ" [(ngModel)]="formulaire.wilayaCode" name="wilayaCode" style="color:#10241F;font-size:1rem">
+                <option value="">Non renseignée</option>
+                <option *ngIf="wilayaHorsListe()" [value]="formulaire.wilayaCode">{{ formulaire.wilayaCode }}</option>
+                <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.code }} — {{ w.nom }}</option>
+              </select>
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Langue
@@ -91,6 +95,7 @@ function formulaireVide(): DemandeProfil {
 export class ProfilComponent implements OnInit {
   private auth = inject(AuthService);
   private service = inject(ProfilService);
+  private http = inject(HttpClient);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -100,6 +105,8 @@ export class ProfilComponent implements OnInit {
   langues = LANGUES;
   longueurMaxNom = LONGUEUR_MAX_NOM;
   longueurMaxWilaya = LONGUEUR_MAX_WILAYA;
+  /** Wilayas du referentiel (assets/referentiel.json) : code attendu par l'API + libelle FR. */
+  wilayas = signal<{ code: string; nom: string }[]>([]);
   /** Bornes du selecteur de date : la veille (date passee) et le 1er janvier suivant l'annee minimale. */
   hier = dateLocaleIso(new Date(Date.now() - 24 * 60 * 60 * 1000));
   dateMin = `${ANNEE_NAISSANCE_MIN + 1}-01-01`;
@@ -111,6 +118,10 @@ export class ProfilComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.http
+      .get<{ wilayas?: { code: string; nom: string }[] }>('/assets/referentiel.json')
+      .pipe(catchError(() => of({ wilayas: [] })))
+      .subscribe((ref) => this.wilayas.set(ref?.wilayas ?? []));
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -183,5 +194,11 @@ export class ProfilComponent implements OnInit {
       wilayaCode: p.wilayaCode ?? '',
       langue: p.langue || LANGUE_PAR_DEFAUT,
     };
+  }
+
+  /** Vrai si le code enregistre n'est pas dans le referentiel : on le garde selectionnable pour ne pas le perdre. */
+  wilayaHorsListe(): boolean {
+    const code = (this.formulaire.wilayaCode ?? '').trim();
+    return !!code && this.wilayas().length > 0 && !this.wilayas().some((w) => w.code === code);
   }
 }

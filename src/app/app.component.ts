@@ -63,7 +63,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
               <a class="side__pro" routerLink="/praticien">Vous êtes praticien ?</a>
               <a class="side__help" href="#aide">Centre d'aide</a>
               <a class="side__login" (click)="seConnecter()" tabindex="0" role="button">Se connecter</a>
-              <a class="side__signup" (click)="seConnecter()" tabindex="0" role="button" style="cursor:pointer">Créer un compte</a>
+              <a class="side__signup" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">Créer un compte</a>
             </ng-container>
             <ng-container *ngIf="connecte()">
               <a class="side__help" href="#aide">Centre d'aide</a>
@@ -168,6 +168,9 @@ export class AppComponent implements OnInit {
 
   /** Lance la connexion Keycloak (bouton « Se connecter » de la barre de navigation). */
   seConnecter() { this.menuOuvert.set(false); this.auth.seConnecter(); }
+
+  /** « Créer un compte » ouvre directement le formulaire d'inscription Keycloak. */
+  sInscrire() { this.menuOuvert.set(false); this.auth.sInscrireParEmail(); }
 
   /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()), puis roles. */
   async ngOnInit() {

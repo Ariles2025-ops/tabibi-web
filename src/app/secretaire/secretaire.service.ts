@@ -13,6 +13,9 @@ export interface Rattachement {
   secretaireId: string;
   /** Date de rattachement au format ISO 8601. */
   creeLe: string;
+  /** Nom et e-mail du compte de la secretaire, s'ils sont connus. */
+  secretaireNom?: string | null;
+  secretaireEmail?: string | null;
 }
 
 /** Bornes de la duree d'un creneau, celles du backend (CreneauService). */
@@ -55,6 +58,16 @@ export class SecretaireService {
   /** Ouvre un creneau dans l'agenda du medecin (201 ; 400 si passe ou duree hors bornes). `debut` au format ISO 8601. */
   ouvrirCreneau(medecinId: string, debut: string, dureeMinutes: number): Observable<Creneau> {
     return this.http.post<Creneau>(`${this.base}/api/secretaire/medecins/${medecinId}/creneaux`, { debut, dureeMinutes });
+  }
+
+  /** Creneaux a venir du medecin, libres et reserves (403 sans rattachement). */
+  creneaux(medecinId: string): Observable<Creneau[]> {
+    return this.http.get<Creneau[]>(`${this.base}/api/secretaire/medecins/${medecinId}/creneaux`);
+  }
+
+  /** Supprime un creneau libre du medecin (204 ; 409 s'il est reserve). */
+  supprimerCreneau(medecinId: string, creneauId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/secretaire/medecins/${medecinId}/creneaux/${creneauId}`);
   }
 
   /** Le patient est venu : le rendez-vous passe HONORE (409 s'il n'est pas confirme). */

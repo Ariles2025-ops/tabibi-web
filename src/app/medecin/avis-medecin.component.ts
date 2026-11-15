@@ -7,8 +7,8 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
 
 /**
  * Avis publics recus par le medecin connecte (GET /api/medecins/{moi}/avis, ou « moi » est le sujet du jeton lu
- * sur /api/moi) et signalement d'un avis a l'administrateur (POST /api/avis/{id}/signaler) : l'avis signale
- * quitte la vue publique jusqu'a la decision de l'administrateur.
+ * sur /api/moi) et signalement d'un avis a l'equipe Tabibi (POST /api/avis/{id}/signaler) : l'avis signale
+ * reste visible jusqu'a la decision de l'equipe ; il est marque « Signalé » dans la page.
  */
 @Component({
   selector: 'app-avis-medecin',
@@ -16,25 +16,27 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
   imports: [CommonModule],
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Avis des patients</h1>
+      <h1 style="color:var(--blue);margin:0 0 8px">Avis des patients</h1>
       <p style="color:var(--text3);margin:0 0 16px">
-        Avis publiés sur votre fiche, anonymes. Un avis signalé est retiré de la vue publique et examiné par un administrateur.
+        Avis publiés sur votre fiche, anonymes. Un avis signalé reste visible jusqu'à la décision de l'équipe Tabibi.
       </p>
 
-      <p *ngIf="charge()">Chargement…</p>
-      <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
-      <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
+      <p *ngIf="charge()" style="color:var(--text3)">Chargement…</p>
+      <p *ngIf="succes()" style="color:var(--blue)">{{ succes() }}</p>
+      <p *ngIf="erreur()" role="alert" style="color:var(--red)">{{ erreur() }}</p>
       <p *ngIf="synthese()" style="margin:0 0 12px"><strong>{{ libelle() }}</strong></p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let a of avis()"
-            style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:var(--r12);padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div>
             <strong>{{ a.note }} / 5</strong>
             <span style="color:var(--text3)"> · {{ a.deposeLe | date:'d MMMM yyyy' }}</span>
             <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
           </div>
-          <button type="button" class="bouton-secondaire" (click)="signaler(a)" [disabled]="enCours() !== null">
+          <span *ngIf="estSignale(a)"
+                style="display:inline-block;background:var(--red-l);color:var(--red);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600">Signalé</span>
+          <button *ngIf="!estSignale(a)" type="button" class="bouton-secondaire" (click)="signaler(a)" [disabled]="enCours() !== null">
             {{ enCours() === a.id ? 'Signalement…' : 'Signaler' }}
           </button>
         </li>
@@ -53,6 +55,8 @@ export class AvisMedecinComponent implements OnInit {
   charge = signal(false);
   /** Identifiant de l'avis en cours de signalement. */
   enCours = signal<string | null>(null);
+  /** Avis signales depuis cette page (marques « Signalé », sans bouton). */
+  signales = signal<ReadonlySet<string>>(new Set());
   succes = signal('');
   erreur = signal('');
 
@@ -104,8 +108,8 @@ export class AvisMedecinComponent implements OnInit {
     this.service.signaler(a.id).subscribe({
       next: () => {
         this.enCours.set(null);
-        this.succes.set("Avis signalé : il est retiré de votre fiche en attendant la décision de l'administrateur.");
-        this.charger();
+        this.marquerSignale(a.id);
+        this.succes.set("Avis signalé : il reste visible jusqu'à la décision de l'équipe Tabibi.");
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
@@ -113,12 +117,23 @@ export class AvisMedecinComponent implements OnInit {
           this.auth.seConnecter();
         } else if (e.status === 403) {
           this.erreur.set('Cet avis ne vous concerne pas.');
-        } else if (e.status === 409 || e.status === 404) {
-          this.charger(e.error?.erreur ?? 'Cet avis a déjà été signalé.');
+        } else if (e.status === 409) {
+          this.marquerSignale(a.id);
+          this.erreur.set(e.error?.erreur ?? 'Cet avis a déjà été signalé.');
+        } else if (e.status === 404) {
+          this.charger(e.error?.erreur ?? "Cet avis n'existe plus.");
         } else {
           this.erreur.set(e.error?.erreur ?? "Le signalement a échoué, veuillez réessayer.");
         }
       },
     });
+  }
+
+  estSignale(a: AvisPublic): boolean {
+    return this.signales().has(a.id);
+  }
+
+  private marquerSignale(id: string) {
+    this.signales.update((s) => new Set([...s, id]));
   }
 }

@@ -9,6 +9,7 @@ import { AuthService } from '../auth/auth.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { Teleconsultation, TeleconsultationService } from '../teleconsultation/teleconsultation.service';
 import { MedecinService } from './medecin.service';
+import { PatientsService } from './patients.service';
 import { TeleconsultationsMedecinComponent } from './teleconsultations-medecin.component';
 
 const LIEN = 'https://meet.jit.si/tabibi-0123456789abcdef0123456789abcdef';
@@ -44,6 +45,10 @@ describe('TeleconsultationsMedecinComponent', () => {
     service.duMedecin.and.returnValue(of([SANS_CONSENTEMENT]));
     medecinService = jasmine.createSpyObj<MedecinService>('MedecinService', ['agenda']);
     medecinService.agenda.and.returnValue(of([RENDEZ_VOUS]));
+    const patients = jasmine.createSpyObj<PatientsService>('PatientsService', ['patientsDuMedecin']);
+    patients.patientsDuMedecin.and.returnValue(
+      of(new Map([['p1', { patientId: 'p1', nomComplet: 'Yasmine Benali', telephone: null, email: null }]])),
+    );
     auth = { seConnecter: jasmine.createSpy('seConnecter') };
 
     TestBed.configureTestingModule({
@@ -52,6 +57,7 @@ describe('TeleconsultationsMedecinComponent', () => {
         provideRouter([]),
         { provide: TeleconsultationService, useValue: service },
         { provide: MedecinService, useValue: medecinService },
+        { provide: PatientsService, useValue: patients },
         { provide: AuthService, useValue: auth },
         { provide: LOCALE_ID, useValue: 'fr' },
       ],
@@ -82,7 +88,8 @@ describe('TeleconsultationsMedecinComponent', () => {
     expect(bouton(ligne, 'Terminer')).toBeUndefined();
     expect(ligne.textContent).toContain('Rendez-vous du');
     expect(ligne.textContent).toContain('7 décembre');
-    expect(ligne.textContent).toContain('Patient : p1');
+    expect(ligne.textContent).toContain('Yasmine Benali');
+    expect(ligne.textContent).not.toContain('p1');
     expect(ligne.textContent).toContain('Planifiée');
   });
 
@@ -123,12 +130,34 @@ describe('TeleconsultationsMedecinComponent', () => {
     expect(lignes()[0].querySelectorAll('button').length).toBe(0);
   });
 
-  it('« Annuler » demande confirmation puis annule', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
+  it('« Démarrer » reste desactive plus de 15 minutes avant le rendez-vous, avec une indication', () => {
+    const dansUneHeure = new Date(Date.now() + 3600_000).toISOString();
+    service.duMedecin.and.returnValue(of([CONSENTIE]));
+    medecinService.agenda.and.returnValue(of([{ ...RENDEZ_VOUS, id: 'r2', debut: dansUneHeure }]));
+    fixture.detectChanges();
+
+    expect(bouton(lignes()[0], 'Démarrer')!.disabled).toBeTrue();
+    expect(lignes()[0].textContent).toContain('Démarrage possible 15 minutes avant le rendez-vous.');
+  });
+
+  it('« Démarrer » est actif 10 minutes avant le rendez-vous', () => {
+    const dansDixMinutes = new Date(Date.now() + 10 * 60_000).toISOString();
+    service.duMedecin.and.returnValue(of([CONSENTIE]));
+    medecinService.agenda.and.returnValue(of([{ ...RENDEZ_VOUS, id: 'r2', debut: dansDixMinutes }]));
+    fixture.detectChanges();
+
+    expect(bouton(lignes()[0], 'Démarrer')!.disabled).toBeFalse();
+  });
+
+  it('« Annuler » demande confirmation dans la page puis annule', () => {
     service.annuler.and.returnValue(of({ ...SANS_CONSENTEMENT, statut: 'ANNULEE' }));
     fixture.detectChanges();
 
     bouton(lignes()[0], 'Annuler')!.click();
+    fixture.detectChanges();
+    expect(service.annuler).not.toHaveBeenCalled();
+    expect(texte()).toContain('Annuler cette téléconsultation ?');
+    bouton(lignes()[0], 'Oui')!.click();
     fixture.detectChanges();
 
     expect(service.annuler).toHaveBeenCalledWith('t1');

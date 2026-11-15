@@ -1,15 +1,20 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { catchError, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { ProfilService } from '../moi/profil.service';
 import { Besoin, DawiniService, DemandeBesoin, libelleReponses, libelleStatutBesoin } from './dawini.service';
 
 /** Champs du formulaire de publication, vides. */
-function formulaireVide(): Required<DemandeBesoin> {
-  return { medicament: '', wilayaCode: '', commune: '', precision: '' };
+function formulaireVide(wilayaCode = ''): Required<DemandeBesoin> {
+  return { medicament: '', wilayaCode, commune: '', precision: '' };
 }
+
+/** Une wilaya du referentiel (assets/referentiel.json) : code officiel attendu par l'API + libelle FR. */
+interface OptionWilaya { code: string; nom: string; }
 
 /**
  * Dawini, cote patient : publication d'un besoin de medicament (POST /api/dawini/besoins) puis « Mes demandes »
@@ -37,8 +42,11 @@ function formulaireVide(): Required<DemandeBesoin> {
               <input class="champ" [(ngModel)]="demande.medicament" name="medicament" required placeholder="Ex. Amoxicilline 1 g" style="color:#10241F;font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Wilaya (code) *
-              <input class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required placeholder="Ex. 16" style="color:#10241F;font-size:1rem">
+              Wilaya *
+              <select class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required style="color:#10241F;font-size:1rem">
+                <option value="">Choisissez votre wilaya</option>
+                <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.code }} — {{ w.nom }}</option>
+              </select>
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Commune
@@ -85,10 +93,16 @@ function formulaireVide(): Required<DemandeBesoin> {
 export class MesDemandesComponent implements OnInit {
   private auth = inject(AuthService);
   private service = inject(DawiniService);
+  private profils = inject(ProfilService);
+  private http = inject(HttpClient);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
   demande = formulaireVide();
+  /** Wilayas du referentiel, pour la liste deroulante. */
+  wilayas = signal<OptionWilaya[]>([]);
+  /** Wilaya du profil du patient, preselectionnee (et conservee apres publication). */
+  private wilayaProfil = '';
   besoins = signal<Besoin[]>([]);
   charge = signal(false);
   enCours = signal(false);
@@ -98,6 +112,10 @@ export class MesDemandesComponent implements OnInit {
   erreur = signal('');
 
   async ngOnInit() {
+    this.http
+      .get<{ wilayas?: OptionWilaya[] }>('/assets/referentiel.json')
+      .pipe(catchError(() => of({ wilayas: [] as OptionWilaya[] })))
+      .subscribe((ref) => this.wilayas.set(ref?.wilayas ?? []));
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
@@ -105,7 +123,18 @@ export class MesDemandesComponent implements OnInit {
       this.auth.seConnecter();
       return;
     }
+    this.preselectionnerWilaya();
     this.charger();
+  }
+
+  /** Preselectionne la wilaya du profil (GET /api/moi/profil) ; profil absent (404) ou en erreur : rien. */
+  private preselectionnerWilaya() {
+    this.profils.monProfil().pipe(catchError(() => of(null))).subscribe((profil) => {
+      const code = profil?.wilayaCode?.trim();
+      if (!code) return;
+      this.wilayaProfil = code;
+      if (!this.demande.wilayaCode) this.demande.wilayaCode = code;
+    });
   }
 
   charger() {
@@ -137,7 +166,7 @@ export class MesDemandesComponent implements OnInit {
     const precision = this.demande.precision.trim();
     this.succes.set('');
     if (!medicament || !wilayaCode) {
-      this.erreurFormulaire.set('Indiquez le médicament recherché et le code de votre wilaya.');
+      this.erreurFormulaire.set('Indiquez le médicament recherché et choisissez votre wilaya.');
       return;
     }
     const demande: DemandeBesoin = { medicament, wilayaCode };
@@ -148,7 +177,7 @@ export class MesDemandesComponent implements OnInit {
     this.service.publier(demande).subscribe({
       next: () => {
         this.enCours.set(false);
-        this.demande = formulaireVide();
+        this.demande = formulaireVide(this.wilayaProfil);
         this.succes.set('Demande publiée : les pharmacies de votre wilaya peuvent y répondre.');
         this.charger();
       },

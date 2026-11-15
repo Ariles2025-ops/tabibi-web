@@ -66,7 +66,7 @@ describe('MesAvisComponent', () => {
     const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
     expect(items.length).toBe(2);
     expect(items[0].textContent).toContain('2 / 5');
-    expect(items[0].textContent).toContain('Masqué');
+    expect(items[0].textContent).toContain('Masqué par la modération');
     expect(items[0].textContent).toContain('18 septembre 2026');
     expect(items[0].textContent).toContain('Dr Amina Belkacem');
     expect(items[1].textContent).toContain('5 / 5');

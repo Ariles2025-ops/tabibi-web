@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import localeFr from '@angular/common/locales/fr';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
@@ -33,6 +33,9 @@ const REPONSE: Reponse = {
   commentaire: null,
   repondueLe: '2026-09-18T11:00:00Z',
 };
+
+/** Referentiel servi a la place de assets/referentiel.json (liste deroulante des wilayas). */
+const REFERENTIEL = { wilayas: [{ code: '9', nom: 'Blida' }, { code: '16', nom: 'Alger' }], specialites: [] };
 
 describe('EspacePharmacieComponent', () => {
   let fixture: ComponentFixture<EspacePharmacieComponent>;
@@ -68,6 +71,7 @@ describe('EspacePharmacieComponent', () => {
         { provide: DawiniService, useValue: service },
         { provide: AuthService, useValue: { seConnecter: jasmine.createSpy('seConnecter') } },
         { provide: LOCALE_ID, useValue: 'fr' },
+        { provide: HttpClient, useValue: { get: () => of(REFERENTIEL) } },
       ],
     });
     fixture = TestBed.createComponent(EspacePharmacieComponent);
@@ -87,13 +91,13 @@ describe('EspacePharmacieComponent', () => {
   }
 
   function champ(nom: string): HTMLInputElement {
-    return fixture.nativeElement.querySelector(`input[name="${nom}"]`);
+    return fixture.nativeElement.querySelector(`[name="${nom}"]`);
   }
 
   async function saisir(nom: string, valeur: string) {
     const c = champ(nom);
     c.value = valeur;
-    c.dispatchEvent(new Event('input'));
+    c.dispatchEvent(new Event(c.tagName === 'SELECT' ? 'change' : 'input'));
     await afficher();
   }
 
@@ -119,7 +123,7 @@ describe('EspacePharmacieComponent', () => {
   async function saisirDansReponse(selecteur: string, valeur: string) {
     const c: HTMLInputElement = formulaireReponse()!.querySelector(selecteur)!;
     c.value = valeur;
-    c.dispatchEvent(new Event('input'));
+    c.dispatchEvent(new Event(c.tagName === 'SELECT' ? 'change' : 'input'));
     await afficher();
   }
 
@@ -133,7 +137,7 @@ describe('EspacePharmacieComponent', () => {
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
     await afficher();
     expect(service.besoinsOuverts).not.toHaveBeenCalled();
-    expect(texte()).toContain('Indiquez le code de votre wilaya.');
+    expect(texte()).toContain('Choisissez votre wilaya.');
 
     await chercher('16');
     expect(service.besoinsOuverts).toHaveBeenCalledWith('16');
@@ -219,11 +223,11 @@ describe('EspacePharmacieComponent', () => {
   it('affiche le { erreur } d un 400 de la recherche et un etat vide sans demande', async () => {
     service.besoinsOuverts.and.returnValue(throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: 'La wilaya est obligatoire.' } })));
     await afficher();
-    await chercher('xx');
+    await chercher('16');
     expect(texte()).toContain('La wilaya est obligatoire.');
 
     service.besoinsOuverts.and.returnValue(of([]));
-    await chercher('31');
+    await chercher('9');
     expect(texte()).toContain('Aucune demande ouverte dans cette wilaya.');
   });
 });

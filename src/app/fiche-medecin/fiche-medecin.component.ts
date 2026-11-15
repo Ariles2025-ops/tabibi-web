@@ -346,6 +346,21 @@ export class FicheMedecinComponent implements OnInit {
       error: () => this.reclamable.set(false),
     });
     this.chargerCreneaux();
+    this.verifierInscriptionAttente(id);
+  }
+
+  /** Si le patient est deja sur la liste d'attente de ce praticien, on l'indique d'emblee (pas de 409 a la clic). */
+  private async verifierInscriptionAttente(id: string) {
+    await this.auth.pret();
+    if (!this.auth.estConnecte()) return;
+    this.listeAttente.mes().subscribe({
+      next: (inscriptions) => {
+        if (inscriptions.some((i) => i.medecinId === id)) {
+          this.inscription.set("Vous êtes déjà inscrit sur la liste d'attente de ce praticien.");
+        }
+      },
+      error: () => undefined,
+    });
   }
 
   private chargerCreneaux() {

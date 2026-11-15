@@ -1,11 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import localeFr from '@angular/common/locales/fr';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { Profil, ProfilService } from '../moi/profil.service';
 import { Besoin, DawiniService } from './dawini.service';
 import { MesDemandesComponent } from './mes-demandes.component';
 
@@ -33,15 +34,21 @@ const CLOTUREE: Besoin = {
   nombreReponses: 1,
 };
 
+/** Referentiel servi a la place de assets/referentiel.json (liste deroulante des wilayas). */
+const REFERENTIEL = { wilayas: [{ code: '9', nom: 'Blida' }, { code: '16', nom: 'Alger' }], specialites: [] };
+
 describe('MesDemandesComponent', () => {
   let fixture: ComponentFixture<MesDemandesComponent>;
   let service: jasmine.SpyObj<DawiniService>;
   let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy };
+  let profils: jasmine.SpyObj<ProfilService>;
 
   beforeEach(() => {
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<DawiniService>('DawiniService', ['mesBesoins', 'publier']);
     service.mesBesoins.and.returnValue(of([CLOTUREE, OUVERTE]));
+    profils = jasmine.createSpyObj<ProfilService>('ProfilService', ['monProfil']);
+    profils.monProfil.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
     auth = { pret: () => Promise.resolve(), estConnecte: () => true, seConnecter: jasmine.createSpy('seConnecter') };
 
     TestBed.configureTestingModule({
@@ -50,7 +57,9 @@ describe('MesDemandesComponent', () => {
         provideRouter([]),
         { provide: DawiniService, useValue: service },
         { provide: AuthService, useValue: auth },
+        { provide: ProfilService, useValue: profils },
         { provide: LOCALE_ID, useValue: 'fr' },
+        { provide: HttpClient, useValue: { get: () => of(REFERENTIEL) } },
       ],
     });
     fixture = TestBed.createComponent(MesDemandesComponent);
@@ -68,14 +77,14 @@ describe('MesDemandesComponent', () => {
   }
 
   function champ(nom: string): HTMLInputElement {
-    return fixture.nativeElement.querySelector(`input[name="${nom}"]`);
+    return fixture.nativeElement.querySelector(`[name="${nom}"]`);
   }
 
   async function saisir(valeurs: Record<string, string>) {
     for (const [nom, valeur] of Object.entries(valeurs)) {
       const c = champ(nom);
       c.value = valeur;
-      c.dispatchEvent(new Event('input'));
+      c.dispatchEvent(new Event(c.tagName === 'SELECT' ? 'change' : 'input'));
     }
     await afficher();
   }
@@ -99,6 +108,16 @@ describe('MesDemandesComponent', () => {
     expect(items[1].textContent).toContain('1 réponse');
   });
 
+  it('propose les wilayas du referentiel et preselectionne celle du profil du patient', async () => {
+    profils.monProfil.and.returnValue(of({ wilayaCode: '9' } as Profil));
+    await afficher();
+
+    const select = champ('wilayaCode') as unknown as HTMLSelectElement;
+    const options = Array.from(select.options).map((o) => `${o.value}:${o.textContent?.trim()}`);
+    expect(options).toEqual([':Choisissez votre wilaya', '9:9 — Blida', '16:16 — Alger']);
+    expect(select.value).toBe('9');
+  });
+
   it('refuse cote client une demande sans medicament ou sans wilaya', async () => {
     await afficher();
 
@@ -107,14 +126,14 @@ describe('MesDemandesComponent', () => {
     await afficher();
 
     expect(service.publier).not.toHaveBeenCalled();
-    expect(texte()).toContain('Indiquez le médicament recherché et le code de votre wilaya.');
+    expect(texte()).toContain('Indiquez le médicament recherché et choisissez votre wilaya.');
   });
 
   it('publie la demande (champs nettoyes, facultatifs omis s ils sont vides), confirme, vide le formulaire et recharge', async () => {
     service.publier.and.returnValue(of(OUVERTE));
     await afficher();
 
-    await saisir({ medicament: '  Amoxicilline 1 g ', wilayaCode: ' 16 ', commune: 'Bab Ezzouar', precision: '   ' });
+    await saisir({ medicament: '  Amoxicilline 1 g ', wilayaCode: '16', commune: 'Bab Ezzouar', precision: '   ' });
     soumettre();
     await afficher();
 
@@ -130,7 +149,7 @@ describe('MesDemandesComponent', () => {
     );
     await afficher();
 
-    await saisir({ medicament: 'Insuline', wilayaCode: '16000' });
+    await saisir({ medicament: 'Insuline', wilayaCode: '16' });
     soumettre();
     await afficher();
 

@@ -5,8 +5,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import localeFr from '@angular/common/locales/fr';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { AvisAdmin, AvisService } from '../avis/avis.service';
+import { PatientsService } from '../medecin/patients.service';
 import { ModerationAvisComponent } from './moderation-avis.component';
 
 const SIGNALE: AvisAdmin = {
@@ -26,17 +28,26 @@ const PUBLIE: AvisAdmin = { ...SIGNALE, id: 'a3', statut: 'PUBLIE', note: 5, com
 describe('ModerationAvisComponent', () => {
   let fixture: ComponentFixture<ModerationAvisComponent>;
   let service: jasmine.SpyObj<AvisService>;
+  let patients: jasmine.SpyObj<PatientsService>;
 
   beforeEach(() => {
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<AvisService>('AvisService', ['pourModeration', 'masquer', 'retablir']);
     service.pourModeration.and.returnValue(of([SIGNALE]));
+    patients = jasmine.createSpyObj<PatientsService>('PatientsService', ['patientsParIds']);
+    patients.patientsParIds.and.returnValue(of(new Map([['p1', { patientId: 'p1', nomComplet: 'Samir Kaci', telephone: null, email: null }]])));
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin']);
+    annuaire.medecin.and.returnValue(
+      of({ id: 'm1', nomComplet: 'Dr Amina Belkacem', specialiteSlug: 'generaliste', specialiteFr: 'Généraliste', wilayaCode: '16', wilayaFr: 'Alger', ville: 'Alger' }),
+    );
 
     TestBed.configureTestingModule({
       imports: [ModerationAvisComponent],
       providers: [
         provideRouter([]),
         { provide: AvisService, useValue: service },
+        { provide: PatientsService, useValue: patients },
+        { provide: AnnuaireService, useValue: annuaire },
         { provide: AuthService, useValue: { seConnecter: jasmine.createSpy('seConnecter') } },
         { provide: LOCALE_ID, useValue: 'fr' },
       ],
@@ -75,7 +86,7 @@ describe('ModerationAvisComponent', () => {
     expect(texte()).toContain('Signalé');
     expect(texte()).toContain('Commentaire déplacé.');
     expect(texte()).toContain('18 septembre 2026');
-    expect(texte()).toContain('Médecin m1 · Patient p1 · Rendez-vous r1');
+    expect(texte()).toContain('Dr Amina Belkacem · Samir Kaci');
     expect(bouton('Masquer')).toBeDefined();
     expect(bouton('Rétablir')).toBeDefined();
   });
@@ -148,5 +159,16 @@ describe('ModerationAvisComponent', () => {
     fixture = TestBed.createComponent(ModerationAvisComponent);
     await afficher();
     expect(texte()).toContain("Cette page est réservée à l'administrateur.");
+  });
+
+  it('affiche le nom du patient et du medecin plutot que leurs identifiants', async () => {
+    await afficher();
+
+    expect(patients.patientsParIds).toHaveBeenCalledWith(['p1']);
+    const ligne: HTMLLIElement = fixture.nativeElement.querySelector('li');
+    expect(ligne.textContent).toContain('Samir Kaci');
+    expect(ligne.textContent).toContain('Dr Amina Belkacem');
+    expect(ligne.textContent).not.toContain('Patient p1');
+    expect(ligne.textContent).not.toContain('Rendez-vous r1');
   });
 });

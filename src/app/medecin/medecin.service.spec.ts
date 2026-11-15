@@ -121,13 +121,13 @@ describe('MedecinService (candidature et cabinet)', () => {
     expect(recu).toEqual([RATTACHEMENT]);
   });
 
-  it('rattache une secretaire par POST /api/medecin/secretaires avec { secretaireId }', () => {
+  it('rattache une secretaire par POST /api/medecin/secretaires avec { email }', () => {
     let recu: Rattachement | undefined;
-    service.rattacherSecretaire('55555555-5555-5555-5555-555555555555').subscribe((r) => (recu = r));
+    service.rattacherSecretaire('secretaire@exemple.dz').subscribe((r) => (recu = r));
 
     const requete = http.expectOne(`${BASE}/api/medecin/secretaires`);
     expect(requete.request.method).toBe('POST');
-    expect(requete.request.body).toEqual({ secretaireId: '55555555-5555-5555-5555-555555555555' });
+    expect(requete.request.body).toEqual({ email: 'secretaire@exemple.dz' });
     requete.flush(RATTACHEMENT, { status: 201, statusText: 'Created' });
 
     expect(recu).toEqual(RATTACHEMENT);
@@ -142,6 +142,20 @@ describe('MedecinService (candidature et cabinet)', () => {
     expect(requete.request.body).toBeNull();
     requete.flush(null, { status: 204, statusText: 'No Content' });
 
+    expect(termine).toBeTrue();
+  });
+
+  it('liste les creneaux a venir sur GET /api/medecin/creneaux et supprime par DELETE /api/medecin/creneaux/{id}', () => {
+    service.creneaux().subscribe();
+    const lecture = http.expectOne(`${BASE}/api/medecin/creneaux`);
+    expect(lecture.request.method).toBe('GET');
+    lecture.flush([]);
+
+    let termine = false;
+    service.supprimerCreneau('c1').subscribe({ complete: () => (termine = true) });
+    const suppression = http.expectOne(`${BASE}/api/medecin/creneaux/c1`);
+    expect(suppression.request.method).toBe('DELETE');
+    suppression.flush(null, { status: 204, statusText: 'No Content' });
     expect(termine).toBeTrue();
   });
 });

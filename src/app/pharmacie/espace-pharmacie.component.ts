@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { catchError, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../auth/auth.service';
 import { Besoin, DawiniService, DemandeReponse, libelleReponses } from '../dawini/dawini.service';
@@ -41,8 +42,11 @@ function formulaireVide(): FormulaireReponse {
 
       <form (ngSubmit)="chercher()" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:0 0 20px">
         <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-          Wilaya (code) *
-          <input class="champ" [(ngModel)]="wilayaCode" name="wilayaCode" required placeholder="Ex. 16" style="width:120px;color:#10241F;font-size:1rem">
+          Wilaya *
+          <select class="champ" [(ngModel)]="wilayaCode" name="wilayaCode" required style="min-width:200px;color:#10241F;font-size:1rem">
+            <option value="">Choisissez votre wilaya</option>
+            <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.code }} — {{ w.nom }}</option>
+          </select>
         </label>
         <button type="submit" class="bouton" [disabled]="charge()">{{ charge() ? 'Recherche…' : 'Afficher les demandes' }}</button>
       </form>
@@ -101,8 +105,11 @@ function formulaireVide(): FormulaireReponse {
 export class EspacePharmacieComponent implements OnInit {
   private auth = inject(AuthService);
   private service = inject(DawiniService);
+  private http = inject(HttpClient);
 
   wilayaCode = '';
+  /** Wilayas du referentiel (assets/referentiel.json) : code attendu par l'API + libelle FR. */
+  wilayas = signal<{ code: string; nom: string }[]>([]);
   /** Nom de la pharmacie, commun a toutes les reponses, relu depuis localStorage s'il a deja ete saisi. */
   nomPharmacie = '';
   besoins = signal<Besoin[]>([]);
@@ -120,13 +127,17 @@ export class EspacePharmacieComponent implements OnInit {
 
   ngOnInit() {
     this.nomPharmacie = lireNomMemorise();
+    this.http
+      .get<{ wilayas?: { code: string; nom: string }[] }>('/assets/referentiel.json')
+      .pipe(catchError(() => of({ wilayas: [] })))
+      .subscribe((ref) => this.wilayas.set(ref?.wilayas ?? []));
   }
 
   chercher() {
     const wilaya = this.wilayaCode.trim();
     this.succes.set('');
     if (!wilaya) {
-      this.erreur.set('Indiquez le code de votre wilaya.');
+      this.erreur.set('Choisissez votre wilaya.');
       return;
     }
     this.charger(wilaya);

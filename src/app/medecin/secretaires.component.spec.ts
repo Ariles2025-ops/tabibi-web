@@ -11,8 +11,17 @@ import { MedecinService } from './medecin.service';
 import { SecretairesComponent } from './secretaires.component';
 
 const SECRETAIRE_ID = '55555555-5555-5555-5555-555555555555';
+const EMAIL = 'nadia@exemple.dz';
 
-const RATTACHEMENT: Rattachement = { id: 'ra1', medecinId: 'm1', secretaireId: SECRETAIRE_ID, creeLe: '2026-09-18T10:00:00Z' };
+const RATTACHEMENT: Rattachement = {
+  id: 'ra1',
+  medecinId: 'm1',
+  secretaireId: SECRETAIRE_ID,
+  creeLe: '2026-09-18T10:00:00Z',
+  secretaireNom: 'Nadia Saidi',
+  secretaireEmail: EMAIL,
+};
+/** Rattachement ancien, sans nom ni e-mail connus : un identifiant abrege est affiche. */
 const ANCIEN: Rattachement = { id: 'ra0', medecinId: 'm1', secretaireId: '66666666-6666-6666-6666-666666666666', creeLe: '2026-09-01T10:00:00Z' };
 
 describe('SecretairesComponent', () => {
@@ -52,7 +61,7 @@ describe('SecretairesComponent', () => {
   }
 
   async function saisir(valeur: string) {
-    const champ: HTMLInputElement = fixture.nativeElement.querySelector('input[name="secretaireId"]');
+    const champ: HTMLInputElement = fixture.nativeElement.querySelector('input[name="email"]');
     champ.value = valeur;
     champ.dispatchEvent(new Event('input'));
     await afficher();
@@ -62,19 +71,29 @@ describe('SecretairesComponent', () => {
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
   }
 
+  function bouton(ligne: HTMLElement, libelle: string): HTMLButtonElement | undefined {
+    const boutons: HTMLButtonElement[] = Array.from(ligne.querySelectorAll('button'));
+    return boutons.find((b) => b.textContent?.trim() === libelle);
+  }
+
   it('liste les secretaires rattachees, les plus anciens rattachements d abord, avec l explication du champ', async () => {
     await afficher();
 
-    expect(texte()).toContain('Identifiant du compte de votre secrétaire (visible dans Mon compte)');
+    expect(texte()).toContain('Adresse e-mail du compte Tabibi de votre secrétaire');
+    expect(texte()).toContain("La secrétaire doit avoir créé son compte Tabibi ; elle aura accès à l'espace secrétaire à sa prochaine connexion.");
+    expect(fixture.nativeElement.querySelector('input[name="email"]').getAttribute('type')).toBe('email');
     const items = lignes();
     expect(items.length).toBe(2);
-    expect(items[0].textContent).toContain('66666666-6666-6666-6666-666666666666');
+    expect(items[0].textContent).toContain('Secrétaire 66666666');
+    expect(items[0].textContent).not.toContain('66666666-6666');
     expect(items[0].textContent).toContain('Rattachée le 1 septembre 2026');
-    expect(items[1].textContent).toContain(SECRETAIRE_ID);
+    expect(items[1].textContent).toContain('Nadia Saidi');
+    expect(items[1].textContent).toContain(EMAIL);
+    expect(items[1].textContent).not.toContain(SECRETAIRE_ID);
     expect(items[1].querySelector('button')?.textContent).toContain('Retirer');
   });
 
-  it('refuse cote client un identifiant qui n est pas un UUID, sans appeler l API', async () => {
+  it('refuse cote client une adresse e-mail invalide, sans appeler l API', async () => {
     await afficher();
 
     await saisir('secretaire.demo');
@@ -82,20 +101,20 @@ describe('SecretairesComponent', () => {
     await afficher();
 
     expect(service.rattacherSecretaire).not.toHaveBeenCalled();
-    expect(texte()).toContain("Indiquez l'identifiant du compte de votre secrétaire");
+    expect(texte()).toContain("Indiquez l'adresse e-mail du compte Tabibi de votre secrétaire.");
   });
 
-  it('rattache la secretaire (identifiant nettoye), confirme, vide le champ et recharge', async () => {
+  it('rattache la secretaire par e-mail (nettoye), confirme, vide le champ et recharge', async () => {
     service.rattacherSecretaire.and.returnValue(of(RATTACHEMENT));
     await afficher();
 
-    await saisir(`  ${SECRETAIRE_ID.toUpperCase()} `);
+    await saisir(`  ${EMAIL.toUpperCase()} `);
     soumettre();
     await afficher();
 
-    expect(service.rattacherSecretaire).toHaveBeenCalledWith(SECRETAIRE_ID);
+    expect(service.rattacherSecretaire).toHaveBeenCalledWith(EMAIL);
     expect(texte()).toContain('Secrétaire rattachée');
-    expect(fixture.nativeElement.querySelector('input[name="secretaireId"]').value).toBe('');
+    expect(fixture.nativeElement.querySelector('input[name="email"]').value).toBe('');
     expect(service.secretaires).toHaveBeenCalledTimes(2);
   });
 
@@ -105,7 +124,7 @@ describe('SecretairesComponent', () => {
     );
     await afficher();
 
-    await saisir(SECRETAIRE_ID);
+    await saisir(EMAIL);
     soumettre();
     await afficher();
 
@@ -113,31 +132,34 @@ describe('SecretairesComponent', () => {
     expect(service.secretaires).toHaveBeenCalledTimes(2);
   });
 
-  it('affiche le { erreur } d un 400 (soi-meme) sans recharger', async () => {
+  it('affiche le { erreur } d un 400 (aucun compte avec cet e-mail) sans recharger', async () => {
     service.rattacherSecretaire.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: 'Un medecin ne peut pas se rattacher lui-meme comme secretaire.' } })),
+      throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: "Aucun compte Tabibi n'utilise cette adresse e-mail : nadia@exemple.dz" } })),
     );
     await afficher();
 
-    await saisir(SECRETAIRE_ID);
+    await saisir(EMAIL);
     soumettre();
     await afficher();
 
-    expect(texte()).toContain('Un medecin ne peut pas se rattacher lui-meme comme secretaire.');
+    expect(texte()).toContain("Aucun compte Tabibi n'utilise cette adresse e-mail : nadia@exemple.dz");
     expect(service.secretaires).toHaveBeenCalledTimes(1);
   });
 
-  it('retire une secretaire apres confirmation puis recharge ; sans confirmation rien ne se passe', async () => {
-    const confirmation = spyOn(window, 'confirm').and.returnValue(false);
+  it('retire une secretaire apres confirmation dans la page puis recharge ; « Non » ne fait rien', async () => {
     service.retirerSecretaire.and.returnValue(of(void 0));
     await afficher();
 
-    lignes()[0].querySelector('button')!.click();
+    bouton(lignes()[0], 'Retirer')!.click();
+    await afficher();
+    expect(lignes()[0].textContent).toContain('Retirer cette secrétaire ?');
+    bouton(lignes()[0], 'Non')!.click();
     await afficher();
     expect(service.retirerSecretaire).not.toHaveBeenCalled();
 
-    confirmation.and.returnValue(true);
-    lignes()[0].querySelector('button')!.click();
+    bouton(lignes()[0], 'Retirer')!.click();
+    await afficher();
+    bouton(lignes()[0], 'Oui')!.click();
     await afficher();
 
     expect(service.retirerSecretaire).toHaveBeenCalledWith('ra0');

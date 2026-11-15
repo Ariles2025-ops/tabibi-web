@@ -53,6 +53,11 @@ const RENDEZ_VOUS: RendezVous = {
   creneauId: 'c1',
 };
 
+/** Rendez-vous qui commence dans 5 minutes : la salle est ouverte (15 min avant a 2 h apres). */
+function rendezVousImminent(): RendezVous {
+  return { ...RENDEZ_VOUS, debut: new Date(Date.now() + 5 * 60 * 1000).toISOString() };
+}
+
 describe('MesTeleconsultationsComponent', () => {
   let fixture: ComponentFixture<MesTeleconsultationsComponent>;
   let service: jasmine.SpyObj<TeleconsultationService>;
@@ -114,11 +119,12 @@ describe('MesTeleconsultationsComponent', () => {
     expect(texte()).toContain('Planifiée');
     expect(texte()).toContain('Dr Amina Belkacem');
     expect(texte()).toContain('Rendez-vous du');
-    expect(texte()).toContain('7 décembre');
+    expect(texte()).toContain('7 décembre 2026');
   });
 
   it('affiche le lien « Rejoindre la téléconsultation » (nouvel onglet, noopener) apres le consentement', async () => {
     service.consentir.and.returnValue(of(CONSENTIE));
+    rendezVous.mes.and.returnValue(of([rendezVousImminent()]));
     await afficher();
 
     bouton('Je donne mon consentement')!.click();
@@ -136,12 +142,28 @@ describe('MesTeleconsultationsComponent', () => {
 
   it('affiche directement le lien quand le consentement est deja donne, mais pas une fois terminee', async () => {
     service.mes.and.returnValue(of([{ ...CONSENTIE, id: 't2', statut: 'TERMINEE' }, CONSENTIE]));
+    rendezVous.mes.and.returnValue(of([rendezVousImminent()]));
     await afficher();
 
     const liens: HTMLAnchorElement[] = Array.from(fixture.nativeElement.querySelectorAll('a[target="_blank"]'));
     expect(liens.length).toBe(1);
     expect(texte()).not.toContain(CONSENTEMENT);
     expect(texte()).toContain('Terminée');
+  });
+
+  it('desactive « Rejoindre » hors de la fenetre (15 min avant a 2 h apres) avec une indication', async () => {
+    service.mes.and.returnValue(of([CONSENTIE]));
+    await afficher();
+
+    expect(lienSalle()).toBeNull();
+    expect(bouton('Rejoindre la téléconsultation')?.disabled).toBeTrue();
+    expect(texte()).toContain('Disponible 15 min avant le rendez-vous');
+
+    rendezVous.mes.and.returnValue(of([{ ...RENDEZ_VOUS, debut: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() }]));
+    fixture.componentInstance.charger();
+    fixture.detectChanges();
+    expect(lienSalle()).toBeNull();
+    expect(texte()).toContain('Le créneau de cette téléconsultation est passé');
   });
 
   it('affiche le motif { erreur } d un 409 au consentement et recharge la liste', async () => {

@@ -72,7 +72,7 @@ describe('AvisMedecinComponent', () => {
     expect(boutonsSignaler()[0].textContent).toContain('Signaler');
   });
 
-  it('signale un avis, confirme et recharge la liste', async () => {
+  it('signale un avis : il reste visible, marque « Signalé », sans bouton', async () => {
     service.signaler.and.returnValue(of({ id: 'a1', rendezVousId: 'r1', medecinId: MEDECIN_ID, note: 5, commentaire: 'Très bon accueil.', statut: 'SIGNALE', deposeLe: '2026-09-18T10:00:00Z' }));
     await afficher();
 
@@ -80,11 +80,16 @@ describe('AvisMedecinComponent', () => {
     await afficher();
 
     expect(service.signaler).toHaveBeenCalledWith('a1');
-    expect(texte()).toContain('Avis signalé');
-    expect(service.synthese).toHaveBeenCalledTimes(2);
+    expect(texte()).toContain("Avis signalé : il reste visible jusqu'à la décision de l'équipe Tabibi.");
+    expect(texte()).not.toContain('retiré');
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.length).toBe(2);
+    expect(items[0].textContent).toContain('Signalé');
+    expect(items[0].querySelector('button')).toBeNull();
+    expect(boutonsSignaler().length).toBe(1);
   });
 
-  it('affiche le motif { erreur } d un 409 (deja signale) et recharge', async () => {
+  it('affiche le motif { erreur } d un 409 (deja signale) et marque l avis « Signalé »', async () => {
     service.signaler.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Seul un avis publie peut etre signale.' } })),
     );
@@ -94,7 +99,7 @@ describe('AvisMedecinComponent', () => {
     await afficher();
 
     expect(texte()).toContain('Seul un avis publie peut etre signale.');
-    expect(service.synthese).toHaveBeenCalledTimes(2);
+    expect(boutonsSignaler().length).toBe(1);
   });
 
   it('indique qu il n y a aucun avis et signale un profil illisible', async () => {

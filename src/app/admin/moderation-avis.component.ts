@@ -4,7 +4,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AvisAdmin, AvisService, libelleStatutAvis } from '../avis/avis.service';
+import { PatientsService, RepertoirePatients, nomPatient } from '../medecin/patients.service';
 
 /** Filtre par statut de la liste ; '' = tous. */
 const STATUTS_FILTRE = [
@@ -25,18 +27,18 @@ const STATUTS_FILTRE = [
   template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
-        <h1 style="color:var(--vert);margin:0">Modération des avis</h1>
+        <h1 style="color:var(--blue);margin:0">Modération des avis</h1>
         <label style="display:flex;align-items:center;gap:8px;color:var(--text3);font-size:.9rem">
           Statut
-          <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:#10241F;font-size:1rem">
+          <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:var(--ink);font-size:1rem">
             <option *ngFor="let s of statuts" [value]="s.valeur">{{ s.libelle }}</option>
           </select>
         </label>
       </div>
 
       <p *ngIf="charge()">Chargement…</p>
-      <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
-      <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
+      <p *ngIf="succes()" style="color:var(--blue)">{{ succes() }}</p>
+      <p *ngIf="erreur()" role="alert" style="color:var(--red)">{{ erreur() }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let a of avis()"
@@ -47,12 +49,12 @@ const STATUTS_FILTRE = [
             <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
             <p *ngIf="!a.commentaire" style="margin:6px 0 0;color:var(--text3)">Sans commentaire.</p>
             <span style="display:block;margin:6px 0 0;color:var(--text3);font-size:.85rem">
-              Médecin {{ a.medecinId }} · Patient {{ a.patientId }} · Rendez-vous {{ a.rendezVousId }}
+              {{ nomMedecin(a.medecinId) }} · {{ nom(a.patientId) }}
             </span>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button *ngIf="a.statut !== 'MASQUE'" type="button" (click)="masquer(a)" [disabled]="enCours() !== null"
-                    style="padding:11px 18px;background:#fff;color:#b3261e;border:1.5px solid #f0c9c6;border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
+                    style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
               {{ enCours() === a.id ? 'Enregistrement…' : 'Masquer' }}
             </button>
             <button *ngIf="a.statut !== 'PUBLIE'" type="button" class="bouton" (click)="retablir(a)" [disabled]="enCours() !== null">
@@ -63,13 +65,15 @@ const STATUTS_FILTRE = [
       </ul>
       <p *ngIf="!charge() && !erreur() && avis().length === 0">Aucun avis pour ce filtre.</p>
 
-      <p style="margin:24px 0 0"><a routerLink="/admin" style="color:var(--vert)">Retour au tableau de bord</a></p>
+      <p style="margin:24px 0 0"><a routerLink="/admin" style="color:var(--blue)">Retour au tableau de bord</a></p>
     </main>
   `,
 })
 export class ModerationAvisComponent implements OnInit {
   private auth = inject(AuthService);
   private service = inject(AvisService);
+  private patients = inject(PatientsService);
+  private annuaire = inject(AnnuaireService);
 
   statuts = STATUTS_FILTRE;
   /** Statut filtre ('' = tous) ; les avis signales d'abord. */
@@ -80,6 +84,9 @@ export class ModerationAvisComponent implements OnInit {
   enCours = signal<string | null>(null);
   succes = signal('');
   erreur = signal('');
+  /** Noms des patients et des medecins des avis affiches ; a defaut « Patient » / « Médecin ». */
+  repertoire = signal<RepertoirePatients>(new Map());
+  nomsMedecins = signal<Partial<Record<string, string>>>({});
 
   ngOnInit() {
     this.charger();
@@ -99,6 +106,7 @@ export class ModerationAvisComponent implements OnInit {
       next: (liste) => {
         this.avis.set(liste);
         this.charge.set(false);
+        this.chargerNoms(liste);
       },
       error: (e: HttpErrorResponse) => {
         this.charge.set(false);
@@ -123,6 +131,30 @@ export class ModerationAvisComponent implements OnInit {
 
   libelleStatut(statut: string): string {
     return libelleStatutAvis(statut);
+  }
+
+  nom(patientId: string): string {
+    return nomPatient(this.repertoire(), patientId);
+  }
+
+  nomMedecin(medecinId: string): string {
+    return this.nomsMedecins()[medecinId] ?? 'Médecin';
+  }
+
+  /** Noms des patients (GET /api/admin/patients?ids=) et des medecins (annuaire) absents du cache ; un echec laisse le libelle generique. */
+  private chargerNoms(liste: AvisAdmin[]) {
+    const patientsInconnus = liste.map((a) => a.patientId).filter((id) => !this.repertoire().has(id));
+    this.patients.patientsParIds(patientsInconnus).subscribe({
+      next: (r) => this.repertoire.update((actuel) => new Map([...actuel, ...r])),
+      error: () => undefined,
+    });
+    for (const id of new Set(liste.map((a) => a.medecinId))) {
+      if (this.nomsMedecins()[id] !== undefined) continue;
+      this.annuaire.medecin(id).subscribe({
+        next: (m) => this.nomsMedecins.update((noms) => ({ ...noms, [id]: m.nomComplet })),
+        error: () => undefined,
+      });
+    }
   }
 
   /** Applique une decision puis recharge la liste ; 409 / 404 (deja traite, disparu) affichent le motif et rechargent. */

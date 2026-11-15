@@ -8,6 +8,10 @@ import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { libelleStatutTeleconsultation } from './statut-teleconsultation';
 import { Teleconsultation, TeleconsultationService, salleAccessible } from './teleconsultation.service';
 
+/** La salle s'ouvre 15 min avant le rendez-vous et reste accessible 2 h apres son debut. */
+const AVANCE_MS = 15 * 60 * 1000;
+const RETARD_MS = 2 * 60 * 60 * 1000;
+
 /**
  * Teleconsultations du patient connecte (GET /api/teleconsultations/mes). Le lien de la salle video n'est
  * remis qu'apres un consentement explicite (POST /api/teleconsultations/{id}/consentir) : tant qu'il manque,
@@ -30,16 +34,22 @@ import { Teleconsultation, TeleconsultationService, salleAccessible } from './te
           <li *ngFor="let t of teleconsultations()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
               <div>
-                <strong *ngIf="datesRendezVous()[t.rendezVousId] as debut">Rendez-vous du {{ debut | date:'EEEE d MMMM à HH:mm' }}</strong>
-                <strong *ngIf="!datesRendezVous()[t.rendezVousId]">Téléconsultation proposée le {{ t.creeLe | date:'EEEE d MMMM à HH:mm' }}</strong>
+                <strong *ngIf="datesRendezVous()[t.rendezVousId] as debut">Rendez-vous du {{ debut | date:'EEEE d MMMM y à HH:mm' }}</strong>
+                <strong *ngIf="!datesRendezVous()[t.rendezVousId]">Téléconsultation proposée le {{ t.creeLe | date:'EEEE d MMMM y à HH:mm' }}</strong>
                 <br>
                 <a [routerLink]="['/medecins', t.medecinId]" style="color:var(--vert)">{{ noms()[t.medecinId] ?? 'Voir le praticien' }}</a>
                 <span style="color:var(--text3)"> · {{ libelleStatut(t.statut) }}</span>
-                <span *ngIf="t.consentementPatientLe" style="color:var(--text3)"> · consentement donné le {{ t.consentementPatientLe | date:'d MMMM à HH:mm' }}</span>
+                <span *ngIf="t.consentementPatientLe" style="color:var(--text3)"> · consentement donné le {{ t.consentementPatientLe | date:'d MMMM y à HH:mm' }}</span>
               </div>
-              <a *ngIf="salleAccessible(t)" class="bouton" [href]="t.lienSalle" target="_blank" rel="noopener">
-                Rejoindre la téléconsultation
-              </a>
+              <ng-container *ngIf="salleAccessible(t)">
+                <a *ngIf="fenetre(t) === 'ouverte'" class="bouton" [href]="t.lienSalle" target="_blank" rel="noopener">
+                  Rejoindre la téléconsultation
+                </a>
+                <span *ngIf="fenetre(t) !== 'ouverte'" style="display:grid;gap:4px;justify-items:end">
+                  <button type="button" class="bouton" disabled>Rejoindre la téléconsultation</button>
+                  <small style="color:var(--text3)">{{ fenetre(t) === 'avant' ? 'Disponible 15 min avant le rendez-vous' : 'Le créneau de cette téléconsultation est passé' }}</small>
+                </span>
+              </ng-container>
             </div>
 
             <section *ngIf="consentementAttendu(t)"
@@ -146,6 +156,20 @@ export class MesTeleconsultationsComponent implements OnInit {
 
   libelleStatut(statut: string): string {
     return libelleStatutTeleconsultation(statut);
+  }
+
+  /**
+   * Fenetre pour rejoindre la salle : de 15 min avant le debut du rendez-vous a 2 h apres. Une seance deja
+   * demarree par le medecin (EN_COURS) ou dont la date est inconnue reste ouverte.
+   */
+  fenetre(t: Teleconsultation, maintenant = Date.now()): 'avant' | 'ouverte' | 'apres' {
+    const debut = this.datesRendezVous()[t.rendezVousId];
+    if (t.statut === 'EN_COURS' || !debut) return 'ouverte';
+    const heure = Date.parse(debut);
+    if (Number.isNaN(heure)) return 'ouverte';
+    if (maintenant < heure - AVANCE_MS) return 'avant';
+    if (maintenant > heure + RETARD_MS) return 'apres';
+    return 'ouverte';
   }
 
   /** Recupere (une seule fois par praticien) le nom des medecins des teleconsultations. */

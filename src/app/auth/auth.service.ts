@@ -37,6 +37,7 @@ export class AuthService {
               this.oauth.configure(creerAuthConfig(this.config));
               return this.oauth.loadDiscoveryDocumentAndTryLogin();
             })
+            .then(() => this.garderLaSession())
             .then(() => this.revenirApresConnexion())
             .catch((e) => console.error('Initialisation OIDC impossible', e));
     }
@@ -82,6 +83,25 @@ export class AuthService {
   seDeconnecter(): void {
     if (!this.navigateur) return;
     this.oauth.logOut();
+  }
+
+  /**
+   * Le jeton d'acces Keycloak ne vit que 5 minutes : sans renouvellement, l'utilisateur serait renvoye vers la
+   * connexion en pleine saisie. On renouvelle un jeton expire au chargement (jeton de rafraichissement), puis
+   * automatiquement avant chaque expiration, tant que la session Keycloak est active.
+   */
+  private async garderLaSession(): Promise<void> {
+    const rafraichissable = !!this.oauth.getRefreshToken();
+    if (rafraichissable && !this.oauth.hasValidAccessToken()) {
+      try {
+        await this.oauth.refreshToken();
+      } catch {
+        // Session Keycloak terminee : l'utilisateur se reconnectera a sa prochaine action.
+      }
+    }
+    if (rafraichissable) {
+      this.oauth.setupAutomaticSilentRefresh();
+    }
   }
 
   /** Apres un retour de Keycloak, reprend la navigation vers la page demandee avant la connexion. */

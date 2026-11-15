@@ -81,6 +81,20 @@ describe('ReponsesDemandeComponent', () => {
     return fixture.nativeElement.textContent;
   }
 
+  function bouton(libelle: string): HTMLButtonElement | undefined {
+    const boutons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
+    return boutons.find((b) => b.textContent?.trim() === libelle);
+  }
+
+  /** « Clôturer la demande » puis « Oui, clôturer » (confirmation dans la page). */
+  async function confirmerCloture() {
+    boutonCloturer()!.click();
+    await afficher();
+    expect(texte()).toContain('Clôturer cette demande ?');
+    bouton('Oui, clôturer')!.click();
+    await afficher();
+  }
+
   function boutonCloturer(): HTMLButtonElement | undefined {
     const boutons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
     return boutons.find((b) => b.textContent?.includes('Clôturer la demande'));
@@ -110,8 +124,7 @@ describe('ReponsesDemandeComponent', () => {
     service.cloturer.and.returnValue(of(CLOTUREE));
     await afficher();
 
-    boutonCloturer()!.click();
-    await afficher();
+    await confirmerCloture();
 
     expect(service.cloturer).toHaveBeenCalledWith('b1');
     expect(texte()).toContain('Demande clôturée');
@@ -119,13 +132,26 @@ describe('ReponsesDemandeComponent', () => {
     expect(boutonCloturer()).toBeUndefined();
   });
 
+  it('ne cloture rien tant que la confirmation n est pas donnee, et « Non » annule', async () => {
+    await afficher();
+
+    boutonCloturer()!.click();
+    await afficher();
+    expect(service.cloturer).not.toHaveBeenCalled();
+    bouton('Non')!.click();
+    await afficher();
+
+    expect(service.cloturer).not.toHaveBeenCalled();
+    expect(texte()).not.toContain('Clôturer cette demande ?');
+    expect(boutonCloturer()).toBeDefined();
+  });
+
   it('affiche le { erreur } d un 409 (deja cloturee) et recharge la demande', async () => {
     service.cloturer.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Ce besoin est deja cloture.' } })));
     await afficher();
     service.mesBesoins.and.returnValue(of([CLOTUREE]));
 
-    boutonCloturer()!.click();
-    await afficher();
+    await confirmerCloture();
 
     expect(texte()).toContain('Ce besoin est deja cloture.');
     expect(service.mesBesoins).toHaveBeenCalledTimes(2);

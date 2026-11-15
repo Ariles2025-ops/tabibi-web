@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
+import { ProfilService } from '../moi/profil.service';
 import { Ordonnance, OrdonnanceService } from './ordonnance.service';
 import { libelleStatutOrdonnance } from './statut-ordonnance';
 
@@ -30,8 +31,8 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
               Émise le {{ o.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }} · {{ libelleStatut(o.statut) }}
             </p>
             <p style="color:var(--text3);margin:4px 0 0">
-              Praticien : {{ medecin()?.nomComplet ?? o.medecinId }}<br>
-              Patient : {{ o.patientId }}
+              Praticien : {{ medecin()?.nomComplet ?? 'Votre médecin' }}
+              <ng-container *ngIf="nomPatient()"><br>Patient : {{ nomPatient() }}</ng-container>
             </p>
           </div>
           <button type="button" class="bouton sans-impression" (click)="imprimer()">Imprimer</button>
@@ -74,6 +75,7 @@ export class OrdonnanceDetailComponent implements OnInit {
   private service = inject(OrdonnanceService);
   private annuaire = inject(AnnuaireService);
   private roleService = inject(RoleService);
+  private profils = inject(ProfilService);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -82,6 +84,8 @@ export class OrdonnanceDetailComponent implements OnInit {
   ordonnance = signal<Ordonnance | null>(null);
   /** Praticien emetteur, lu dans l'annuaire pour afficher son nom. */
   medecin = signal<Medecin | null>(null);
+  /** Nom du patient, lu dans MON profil quand je suis ce patient ; jamais d'identifiant brut a l'impression. */
+  nomPatient = signal<string | null>(null);
   charge = signal(false);
   erreur = signal('');
 
@@ -107,6 +111,7 @@ export class OrdonnanceDetailComponent implements OnInit {
   private charger(id: string) {
     this.ordonnance.set(null);
     this.medecin.set(null);
+    this.nomPatient.set(null);
     this.erreur.set('');
     this.charge.set(true);
     this.service.parId(id).subscribe({
@@ -114,6 +119,7 @@ export class OrdonnanceDetailComponent implements OnInit {
         this.ordonnance.set(o);
         this.charge.set(false);
         this.chargerMedecin(o.medecinId);
+        this.chargerNomPatient(o.patientId);
       },
       error: (e: HttpErrorResponse) => {
         this.charge.set(false);
@@ -130,7 +136,18 @@ export class OrdonnanceDetailComponent implements OnInit {
     });
   }
 
-  /** Nom du praticien (annuaire public) ; a defaut, l'identifiant reste affiche. */
+  /**
+   * Nom du patient : GET /api/moi/profil (nomComplet), retenu seulement si ce profil est celui du patient de
+   * l'ordonnance (meme sujet Keycloak) ; profil absent ou autre lecteur (medecin) : la ligne est omise.
+   */
+  private chargerNomPatient(patientId: string) {
+    this.profils.monProfil().subscribe({
+      next: (p) => this.nomPatient.set(p.utilisateurId === patientId && p.nomComplet?.trim() ? p.nomComplet.trim() : null),
+      error: () => this.nomPatient.set(null),
+    });
+  }
+
+  /** Nom du praticien (annuaire public) ; a defaut, « Votre médecin » (jamais l'identifiant brut). */
   private chargerMedecin(medecinId: string) {
     this.annuaire.medecin(medecinId).subscribe({
       next: (m) => this.medecin.set(m),

@@ -86,9 +86,9 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
             <div class="bc-day">Aujourd'hui · 12 créneaux disponibles</div>
             <div class="bc-slots"><span dir="ltr">09:00</span><span dir="ltr">09:30</span><span class="sel" dir="ltr">10:30</span><span dir="ltr">11:00</span><span dir="ltr">14:00</span><span dir="ltr">15:30</span></div>
             <div class="bc-btn"><i class="fa fa-check"></i> <span>Confirmer le RDV</span> · <span dir="ltr">10:30</span></div>
-            <div class="bc-note">Rappel SMS automatique · Paiement au cabinet</div>
+            <div class="bc-note">Confirmation immédiate · Paiement au cabinet</div>
           </div>
-          <div class="badge-float bf1"><span class="dot" style="background:var(--blue)"><i class="fa fa-check"></i></span><span><b>RDV confirmé</b><small>Rappel SMS envoyé</small></span></div>
+          <div class="badge-float bf1"><span class="dot" style="background:var(--blue)"><i class="fa fa-check"></i></span><span><b>RDV confirmé</b><small>Rappel dans votre espace Tabibi</small></span></div>
           <div class="badge-float bf2"><span class="dot" style="background:#D4A437"><i class="fa fa-star"></i></span><span><b>Médecin vérifié</b><small>Identité contrôlée</small></span></div>
         </div>
       </div>
@@ -111,11 +111,11 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
         <div class="dwh-l">
           <span class="dwh-new"><i class="fa fa-wand-magic-sparkles" aria-hidden="true"></i> <span>Nouveau</span></span>
           <h2><span class="dwh-name">Dawini</span> — trouvez votre médicament en pharmacie</h2>
-          <p>Décrivez le médicament que vous cherchez, ajoutez la photo de l'ordonnance si besoin : les pharmacies partenaires de votre wilaya sont prévenues et vous répondent en direct.</p>
+          <p>Décrivez le médicament que vous cherchez : les pharmacies partenaires de votre wilaya voient votre demande et vous indiquent sa disponibilité et son prix.</p>
           <div class="dwh-points">
             <span><i class="fa fa-clock" aria-hidden="true"></i> <span>Disponibilité indiquée par la pharmacie</span></span>
             <span><i class="fa fa-location-dot" aria-hidden="true"></i> <span>Pharmacies de votre wilaya</span></span>
-            <span><i class="fa fa-lock" aria-hidden="true"></i> <span>Vos coordonnées ne sont partagées qu'avec la pharmacie qui accepte</span></span>
+            <span><i class="fa fa-lock" aria-hidden="true"></i> <span>Votre identité n'est pas communiquée aux pharmacies</span></span>
           </div>
           <a class="btn btn-primary btn-lg dwh-cta" routerLink="/dawini"><i class="fa fa-prescription-bottle-medical" aria-hidden="true"></i> <span>Chercher un médicament</span></a>
         </div>
@@ -125,8 +125,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
             <div class="dwh-mock-resp">
               <div class="top">Pharmacie El Chifa <span class="ok"><i class="fa fa-check"></i> <span>Disponible</span></span></div>
               <small>Alger-Centre · générique disponible</small>
-              <div class="dwh-mock-actions"><span><i class="fa fa-route"></i> <span>Itinéraire</span></span><span><i class="fa fa-phone"></i> <span>Appeler</span></span></div>
-            </div>
+                          </div>
             <div style="text-align:center;font-size:10px;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.78);font-weight:700">Aperçu — exemple</div>
           </div>
         </div>
@@ -145,7 +144,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
           <div class="dl-feat">
             <span class="dl-feat__ic"><i class="fa fa-comment-medical" aria-hidden="true"></i></span>
             <h3>Suivi et rappels</h3>
-            <p>Un rappel SMS automatique avant chaque rendez-vous, pour ne jamais l'oublier.</p>
+            <p>Retrouvez vos rendez-vous et leurs rappels dans votre espace Tabibi, pour ne jamais les oublier.</p>
           </div>
           <div class="dl-feat">
             <span class="dl-feat__ic"><i class="fa fa-shield-halved" aria-hidden="true"></i></span>
@@ -169,7 +168,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     <section class="section" id="sec-docs" *ngIf="enRecherche">
       <div class="sec-head" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 var(--gutter);margin-bottom:14px">
         <h2 class="sec-title">Résultats de votre recherche</h2>
-        <span style="color:var(--text3);font-size:13px;font-weight:600" *ngIf="connecte() && !charge() && resultats().length">{{ resultats().length }} médecin(s)</span>
+        <span style="color:var(--text3);font-size:13px;font-weight:600" *ngIf="connecte() && !charge() && resultats().length">{{ resultats().length >= 50 ? '50 premiers résultats — affinez votre recherche' : resultats().length + ' médecin(s)' }}</span>
       </div>
 
       <p *ngIf="charge()" style="padding:0 var(--gutter);color:var(--text3)">Recherche…</p>
@@ -226,10 +225,10 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     <div class="v4-tele" *ngIf="!enRecherche">
       <span class="ti"><i class="fa fa-video" aria-hidden="true"></i></span>
       <div>
-        <h3>Téléconsultation <span class="v4-live">Disponible</span></h3>
-        <p>Consultez à distance un praticien vérifié, où que vous soyez en Algérie. Choisissez un médecin qui propose la téléconsultation et réservez votre créneau.</p>
+        <h3>Téléconsultation</h3>
+        <p>Après la prise de rendez-vous, votre médecin peut vous proposer une téléconsultation : vous la retrouvez alors dans votre espace Tabibi et consultez à distance, où que vous soyez en Algérie.</p>
       </div>
-      <a class="btn btn-primary cta" href="#hero-recherche">Trouver un médecin en téléconsultation</a>
+      <a class="btn btn-primary cta" href="#hero-recherche">Trouver un médecin</a>
     </div>
 
     <section class="section" *ngIf="!enRecherche" style="background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
@@ -237,7 +236,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       <div class="steps-col">
         <div class="step-row"><div class="step-num">1</div><div class="step-info"><div class="step-title">Recherchez</div><div class="step-desc">Filtrez par nom, ville ou spécialité.</div></div></div>
         <div class="step-row"><div class="step-num">2</div><div class="step-info"><div class="step-title">Réservez</div><div class="step-desc">Choisissez un créneau et confirmez votre RDV en ligne.</div></div></div>
-        <div class="step-row" style="padding-bottom:0"><div class="step-num">3</div><div class="step-info"><div class="step-title">Consultez</div><div class="step-desc">Recevez un SMS de confirmation et rencontrez votre médecin.</div></div></div>
+        <div class="step-row" style="padding-bottom:0"><div class="step-num">3</div><div class="step-info"><div class="step-title">Consultez</div><div class="step-desc">Confirmation immédiate : retrouvez votre rendez-vous dans votre espace Tabibi et rencontrez votre médecin.</div></div></div>
       </div>
     </section>
 
@@ -252,7 +251,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
         <div class="v4-cmp-r"><span>Données de santé protégées (loi 18-07)</span><strong class="y">✓</strong><span class="n">—</span></div>
         <div class="v4-cmp-r"><span>FR · AR · EN avec arabe RTL soigné</span><strong class="y">✓</strong><span class="n">partiel</span></div>
         <div class="v4-cmp-r"><span>Paiement au cabinet — espèces ou Chifa, gratuit patients</span><strong class="y">✓</strong><span class="n">variable</span></div>
-        <div class="v4-cmp-r"><span>Réservation instantanée + rappels SMS</span><strong class="y">✓</strong><span class="n">—</span></div>
+        <div class="v4-cmp-r"><span>Réservation instantanée + rappels dans votre espace</span><strong class="y">✓</strong><span class="n">—</span></div>
       </div>
     </section>
 

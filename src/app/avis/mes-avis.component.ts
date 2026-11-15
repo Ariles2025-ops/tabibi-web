@@ -83,7 +83,10 @@ export class MesAvisComponent implements OnInit {
     });
   }
 
+  /** Libelle cote patient : un avis signale est en verification, un avis masque l'a ete par la moderation. */
   libelleStatut(statut: string): string {
+    if (statut === 'SIGNALE') return 'En cours de vérification';
+    if (statut === 'MASQUE') return 'Masqué par la modération';
     return libelleStatutAvis(statut);
   }
 
