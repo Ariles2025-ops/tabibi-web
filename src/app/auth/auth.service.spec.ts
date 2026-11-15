@@ -6,6 +6,16 @@ import { ConfigService } from '../config/config.service';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
+  // Pre-lancement : les tests de connexion s'executent avec l'acces equipe.
+  beforeEach(() => localStorage.setItem('tabibi.equipe', '1'));
+  afterEach(() => localStorage.removeItem('tabibi.equipe'));
+
+  it('pre-lancement : sans acces equipe, « Se connecter » mene a /bientot', async () => {
+    localStorage.removeItem('tabibi.equipe');
+    const { connexionFermee } = await import('../lancement');
+    expect(connexionFermee()).toBeTrue();
+  });
+
   let oauth: jasmine.SpyObj<OAuthService>;
   let config: { charger: jasmine.Spy; keycloakIssuer: string; keycloakClientId: string };
 

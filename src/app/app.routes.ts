@@ -37,6 +37,7 @@ import { MesTeleconsultationsComponent } from './teleconsultation/mes-teleconsul
 import { MoiComponent } from './moi/moi.component';
 import { ProfilComponent } from './moi/profil.component';
 import { InvitationsComponent } from './secretaire/invitations.component';
+import { BientotComponent } from './bientot.component';
 import { AnnuaireSeoComponent } from './seo/annuaire-seo.component';
 import { PraticienPublicComponent } from './seo/praticien-public.component';
 
@@ -107,6 +108,7 @@ export const routes: Routes = [
       { path: 'avis', component: ModerationAvisComponent },
     ],
   },
+  { path: 'bientot', component: BientotComponent },
   { path: 'invitations', component: InvitationsComponent },
   // Pages de referencement de l'annuaire (publiques), liees depuis le pied de page.
   { path: 'specialites', component: AnnuaireSeoComponent },

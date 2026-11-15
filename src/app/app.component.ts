@@ -4,12 +4,18 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { ClocheNotificationsComponent } from './notifications/cloche-notifications.component';
+import { PRELANCEMENT } from './lancement';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ClocheNotificationsComponent],
   template: `
+    <div class="lancement-bandeau" *ngIf="prelancement" role="status">
+      <span class="lancement-bandeau__pastille">Bientôt</span>
+      <strong>Lancement prochainement</strong>
+      <span class="lancement-bandeau__txt">— la prise de rendez-vous en ligne ouvre très bientôt. Parcourez déjà l'annuaire des médecins.</span>
+    </div>
     <div class="shell">
       <aside class="side">
         <a class="side__brand" routerLink="/">tabibi<i>.</i></a>
@@ -129,6 +135,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
   `,
 })
 export class AppComponent implements OnInit {
+  readonly prelancement = PRELANCEMENT;
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   private router = inject(Router);

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { ConfigService } from '../config/config.service';
 import { creerAuthConfig } from './auth.config';
+import { connexionFermee } from '../lancement';
 
 /**
  * Fin wrapper d'OAuthService (Keycloak) : initialisation unique de l'OIDC
@@ -64,6 +65,8 @@ export class AuthService {
    */
   async seConnecter(retour: string = this.router.url): Promise<void> {
     if (!this.navigateur) return;
+    // Pre-lancement : pas de connexion, page « Lancement prochainement ».
+    if (connexionFermee()) { this.router.navigateByUrl('/bientot'); return; }
     await this.initialiser();
     // Mot de passe exige a chaque connexion, meme si une session Keycloak existe encore dans ce navigateur.
     this.oauth.initCodeFlow(retour, { prompt: 'login' });
@@ -77,6 +80,7 @@ export class AuthService {
    */
   async sInscrireParEmail(retour: string = this.router.url): Promise<void> {
     if (!this.navigateur) return;
+    if (connexionFermee()) { this.router.navigateByUrl('/bientot'); return; }
     await this.initialiser();
     const urlAuth = this.oauth.loginUrl || '';
     // Cibler l'endpoint precis (pas le "/auth" present dans l'hote auth.tabibi.doctor).

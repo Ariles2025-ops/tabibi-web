@@ -151,3 +151,9 @@ button:disabled { opacity:.6; cursor:default; }
 .siteft__logo i { color:var(--or); font-style:normal; }
 .siteft__copy { color:var(--text3); font-size:13px; }
 @media (max-width:640px) { .siteft__cols { grid-template-columns:1fr 1fr; } }
+
+/* Pre-lancement : bandeau « Lancement prochainement » en haut de toutes les pages. */
+.lancement-bandeau { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 10px; padding:12px max(16px, env(safe-area-inset-left, 0px)); background:#D4A437; color:#10241F; text-align:center; font-size:15px; line-height:1.35; }
+.lancement-bandeau strong { font-size:17px; font-weight:800; letter-spacing:-.01em; }
+.lancement-bandeau__pastille { background:#10241F; color:#F6E7BF; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; padding:3px 10px; border-radius:999px; }
+@media (max-width:640px) { .lancement-bandeau__txt { display:none; } }
