@@ -2,6 +2,11 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
+import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
+import { AuthService } from '../auth/auth.service';
+import { WILAYAS_SEO } from '../seo/referentiel-seo';
 
 /**
  * Page publique « Vous etes praticien ? » : presentation + formulaire de DEMANDE (sans compte).
@@ -22,9 +27,9 @@ import { FormsModule } from '@angular/forms';
             <h1>Développez votre cabinet avec <span class="acc">Tabibi</span></h1>
             <p>Recevez vos rendez-vous en ligne, réduisez les absences grâce aux rappels SMS et gagnez en visibilité auprès des patients de votre wilaya — <b>gratuitement</b>.</p>
             <div class="prat-cta">
-              <button type="button" class="prat-btn-blanc" (click)="versDemande()">Demander à rejoindre Tabibi</button>
+              <button type="button" class="prat-btn-blanc" (click)="versFiche()">Trouver ma fiche et créer mon compte</button>
             </div>
-            <p class="prat-note">Les comptes praticiens sont créés par notre équipe après vérification de votre inscription à l'ordre.</p>
+            <p class="prat-note">Votre compte praticien est activé après vérification de votre inscription à l'ordre par notre équipe.</p>
           </div>
           <ul class="prat-benef">
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Recevez vos RDV en ligne, 24h/24</li>
@@ -35,11 +40,43 @@ import { FormsModule } from '@angular/forms';
         </div>
       </section>
 
+      <section class="prat-sec" id="fiche">
+        <div class="prat-form-wrap">
+          <h2 class="prat-h2" style="margin-bottom:6px">Retrouvez votre fiche</h2>
+          <p style="text-align:center;color:var(--text3);margin:0 0 20px;font-size:14px">
+            Plus de 75 000 praticiens sont déjà référencés. Cherchez votre nom, puis créez votre compte pour gérer votre fiche.
+          </p>
+          <div class="prat-cherche">
+            <label class="pf"><span>Votre nom</span>
+              <input class="champ" [(ngModel)]="nomFiche" (ngModelChange)="chercher()" name="nomFiche" placeholder="Ex. Belkacem" autocomplete="off"></label>
+            <label class="pf"><span>Wilaya</span>
+              <select class="champ" [(ngModel)]="wilayaFiche" (ngModelChange)="chercher()" name="wilayaFiche">
+                <option value="">Toutes les wilayas</option>
+                <option *ngFor="let w of wilayas" [value]="w.code">{{ w.nom }}</option>
+              </select></label>
+          </div>
+          <p *ngIf="rechercheEnCours()" class="prat-muet">Recherche…</p>
+          <p *ngIf="!rechercheEnCours() && nomFiche.trim().length > 0 && nomFiche.trim().length < 3" class="prat-muet">Tapez au moins 3 lettres.</p>
+          <ul class="prat-fiches" *ngIf="fiches().length">
+            <li *ngFor="let m of fiches()">
+              <span class="prat-fiche__txt"><strong dir="auto">{{ m.nomComplet }}</strong>
+                <small>{{ m.specialiteFr }} · {{ m.ville || m.wilayaFr }}</small></span>
+              <button type="button" class="prat-btn-vert prat-btn-sm" (click)="cestMaFiche(m)">C'est ma fiche</button>
+            </li>
+          </ul>
+          <p *ngIf="!rechercheEnCours() && nomFiche.trim().length >= 3 && fiches().length === 0" class="prat-muet">Aucune fiche trouvée avec ce nom.</p>
+          <div class="prat-pas-fiche">
+            <span>Votre fiche n'apparaît pas ?</span>
+            <button type="button" class="prat-lien" (click)="sansFiche()">Créer mon compte et déposer ma candidature</button>
+          </div>
+        </div>
+      </section>
+
       <section class="prat-sec">
         <h2 class="prat-h2">Comment rejoindre Tabibi ?</h2>
         <div class="prat-steps">
-          <div class="prat-step"><span class="prat-num">1</span><h3>Envoyez votre demande</h3><p>Remplissez le formulaire ci-dessous : nom, spécialité, wilaya et numéro d'inscription à l'ordre.</p></div>
-          <div class="prat-step"><span class="prat-num">2</span><h3>Vérification</h3><p>Notre équipe vérifie votre identité et crée votre compte praticien.</p></div>
+          <div class="prat-step"><span class="prat-num">1</span><h3>Trouvez votre fiche</h3><p>Cherchez votre nom, puis créez votre compte en un clic (ou déposez une candidature si votre fiche n'existe pas).</p></div>
+          <div class="prat-step"><span class="prat-num">2</span><h3>Vérification</h3><p>Ajoutez votre numéro d'inscription à l'ordre : notre équipe confirme que c'est bien vous.</p></div>
           <div class="prat-step"><span class="prat-num">3</span><h3>Recevez vos RDV</h3><p>Gérez vos disponibilités et recevez vos rendez-vous en ligne, avec rappels SMS.</p></div>
         </div>
       </section>
@@ -57,8 +94,8 @@ import { FormsModule } from '@angular/forms';
       <!-- Formulaire de demande -->
       <section class="prat-sec" id="demande">
         <div class="prat-form-wrap">
-          <h2 class="prat-h2" style="margin-bottom:6px">Demander à rejoindre Tabibi</h2>
-          <p style="text-align:center;color:var(--text3);margin:0 0 22px;font-size:14px">C'est gratuit. Notre équipe vous recontacte pour créer votre compte.</p>
+          <h2 class="prat-h2" style="margin-bottom:6px">Besoin d'aide ? Écrivez-nous</h2>
+          <p style="text-align:center;color:var(--text3);margin:0 0 22px;font-size:14px">Vous préférez être accompagné ? Envoyez-nous vos informations, notre équipe vous recontacte.</p>
 
           <div *ngIf="!envoye()" class="prat-form">
             <label class="pf"><span>Nom complet *</span><input class="champ" [(ngModel)]="nom" name="nom" placeholder="Dr Amina Belkacem"></label>
@@ -125,6 +162,16 @@ import { FormsModule } from '@angular/forms';
     .pf { display:flex; flex-direction:column; gap:5px; font-size:13px; color:var(--text3); font-weight:600; }
     .pf--full { grid-column:1 / -1; }
     .pf .champ, .pf textarea.champ { width:100%; box-sizing:border-box; font-size:15px; color:var(--ink); }
+    .prat-cherche { display:grid; grid-template-columns:2fr 1fr; gap:12px; }
+    .prat-muet { color:var(--text3); font-size:14px; margin:12px 0 0; }
+    .prat-fiches { list-style:none; padding:0; margin:14px 0 0; display:grid; gap:8px; max-height:380px; overflow:auto; }
+    .prat-fiches li { display:flex; align-items:center; gap:12px; justify-content:space-between; padding:12px 14px; border:1px solid var(--border); border-radius:14px; flex-wrap:wrap; }
+    .prat-fiche__txt { display:flex; flex-direction:column; min-width:0; flex:1; }
+    .prat-fiche__txt strong { overflow-wrap:anywhere; }
+    .prat-fiche__txt small { color:var(--text3); }
+    .prat-btn-sm { padding:9px 16px; font-size:14px; }
+    .prat-pas-fiche { display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; justify-content:center; margin-top:18px; padding-top:16px; border-top:1px solid var(--border); font-size:14px; color:var(--text3); }
+    .prat-lien { background:none; border:0; padding:0; color:var(--vert); font:inherit; font-weight:700; text-decoration:underline; cursor:pointer; }
     .prat-ok { text-align:center; padding:12px; }
     .prat-ok__ic { display:inline-flex; width:56px; height:56px; align-items:center; justify-content:center; border-radius:50%; background:#f0fdf4; color:#2E8B57; font-size:26px; margin-bottom:12px; }
     .prat-ok h3 { margin:0 0 8px; font-size:20px; font-weight:800; color:var(--ink); }
@@ -135,12 +182,63 @@ import { FormsModule } from '@angular/forms';
       .prat-steps { grid-template-columns:1fr; }
       .prat-feats { grid-template-columns:1fr 1fr; }
       .prat-form { grid-template-columns:1fr; }
+      .prat-cherche { grid-template-columns:1fr; }
     }
     @media (max-width:560px) { .prat-feats { grid-template-columns:1fr; } }
   `],
 })
 export class PraticienComponent {
   private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
+  private annuaire = inject(AnnuaireService);
+  private auth = inject(AuthService);
+  private router = inject(Router);
+  readonly wilayas = [...WILAYAS_SEO].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  nomFiche = '';
+  wilayaFiche = '';
+  fiches = signal<Medecin[]>([]);
+  rechercheEnCours = signal(false);
+  private recherches = new Subject<string>();
+
+  constructor() {
+    // Recherche de fiche differee (300 ms) ; au moins 3 lettres. Les resultats viennent de l'annuaire public.
+    this.recherches.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((cle) => {
+        const [q, wilaya] = cle.split('|');
+        if (q.length < 3) { this.rechercheEnCours.set(false); return of([] as Medecin[]); }
+        this.rechercheEnCours.set(true);
+        return this.annuaire.rechercher(undefined, wilaya || undefined, q).pipe(catchError(() => of([] as Medecin[])));
+      }),
+    ).subscribe((liste) => { this.fiches.set(liste.slice(0, 20)); this.rechercheEnCours.set(false); });
+  }
+
+  chercher() {
+    this.recherches.next(this.nomFiche.trim() + '|' + this.wilayaFiche);
+  }
+
+  versFiche() {
+    if (this.navigateur) document.getElementById('fiche')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /** Fiche choisie : reclamation preremplie ; sans compte, on cree d'abord le compte puis on y revient. */
+  cestMaFiche(m: Medecin) {
+    this.allerVers('/medecin/candidature?fiche=' + encodeURIComponent(m.id));
+  }
+
+  /** Pas de fiche : compte puis candidature. */
+  sansFiche() {
+    this.allerVers('/medecin/candidature');
+  }
+
+  private async allerVers(cible: string) {
+    await this.auth.pret();
+    if (this.auth.estConnecte()) {
+      this.router.navigateByUrl(cible);
+    } else {
+      this.auth.sInscrireParEmail(cible);
+    }
+  }
   nom = ''; specialite = ''; wilaya = ''; ville = ''; numeroOrdre = ''; telephone = ''; email = ''; message = '';
   envoye = signal(false);
   erreur = signal('');
