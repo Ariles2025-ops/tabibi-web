@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /moi
+Disallow: /medecin/
+Disallow: /admin
+Disallow: /secretaire
+Disallow: /pharmacie
+Disallow: /invitations
+
+Sitemap: https://tabibi.doctor/sitemap.xml

@@ -17,7 +17,7 @@
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
-            "assets": ["src/assets", { "glob": "**/*", "input": "src/legal", "output": "legal" }],
+            "assets": ["src/assets", { "glob": "**/*", "input": "src/legal", "output": "legal" }, { "glob": "*", "input": "src/seo-static", "output": "/" }],
             "styles": ["src/legacy-accueil.css", "src/styles.css"],
             "outputHashing": "all",
             "optimization": {

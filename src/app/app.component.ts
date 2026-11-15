@@ -98,21 +98,23 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
               </div>
               <div class="siteft__col">
                 <h4>Spécialités</h4>
-                <a routerLink="/" [queryParams]="{ specialite: 'medecin-generaliste' }">Médecin généraliste</a>
-                <a routerLink="/" [queryParams]="{ specialite: 'cardiologue' }">Cardiologue</a>
-                <a routerLink="/" [queryParams]="{ specialite: 'dentiste' }">Dentiste</a>
-                <a routerLink="/" [queryParams]="{ specialite: 'pediatre' }">Pédiatre</a>
-                <a routerLink="/" [queryParams]="{ specialite: 'gynecologue' }">Gynécologue</a>
-                <a routerLink="/" [queryParams]="{ specialite: 'dermatologue' }">Dermatologue</a>
+                <a routerLink="/specialites/medecin-generaliste">Médecin généraliste</a>
+                <a routerLink="/specialites/cardiologue">Cardiologue</a>
+                <a routerLink="/specialites/dentiste">Dentiste</a>
+                <a routerLink="/specialites/pediatre">Pédiatre</a>
+                <a routerLink="/specialites/gynecologue">Gynécologue</a>
+                <a routerLink="/specialites/dermatologue">Dermatologue</a>
+                <a routerLink="/specialites" class="siteft__tout">Toutes les spécialités →</a>
               </div>
               <div class="siteft__col">
                 <h4>Villes</h4>
-                <a routerLink="/" [queryParams]="{ wilaya: '16' }">Alger</a>
-                <a routerLink="/" [queryParams]="{ wilaya: '31' }">Oran</a>
-                <a routerLink="/" [queryParams]="{ wilaya: '25' }">Constantine</a>
-                <a routerLink="/" [queryParams]="{ wilaya: '23' }">Annaba</a>
-                <a routerLink="/" [queryParams]="{ wilaya: '9' }">Blida</a>
-                <a routerLink="/" [queryParams]="{ wilaya: '19' }">Sétif</a>
+                <a routerLink="/wilayas/alger">Alger</a>
+                <a routerLink="/wilayas/oran">Oran</a>
+                <a routerLink="/wilayas/constantine">Constantine</a>
+                <a routerLink="/wilayas/annaba">Annaba</a>
+                <a routerLink="/wilayas/blida">Blida</a>
+                <a routerLink="/wilayas/setif">Sétif</a>
+                <a routerLink="/specialites" class="siteft__tout">Toutes les wilayas →</a>
               </div>
             </div>
 
