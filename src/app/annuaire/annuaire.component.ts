@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { liensLangues } from '../seo/referentiel-seo';
+import { VISIO_ACTIVE } from '../lancement';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -230,8 +231,9 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     <div class="v4-tele" *ngIf="!enRecherche">
       <span class="ti"><i class="fa fa-video" aria-hidden="true"></i></span>
       <div>
-        <h3>Téléconsultation</h3>
-        <p>Après la prise de rendez-vous, votre médecin peut vous proposer une téléconsultation : vous la retrouvez alors dans votre espace Tabibi et consultez à distance, où que vous soyez en Algérie.</p>
+        <h3>Téléconsultation <span *ngIf="!visio" class="pastille-bientot">Bientôt</span></h3>
+        <p *ngIf="visio">Après la prise de rendez-vous, votre médecin peut vous proposer une téléconsultation : vous la retrouvez alors dans votre espace Tabibi et consultez à distance, où que vous soyez en Algérie.</p>
+        <p *ngIf="!visio">Bientôt, consultez votre médecin à distance par vidéo, où que vous soyez en Algérie. En attendant, prenez rendez-vous au cabinet.</p>
       </div>
       <a class="btn btn-primary cta" href="#hero-recherche">Trouver un médecin</a>
     </div>
@@ -374,6 +376,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
   `],
 })
 export class AnnuaireComponent implements OnInit, OnDestroy {
+  readonly visio = VISIO_ACTIVE;
   private doc = inject(DOCUMENT);
   private service = inject(AnnuaireService);
   private http = inject(HttpClient);

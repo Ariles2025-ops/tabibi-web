@@ -34,6 +34,8 @@ import { EspacePharmacieComponent } from './pharmacie/espace-pharmacie.component
 import { EspaceSecretaireComponent } from './secretaire/espace-secretaire.component';
 import { VerifierOrdonnanceComponent } from './ordonnances/verifier-ordonnance.component';
 import { MesTeleconsultationsComponent } from './teleconsultation/mes-teleconsultations.component';
+import { VisioBientotComponent } from './teleconsultation/visio-bientot.component';
+import { VISIO_ACTIVE } from './lancement';
 import { MoiComponent } from './moi/moi.component';
 import { ProfilComponent } from './moi/profil.component';
 import { InvitationsComponent } from './secretaire/invitations.component';
@@ -53,7 +55,7 @@ export const routes: Routes = [
   { path: 'ordonnances/:id', component: OrdonnanceDetailComponent },
   { path: 'verifier', component: VerifierOrdonnanceComponent },
   { path: 'notifications', component: MesNotificationsComponent },
-  { path: 'teleconsultations', component: MesTeleconsultationsComponent },
+  { path: 'teleconsultations', component: VISIO_ACTIVE ? MesTeleconsultationsComponent : VisioBientotComponent },
   // Messagerie patient-medecin (utilisateur connecte, patient ou medecin : les pages redirigent vers la connexion).
   { path: 'messagerie', component: MesConversationsComponent },
   { path: 'messagerie/:id', component: ConversationComponent },
@@ -92,7 +94,7 @@ export const routes: Routes = [
       { path: 'disponibilites', component: DisponibilitesComponent },
       { path: 'ordonnances', component: OrdonnancesRedigeesComponent },
       { path: 'ordonnance/nouvelle', component: NouvelleOrdonnanceComponent },
-      { path: 'teleconsultations', component: TeleconsultationsMedecinComponent },
+      { path: 'teleconsultations', component: VISIO_ACTIVE ? TeleconsultationsMedecinComponent : VisioBientotComponent },
       { path: 'avis', component: AvisMedecinComponent },
       { path: 'liste-attente', component: ListeAttenteMedecinComponent },
       { path: 'secretaires', component: SecretairesComponent },

@@ -66,6 +66,8 @@ describe('AgendaMedecinComponent', () => {
       ],
     });
     fixture = TestBed.createComponent(AgendaMedecinComponent);
+    // Ces essais couvrent la teleconsultation ouverte ; le cas « Bientôt » (fermee) a son propre essai.
+    fixture.componentInstance.visio = true;
   });
 
   function texte(): string {
@@ -226,5 +228,13 @@ describe('AgendaMedecinComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('li .badge-statut').textContent.trim()).toBe('Absent');
+  });
+
+  it('visio fermee (lancement) : aucun bouton « Proposer une téléconsultation »', async () => {
+    fixture.componentInstance.visio = false;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Proposer une téléconsultation');
   });
 });
