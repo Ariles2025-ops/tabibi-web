@@ -914,3 +914,8 @@ body.recherche-active [data-replier-recherche]{ display:none !important; }
 .tbm-cta{ box-shadow:0 10px 24px rgba(15,117,96,.25); }
 .tbm-logout{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:11px; background:transparent; border:1px solid #E7E0D2; border-radius:999px; color:#8A5B52; font-size:13.5px; font-weight:600; cursor:pointer; font-family:inherit; transition:background .15s, border-color .15s; }
 .tbm-logout:hover{ background:#F4EEE2; border-color:#DCCFC0; }
+
+/* Photo de la medecin de la carte d'accueil : cadree sur le visage, et le badge « RDV confirme » ne la cache plus. */
+.bc-ava--photo{ width:64px; height:64px; border-radius:18px; background:#E7F1EC url(/assets/img/medecin-accueil.webp) no-repeat; background-size:280%; background-position:68% 12%; box-shadow:0 0 0 3px #fff, 0 6px 16px rgba(6,82,64,.18); }
+.hero-visual .bf1{ top:-64px; }
+.hero-visual{ margin-top:56px; }
