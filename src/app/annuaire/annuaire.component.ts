@@ -79,7 +79,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
           <div class="bookcard-ghost"></div>
           <div class="bookcard">
             <div class="bc-doc">
-              <div class="bc-ava" style="display:flex;align-items:center;justify-content:center;background:#E7F1EC;color:var(--vert);font-weight:800">SM</div>
+              <img class="bc-ava" src="assets/img/medecin-accueil.webp" alt="" width="56" height="56" style="object-fit:cover;object-position:50% 18%;background:#E7F1EC">
               <div class="bc-id"><b>Dr. Sofiane M.</b><small>Généraliste · Constantine</small></div>
               <span class="bc-verified"><i class="fa fa-check"></i> <span>Vérifié</span></span>
             </div>
