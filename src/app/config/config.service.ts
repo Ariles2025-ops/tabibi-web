@@ -103,3 +103,10 @@ function valeur(lue: unknown, parDefaut: string): string {
 function sansBarreFinale(url: string): string {
   return url.replace(/\/+$/, '');
 }
+
+/** Configuration du rendu serveur : celle de l'environnement, avec l'adresse INTERNE de l'API si elle est donnee. */
+export function configurationServeur(env: Record<string, string | undefined>): Partial<ConfigurationApplication> {
+  const config = configurationDepuisEnvironnement(env);
+  const interne = env['TABIBI_API_URL_INTERNE']?.trim();
+  return interne ? { ...config, apiUrl: interne } : config;
+}
