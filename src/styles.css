@@ -79,7 +79,7 @@ button:disabled { opacity:.6; cursor:default; }
 .side__pro:hover { opacity:1; }
 .side__login { color:#fff; opacity:.95; cursor:pointer; font-weight:600; white-space:nowrap; }
 /* Sur petit ecran, on garde l'essentiel : Se connecter + Creer un compte (le lien medecin passe en pied / espace medecin). */
-@media (max-width:620px) { .side__pro { display:none; } }
+
 .side .side__signup, .side__account .side__signup { background:#fff; color:var(--vert); font-weight:700; padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap; }
 .side .side__signup:hover { background:#f0f7f4; color:var(--vert); }
 
@@ -101,19 +101,30 @@ button:disabled { opacity:.6; cursor:default; }
 }
 
 /* Mobile : barre sur une seule ligne (logo + actions). « Accueil » est redondant avec le logo -> masque. */
+/* Telephone / tablette : logo + bouton « 3 barres » ; le menu complet s'ouvre en dessous au clic. */
+.side__burger { display:none; }
 @media (max-width:959px) {
-  .side { display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:10px 14px; padding:12px 16px; }
+  .side { position:sticky; top:0; z-index:30; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0; padding:12px 16px; }
   .side__brand { padding:0; }
-  .side__nav { order:3; flex-basis:100%; }
-  .side__home { display:none; }
-  .side__account { margin-inline-start:auto; padding-top:0; border-top:0; }
-  .side__account a { padding:6px 2px; }
+  .side__burger { display:inline-grid; place-items:center; width:44px; height:44px; border-radius:12px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.08); color:#fff; font-size:20px; cursor:pointer; }
+  .side__burger:hover { background:rgba(255,255,255,.16); }
+  .side__nav { display:none; order:3; flex-basis:100%; flex-direction:column; align-items:stretch; flex-wrap:nowrap; gap:2px; padding:12px 0 4px; margin-top:12px; border-top:1px solid rgba(255,255,255,.18); max-height:calc(100vh - 80px); overflow-y:auto; }
+  .side__nav.ouvert { display:flex; }
+  .side__nav a { display:block; padding:12px 12px; border-radius:10px; font-size:16px; }
+  .side__nav a:hover { background:rgba(255,255,255,.12); }
+  .side__nav a.actif { background:rgba(255,255,255,.18); font-weight:700; }
+  .side__group { display:block; margin-top:10px; border-top:1px solid rgba(255,255,255,.18); padding-top:8px; }
+  .side__grouptitle { display:block; text-transform:uppercase; letter-spacing:.05em; font-size:.72rem; padding:4px 12px; opacity:.85; width:auto; }
+  .side__account { margin:10px 0 0; padding-top:10px; border-top:1px solid rgba(255,255,255,.18); flex-direction:column; align-items:stretch; gap:2px; }
+  .side__account a { display:block; padding:12px; }
+  .side__account .side__pro, .side__account .side__help { display:block; }
+  .side__account .side__signup { text-align:center; margin-top:6px; padding:12px 18px; }
 }
 
 /* Centre d'aide dans la barre du haut */
 .side__help { color:#fff; opacity:.92; white-space:nowrap; }
 .side__help:hover { opacity:1; }
-@media (max-width:620px) { .side__help { display:none; } }
+
 
 /* ===== Grand pied de page « Aide et information » facon Doctolib, version Tabibi ===== */
 .siteft { background:#f1f5f9; border-top:1px solid var(--border); margin-top:44px; }

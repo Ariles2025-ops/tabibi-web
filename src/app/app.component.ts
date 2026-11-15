@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { ClocheNotificationsComponent } from './notifications/cloche-notifications.component';
@@ -13,7 +13,12 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
     <div class="shell">
       <aside class="side">
         <a class="side__brand" routerLink="/">tabibi<i>.</i></a>
-        <nav class="side__nav">
+        <!-- Telephone : bouton « 3 barres » qui ouvre tout le menu -->
+        <button type="button" class="side__burger" (click)="menuOuvert.set(!menuOuvert())"
+                [attr.aria-expanded]="menuOuvert()" aria-controls="menu-principal" [attr.aria-label]="menuOuvert() ? 'Fermer le menu' : 'Ouvrir le menu'">
+          <i class="fa" [class.fa-bars]="!menuOuvert()" [class.fa-xmark]="menuOuvert()" aria-hidden="true"></i>
+        </button>
+        <nav class="side__nav" id="menu-principal" [class.ouvert]="menuOuvert()">
           <a class="side__home" routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
           <a *ngIf="estPatient()" routerLink="/mes-rendez-vous" routerLinkActive="actif">Mes rendez-vous</a>
           <a *ngIf="estPatient()" routerLink="/mes-ordonnances" routerLinkActive="actif">Mes ordonnances</a>
@@ -137,6 +142,10 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
 export class AppComponent implements OnInit {
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
+  private router = inject(Router);
+
+  /** Menu « 3 barres » ouvert (vue telephone) ; referme a chaque changement de page. */
+  menuOuvert = signal(false);
 
   /** Etat de connexion, connu une fois l'initialisation OIDC terminee (liens reserves aux connectes). */
   connecte = signal(false);
@@ -157,10 +166,11 @@ export class AppComponent implements OnInit {
   );
 
   /** Lance la connexion Keycloak (bouton « Se connecter » de la barre de navigation). */
-  seConnecter() { this.auth.seConnecter(); }
+  seConnecter() { this.menuOuvert.set(false); this.auth.seConnecter(); }
 
   /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()), puis roles. */
   async ngOnInit() {
+    this.router.events.subscribe((e) => { if (e instanceof NavigationEnd) this.menuOuvert.set(false); });
     await this.auth.initialiser();
     this.connecte.set(this.auth.estConnecte());
     this.roleService.charger();

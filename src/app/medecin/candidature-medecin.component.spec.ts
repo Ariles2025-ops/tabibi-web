@@ -184,11 +184,11 @@ describe('CandidatureMedecinComponent', () => {
     expect(formulaire()).not.toBeNull();
   });
 
-  it('indique que la page est reservee aux medecins sur un 403', async () => {
+  it('indique l acces refuse sur un 403', async () => {
     service.maCandidature.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403, error: { erreur: 'Acces refuse.' } })));
     await afficher();
 
-    expect(texte()).toContain('Cette page est réservée aux médecins.');
+    expect(texte()).toContain('Accès refusé. Connectez-vous pour envoyer votre demande.');
     expect(formulaire()).toBeNull();
   });
 

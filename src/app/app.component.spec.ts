@@ -65,8 +65,8 @@ describe('AppComponent', () => {
     expect(texteNav()).not.toContain('Mes avis');
     expect(texteNav()).not.toContain('Dawini');
     expect(texteNav()).not.toContain("Mes listes d'attente");
-    expect(texteNav()).toContain('Vérifier une ordonnance');
-    expect(texteNav()).toContain('Mon compte');
+    // « Vérifier une ordonnance » est desormais dans le pied de page (footer riche), plus dans la barre.
+    expect(fixture.nativeElement.querySelector('footer').textContent).toContain('Vérifier une ordonnance');
     expect(fixture.nativeElement.querySelector('app-cloche-notifications')).toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
     expect(texteNav()).not.toContain('Espace pharmacie');
