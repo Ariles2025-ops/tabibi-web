@@ -38,15 +38,18 @@ import {
       <!-- Index : toutes les specialites et toutes les wilayas -->
       <ng-container *ngIf="index">
         <section class="seo-bloc">
-          <h2>Spécialités</h2>
-          <div class="seo-liens">
-            <a *ngFor="let s of specialites" [routerLink]="['/specialites', s.slug]">{{ s.nom }}</a>
+          <h2>Spécialités <small>{{ specialitesAlpha.length }}</small></h2>
+          <div class="seo-cartes">
+            <a *ngFor="let s of specialitesAlpha" [routerLink]="['/specialites', s.slug]" class="seo-carte">
+              <span class="seo-carte__ic" aria-hidden="true"><i class="fa fa-stethoscope"></i></span>{{ s.nom }}
+            </a>
           </div>
         </section>
         <section class="seo-bloc">
-          <h2>Wilayas</h2>
-          <div class="seo-liens">
-            <a *ngFor="let w of wilayas" [routerLink]="['/wilayas', w.slug]">Médecins à {{ w.nom }}</a>
+          <h2>Wilayas <small>{{ wilayasAlpha.length }}</small></h2>
+          <div class="seo-colonnes">
+            <a *ngFor="let w of wilayasAlpha" [routerLink]="['/wilayas', w.slug]" [attr.title]="'Médecins à ' + w.nom">
+              {{ w.nom }}<span class="seo-code">{{ w.code }}</span></a>
           </div>
         </section>
       </ng-container>
@@ -84,18 +87,19 @@ import {
       <!-- Maillage : autres wilayas pour cette specialite -->
       <section class="seo-bloc" *ngIf="specialite && !introuvable">
         <h2>{{ specialite.nom }} dans une autre wilaya</h2>
-        <div class="seo-liens">
-          <a *ngFor="let w of wilayas" [routerLink]="['/specialites', specialite.slug, w.slug]"
-             [class.actif]="w.slug === wilaya?.slug">{{ specialite.nom }} à {{ w.nom }}</a>
+        <div class="seo-colonnes">
+          <a *ngFor="let w of wilayasAlpha" [routerLink]="['/specialites', specialite.slug, w.slug]"
+             [class.actif]="w.slug === wilaya?.slug" [attr.title]="specialite.nom + ' à ' + w.nom">
+            {{ w.nom }}<span class="seo-code">{{ w.code }}</span></a>
         </div>
       </section>
 
       <!-- Maillage : autres specialites dans cette wilaya -->
       <section class="seo-bloc" *ngIf="wilaya && !introuvable">
-        <h2>Autres spécialités à {{ wilaya.nom }}</h2>
-        <div class="seo-liens">
-          <a *ngFor="let s of specialites" [routerLink]="['/specialites', s.slug, wilaya.slug]"
-             [class.actif]="s.slug === specialite?.slug">{{ s.nom }} à {{ wilaya.nom }}</a>
+        <h2>{{ specialite ? 'Autres spécialités' : 'Spécialités' }} à {{ wilaya.nom }}</h2>
+        <div class="seo-colonnes">
+          <a *ngFor="let s of specialitesAlpha" [routerLink]="['/specialites', s.slug, wilaya.slug]"
+             [class.actif]="s.slug === specialite?.slug" [attr.title]="s.nom + ' à ' + wilaya.nom">{{ s.nom }}</a>
         </div>
       </section>
 
@@ -131,6 +135,15 @@ import {
     .seo-resa { font-size:12px; font-weight:700; color:var(--vert); background:#E7F1EC; padding:3px 10px; border-radius:999px; }
     .seo-note { color:var(--text3); font-size:13px; margin:14px 0 0; }
     .seo-liens { display:flex; flex-wrap:wrap; gap:8px; }
+    .seo-bloc h2 small { font-size:13px; font-weight:700; color:var(--text3); margin-inline-start:6px; }
+    .seo-cartes { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr)); gap:10px; }
+    .seo-carte { display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fff; border:1px solid var(--border); border-radius:14px; color:var(--ink); text-decoration:none; font-weight:600; font-size:14px; }
+    .seo-carte:hover { border-color:var(--vert); color:var(--vert); }
+    .seo-carte__ic { flex:none; width:32px; height:32px; border-radius:10px; background:#E7F1EC; color:var(--vert); display:grid; place-items:center; font-size:13px; }
+    .seo-colonnes { columns:4 180px; column-gap:24px; background:#fff; border:1px solid var(--border); border-radius:16px; padding:14px 18px; }
+    .seo-colonnes a { display:flex; justify-content:space-between; gap:8px; break-inside:avoid; padding:7px 4px; border-bottom:1px solid #f0ece3; color:var(--ink); text-decoration:none; font-size:14px; }
+    .seo-colonnes a:hover, .seo-colonnes a.actif { color:var(--vert); font-weight:700; }
+    .seo-code { color:var(--text3); font-size:12px; font-variant-numeric:tabular-nums; }
     .seo-liens a { padding:7px 12px; border:1px solid var(--border); border-radius:999px; background:#fff; color:var(--ink); text-decoration:none; font-size:13px; }
     .seo-liens a:hover, .seo-liens a.actif { border-color:var(--vert); color:var(--vert); font-weight:700; }
     .seo-faq details { background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 16px; margin-bottom:8px; }
@@ -150,6 +163,10 @@ export class AnnuaireSeoComponent implements OnInit {
 
   readonly specialites: SpecialiteSeo[] = trierAvecPrincipales(SPECIALITES_SEO, (s) => s.slug, SPECIALITES_PRINCIPALES);
   readonly wilayas: WilayaSeo[] = trierAvecPrincipales(WILAYAS_SEO, (w) => w.code, WILAYAS_PRINCIPALES);
+
+  /** Listes completes, par ordre alphabetique (maillage lisible). */
+  readonly specialitesAlpha = [...SPECIALITES_SEO].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  readonly wilayasAlpha = [...WILAYAS_SEO].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 
   specialite: SpecialiteSeo | null = null;
   wilaya: WilayaSeo | null = null;
