@@ -1,4 +1,4 @@
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, NgZone, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
@@ -20,6 +20,11 @@ export class AuthService {
   private config = inject(ConfigService);
   private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
   private initialisation: Promise<void> | null = null;
+  private zone = inject(NgZone);
+  private derniereActivite = Date.now();
+
+  /** Donnees de sante : deconnexion automatique apres 15 minutes sans aucune action. */
+  static readonly INACTIVITE_MAX_MS = 15 * 60 * 1000;
 
   /**
    * Attend la configuration (issuer et client Keycloak lus dans assets/config.json ; deja chargee par
@@ -60,7 +65,8 @@ export class AuthService {
   async seConnecter(retour: string = this.router.url): Promise<void> {
     if (!this.navigateur) return;
     await this.initialiser();
-    this.oauth.initCodeFlow(retour);
+    // Mot de passe exige a chaque connexion, meme si une session Keycloak existe encore dans ce navigateur.
+    this.oauth.initCodeFlow(retour, { prompt: 'login' });
   }
 
   /**
@@ -101,6 +107,30 @@ export class AuthService {
     }
     if (rafraichissable) {
       this.oauth.setupAutomaticSilentRefresh();
+    }
+    this.surveillerInactivite();
+  }
+
+  /**
+   * Le renouvellement automatique garderait la session ouverte indefiniment sur un onglet oublie (ordinateur
+   * partage, cybercafe) : sans clic, frappe, defilement ni toucher pendant 15 minutes, on deconnecte.
+   */
+  private surveillerInactivite(): void {
+    const marquer = () => (this.derniereActivite = Date.now());
+    this.zone.runOutsideAngular(() => {
+      for (const evt of ['click', 'keydown', 'scroll', 'touchstart', 'mousemove']) {
+        window.addEventListener(evt, marquer, { passive: true });
+      }
+      // Onglet en veille ou ordinateur mis en veille : verifier aussi au retour sur l'onglet.
+      document.addEventListener('visibilitychange', () => this.verifierInactivite());
+      setInterval(() => this.verifierInactivite(), 30_000);
+    });
+  }
+
+  private verifierInactivite(): void {
+    if (!this.oauth.getRefreshToken() && !this.oauth.hasValidAccessToken()) return;
+    if (Date.now() - this.derniereActivite > AuthService.INACTIVITE_MAX_MS) {
+      this.zone.run(() => this.seDeconnecter());
     }
   }
 

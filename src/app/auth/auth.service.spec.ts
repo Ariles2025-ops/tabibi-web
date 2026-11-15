@@ -39,7 +39,7 @@ describe('AuthService', () => {
     expect(auth.estConnecte()).toBeTrue();
 
     await auth.seConnecter('/moi');
-    expect(oauth.initCodeFlow).toHaveBeenCalledWith('/moi');
+    expect(oauth.initCodeFlow).toHaveBeenCalledWith('/moi', { prompt: 'login' });
   });
 
   it('cote serveur (SSR) : aucune initialisation OIDC, jamais connecte, connexion et deconnexion sans effet', async () => {
