@@ -34,6 +34,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
             <a routerLink="/medecin/disponibilites" routerLinkActive="actif">Disponibilités</a>
             <a routerLink="/medecin/ordonnances" routerLinkActive="actif">Mes ordonnances rédigées</a>
             <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">Téléconsultations</a>
+            <a routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
             <a routerLink="/medecin/candidature" routerLinkActive="actif">Ma candidature</a>
             <a routerLink="/medecin/avis" routerLinkActive="actif">Avis des patients</a>
             <a routerLink="/medecin/liste-attente" routerLinkActive="actif">Liste d'attente</a>

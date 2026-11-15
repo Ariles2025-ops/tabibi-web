@@ -124,7 +124,7 @@ export class NouvelleOrdonnanceComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Seul un compte médecin peut émettre une ordonnance.');
+          this.erreur.set("Vous ne pouvez rédiger une ordonnance que pour vos patients (patient ou rendez-vous de votre agenda).");
         } else if (e.status === 404) {
           this.erreur.set('Patient ou rendez-vous introuvable.');
         } else {
