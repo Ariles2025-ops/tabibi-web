@@ -131,3 +131,11 @@ describe('configurationDepuisEnvironnement', () => {
     });
   });
 });
+
+describe('configurationServeur', () => {
+  it("prend l'adresse interne de l'API pour le rendu serveur, sans toucher a l'adresse publique sinon", async () => {
+    const { configurationServeur } = await import('./config.service');
+    expect(configurationServeur({ DOMAINE: 'tabibi.doctor', TABIBI_API_URL_INTERNE: 'http://backend:8080' }).apiUrl).toBe('http://backend:8080');
+    expect(configurationServeur({ DOMAINE: 'tabibi.doctor' }).apiUrl).toBe('https://api.tabibi.doctor');
+  });
+});

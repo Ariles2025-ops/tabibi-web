@@ -29,6 +29,10 @@ nb="$(curl -fsS "$SITE/specialites/medecin-generaliste/alger?$cb" | grep -o 'cla
 nbar="$(curl -fsS "$SITE/ar/specialites/medecin-generaliste/alger?$cb" | grep -o 'class="seo-med"' | wc -l | tr -d ' ')"
 [ "${nbar:-0}" -gt 0 ] && ok "page arabe : $nbar medecins rendus" || ko "aucun medecin rendu sur /ar/specialites/medecin-generaliste/alger"
 
+# 3c. Anti-copie : la liste complete des fiches n'est pas publique.
+code="$(curl -s -o /dev/null -w '%{http_code}' "https://api.tabibi.doctor/api/medecins/plan?$cb")"
+[ "$code" = "404" ] && ok "liste complete des fiches fermee au public (404)" || ko "liste complete des fiches accessible depuis Internet (HTTP $code)"
+
 # 4. Plan du site joignable.
 curl -fsS "$SITE/sitemap.xml?$cb" | grep -q "<sitemapindex" && ok "plan du site" || ko "plan du site indisponible"
 

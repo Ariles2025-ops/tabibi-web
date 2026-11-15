@@ -4,7 +4,7 @@ import express, { Request, Response } from 'express';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CONFIGURATION_PAR_DEFAUT, ConfigurationApplication, configurationDepuisEnvironnement } from './src/app/config/config.service';
+import { CONFIGURATION_PAR_DEFAUT, ConfigurationApplication, configurationDepuisEnvironnement, configurationServeur } from './src/app/config/config.service';
 import bootstrap from './src/main.server';
 
 /**
@@ -81,7 +81,7 @@ export function app(): express.Express {
   // Plans du site pour les moteurs de recherche : un index, les pages fixes (fichier du build) et une page publique
   // par praticien, tiree de l'API (GET /api/medecins/plan, 5 000 fiches par fichier) et gardee 12 h en memoire.
   const site = 'https://' + (process.env['DOMAINE']?.trim() || 'tabibi.doctor');
-  const api = (configurationDepuisEnvironnement(process.env).apiUrl || CONFIGURATION_PAR_DEFAUT.apiUrl).replace(/\/$/, '');
+  const api = (configurationServeur(process.env).apiUrl || CONFIGURATION_PAR_DEFAUT.apiUrl).replace(/\/$/, '');
   const cachePlans = new Map<string, { xml: string; le: number }>();
   const DUREE_CACHE_MS = 12 * 3600 * 1000;
   const lirePlan = async (page: number) => {
