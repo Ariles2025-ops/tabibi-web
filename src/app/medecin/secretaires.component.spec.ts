@@ -80,7 +80,7 @@ describe('SecretairesComponent', () => {
     await afficher();
 
     expect(texte()).toContain('Adresse e-mail du compte Tabibi de votre secrétaire');
-    expect(texte()).toContain("La secrétaire doit avoir créé son compte Tabibi ; elle aura accès à l'espace secrétaire à sa prochaine connexion.");
+    expect(texte()).toContain("Elle reçoit une invitation à accepter depuis ses notifications.");
     expect(fixture.nativeElement.querySelector('input[name="email"]').getAttribute('type')).toBe('email');
     const items = lignes();
     expect(items.length).toBe(2);
@@ -113,7 +113,7 @@ describe('SecretairesComponent', () => {
     await afficher();
 
     expect(service.rattacherSecretaire).toHaveBeenCalledWith(EMAIL);
-    expect(texte()).toContain('Secrétaire rattachée');
+    expect(texte()).toContain('Invitation envoyée');
     expect(fixture.nativeElement.querySelector('input[name="email"]').value).toBe('');
     expect(service.secretaires).toHaveBeenCalledTimes(2);
   });

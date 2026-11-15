@@ -16,6 +16,15 @@ export interface Rattachement {
   /** Nom et e-mail du compte de la secretaire, s'ils sont connus. */
   secretaireNom?: string | null;
   secretaireEmail?: string | null;
+  /** Faux tant que la secretaire n'a pas accepte l'invitation (aucun acces d'ici la). Absent = ancien rattachement, actif. */
+  accepte?: boolean;
+}
+
+/** Invitation recue d'un medecin, en attente de reponse. */
+export interface Invitation {
+  id: string;
+  medecinId: string;
+  creeLe: string;
 }
 
 /** Bornes de la duree d'un creneau, celles du backend (CreneauService). */
@@ -43,6 +52,21 @@ export class SecretaireService {
   /** Origine de l'API, lue a l'execution dans assets/config.json. */
   private get base(): string {
     return this.config.apiUrl;
+  }
+
+  /** Invitations a rejoindre un cabinet, en attente, adressees au compte connecte (tout role). */
+  invitations(): Observable<Invitation[]> {
+    return this.http.get<Invitation[]>(`${this.base}/api/moi/invitations-cabinet`);
+  }
+
+  /** Accepte : acces a l'agenda du medecin et role SECRETAIRE (403 si l'invitation est pour un autre compte). */
+  accepterInvitation(id: string): Observable<Rattachement> {
+    return this.http.post<Rattachement>(`${this.base}/api/moi/invitations-cabinet/${id}/accepter`, {});
+  }
+
+  /** Refuse : l'invitation disparait, le medecin est prevenu. */
+  refuserInvitation(id: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/api/moi/invitations-cabinet/${id}/refuser`, {});
   }
 
   /** Cabinets auxquels la secretaire connectee est rattachee. */

@@ -36,6 +36,7 @@ import { VerifierOrdonnanceComponent } from './ordonnances/verifier-ordonnance.c
 import { MesTeleconsultationsComponent } from './teleconsultation/mes-teleconsultations.component';
 import { MoiComponent } from './moi/moi.component';
 import { ProfilComponent } from './moi/profil.component';
+import { InvitationsComponent } from './secretaire/invitations.component';
 
 export const routes: Routes = [
   { path: '', component: AnnuaireComponent },
@@ -104,6 +105,7 @@ export const routes: Routes = [
       { path: 'avis', component: ModerationAvisComponent },
     ],
   },
+  { path: 'invitations', component: InvitationsComponent },
   { path: 'moi', component: MoiComponent },
   // Mon profil (utilisateur connecte, tous roles : la page redirige vers la connexion).
   { path: 'moi/profil', component: ProfilComponent },

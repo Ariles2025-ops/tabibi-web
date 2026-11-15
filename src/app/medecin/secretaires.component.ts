@@ -24,7 +24,7 @@ import { MedecinService } from './medecin.service';
       <h1 style="color:var(--blue);margin:0 0 8px">Mes secrétaires</h1>
       <p style="color:var(--text3);margin:0 0 20px">
         Une secrétaire rattachée à votre cabinet consulte votre agenda, ouvre des créneaux et marque vos rendez-vous
-        honorés ou annulés depuis son espace. Elle est prévenue de son rattachement et de son retrait.
+        honorés ou annulés depuis son espace. Vous l'invitez ; elle n'a accès à rien tant qu'elle n'a pas accepté.
       </p>
 
       <form (ngSubmit)="rattacher()" style="display:grid;gap:12px;margin:0 0 28px;background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:20px">
@@ -34,12 +34,12 @@ import { MedecinService } from './medecin.service';
                  placeholder="Ex. secretaire@exemple.dz" style="color:var(--ink);font-size:1rem">
         </label>
         <p style="margin:0;color:var(--text3);font-size:.9rem">
-          La secrétaire doit avoir créé son compte Tabibi ; elle aura accès à l'espace secrétaire à sa prochaine connexion.
+          La secrétaire doit avoir créé son compte Tabibi. Elle reçoit une invitation à accepter depuis ses notifications.
         </p>
         <p *ngIf="succes()" style="color:var(--blue);margin:0">{{ succes() }}</p>
         <p *ngIf="erreurFormulaire()" role="alert" style="color:var(--red);margin:0">{{ erreurFormulaire() }}</p>
         <div>
-          <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? 'Rattachement…' : 'Rattacher cette secrétaire' }}</button>
+          <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? 'Envoi…' : 'Inviter cette secrétaire' }}</button>
         </div>
       </form>
 
@@ -53,7 +53,11 @@ import { MedecinService } from './medecin.service';
           <div>
             <strong style="color:var(--ink)">{{ nom(r) }}</strong>
             <span *ngIf="r.secretaireNom && r.secretaireEmail" style="color:var(--text3)"> · {{ r.secretaireEmail }}</span><br>
-            <span style="color:var(--text3);font-size:.9rem">Rattachée le {{ r.creeLe | date:'d MMMM yyyy à HH:mm' }}</span>
+            <span *ngIf="r.accepte !== false" style="color:var(--text3);font-size:.9rem">Rattachée le {{ r.creeLe | date:'d MMMM yyyy à HH:mm' }}</span>
+            <span *ngIf="r.accepte === false" style="color:#8a5a00;font-size:.9rem">
+              <strong style="background:#fff5d6;border-radius:999px;padding:2px 8px">En attente</strong>
+              Invitée le {{ r.creeLe | date:'d MMMM yyyy à HH:mm' }}, pas encore acceptée
+            </span>
           </div>
           <div *ngIf="aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <span style="color:var(--text2);font-size:.9rem">Retirer cette secrétaire ?</span>
@@ -127,7 +131,7 @@ export class SecretairesComponent implements OnInit {
       next: () => {
         this.enCours.set(false);
         this.email = '';
-        this.succes.set("Secrétaire rattachée : elle est prévenue et accédera à votre agenda à sa prochaine connexion.");
+        this.succes.set("Invitation envoyée : votre secrétaire aura accès à votre agenda dès qu'elle l'aura acceptée.");
         this.charger();
       },
       error: (e: HttpErrorResponse) => {
@@ -140,7 +144,7 @@ export class SecretairesComponent implements OnInit {
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreurFormulaire.set('Seul un compte médecin peut rattacher une secrétaire.');
+          this.erreurFormulaire.set('Seul un compte médecin peut inviter une secrétaire.');
         } else {
           this.erreurFormulaire.set(e.error?.erreur ?? 'Le rattachement a échoué, veuillez réessayer.');
         }
@@ -156,7 +160,7 @@ export class SecretairesComponent implements OnInit {
       next: () => {
         this.retraitEnCours.set(null);
         this.aConfirmer.set(null);
-        this.succes.set('Secrétaire retirée : elle est prévenue.');
+        this.succes.set(rattachement.accepte === false ? 'Invitation annulée.' : 'Secrétaire retirée : elle est prévenue.');
         this.charger();
       },
       error: (e: HttpErrorResponse) => {

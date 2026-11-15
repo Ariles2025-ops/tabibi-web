@@ -86,6 +86,16 @@ export class AuthService {
     this.oauth.initCodeFlow(retour);
   }
 
+  /** Relit les roles apres un changement cote serveur (ex. invitation de secretaire acceptee) via le jeton de rafraichissement. */
+  async actualiserRoles(): Promise<void> {
+    if (!this.navigateur || !this.oauth.getRefreshToken()) return;
+    try {
+      await this.oauth.refreshToken();
+    } catch {
+      // Les nouveaux roles seront pris a la prochaine connexion.
+    }
+  }
+
   seDeconnecter(): void {
     if (!this.navigateur) return;
     this.oauth.logOut();
