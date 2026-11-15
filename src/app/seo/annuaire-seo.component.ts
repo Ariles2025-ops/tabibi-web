@@ -175,6 +175,8 @@ export class AnnuaireSeoComponent implements OnInit {
     this.introuvable = (!!specSlug && !this.specialite) || (!!wilSlug && !this.wilaya);
     this.index = !specSlug && !wilSlug;
     this.medecins.set([]);
+    // Page de liste : « Chargement » des le rendu serveur (sinon « Aucun praticien » s'afficherait un instant).
+    this.charge.set(!(!specSlug && !wilSlug));
 
     const s = this.specialite, w = this.wilaya;
     let chemin = '/specialites';
