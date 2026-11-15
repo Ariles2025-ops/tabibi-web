@@ -400,6 +400,11 @@ export const WILAYAS_SEO: WilayaSeo[] = [
   "slug": "timimoun"
  },
  {
+  "code": "50",
+  "nom": "Bordj Badji Mokhtar",
+  "slug": "bordj-badji-mokhtar"
+ },
+ {
   "code": "51",
   "nom": "Ouled Djellal",
   "slug": "ouled-djellal"
@@ -413,6 +418,11 @@ export const WILAYAS_SEO: WilayaSeo[] = [
   "code": "53",
   "nom": "In Salah",
   "slug": "in-salah"
+ },
+ {
+  "code": "54",
+  "nom": "In Guezzam",
+  "slug": "in-guezzam"
  },
  {
   "code": "55",
@@ -483,6 +493,11 @@ export const WILAYAS_SEO: WilayaSeo[] = [
   "code": "68",
   "nom": "Bou Saâda",
   "slug": "bou-saada"
+ },
+ {
+  "code": "69",
+  "nom": "El Abiodh Sidi Cheikh",
+  "slug": "el-abiodh-sidi-cheikh"
  }
 ];
 

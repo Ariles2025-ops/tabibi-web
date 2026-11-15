@@ -9,3 +9,4 @@ coverage/
 e2e/captures/
 test-results/
 playwright-report/
+src/assets/version.txt

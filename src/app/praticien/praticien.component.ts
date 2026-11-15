@@ -25,7 +25,7 @@ import { WILAYAS_SEO } from '../seo/referentiel-seo';
           <div class="prat-hero__txt">
             <span class="prat-eyebrow">Espace praticien</span>
             <h1>Développez votre cabinet avec <span class="acc">Tabibi</span></h1>
-            <p>Recevez vos rendez-vous en ligne, réduisez les absences grâce aux rappels SMS et gagnez en visibilité auprès des patients de votre wilaya — <b>gratuitement</b>.</p>
+            <p>Recevez vos rendez-vous en ligne, réduisez les absences grâce aux rappels automatiques et gagnez en visibilité auprès des patients de votre wilaya — <b>gratuitement</b>.</p>
             <div class="prat-cta">
               <button type="button" class="prat-btn-blanc" (click)="versFiche()">Trouver ma fiche et créer mon compte</button>
             </div>
@@ -33,7 +33,7 @@ import { WILAYAS_SEO } from '../seo/referentiel-seo';
           </div>
           <ul class="prat-benef">
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Recevez vos RDV en ligne, 24h/24</li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Rappels SMS automatiques : moins d'absences</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Rappel automatique avant chaque rendez-vous</li>
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Agenda et disponibilités faciles à gérer</li>
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Plus de visibilité auprès des patients</li>
           </ul>
@@ -77,7 +77,7 @@ import { WILAYAS_SEO } from '../seo/referentiel-seo';
         <div class="prat-steps">
           <div class="prat-step"><span class="prat-num">1</span><h3>Trouvez votre fiche</h3><p>Cherchez votre nom, puis créez votre compte en un clic (ou déposez une candidature si votre fiche n'existe pas).</p></div>
           <div class="prat-step"><span class="prat-num">2</span><h3>Vérification</h3><p>Ajoutez votre numéro d'inscription à l'ordre : notre équipe confirme que c'est bien vous.</p></div>
-          <div class="prat-step"><span class="prat-num">3</span><h3>Recevez vos RDV</h3><p>Gérez vos disponibilités et recevez vos rendez-vous en ligne, avec rappels SMS.</p></div>
+          <div class="prat-step"><span class="prat-num">3</span><h3>Recevez vos RDV</h3><p>Gérez vos disponibilités et recevez vos rendez-vous en ligne, avec rappels automatiques.</p></div>
         </div>
       </section>
 
@@ -85,7 +85,7 @@ import { WILAYAS_SEO } from '../seo/referentiel-seo';
         <h2 class="prat-h2">Pourquoi les praticiens choisissent Tabibi</h2>
         <div class="prat-feats">
           <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-calendar-check" aria-hidden="true"></i></span><h3>Agenda en ligne</h3><p>Vos créneaux se remplissent tout seuls, sans appels téléphoniques à gérer.</p></div>
-          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-comment-sms" aria-hidden="true"></i></span><h3>Moins d'absences</h3><p>Un rappel SMS automatique est envoyé au patient avant chaque rendez-vous.</p></div>
+          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-bell" aria-hidden="true"></i></span><h3>Moins d'absences</h3><p>Un rappel automatique est envoyé au patient dans son espace Tabibi avant chaque rendez-vous.</p></div>
           <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-magnifying-glass" aria-hidden="true"></i></span><h3>Plus de visibilité</h3><p>Les patients de votre wilaya vous trouvent facilement par spécialité.</p></div>
           <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-shield-halved" aria-hidden="true"></i></span><h3>Données protégées</h3><p>Vos données et celles de vos patients sont chiffrées et protégées (loi 18-07).</p></div>
         </div>
