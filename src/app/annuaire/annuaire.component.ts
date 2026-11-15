@@ -168,7 +168,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     <section class="section" id="sec-docs" *ngIf="enRecherche">
       <div class="sec-head" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 var(--gutter);margin-bottom:14px">
         <h2 class="sec-title">Résultats de votre recherche</h2>
-        <span style="color:var(--text3);font-size:13px;font-weight:600" *ngIf="connecte() && !charge() && resultats().length">{{ resultats().length >= 50 ? '50 premiers résultats — affinez votre recherche' : resultats().length + ' médecin(s)' }}</span>
+        <span style="color:var(--text3);font-size:13px;font-weight:600" *ngIf="!charge() && resultats().length">{{ resultats().length >= 50 ? (connecte() ? '50 premiers résultats — affinez votre recherche' : '50+ médecins trouvés') : resultats().length + (resultats().length > 1 ? ' médecins trouvés' : ' médecin trouvé') }}</span>
       </div>
 
       <p *ngIf="charge()" style="padding:0 var(--gutter);color:var(--text3)">Recherche…</p>
@@ -177,8 +177,9 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
         <button type="button" (click)="rechercher()" style="margin-left:8px;background:none;border:0;color:var(--vert);font-weight:700;text-decoration:underline;cursor:pointer;font:inherit;padding:0">Réessayer</button>
       </p>
 
-      <div id="docs-list" *ngIf="connecte()" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;padding:0 var(--gutter)">
-        <article class="doc-card fu" *ngFor="let m of resultats()" [routerLink]="['/medecins', m.id]" tabindex="0">
+      <div class="docs-wrap">
+      <div id="docs-list" [class.docs-flou]="!connecte()" [attr.aria-hidden]="!connecte() ? 'true' : null" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;padding:0 var(--gutter)">
+        <article class="doc-card fu" *ngFor="let m of visibles()" [routerLink]="['/medecins', m.id]" tabindex="0">
           <div class="doc-row">
             <div class="doc-ava">{{ initiales(m) }}</div>
             <div style="flex:1;min-width:0">
@@ -195,11 +196,12 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
         </article>
       </div>
 
-      <!-- Hors connexion : AUCUN medecin n'est charge ni rendu ; vrai cadenas (pas du flou). -->
-      <div class="docs-gate docs-gate--solo" *ngIf="!connecte()">
+      <!-- Hors connexion : les premiers resultats sont floutes (non cliquables) sous le cadenas, avec leur nombre. -->
+      <div class="docs-gate" [class.docs-gate--solo]="resultats().length === 0" *ngIf="!connecte() && !charge()">
         <div class="docs-gate__card">
           <span class="docs-gate__ic"><i class="fa fa-lock" aria-hidden="true"></i></span>
-          <h3>Créez un compte pour voir les médecins</h3>
+          <h3 *ngIf="resultats().length">{{ resultats().length >= 50 ? '50+' : resultats().length }} {{ resultats().length > 1 ? 'médecins trouvés' : 'médecin trouvé' }}</h3>
+          <h3 *ngIf="!resultats().length">Créez un compte pour voir les médecins</h3>
           <p>La liste des médecins et leurs disponibilités sont réservées aux membres de Tabibi — c'est gratuit.</p>
           <div class="docs-gate__btns">
             <a class="bouton" (click)="seConnecter()" tabindex="0" role="button" style="cursor:pointer">Créer un compte</a>
@@ -208,7 +210,8 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
         </div>
       </div>
 
-      <p *ngIf="connecte() && !charge() && !erreur() && resultats().length === 0" style="text-align:center;color:var(--text3);padding:32px var(--gutter)">
+      </div>
+      <p *ngIf="!charge() && !erreur() && resultats().length === 0" style="text-align:center;color:var(--text3);padding:32px var(--gutter)">
         Aucun médecin trouvé. Essayez un autre nom ou une autre wilaya.
       </p>
     </section>
@@ -352,7 +355,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
 
     /* Resultats verrouilles : floutes hors connexion, avec un cadenas invitant a creer un compte. */
     .docs-wrap { position:relative; }
-    .docs-flou { filter:blur(6px); pointer-events:none; user-select:none; }
+    .docs-flou { filter:blur(7px); pointer-events:none; user-select:none; min-height:320px; }
     .docs-gate { position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; padding:24px var(--gutter); }
     .docs-gate__card { background:#fff; border:1px solid var(--border); border-radius:var(--r16); box-shadow:var(--s3); padding:28px 24px; text-align:center; max-width:380px; width:100%; }
     .docs-gate__ic { display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:16px; background:#e7f3ef; color:var(--vert); font-size:20px; margin-bottom:12px; }
@@ -502,8 +505,6 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   }
 
   rechercher() {
-    // Annuaire prive : hors connexion, on ne charge AUCUNE donnee (le cadenas s'affiche a la place).
-    if (!this.connecte()) { this.resultats.set([]); this.charge.set(false); this.erreur.set(''); return; }
     this.charge.set(true);
     this.erreur.set('');
     this.service.rechercher(this.specialite, this.wilaya, this.q).subscribe({
@@ -513,6 +514,11 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
         this.charge.set(false);
       },
     });
+  }
+
+  /** Hors connexion, seules 6 cartes (floutees) sont rendues sous le cadenas. */
+  visibles(): Medecin[] {
+    return this.connecte() ? this.resultats() : this.resultats().slice(0, 6);
   }
 
   /** Monogramme (1 ou 2 lettres) a partir du nom, pour l'avatar. */
