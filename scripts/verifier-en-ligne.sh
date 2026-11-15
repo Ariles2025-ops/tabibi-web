@@ -25,6 +25,10 @@ n="$(curl -fsS "$SITE/assets/referentiel.json?$cb" | python3 -c 'import json,sys
 nb="$(curl -fsS "$SITE/specialites/medecin-generaliste/alger?$cb" | grep -o 'class="seo-med"' | wc -l | tr -d ' ')"
 [ "${nb:-0}" -gt 0 ] && ok "page Generaliste a Alger : $nb medecins rendus" || ko "aucun medecin rendu sur /specialites/medecin-generaliste/alger"
 
+# 3b. La version arabe rend aussi de vrais medecins cote serveur.
+nbar="$(curl -fsS "$SITE/ar/specialites/medecin-generaliste/alger?$cb" | grep -o 'class="seo-med"' | wc -l | tr -d ' ')"
+[ "${nbar:-0}" -gt 0 ] && ok "page arabe : $nbar medecins rendus" || ko "aucun medecin rendu sur /ar/specialites/medecin-generaliste/alger"
+
 # 4. Plan du site joignable.
 curl -fsS "$SITE/sitemap.xml?$cb" | grep -q "<sitemapindex" && ok "plan du site" || ko "plan du site indisponible"
 
