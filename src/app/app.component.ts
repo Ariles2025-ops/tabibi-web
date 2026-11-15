@@ -5,27 +5,28 @@ import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { ClocheNotificationsComponent } from './notifications/cloche-notifications.component';
 import { PRELANCEMENT } from './lancement';
+import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ClocheNotificationsComponent],
   template: `
-    <div class="lancement-bandeau" *ngIf="prelancement" role="status">
-      <span class="lancement-bandeau__pastille">Bientôt</span>
-      <strong>Lancement prochainement</strong>
-      <span class="lancement-bandeau__txt">— la prise de rendez-vous en ligne ouvre très bientôt. Parcourez déjà l'annuaire des médecins.</span>
+    <div class="lancement-bandeau" *ngIf="prelancement" role="status" [attr.dir]="ar() ? 'rtl' : null">
+      <span class="lancement-bandeau__pastille">{{ ar() ? 'قريبًا' : 'Bientôt' }}</span>
+      <strong>{{ ar() ? 'الإطلاق قريبًا' : 'Lancement prochainement' }}</strong>
+      <span class="lancement-bandeau__txt">{{ ar() ? '— حجز المواعيد عبر الإنترنت متاح قريبًا جدًا. تصفّح دليل الأطباء من الآن.' : "— la prise de rendez-vous en ligne ouvre très bientôt. Parcourez déjà l'annuaire des médecins." }}</span>
     </div>
     <div class="shell">
       <aside class="side">
-        <a class="side__brand" routerLink="/">tabibi<i>.</i></a>
+        <a class="side__brand" [routerLink]="ar() ? '/ar' : '/'">tabibi<i>.</i></a>
         <!-- Telephone : bouton « 3 barres » qui ouvre tout le menu -->
         <button type="button" class="side__burger" (click)="menuOuvert.set(!menuOuvert())"
                 [attr.aria-expanded]="menuOuvert()" aria-controls="menu-principal" [attr.aria-label]="menuOuvert() ? 'Fermer le menu' : 'Ouvrir le menu'">
           <i class="fa" [class.fa-bars]="!menuOuvert()" [class.fa-xmark]="menuOuvert()" aria-hidden="true"></i>
         </button>
         <nav class="side__nav" id="menu-principal" [class.ouvert]="menuOuvert()">
-          <a class="side__home" routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
+          <a class="side__home" [routerLink]="ar() ? '/ar' : '/'" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">{{ ar() ? 'الرئيسية' : 'Accueil' }}</a>
           <a *ngIf="estPatient()" routerLink="/mes-rendez-vous" routerLinkActive="actif">Mes rendez-vous</a>
           <a *ngIf="estPatient()" routerLink="/mes-ordonnances" routerLinkActive="actif">Mes ordonnances</a>
           <a *ngIf="estPatient()" routerLink="/teleconsultations" routerLinkActive="actif">Mes téléconsultations</a>
@@ -66,10 +67,11 @@ import { PRELANCEMENT } from './lancement';
 
           <div class="side__account">
             <ng-container *ngIf="!connecte()">
-              <a class="side__pro" routerLink="/praticien">Vous êtes praticien ?</a>
-              <a class="side__help" href="#aide">Centre d'aide</a>
-              <a class="side__login" (click)="seConnecter()" tabindex="0" role="button">Se connecter</a>
-              <a class="side__signup" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">Créer un compte</a>
+              <a class="side__pro" routerLink="/praticien">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
+              <a class="side__help" href="#aide">{{ ar() ? 'المساعدة' : "Centre d'aide" }}</a>
+              <a class="side__help" [routerLink]="ar() ? '/' : '/ar'" [attr.lang]="ar() ? 'fr' : 'ar'">{{ ar() ? 'Français' : 'العربية' }}</a>
+              <a class="side__login" (click)="seConnecter()" tabindex="0" role="button">{{ ar() ? 'تسجيل الدخول' : 'Se connecter' }}</a>
+              <a class="side__signup" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ ar() ? 'إنشاء حساب' : 'Créer un compte' }}</a>
             </ng-container>
             <ng-container *ngIf="connecte()">
               <a class="side__help" href="#aide">Centre d'aide</a>
@@ -82,51 +84,41 @@ import { PRELANCEMENT } from './lancement';
 
       <div class="content">
         <router-outlet />
-        <footer class="siteft" id="aide">
+        <footer class="siteft" id="aide" [attr.dir]="ar() ? 'rtl' : null" [attr.lang]="ar() ? 'ar' : null">
           <div class="siteft__in">
             <div class="siteft__top">
               <div class="siteft__q">
-                <b>Des questions ?</b>
-                <span>Consultez notre aide ou contactez-nous.</span>
+                <b>{{ ar() ? 'لديك سؤال؟' : 'Des questions ?' }}</b>
+                <span>{{ ar() ? 'اطّلع على المساعدة أو تواصل معنا.' : 'Consultez notre aide ou contactez-nous.' }}</span>
               </div>
-              <a class="siteft__contact" href="mailto:contact@tabibi.doctor">Nous contacter</a>
+              <a class="siteft__contact" href="mailto:contact@tabibi.doctor">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
             </div>
 
             <div class="siteft__cols">
               <div class="siteft__col">
-                <h4>Tabibi</h4>
-                <a routerLink="/verifier">Vérifier une ordonnance</a>
-                <a href="/legal/mentions-legales.html">Mentions légales</a>
-                <a href="/legal/cgu.html">Conditions d'utilisation</a>
-                <a href="/legal/confidentialite.html">Confidentialité</a>
-                <a href="mailto:contact@tabibi.doctor">Nous contacter</a>
-                <a routerLink="/praticien">Vous êtes praticien ?</a>
+                <h4>{{ ar() ? 'طبيبي' : 'Tabibi' }}</h4>
+                <a routerLink="/verifier">{{ ar() ? 'التحقق من وصفة طبية' : 'Vérifier une ordonnance' }}</a>
+                <a href="/legal/mentions-legales.html">{{ ar() ? 'الإشعارات القانونية' : 'Mentions légales' }}</a>
+                <a href="/legal/cgu.html">{{ ar() ? 'شروط الاستخدام' : "Conditions d'utilisation" }}</a>
+                <a href="/legal/confidentialite.html">{{ ar() ? 'الخصوصية' : 'Confidentialité' }}</a>
+                <a href="mailto:contact@tabibi.doctor">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
+                <a routerLink="/praticien">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
               </div>
               <div class="siteft__col">
-                <h4>Spécialités</h4>
-                <a routerLink="/specialites/medecin-generaliste">Médecin généraliste</a>
-                <a routerLink="/specialites/cardiologue">Cardiologue</a>
-                <a routerLink="/specialites/dentiste">Dentiste</a>
-                <a routerLink="/specialites/pediatre">Pédiatre</a>
-                <a routerLink="/specialites/gynecologue">Gynécologue</a>
-                <a routerLink="/specialites/dermatologue">Dermatologue</a>
-                <a routerLink="/specialites" class="siteft__tout">Toutes les spécialités →</a>
+                <h4>{{ ar() ? 'التخصصات' : 'Spécialités' }}</h4>
+                <a *ngFor="let sp of specialitesPied" [routerLink]="[pre() + '/specialites', sp.slug]">{{ ar() ? sp.nomAr : sp.nom }}</a>
+                <a [routerLink]="pre() + '/specialites'" class="siteft__tout">{{ ar() ? 'جميع التخصصات ←' : 'Toutes les spécialités →' }}</a>
               </div>
               <div class="siteft__col">
-                <h4>Villes</h4>
-                <a routerLink="/wilayas/alger">Alger</a>
-                <a routerLink="/wilayas/oran">Oran</a>
-                <a routerLink="/wilayas/constantine">Constantine</a>
-                <a routerLink="/wilayas/annaba">Annaba</a>
-                <a routerLink="/wilayas/blida">Blida</a>
-                <a routerLink="/wilayas/setif">Sétif</a>
-                <a routerLink="/specialites" class="siteft__tout">Toutes les wilayas →</a>
+                <h4>{{ ar() ? 'الولايات' : 'Villes' }}</h4>
+                <a *ngFor="let w of wilayasPied" [routerLink]="[pre() + '/wilayas', w.slug]">{{ ar() ? w.nomAr : w.nom }}</a>
+                <a [routerLink]="pre() + '/specialites'" class="siteft__tout">{{ ar() ? 'جميع الولايات ←' : 'Toutes les wilayas →' }}</a>
               </div>
             </div>
 
             <div class="siteft__bottom">
               <span class="siteft__logo">tabibi<i>.</i></span>
-              <span class="siteft__copy">© 2026 Tabibi — Tous droits réservés.</span>
+              <span class="siteft__copy">{{ ar() ? '© 2026 طبيبي — جميع الحقوق محفوظة.' : '© 2026 Tabibi — Tous droits réservés.' }}</span>
             </div>
           </div>
         </footer>
@@ -136,6 +128,12 @@ import { PRELANCEMENT } from './lancement';
 })
 export class AppComponent implements OnInit {
   readonly prelancement = PRELANCEMENT;
+  /** Pages publiques en arabe (/ar...) : menu visiteur, bandeau et pied de page en arabe. */
+  ar = signal(false);
+  pre = computed(() => (this.ar() ? '/ar' : ''));
+  readonly specialitesPied = ['medecin-generaliste', 'cardiologue', 'dentiste', 'pediatre', 'gynecologue', 'dermatologue']
+    .map((x) => SPECIALITES_SEO.find((s) => s.slug === x)!);
+  readonly wilayasPied = ['16', '31', '25', '23', '9', '19'].map((c) => WILAYAS_SEO.find((w) => w.code === c)!);
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   private router = inject(Router);
@@ -169,7 +167,12 @@ export class AppComponent implements OnInit {
 
   /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()), puis roles. */
   async ngOnInit() {
-    this.router.events.subscribe((e) => { if (e instanceof NavigationEnd) this.menuOuvert.set(false); });
+    this.router.events.subscribe((e) => {
+      if (e instanceof NavigationEnd) {
+        this.menuOuvert.set(false);
+        this.ar.set(e.urlAfterRedirects === '/ar' || e.urlAfterRedirects.startsWith('/ar/') || e.urlAfterRedirects.startsWith('/ar?'));
+      }
+    });
     await this.auth.initialiser();
     this.connecte.set(this.auth.estConnecte());
     this.roleService.charger();
