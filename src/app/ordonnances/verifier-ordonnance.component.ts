@@ -8,10 +8,9 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
 
 /** Page publique : un pharmacien saisit le code imprime sur l'ordonnance pour en verifier l'authenticite. */
 @Component({
-  selector: 'app-verifier-ordonnance',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
+    selector: 'app-verifier-ordonnance',
+    imports: [CommonModule, FormsModule],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Vérifier une ordonnance</h1>
       <p style="color:var(--text3);margin:0 0 20px">Saisissez le code de vérification imprimé sur l'ordonnance.</p>
@@ -42,7 +41,7 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
       </ng-container>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
     </main>
-  `,
+  `
 })
 export class VerifierOrdonnanceComponent implements OnInit {
   private route = inject(ActivatedRoute);

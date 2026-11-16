@@ -10,10 +10,9 @@ import { ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { MessagerieService } from '../messagerie/messagerie.service';
 
 @Component({
-  selector: 'app-fiche-medecin',
-  standalone: true,
-  imports: [CommonModule, RouterLink, SyntheseAvisComponent],
-  template: `
+    selector: 'app-fiche-medecin',
+    imports: [CommonModule, RouterLink, SyntheseAvisComponent],
+    template: `
     <main class="fm">
       <a routerLink="/" class="fm-back"><i class="fa fa-arrow-left fa-xs"></i> Retour à la recherche</a>
 
@@ -146,7 +145,7 @@ import { MessagerieService } from '../messagerie/messagerie.service';
       </ng-container>
     </main>
   `,
-  styles: [`
+    styles: [`
     :host { display:block; background:var(--bg); }
     .fm { max-width:1080px; margin:0 auto; padding:20px var(--gutter) 48px; }
     .fm-back { display:inline-flex; align-items:center; gap:6px; color:var(--blue); font-weight:600; font-size:14px; text-decoration:none; margin-bottom:16px; }
@@ -249,7 +248,7 @@ import { MessagerieService } from '../messagerie/messagerie.service';
       .fm-hero-act { grid-column:1 / -1; }
       .fm-hero-act .fm-btn { width:100%; }
     }
-  `],
+  `]
 })
 export class FicheMedecinComponent implements OnInit {
   private route = inject(ActivatedRoute);

@@ -12,10 +12,9 @@ import { PatientsService, RepertoirePatients, nomPatient } from './patients.serv
 
 /** Ordonnances emises par le medecin connecte (GET /api/medecin/ordonnances), avec le nom du patient. */
 @Component({
-  selector: 'app-ordonnances-redigees',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BadgeStatutOrdonnanceComponent],
-  template: `
+    selector: 'app-ordonnances-redigees',
+    imports: [CommonModule, FormsModule, RouterLink, BadgeStatutOrdonnanceComponent],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
         <h1 style="color:var(--blue);margin:0">Mes ordonnances rédigées</h1>
@@ -61,7 +60,7 @@ import { PatientsService, RepertoirePatients, nomPatient } from './patients.serv
       </ul>
       <p *ngIf="!charge() && !erreur() && ordonnances().length === 0">Aucune ordonnance rédigée pour le moment.</p>
     </main>
-  `,
+  `
 })
 export class OrdonnancesRedigeesComponent implements OnInit {
   private auth = inject(AuthService);

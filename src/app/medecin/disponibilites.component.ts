@@ -9,10 +9,9 @@ import { MedecinService } from './medecin.service';
  * (DELETE /api/medecin/creneaux/{id}).
  */
 @Component({
-  selector: 'app-disponibilites',
-  standalone: true,
-  imports: [CommonModule, GestionCreneauxComponent],
-  template: `
+    selector: 'app-disponibilites',
+    imports: [CommonModule, GestionCreneauxComponent],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--blue);margin:0 0 8px">Disponibilités</h1>
       <p style="color:var(--text3);margin:0 0 20px">
@@ -21,7 +20,7 @@ import { MedecinService } from './medecin.service';
       <app-gestion-creneaux [source]="source" lienAgenda="/medecin/agenda"
                             message403="Seul un compte médecin peut gérer des créneaux." />
     </main>
-  `,
+  `
 })
 export class DisponibilitesComponent {
   private service = inject(MedecinService);

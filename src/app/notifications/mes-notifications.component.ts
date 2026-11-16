@@ -7,10 +7,9 @@ import { Notification, NotificationService } from './notification.service';
 
 /** Boite de reception de l'utilisateur connecte (GET /api/notifications/mes), avec marquage lu. */
 @Component({
-  selector: 'app-mes-notifications',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-mes-notifications',
+    imports: [CommonModule],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
         <h1 style="color:var(--vert);margin:0">Mes notifications</h1>
@@ -48,7 +47,7 @@ import { Notification, NotificationService } from './notification.service';
         <p *ngIf="!charge() && !erreur() && notifications().length === 0">Aucune notification pour le moment.</p>
       </ng-container>
     </main>
-  `,
+  `
 })
 export class MesNotificationsComponent implements OnInit {
   private auth = inject(AuthService);

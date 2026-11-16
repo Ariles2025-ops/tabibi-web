@@ -20,10 +20,9 @@ import { Rattachement, SecretaireService } from './secretaire.service';
  * liste a venir, suppression des creneaux libres).
  */
 @Component({
-  selector: 'app-espace-secretaire',
-  standalone: true,
-  imports: [CommonModule, FormsModule, GestionCreneauxComponent],
-  template: `
+    selector: 'app-espace-secretaire',
+    imports: [CommonModule, FormsModule, GestionCreneauxComponent],
+    template: `
     <main style="max-width:760px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--blue);margin:0 0 8px">Espace secrétaire</h1>
       <p style="color:var(--text3);margin:0 0 20px">
@@ -107,7 +106,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
         <app-gestion-creneaux [source]="sourceCreneaux()" message403="Ce cabinet ne vous est pas rattaché." />
       </ng-container>
     </main>
-  `,
+  `
 })
 export class EspaceSecretaireComponent implements OnInit {
   private auth = inject(AuthService);

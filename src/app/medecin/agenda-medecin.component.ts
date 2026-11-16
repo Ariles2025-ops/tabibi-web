@@ -17,10 +17,9 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
  * confirmation dans la page) ou recoit une proposition de teleconsultation ; une ordonnance se redige preremplie.
  */
 @Component({
-  selector: 'app-agenda-medecin',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-agenda-medecin',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main style="max-width:760px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--blue);margin:0 0 16px">Agenda</h1>
 
@@ -109,7 +108,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
         <a *ngIf="vue() === 'avenir'" routerLink="/medecin/disponibilites" style="color:var(--blue)">Ouvrir des créneaux</a>
       </p>
     </main>
-  `,
+  `
 })
 export class AgendaMedecinComponent implements OnInit {
   visio = VISIO_ACTIVE;

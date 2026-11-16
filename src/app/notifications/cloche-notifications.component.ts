@@ -14,15 +14,14 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 60_000;
  * Cote serveur (SSR), aucune minuterie n'est lancee : elle empecherait le rendu de se terminer.
  */
 @Component({
-  selector: 'app-cloche-notifications',
-  standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
-  template: `
+    selector: 'app-cloche-notifications',
+    imports: [CommonModule, RouterLink, RouterLinkActive],
+    template: `
     <a routerLink="/notifications" routerLinkActive="actif" (click)="rafraichir()"
        [attr.aria-label]="nonLues() > 0 ? 'Notifications, ' + nonLues() + ' non lues' : 'Notifications'">
       Notifications<ng-container *ngIf="nonLues() > 0"> ({{ nonLues() }})</ng-container>
     </a>
-  `,
+  `
 })
 export class ClocheNotificationsComponent implements OnInit, OnDestroy {
   private service = inject(NotificationService);

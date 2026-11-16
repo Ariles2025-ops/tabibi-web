@@ -7,10 +7,9 @@ import { ListeOrdonnancesComponent } from './liste-ordonnances.component';
 import { Ordonnance, OrdonnanceService } from './ordonnance.service';
 
 @Component({
-  selector: 'app-mes-ordonnances',
-  standalone: true,
-  imports: [CommonModule, ListeOrdonnancesComponent],
-  template: `
+    selector: 'app-mes-ordonnances',
+    imports: [CommonModule, ListeOrdonnancesComponent],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 16px">Mes ordonnances</h1>
 
@@ -23,7 +22,7 @@ import { Ordonnance, OrdonnanceService } from './ordonnance.service';
         <p *ngIf="!charge() && !erreur() && ordonnances().length === 0">Aucune ordonnance pour le moment.</p>
       </ng-container>
     </main>
-  `,
+  `
 })
 export class MesOrdonnancesComponent implements OnInit {
   private auth = inject(AuthService);

@@ -21,10 +21,9 @@ const STATUTS_FILTRE = [
  * ou retablissement (remise en ligne apres signalement ou masquage). Les avis signales sont proposes en premier.
  */
 @Component({
-  selector: 'app-moderation-avis',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
+    selector: 'app-moderation-avis',
+    imports: [CommonModule, FormsModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
         <h1 style="color:var(--blue);margin:0">Modération des avis</h1>
@@ -67,7 +66,7 @@ const STATUTS_FILTRE = [
 
       <p style="margin:24px 0 0"><a routerLink="/admin" style="color:var(--blue)">Retour au tableau de bord</a></p>
     </main>
-  `,
+  `
 })
 export class ModerationAvisComponent implements OnInit {
   private auth = inject(AuthService);

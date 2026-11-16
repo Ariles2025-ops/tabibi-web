@@ -21,10 +21,9 @@ import {
  * et un maillage vers les autres wilayas / specialites. La fiche et la reservation restent reservees aux comptes.
  */
 @Component({
-  selector: 'app-annuaire-seo',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-annuaire-seo',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main class="seo" [attr.dir]="ar ? 'rtl' : null" [attr.lang]="ar ? 'ar' : 'fr'">
       <div class="seo-haut">
         <nav class="seo-fil" [attr.aria-label]="t.fil">
@@ -137,7 +136,7 @@ import {
       </section>
     </main>
   `,
-  styles: [`
+    styles: [`
     .seo { max-width:1100px; margin:0 auto; padding:24px var(--gutter, 16px) 48px; color:var(--ink); }
     .seo-haut { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
     .seo-haut .seo-fil { margin-bottom:0; }
@@ -178,7 +177,7 @@ import {
     .seo-faq summary { cursor:pointer; font-weight:700; }
     .seo-faq p { color:var(--text3); margin:8px 0 0; line-height:1.55; }
     .seo-faq a { color:var(--vert); font-weight:700; }
-  `],
+  `]
 })
 export class AnnuaireSeoComponent implements OnInit {
   private route = inject(ActivatedRoute);

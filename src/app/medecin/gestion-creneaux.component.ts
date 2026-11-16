@@ -31,10 +31,9 @@ const SERIE_MAX = 48;
  * « Disponibilites » du medecin et l'espace secretaire.
  */
 @Component({
-  selector: 'app-gestion-creneaux',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
+    selector: 'app-gestion-creneaux',
+    imports: [CommonModule, FormsModule, RouterLink],
+    template: `
     <section style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:20px;margin:0 0 24px">
       <div role="tablist" style="display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap">
         <button type="button" role="tab" [attr.aria-selected]="mode() === 'unique'" (click)="changerMode('unique')"
@@ -132,7 +131,7 @@ const SERIE_MAX = 48;
         </li>
       </ul>
     </div>
-  `,
+  `
 })
 export class GestionCreneauxComponent implements OnChanges {
   private auth = inject(AuthService);

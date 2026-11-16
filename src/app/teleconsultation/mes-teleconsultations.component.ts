@@ -18,10 +18,9 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
  * un encart explique le recours a un service tiers (Jitsi Meet) et propose de consentir.
  */
 @Component({
-  selector: 'app-mes-teleconsultations',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-mes-teleconsultations',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 16px">Mes téléconsultations</h1>
 
@@ -69,7 +68,7 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
         </p>
       </ng-container>
     </main>
-  `,
+  `
 })
 export class MesTeleconsultationsComponent implements OnInit {
   private auth = inject(AuthService);

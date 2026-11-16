@@ -11,10 +11,9 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
  * reste visible jusqu'a la decision de l'equipe ; il est marque « Signalé » dans la page.
  */
 @Component({
-  selector: 'app-avis-medecin',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-avis-medecin',
+    imports: [CommonModule],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--blue);margin:0 0 8px">Avis des patients</h1>
       <p style="color:var(--text3);margin:0 0 16px">
@@ -42,7 +41,7 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
         </li>
       </ul>
     </main>
-  `,
+  `
 })
 export class AvisMedecinComponent implements OnInit {
   private auth = inject(AuthService);

@@ -11,10 +11,9 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
 import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.component';
 
 @Component({
-  selector: 'app-ordonnance-detail',
-  standalone: true,
-  imports: [CommonModule, RouterLink, BadgeStatutOrdonnanceComponent],
-  template: `
+    selector: 'app-ordonnance-detail',
+    imports: [CommonModule, RouterLink, BadgeStatutOrdonnanceComponent],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <p class="sans-impression" style="margin:0 0 16px">
         <a *ngIf="!estMedecin()" routerLink="/mes-ordonnances" style="color:var(--vert)">Retour à mes ordonnances</a>
@@ -70,7 +69,7 @@ import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.compon
         </section>
       </article>
     </main>
-  `,
+  `
 })
 export class OrdonnanceDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);

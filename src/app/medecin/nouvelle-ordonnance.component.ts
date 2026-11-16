@@ -20,10 +20,9 @@ interface LigneSaisie extends LigneOrdonnance {
  * medicament est obligatoire sur chaque ligne.
  */
 @Component({
-  selector: 'app-nouvelle-ordonnance',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
+    selector: 'app-nouvelle-ordonnance',
+    imports: [CommonModule, FormsModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <p style="margin:0 0 16px"><a routerLink="/medecin/agenda" style="color:var(--blue)">Retour à l'agenda</a></p>
       <h1 style="color:var(--blue);margin:0 0 16px">Nouvelle ordonnance</h1>
@@ -84,7 +83,7 @@ interface LigneSaisie extends LigneOrdonnance {
         </div>
       </form>
     </main>
-  `,
+  `
 })
 export class NouvelleOrdonnanceComponent implements OnInit {
   private route = inject(ActivatedRoute);
