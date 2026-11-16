@@ -22,10 +22,9 @@ interface OptionWilaya { code: string; nom: string; }
  * demande mene a ses reponses. Les pharmacies de la wilaya voient le besoin sans l'identite du patient.
  */
 @Component({
-  selector: 'app-mes-demandes',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
+    selector: 'app-mes-demandes',
+    imports: [CommonModule, FormsModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Dawini</h1>
       <p style="color:var(--text3);margin:0 0 20px">
@@ -88,7 +87,7 @@ interface OptionWilaya { code: string; nom: string; }
         <p *ngIf="!charge() && !erreur() && besoins().length === 0">Aucune demande pour le moment.</p>
       </ng-container>
     </main>
-  `,
+  `
 })
 export class MesDemandesComponent implements OnInit {
   /** Nom de la wilaya (referentiel) plutot que son code. */

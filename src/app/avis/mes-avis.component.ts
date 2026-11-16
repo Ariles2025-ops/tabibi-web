@@ -8,10 +8,9 @@ import { Avis, AvisService, libelleStatutAvis } from './avis.service';
 
 /** Avis deposes par le patient connecte (GET /api/avis/mes), tous statuts, les plus recents d'abord. */
 @Component({
-  selector: 'app-mes-avis',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-mes-avis',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 16px">Mes avis</h1>
 
@@ -34,7 +33,7 @@ import { Avis, AvisService, libelleStatutAvis } from './avis.service';
         </p>
       </ng-container>
     </main>
-  `,
+  `
 })
 export class MesAvisComponent implements OnInit {
   private auth = inject(AuthService);

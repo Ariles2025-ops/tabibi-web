@@ -20,10 +20,9 @@ function formulaireVide(): DemandeCandidature {
  * formulaire de depot s'il n'en a jamais depose ou si la derniere a ete refusee (POST /api/medecin/candidature).
  */
 @Component({
-  selector: 'app-candidature-medecin',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
+    selector: 'app-candidature-medecin',
+    imports: [CommonModule, FormsModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">{{ ficheReclamee ? 'Réclamer ma fiche' : 'Ma candidature' }}</h1>
       <p *ngIf="!ficheReclamee" style="color:var(--text3);margin:0 0 20px">
@@ -104,7 +103,7 @@ function formulaireVide(): DemandeCandidature {
         </div>
       </form>
     </main>
-  `,
+  `
 })
 export class CandidatureMedecinComponent implements OnInit {
   private auth = inject(AuthService);

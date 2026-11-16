@@ -15,10 +15,9 @@ import { WILAYAS_SEO } from '../seo/referentiel-seo';
  * un suivi des demandes cote admin pourra etre ajoute ensuite.
  */
 @Component({
-  selector: 'app-praticien',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
+    selector: 'app-praticien',
+    imports: [CommonModule, FormsModule],
+    template: `
     <main class="prat">
       <section class="prat-hero">
         <div class="prat-hero__in">
@@ -123,7 +122,7 @@ import { WILAYAS_SEO } from '../seo/referentiel-seo';
       </section>
     </main>
   `,
-  styles: [`
+    styles: [`
     .prat { color: var(--ink); }
     .prat-hero { background: linear-gradient(155deg, var(--vert) 0%, #0a4d3e 100%); color:#fff; }
     .prat-hero__in { max-width:1100px; margin:0 auto; padding:56px var(--gutter); display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:center; }
@@ -185,7 +184,7 @@ import { WILAYAS_SEO } from '../seo/referentiel-seo';
       .prat-cherche { grid-template-columns:1fr; }
     }
     @media (max-width:560px) { .prat-feats { grid-template-columns:1fr; } }
-  `],
+  `]
 })
 export class PraticienComponent {
   private navigateur = isPlatformBrowser(inject(PLATFORM_ID));

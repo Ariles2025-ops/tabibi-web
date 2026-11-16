@@ -11,10 +11,9 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin, libe
  * ouverte, apres confirmation dans la page (POST .../cloturer). La demande elle-meme est retrouvee dans mes demandes (pas de lecture unitaire cote API).
  */
 @Component({
-  selector: 'app-reponses-demande',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-reponses-demande',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <p style="margin:0 0 16px"><a routerLink="/dawini" style="color:var(--vert)">Retour à mes demandes</a></p>
       <h1 style="color:var(--vert);margin:0 0 8px">{{ besoin()?.medicament ?? 'Ma demande' }}</h1>
@@ -55,7 +54,7 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin, libe
         <p *ngIf="!charge() && !erreur() && reponses().length === 0">Aucune réponse pour le moment.</p>
       </ng-container>
     </main>
-  `,
+  `
 })
 export class ReponsesDemandeComponent implements OnInit {
   /** Nom de la wilaya (referentiel) plutot que son code. */

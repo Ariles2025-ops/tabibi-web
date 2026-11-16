@@ -16,10 +16,9 @@ import { MedecinService } from './medecin.service';
  * confirme dans la page (POST /api/medecin/secretaires/{id}/retirer). Une secretaire rattachee agit sur l'agenda depuis l'espace secretaire.
  */
 @Component({
-  selector: 'app-secretaires',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
+    selector: 'app-secretaires',
+    imports: [CommonModule, FormsModule],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--blue);margin:0 0 8px">Mes secrétaires</h1>
       <p style="color:var(--text3);margin:0 0 20px">
@@ -74,7 +73,7 @@ import { MedecinService } from './medecin.service';
       </ul>
       <p *ngIf="!charge() && !erreur() && rattachements().length === 0">Aucune secrétaire rattachée pour le moment.</p>
     </main>
-  `,
+  `
 })
 export class SecretairesComponent implements OnInit {
   private auth = inject(AuthService);

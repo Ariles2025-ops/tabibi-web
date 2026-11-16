@@ -7,10 +7,9 @@ import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.compon
 
 /** Liste d'ordonnances (date, praticien si fourni, code, statut) ; chaque ligne mene au detail /ordonnances/:id. */
 @Component({
-  selector: 'app-liste-ordonnances',
-  standalone: true,
-  imports: [CommonModule, RouterLink, BadgeStatutOrdonnanceComponent],
-  template: `
+    selector: 'app-liste-ordonnances',
+    imports: [CommonModule, RouterLink, BadgeStatutOrdonnanceComponent],
+    template: `
     <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
       <li *ngFor="let o of ordonnances()" style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1)">
         <a [routerLink]="['/ordonnances', o.id]"
@@ -30,7 +29,7 @@ import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.compon
         </a>
       </li>
     </ul>
-  `,
+  `
 })
 export class ListeOrdonnancesComponent {
   ordonnances = input.required<Ordonnance[]>();

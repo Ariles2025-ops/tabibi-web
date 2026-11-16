@@ -17,10 +17,9 @@ interface InvitationAffichee extends Invitation {
  * la personne invitee accepte ou refuse. Rien n'est accessible avant l'acceptation.
  */
 @Component({
-  selector: 'app-invitations',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-invitations',
+    imports: [CommonModule],
+    template: `
     <main style="max-width:640px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--blue);margin:0 0 8px">Invitations de cabinet</h1>
       <p style="color:var(--text3);margin:0 0 20px">
@@ -52,7 +51,7 @@ interface InvitationAffichee extends Invitation {
         Aucune invitation en attente.
       </p>
     </main>
-  `,
+  `
 })
 export class InvitationsComponent implements OnInit {
   private auth = inject(AuthService);

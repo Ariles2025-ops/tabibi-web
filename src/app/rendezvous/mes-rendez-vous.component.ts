@@ -9,10 +9,9 @@ import { RendezVous, RendezVousService } from './rendezvous.service';
 import { libelleStatutRendezVous } from './statut-rendez-vous';
 
 @Component({
-  selector: 'app-mes-rendez-vous',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-mes-rendez-vous',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main class="mr">
       <header class="mr-tete">
         <div>
@@ -97,7 +96,7 @@ import { libelleStatutRendezVous } from './statut-rendez-vous';
       </ng-container>
     </main>
   `,
-  styles: [`
+    styles: [`
     :host { display:block; background:var(--bg); }
     .mr { max-width:880px; margin:0 auto; padding:28px var(--gutter) 56px; display:flex; flex-direction:column; gap:24px; }
     .mr-tete { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; }
@@ -159,7 +158,7 @@ import { libelleStatutRendezVous } from './statut-rendez-vous';
       .mr-actions .mr-btn, .mr-confirm .mr-btn { flex:1; }
       .mr-confirm span { width:100%; }
     }
-  `],
+  `]
 })
 export class MesRendezVousComponent implements OnInit {
   private auth = inject(AuthService);

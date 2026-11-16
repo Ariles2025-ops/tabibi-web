@@ -19,10 +19,9 @@ const STATUTS_FILTRE = [
  * (publication dans l'annuaire) ou refus motive ; le medecin est prevenu par l'API.
  */
 @Component({
-  selector: 'app-candidatures-admin',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
+    selector: 'app-candidatures-admin',
+    imports: [CommonModule, FormsModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
         <h1 style="color:var(--vert);margin:0">Candidatures</h1>
@@ -106,7 +105,7 @@ const STATUTS_FILTRE = [
 
       <p style="margin:24px 0 0"><a routerLink="/admin" style="color:var(--vert)">Retour au tableau de bord</a></p>
     </main>
-  `,
+  `
 })
 export class CandidaturesAdminComponent implements OnInit {
   private auth = inject(AuthService);

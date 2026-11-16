@@ -12,10 +12,9 @@ const NOMBRE_DERNIERS_AVIS = 5;
  * `<app-synthese-avis [medecinId]="..." />`, rechargee si l'identifiant change.
  */
 @Component({
-  selector: 'app-synthese-avis',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-synthese-avis',
+    imports: [CommonModule],
+    template: `
     <section>
       <h2 style="font-size:1.1rem;margin:0 0 8px">Avis des patients</h2>
       <p *ngIf="synthese()" style="margin:0 0 12px"><strong>{{ libelle() }}</strong></p>
@@ -29,7 +28,7 @@ const NOMBRE_DERNIERS_AVIS = 5;
         </li>
       </ul>
     </section>
-  `,
+  `
 })
 export class SyntheseAvisComponent implements OnChanges {
   private service = inject(AvisService);

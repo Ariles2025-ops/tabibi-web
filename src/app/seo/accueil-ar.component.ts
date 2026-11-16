@@ -10,10 +10,9 @@ import { SPECIALITES_PRINCIPALES, SPECIALITES_SEO, WILAYAS_PRINCIPALES, WILAYAS_
  * (/ar/specialites/:specialite/:wilaya), specialites et wilayas les plus demandees, rappel du pre-lancement.
  */
 @Component({
-  selector: 'app-accueil-ar',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
+    selector: 'app-accueil-ar',
+    imports: [CommonModule, FormsModule, RouterLink],
+    template: `
     <main class="aa" dir="rtl" lang="ar">
       <section class="aa-hero">
         <span class="aa-pastille">أكثر من 75 000 طبيب في الجزائر</span>
@@ -62,7 +61,7 @@ import { SPECIALITES_PRINCIPALES, SPECIALITES_SEO, WILAYAS_PRINCIPALES, WILAYAS_
       </section>
     </main>
   `,
-  styles: [`
+    styles: [`
     .aa { max-width:1100px; margin:0 auto; padding:24px var(--gutter, 16px) 48px; color:var(--ink); }
     .aa-hero { background:linear-gradient(155deg, var(--vert) 0%, #0a4d3e 100%); color:#fff; border-radius:24px; padding:40px 24px; text-align:center; box-shadow:var(--s2); }
     .aa-pastille { display:inline-block; background:#D4A437; color:#10241F; font-weight:800; font-size:13px; padding:6px 14px; border-radius:999px; }
@@ -82,7 +81,7 @@ import { SPECIALITES_PRINCIPALES, SPECIALITES_SEO, WILAYAS_PRINCIPALES, WILAYAS_
     .aa-atouts h3 { margin:0 0 6px; font-size:16px; font-weight:800; }
     .aa-atouts p { margin:0; color:var(--text3); font-size:14px; line-height:1.6; }
     @media (max-width:720px) { .aa-recherche { grid-template-columns:1fr; } .aa-btn { align-self:stretch; } .aa-atouts { grid-template-columns:1fr; } }
-  `],
+  `]
 })
 export class AccueilArComponent implements OnInit {
   private router = inject(Router);

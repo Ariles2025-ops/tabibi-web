@@ -8,10 +8,9 @@ import { PRELANCEMENT, VISIO_ACTIVE } from './lancement';
 import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ClocheNotificationsComponent],
-  template: `
+    selector: 'app-root',
+    imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ClocheNotificationsComponent],
+    template: `
     <div class="lancement-bandeau" *ngIf="prelancement" role="status" [attr.dir]="ar() ? 'rtl' : null">
       <span class="lancement-bandeau__pastille">{{ ar() ? 'قريبًا' : 'Bientôt' }}</span>
       <strong>{{ ar() ? 'الإطلاق قريبًا' : 'Lancement prochainement' }}</strong>
@@ -125,7 +124,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
         </footer>
       </div>
     </div>
-  `,
+  `
 })
 export class AppComponent implements OnInit {
   readonly prelancement = PRELANCEMENT;

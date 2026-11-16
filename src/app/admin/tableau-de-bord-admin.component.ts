@@ -10,10 +10,9 @@ import { AdminService, StatistiquesAdministration, libelleRappels } from './admi
  * declenchement manuel des rappels de rendez-vous (POST /api/admin/rappels/executer).
  */
 @Component({
-  selector: 'app-tableau-de-bord-admin',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-tableau-de-bord-admin',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 16px">Administration</h1>
 
@@ -52,7 +51,7 @@ import { AdminService, StatistiquesAdministration, libelleRappels } from './admi
         <p *ngIf="erreurRappels()" style="color:#b3261e;margin:12px 0 0">{{ erreurRappels() }}</p>
       </section>
     </main>
-  `,
+  `
 })
 export class TableauDeBordAdminComponent implements OnInit {
   private auth = inject(AuthService);

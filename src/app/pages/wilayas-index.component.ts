@@ -7,10 +7,9 @@ import { referencerPage } from '../seo/page-seo';
 
 /** Index public des 69 wilayas (/wilayas et /ar/wilayas) : un lien vers la page de chaque wilaya. */
 @Component({
-  selector: 'app-wilayas-index',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-wilayas-index',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main class="pg" [attr.dir]="ar ? 'rtl' : null" [attr.lang]="ar ? 'ar' : 'fr'">
       <nav class="pg-fil" [attr.aria-label]="ar ? 'مسار التصفح' : 'Fil d\\'Ariane'">
         <a [routerLink]="ar ? '/ar' : '/'">{{ ar ? 'الرئيسية' : 'Accueil' }}</a><span>›</span>
@@ -31,7 +30,7 @@ import { referencerPage } from '../seo/page-seo';
       </p>
     </main>
   `,
-  styles: [`
+    styles: [`
     .pg { max-width:1100px; margin:0 auto; padding:24px var(--gutter, 16px) 48px; color:var(--ink); }
     .pg-fil { display:flex; flex-wrap:wrap; gap:6px; font-size:13px; color:var(--text3); margin-bottom:18px; }
     .pg-fil a, .pg-intro a { color:var(--vert); text-decoration:none; font-weight:600; }
@@ -41,7 +40,7 @@ import { referencerPage } from '../seo/page-seo';
     .pg-colonnes a { display:flex; justify-content:space-between; gap:8px; break-inside:avoid; padding:7px 4px; border-bottom:1px solid var(--border); color:var(--ink); text-decoration:none; font-size:14px; }
     .pg-colonnes a:hover { color:var(--vert); font-weight:700; }
     .pg-code { color:var(--text3); font-size:12px; font-variant-numeric:tabular-nums; }
-  `],
+  `]
 })
 export class WilayasIndexComponent implements OnInit {
   private route = inject(ActivatedRoute);

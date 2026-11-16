@@ -32,10 +32,9 @@ function formulaireVide(): FormulaireReponse {
  * prix en dinars et commentaire facultatifs. Le patient est prevenu par l'API.
  */
 @Component({
-  selector: 'app-espace-pharmacie',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
+    selector: 'app-espace-pharmacie',
+    imports: [CommonModule, FormsModule],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Espace pharmacie</h1>
       <p style="color:var(--text3);margin:0 0 20px">
@@ -163,7 +162,7 @@ function formulaireVide(): FormulaireReponse {
         <p *ngIf="erreurOrdonnance()" role="alert" style="color:var(--red);margin:10px 0 0">{{ erreurOrdonnance() }}</p>
       </section>
     </main>
-  `,
+  `
 })
 export class EspacePharmacieComponent implements OnInit {
   /** Nom de la wilaya (referentiel) plutot que son code. */

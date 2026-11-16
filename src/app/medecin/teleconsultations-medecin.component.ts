@@ -20,10 +20,9 @@ type Action = 'demarrer' | 'terminer' | 'annuler';
  * est alors marque honore par l'API), annulation confirmee dans la page et lien de la salle video.
  */
 @Component({
-  selector: 'app-teleconsultations-medecin',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-teleconsultations-medecin',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--blue);margin:0 0 16px">Téléconsultations</h1>
 
@@ -78,7 +77,7 @@ type Action = 'demarrer' | 'terminer' | 'annuler';
         <a routerLink="/medecin/agenda" style="color:var(--blue)">Proposer une téléconsultation depuis l'agenda</a>
       </p>
     </main>
-  `,
+  `
 })
 export class TeleconsultationsMedecinComponent implements OnInit {
   private auth = inject(AuthService);

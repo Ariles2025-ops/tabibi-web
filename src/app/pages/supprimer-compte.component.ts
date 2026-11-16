@@ -10,10 +10,9 @@ import { referencerPage } from '../seo/page-seo';
  * du compte ») ; exigence de Google Play et droit a l'effacement de la loi 18-07.
  */
 @Component({
-  selector: 'app-supprimer-compte',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-supprimer-compte',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main class="pg">
       <a routerLink="/" class="pg-retour">Accueil</a>
       <h1>Supprimer mon compte Tabibi</h1>
@@ -54,7 +53,7 @@ import { referencerPage } from '../seo/page-seo';
       </section>
     </main>
   `,
-  styles: [`
+    styles: [`
     .pg { max-width:760px; margin:0 auto; padding:24px var(--gutter, 16px) 48px; color:var(--ink); }
     .pg-retour { color:var(--vert); font-weight:600; font-size:13px; text-decoration:none; display:inline-block; margin-bottom:18px; }
     h1 { margin:0 0 8px; font-size:clamp(1.6rem,3vw,2.2rem); font-weight:800; letter-spacing:-.02em; line-height:1.15; text-wrap:balance; }
@@ -64,7 +63,7 @@ import { referencerPage } from '../seo/page-seo';
     .pg-carte h2 + ul { margin-top:0; }
     .pg-carte p, .pg-carte li { color:var(--text3); line-height:1.55; }
     .pg-carte a:not(.bouton) { color:var(--vert); font-weight:700; }
-  `],
+  `]
 })
 export class SupprimerCompteComponent implements OnInit {
   private document = inject(DOCUMENT);
