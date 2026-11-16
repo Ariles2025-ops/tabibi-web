@@ -24,6 +24,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     selector: 'app-annuaire',
     imports: [CommonModule, FormsModule, RouterLink],
     template: `
+    <main id="contenu">
     <section class="hero-mobile">
       <div class="hz">
         <div class="hero-col-l">
@@ -280,6 +281,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
         <details><summary><span>Je suis médecin, comment rejoindre Tabibi ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Réclamez votre fiche depuis la page <a routerLink="/praticien" style="color:var(--vert);font-weight:700">Vous êtes praticien ?</a>, gérez vos disponibilités et recevez vos rendez-vous en ligne.</p></details>
       </div>
     </section>
+    </main>
   `,
     styles: [`
     .ac-liste { position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:40; margin:0; padding:6px; list-style:none; background:#fff; border:1px solid var(--border); border-radius:var(--r12); box-shadow:var(--s1); max-height:340px; overflow-y:auto; }

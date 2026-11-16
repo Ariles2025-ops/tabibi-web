@@ -94,7 +94,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
             <div class="siteft__cols">
               <div class="siteft__col">
-                <h4>{{ ar() ? 'طبيبي' : 'Tabibi' }}</h4>
+                <h2>{{ ar() ? 'طبيبي' : 'Tabibi' }}</h2>
                 <a [routerLink]="pre() + '/aide'">{{ ar() ? 'مركز المساعدة' : "Centre d'aide" }}</a>
                 <a routerLink="/verifier">{{ ar() ? 'التحقق من وصفة طبية' : 'Vérifier une ordonnance' }}</a>
                 <a href="/legal/mentions-legales.html">{{ ar() ? 'الإشعارات القانونية' : 'Mentions légales' }}</a>
@@ -105,12 +105,12 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
                 <a routerLink="/praticien">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
               </div>
               <div class="siteft__col">
-                <h4>{{ ar() ? 'التخصصات' : 'Spécialités' }}</h4>
+                <h2>{{ ar() ? 'التخصصات' : 'Spécialités' }}</h2>
                 <a *ngFor="let sp of specialitesPied" [routerLink]="[pre() + '/specialites', sp.slug]">{{ ar() ? sp.nomAr : sp.nom }}</a>
                 <a [routerLink]="pre() + '/specialites'" class="siteft__tout">{{ ar() ? 'جميع التخصصات ←' : 'Toutes les spécialités →' }}</a>
               </div>
               <div class="siteft__col">
-                <h4>{{ ar() ? 'الولايات' : 'Villes' }}</h4>
+                <h2>{{ ar() ? 'الولايات' : 'Villes' }}</h2>
                 <a *ngFor="let w of wilayasPied" [routerLink]="[pre() + '/wilayas', w.slug]">{{ ar() ? w.nomAr : w.nom }}</a>
                 <a [routerLink]="pre() + '/wilayas'" class="siteft__tout">{{ ar() ? 'جميع الولايات ←' : 'Toutes les wilayas →' }}</a>
               </div>
