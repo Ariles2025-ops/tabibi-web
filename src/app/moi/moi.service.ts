@@ -22,4 +22,9 @@ export class MoiService {
   moi(): Observable<Moi> {
     return this.http.get<Moi>(`${this.base}/api/moi`);
   }
+
+  /** Suppression definitive du compte et des donnees associees (Google Play, loi 18-07) : 204 attendu. */
+  supprimer(): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/moi`);
+  }
 }

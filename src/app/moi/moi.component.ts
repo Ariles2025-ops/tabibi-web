@@ -1,8 +1,10 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
+import { MoiService } from './moi.service';
 
 /** Libelles francais des roles metier ; tout autre role (technique) n'est pas affiche. */
 const LIBELLES_ROLES: Partial<Record<string, string>> = {
@@ -13,9 +15,11 @@ const LIBELLES_ROLES: Partial<Record<string, string>> = {
   ADMIN: 'Administrateur',
 };
 
+interface Raccourci { lien: string; libelle: string; }
+
 /**
- * Mon compte : utilisateur connecte, role en francais, identifiant du compte pour les seules secretaires (sujet du
- * jeton Keycloak, a communiquer au medecin qui la rattache) avec copie, acces rapides, deconnexion.
+ * Mon compte : utilisateur connecte, role en francais, acces rapides selon le role, deconnexion et suppression
+ * du compte (confirmation en deux temps dans la page, puis DELETE /api/moi et deconnexion).
  */
 @Component({
   selector: 'app-moi',
@@ -26,30 +30,39 @@ const LIBELLES_ROLES: Partial<Record<string, string>> = {
       <h1 style="color:var(--vert)">Mon compte</h1>
       <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:12px;max-width:420px">
         <p style="color:var(--text3);margin:0">Connectez-vous ou créez votre compte pour prendre rendez-vous. Vous choisirez le téléphone (code SMS) ou l'e-mail à l'étape suivante.</p>
-        <button type="button" class="bouton" (click)="seConnecter()">Se connecter / Créer un compte</button>
+        <button type="button" class="bouton" (click)="seConnecter()">Se connecter</button>
+        <button type="button" class="bouton-secondaire" (click)="sInscrireParEmail()">Créer un compte</button>
       </div>
       <div *ngIf="connecte()">
         <p>Connecté en tant que <b>{{ moi()?.nom }}</b></p>
         <p *ngIf="rolesAffiches().length">{{ rolesAffiches().length > 1 ? 'Rôles' : 'Rôle' }} : {{ rolesAffiches().join(', ') }}</p>
-        <ng-container *ngIf="estSecretaire()">
-        <p *ngIf="moi()?.sujet as sujet" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span>Identifiant du compte : <code style="font-size:.95rem">{{ sujet }}</code></span>
-          <button type="button" class="bouton-secondaire" style="padding:6px 12px" (click)="copier(sujet)">Copier</button>
-          <span *ngIf="copie()" style="color:var(--vert)">Identifiant copié.</span>
-          <span *ngIf="erreurCopie()" style="color:#b3261e">{{ erreurCopie() }}</span>
-        </p>
-        <p style="color:var(--text3);font-size:.9rem">
-          Communiquez cet identifiant au médecin qui vous rattache à son cabinet.
-        </p>
-        </ng-container>
         <nav aria-label="Accès rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0">
-          <a class="bouton" routerLink="/moi/profil">Mon profil</a>
-          <a class="bouton-secondaire" routerLink="/mes-rendez-vous">Mes rendez-vous</a>
-          <a class="bouton-secondaire" routerLink="/notifications">Notifications</a>
+          <a *ngFor="let r of raccourcis(); let premier = first" [class.bouton]="premier" [class.bouton-secondaire]="!premier" [routerLink]="r.lien">{{ r.libelle }}</a>
         </nav>
         <p style="display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="bouton-secondaire" (click)="seDeconnecter()">Se déconnecter</button>
         </p>
+
+        <section aria-labelledby="titre-suppression" style="margin-top:32px;padding:16px;border:1px solid var(--border);border-radius:16px;background:#fff">
+          <h2 id="titre-suppression" style="font-size:1.05rem;margin:0 0 6px">Supprimer mon compte</h2>
+          <p style="color:var(--text3);margin:0 0 12px;font-size:.95rem">
+            Votre compte et vos données personnelles (profil, rendez-vous, messages, listes d'attente) sont effacés définitivement.
+            <a routerLink="/supprimer-mon-compte" style="color:var(--vert)">En savoir plus</a>
+          </p>
+          <button *ngIf="!confirmation()" type="button" class="bouton-secondaire" style="color:var(--red);border-color:var(--red)"
+                  (click)="confirmation.set(true)">Supprimer mon compte</button>
+          <div *ngIf="confirmation()" role="alert" style="display:flex;flex-direction:column;gap:10px">
+            <p style="margin:0;color:var(--red);font-weight:600">Cette action est définitive. Confirmez-vous la suppression de votre compte ?</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="bouton" style="background:var(--red);border-color:var(--red)"
+                      (click)="supprimer()" [disabled]="suppressionEnCours()">
+                {{ suppressionEnCours() ? 'Suppression…' : 'Oui, supprimer définitivement' }}
+              </button>
+              <button type="button" class="bouton-secondaire" (click)="confirmation.set(false)" [disabled]="suppressionEnCours()">Annuler</button>
+            </div>
+          </div>
+          <p *ngIf="erreurSuppression()" style="color:var(--red);margin:10px 0 0">{{ erreurSuppression() }}</p>
+        </section>
       </div>
     </main>
   `,
@@ -57,18 +70,32 @@ const LIBELLES_ROLES: Partial<Record<string, string>> = {
 export class MoiComponent implements OnInit {
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
+  private moiService = inject(MoiService);
   connecte = signal(false);
   /** Profil /api/moi, lu depuis le cache de RoleService (une seule requete par chargement de page). */
   moi = this.roleService.moi;
-  /** Vrai une fois l'identifiant copie dans le presse-papiers. */
-  copie = signal(false);
+  private roles = computed(() => (this.moi()?.roles ?? []).map((r) => r.toUpperCase()));
   /** Roles metier en francais ; les roles techniques de Keycloak (default-roles-tabibi, offline_access...) sont masques. */
-  rolesAffiches = computed(() =>
-    (this.moi()?.roles ?? []).map((r) => LIBELLES_ROLES[r.toUpperCase()]).filter((l): l is string => !!l),
-  );
-  /** L'identifiant du compte ne sert qu'aux secretaires (rattachement a un cabinet). */
-  estSecretaire = computed(() => (this.moi()?.roles ?? []).some((r) => r.toUpperCase() === 'SECRETAIRE'));
-  erreurCopie = signal('');
+  rolesAffiches = computed(() => this.roles().map((r) => LIBELLES_ROLES[r]).filter((l): l is string => !!l));
+
+  /** Acces rapides selon le role (espace professionnel d'abord, sinon les pages patient). */
+  raccourcis = computed<Raccourci[]>(() => {
+    const r = this.roles();
+    const profil = { lien: '/moi/profil', libelle: 'Mon profil' };
+    const notifications = { lien: '/notifications', libelle: 'Notifications' };
+    if (r.includes('MEDECIN')) {
+      return [{ lien: '/medecin/agenda', libelle: 'Mon agenda' }, { lien: '/medecin/disponibilites', libelle: 'Disponibilités' }, profil, notifications];
+    }
+    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: 'Agenda du cabinet' }, profil, notifications];
+    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: 'Demandes de médicaments' }, profil, notifications];
+    if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: 'Administration' }, profil, notifications];
+    return [profil, { lien: '/mes-rendez-vous', libelle: 'Mes rendez-vous' }, notifications];
+  });
+
+  /** Seconde etape de la suppression du compte affichee (pas de confirm() du navigateur). */
+  confirmation = signal(false);
+  suppressionEnCours = signal(false);
+  erreurSuppression = signal('');
 
   async ngOnInit() {
     await this.auth.pret();
@@ -82,15 +109,25 @@ export class MoiComponent implements OnInit {
   sInscrireParEmail() { this.auth.sInscrireParEmail(); }
   seDeconnecter() { this.auth.seDeconnecter(); this.connecte.set(false); }
 
-  /** Copie l'identifiant ; le presse-papiers peut etre refuse (contexte non securise, permission) : message de repli. */
-  async copier(sujet: string) {
-    this.copie.set(false);
-    this.erreurCopie.set('');
-    try {
-      await navigator.clipboard.writeText(sujet);
-      this.copie.set(true);
-    } catch {
-      this.erreurCopie.set("Copie impossible : sélectionnez l'identifiant et copiez-le.");
-    }
+  /** DELETE /api/moi (204) puis deconnexion : la session Keycloak du compte supprime n'a plus d'objet. */
+  supprimer() {
+    this.suppressionEnCours.set(true);
+    this.erreurSuppression.set('');
+    this.moiService.supprimer().subscribe({
+      next: () => {
+        this.suppressionEnCours.set(false);
+        this.seDeconnecter();
+      },
+      error: (e: HttpErrorResponse) => {
+        this.suppressionEnCours.set(false);
+        if (e.status === 401) {
+          this.auth.seConnecter('/moi');
+        } else {
+          this.erreurSuppression.set(
+            e.error?.erreur ?? 'La suppression a échoué. Réessayez ou écrivez à contact@tabibi.doctor.',
+          );
+        }
+      },
+    });
   }
 }

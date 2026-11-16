@@ -1,21 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
+import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
-import { Moi } from './moi.service';
+import { Moi, MoiService } from './moi.service';
 import { MoiComponent } from './moi.component';
 
-const PROFIL: Moi = { sujet: '55555555-5555-5555-5555-555555555555', nom: 'secretaire.demo', roles: ['SECRETAIRE'] };
+const PROFIL: Moi = { sujet: '55555555-5555-5555-5555-555555555555', nom: 'patient.demo', roles: ['PATIENT'] };
 
-/** Mon compte : identifiant du compte (sujet du jeton) avec copie dans le presse-papiers. */
+/** Mon compte : roles, acces rapides selon le role, suppression du compte en deux temps. */
 describe('MoiComponent', () => {
   let fixture: ComponentFixture<MoiComponent>;
   let connecte: boolean;
   let moi: ReturnType<typeof signal<Moi | null>>;
-  let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy; seDeconnecter: jasmine.Spy };
-  let presseCoupe: { writeText: jasmine.Spy };
-  let presseCoupeInitial: PropertyDescriptor | undefined;
+  let auth: {
+    pret: () => Promise<void>; estConnecte: () => boolean;
+    seConnecter: jasmine.Spy; sInscrireParEmail: jasmine.Spy; seDeconnecter: jasmine.Spy;
+  };
+  let service: jasmine.SpyObj<MoiService>;
 
   beforeEach(() => {
     connecte = true;
@@ -24,30 +28,21 @@ describe('MoiComponent', () => {
       pret: () => Promise.resolve(),
       estConnecte: () => connecte,
       seConnecter: jasmine.createSpy('seConnecter'),
+      sInscrireParEmail: jasmine.createSpy('sInscrireParEmail'),
       seDeconnecter: jasmine.createSpy('seDeconnecter'),
     };
-    // navigator.clipboard n'existe qu'en contexte securise : il est remplace pour le test, puis retabli.
-    presseCoupe = { writeText: jasmine.createSpy('writeText').and.resolveTo() };
-    presseCoupeInitial = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
-    Object.defineProperty(navigator, 'clipboard', { value: presseCoupe, configurable: true });
+    service = jasmine.createSpyObj<MoiService>('MoiService', ['supprimer']);
 
     TestBed.configureTestingModule({
       imports: [MoiComponent],
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: auth },
+        { provide: MoiService, useValue: service },
         { provide: RoleService, useValue: { moi, charger: jasmine.createSpy('charger').and.resolveTo(PROFIL) } },
       ],
     });
     fixture = TestBed.createComponent(MoiComponent);
-  });
-
-  afterEach(() => {
-    if (presseCoupeInitial) {
-      Object.defineProperty(navigator, 'clipboard', presseCoupeInitial);
-    } else {
-      delete (navigator as { clipboard?: unknown }).clipboard;
-    }
   });
 
   async function afficher() {
@@ -56,67 +51,85 @@ describe('MoiComponent', () => {
     fixture.detectChanges();
   }
 
-  function texte(): string {
-    return fixture.nativeElement.textContent;
-  }
+  const texte = (): string => fixture.nativeElement.textContent;
+  const bouton = (libelle: string): HTMLButtonElement | undefined =>
+    (Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[]).find((b) => b.textContent?.trim() === libelle);
+  const lien = (href: string) => fixture.nativeElement.querySelector(`a[href="${href}"]`);
 
-  function boutonCopier(): HTMLButtonElement | undefined {
-    const boutons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
-    return boutons.find((b) => b.textContent?.trim() === 'Copier');
-  }
-
-  it('affiche l identifiant du compte, le copie dans le presse-papiers et le confirme', async () => {
-    await afficher();
-
-    expect(texte()).toContain('secretaire.demo');
-    expect(texte()).toContain('Identifiant du compte : 55555555-5555-5555-5555-555555555555');
-    expect(fixture.nativeElement.querySelector('a[href="/moi/profil"]')).not.toBeNull();
-
-    boutonCopier()!.click();
-    await afficher();
-
-    expect(presseCoupe.writeText).toHaveBeenCalledWith('55555555-5555-5555-5555-555555555555');
-    expect(texte()).toContain('Identifiant copié.');
-  });
-
-  it('affiche le role en francais, masque les roles techniques et propose les acces rapides', async () => {
-    moi.set({ ...PROFIL, nom: 'patient.demo', roles: ['default-roles-tabibi', 'offline_access', 'uma_authorization', 'PATIENT'] });
+  it('affiche le role en francais, masque les roles techniques et propose les acces rapides patient', async () => {
+    moi.set({ ...PROFIL, roles: ['default-roles-tabibi', 'offline_access', 'uma_authorization', 'PATIENT'] });
     await afficher();
 
     expect(texte()).toContain('Rôle : Patient');
     expect(texte()).not.toContain('offline_access');
-    expect(texte()).not.toContain('default-roles-tabibi');
-    expect(fixture.nativeElement.querySelector('a[href="/moi/profil"]')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('a[href="/mes-rendez-vous"]')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('a[href="/notifications"]')).not.toBeNull();
+    expect(lien('/moi/profil')).not.toBeNull();
+    expect(lien('/mes-rendez-vous')).not.toBeNull();
+    expect(lien('/notifications')).not.toBeNull();
   });
 
-  it('n affiche l identifiant du compte qu aux secretaires', async () => {
-    moi.set({ ...PROFIL, roles: ['PATIENT'] });
+  it('adapte les acces rapides au role : agenda pour le medecin, agenda du cabinet pour la secretaire', async () => {
+    moi.set({ ...PROFIL, roles: ['PATIENT', 'MEDECIN'] });
+    await afficher();
+    expect(lien('/medecin/agenda')).not.toBeNull();
+    expect(lien('/mes-rendez-vous')).toBeNull();
+
+    moi.set({ ...PROFIL, roles: ['PATIENT', 'SECRETAIRE'] });
+    await afficher();
+    expect(lien('/secretaire')).not.toBeNull();
+    expect(lien('/mes-rendez-vous')).toBeNull();
+  });
+
+  it('n affiche plus l identifiant technique du compte, meme a une secretaire', async () => {
+    moi.set({ ...PROFIL, roles: ['SECRETAIRE'] });
     await afficher();
 
     expect(texte()).not.toContain('Identifiant du compte');
-    expect(boutonCopier()).toBeUndefined();
+    expect(texte()).not.toContain(PROFIL.sujet);
   });
 
-  it('explique comment faire si le presse-papiers est refuse', async () => {
-    presseCoupe.writeText.and.rejectWith(new Error('NotAllowedError'));
+  it('supprime le compte apres une confirmation dans la page, puis deconnecte', async () => {
+    service.supprimer.and.returnValue(of(undefined));
     await afficher();
 
-    boutonCopier()!.click();
+    bouton('Supprimer mon compte')!.click();
     await afficher();
+    expect(service.supprimer).not.toHaveBeenCalled();
+    expect(texte()).toContain('Cette action est définitive');
 
-    expect(texte()).toContain("Copie impossible : sélectionnez l'identifiant et copiez-le.");
-    expect(texte()).not.toContain('Identifiant copié.');
+    bouton('Oui, supprimer définitivement')!.click();
+    await afficher();
+    expect(service.supprimer).toHaveBeenCalledTimes(1);
+    expect(auth.seDeconnecter).toHaveBeenCalled();
   });
 
-  it('propose la connexion sans afficher d identifiant quand l utilisateur n est pas connecte', async () => {
+  it('annuler la confirmation ne supprime rien ; un echec est explique', async () => {
+    service.supprimer.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    await afficher();
+
+    bouton('Supprimer mon compte')!.click();
+    await afficher();
+    bouton('Annuler')!.click();
+    await afficher();
+    expect(service.supprimer).not.toHaveBeenCalled();
+    expect(texte()).not.toContain('Cette action est définitive');
+
+    bouton('Supprimer mon compte')!.click();
+    await afficher();
+    bouton('Oui, supprimer définitivement')!.click();
+    await afficher();
+    expect(auth.seDeconnecter).not.toHaveBeenCalled();
+    expect(texte()).toContain('La suppression a échoué');
+  });
+
+  it('non connecte : « Se connecter » et « Créer un compte » (inscription), sans suppression', async () => {
     connecte = false;
     moi.set(null);
     await afficher();
 
-    expect(texte()).toContain('Se connecter');
-    expect(texte()).not.toContain('Identifiant du compte');
-    expect(boutonCopier()).toBeUndefined();
+    expect(bouton('Supprimer mon compte')).toBeUndefined();
+    bouton('Créer un compte')!.click();
+    expect(auth.sInscrireParEmail).toHaveBeenCalled();
+    bouton('Se connecter')!.click();
+    expect(auth.seConnecter).toHaveBeenCalled();
   });
 });
