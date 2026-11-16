@@ -77,6 +77,14 @@ describe('AppComponent', () => {
     expect(roleService.charger).toHaveBeenCalledTimes(1);
   });
 
+  it('accessibilite : le pied de page utilise des titres h2 (pas de saut h1 -> h4)', async () => {
+    await afficher();
+
+    const pied = fixture.nativeElement.querySelector('footer') as HTMLElement;
+    expect(pied.querySelectorAll('h4').length).toBe(0);
+    expect(pied.querySelectorAll('h2').length).toBeGreaterThanOrEqual(3);
+  });
+
   it('mene « Centre d aide » a /aide, « Toutes les wilayas » a /wilayas et propose la suppression de compte', async () => {
     await afficher();
 
