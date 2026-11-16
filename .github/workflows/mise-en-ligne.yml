@@ -1,0 +1,30 @@
+# Mise en ligne automatique : après chaque fusion sur main dont la CI est verte, déploie sur le serveur.
+# Le serveur n'accepte que la tête actuelle de main, fait une copie avant, passe la porte de vérification
+# et revient seul en arrière si elle échoue. La clé SSH ne peut lancer que ce déploiement.
+name: Mise en ligne
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: mise-en-ligne
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  deployer:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Déploiement sur le serveur
+        env:
+          CLE: ${{ secrets.TABIBI_DEPLOY_SSH_KEY }}
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$CLE" > ~/.ssh/cle && chmod 600 ~/.ssh/cle
+          echo '129.151.227.16 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOliVdxVmjQnoT9IOqIPOtCWsM+d5Cw/uYP5U4XKs6xz' > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/cle -o StrictHostKeyChecking=yes ubuntu@129.151.227.16 "web $SHA"
