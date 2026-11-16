@@ -43,6 +43,10 @@ import { BientotComponent } from './bientot.component';
 import { AnnuaireSeoComponent } from './seo/annuaire-seo.component';
 import { PraticienPublicComponent } from './seo/praticien-public.component';
 import { AccueilArComponent } from './seo/accueil-ar.component';
+import { WilayasIndexComponent } from './pages/wilayas-index.component';
+import { AideComponent } from './pages/aide.component';
+import { SupprimerCompteComponent } from './pages/supprimer-compte.component';
+import { PageIntrouvableComponent } from './pages/page-introuvable.component';
 
 export const routes: Routes = [
   { path: '', component: AnnuaireComponent },
@@ -117,7 +121,11 @@ export const routes: Routes = [
   { path: 'specialites', component: AnnuaireSeoComponent },
   { path: 'specialites/:specialite', component: AnnuaireSeoComponent },
   { path: 'specialites/:specialite/:wilaya', component: AnnuaireSeoComponent },
+  { path: 'wilayas', component: WilayasIndexComponent },
   { path: 'wilayas/:wilaya', component: AnnuaireSeoComponent },
+  // Centre d'aide et demarche de suppression de compte (URL declaree dans la Play Console), publics.
+  { path: 'aide', component: AideComponent },
+  { path: 'supprimer-mon-compte', component: SupprimerCompteComponent },
   // Page publique de chaque praticien (une par fiche), pour le referencement.
   { path: 'praticiens/:id', component: PraticienPublicComponent },
   { path: 'praticiens/:id/:slug', component: PraticienPublicComponent },
@@ -126,12 +134,14 @@ export const routes: Routes = [
   { path: 'ar/specialites', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
   { path: 'ar/specialites/:specialite', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
   { path: 'ar/specialites/:specialite/:wilaya', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
+  { path: 'ar/wilayas', component: WilayasIndexComponent, data: { langue: 'ar' } },
   { path: 'ar/wilayas/:wilaya', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
+  { path: 'ar/aide', component: AideComponent, data: { langue: 'ar' } },
   { path: 'ar/praticiens/:id', component: PraticienPublicComponent, data: { langue: 'ar' } },
   { path: 'ar/praticiens/:id/:slug', component: PraticienPublicComponent, data: { langue: 'ar' } },
   { path: 'moi', component: MoiComponent },
   // Mon profil (utilisateur connecte, tous roles : la page redirige vers la connexion).
   { path: 'moi/profil', component: ProfilComponent },
-  // Toute adresse inconnue (lien obsolete, faute de frappe) revient a l'accueil plutot qu'une page vide.
-  { path: '**', redirectTo: '' },
+  // Toute adresse inconnue (lien obsolete, faute de frappe) : vraie page 404 (statut HTTP 404 au rendu serveur).
+  { path: '**', component: PageIntrouvableComponent },
 ];

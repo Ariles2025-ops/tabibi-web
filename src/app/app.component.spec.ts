@@ -75,6 +75,17 @@ describe('AppComponent', () => {
     expect(roleService.charger).toHaveBeenCalledTimes(1);
   });
 
+  it('mene « Centre d aide » a /aide, « Toutes les wilayas » a /wilayas et propose la suppression de compte', async () => {
+    await afficher();
+
+    expect(fixture.nativeElement.querySelector('a[href="#aide"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('nav a[href="/aide"]')?.textContent).toContain("Centre d'aide");
+    const pied: HTMLElement = fixture.nativeElement.querySelector('footer');
+    const toutes = Array.from(pied.querySelectorAll('a')).find((a) => a.textContent?.includes('Toutes les wilayas'));
+    expect(toutes?.getAttribute('href')).toBe('/wilayas');
+    expect(pied.querySelector('a[href="/supprimer-mon-compte"]')).not.toBeNull();
+  });
+
   it('affiche la cloche de notifications et « Mes ordonnances » une fois connecte', async () => {
     connecte = true;
     await afficher();
@@ -100,7 +111,8 @@ describe('AppComponent', () => {
     expect(texteNav()).toContain('Agenda');
     expect(texteNav()).toContain('Disponibilités');
     expect(fixture.nativeElement.querySelector('a[href="/medecin/teleconsultations"]')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('a[href="/medecin/candidature"]')).not.toBeNull();
+    // Medecin deja valide : plus de « Ma candidature » dans son menu.
+    expect(fixture.nativeElement.querySelector('a[href="/medecin/candidature"]')).toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/medecin/avis"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/medecin/liste-attente"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/medecin/secretaires"]')).not.toBeNull();

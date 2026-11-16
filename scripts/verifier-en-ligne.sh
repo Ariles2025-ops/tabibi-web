@@ -41,4 +41,22 @@ code="$(curl -s -o /dev/null -w '%{http_code}' "https://api.tabibi.doctor/api/me
 plan="$(curl -fsS "$SITE/sitemap.xml?$cb")"
 case "$plan" in *"<sitemapindex"*) ok "plan du site" ;; *) ko "plan du site indisponible" ;; esac
 
+# 5. Vraie 404 (pas de soft 404) : adresse inconnue et specialite inexistante.
+for chemin in "/nimportequoi-$cb" "/specialites/specialite-inexistante"; do
+  code="$(curl -s -o /dev/null -w '%{http_code}' "$SITE$chemin")"
+  [ "$code" = "404" ] && ok "404 sur $chemin" || ko "$chemin repond HTTP $code (404 attendu)"
+done
+
+# 6. Pages publiques : suppression de compte (URL de la Play Console), index des wilayas, aide, pharmacies.
+for chemin in /supprimer-mon-compte /wilayas /aide /ar/aide /specialites/pharmacie/alger; do
+  code="$(curl -s -o /dev/null -w '%{http_code}' "$SITE$chemin?$cb")"
+  [ "$code" = "200" ] && ok "$chemin (200)" || ko "$chemin repond HTTP $code (200 attendu)"
+done
+
+# 7. robots.txt ferme les pages privees (pas de « curl | grep -q », voir 3b2).
+robots="$(curl -fsS "$SITE/robots.txt?$cb")"
+for regle in "Disallow: /bientot" "Disallow: /medecins/" "Disallow: /mes-"; do
+  case "$robots" in *"$regle"*) ok "robots.txt : $regle" ;; *) ko "robots.txt sans « $regle »" ;; esac
+done
+
 [ $echec -eq 0 ] && echo "PORTE VERTE" || { echo "PORTE ROUGE"; exit 1; }

@@ -42,7 +42,6 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
             <a routerLink="/medecin/ordonnances" routerLinkActive="actif">Mes ordonnances rédigées</a>
             <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">Téléconsultations<span *ngIf="!visio" class="pastille-bientot">Bientôt</span></a>
             <a routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
-            <a routerLink="/medecin/candidature" routerLinkActive="actif">Ma candidature</a>
             <a routerLink="/medecin/avis" routerLinkActive="actif">Avis des patients</a>
             <a routerLink="/medecin/liste-attente" routerLinkActive="actif">Liste d'attente</a>
             <a routerLink="/medecin/secretaires" routerLinkActive="actif">Mes secrétaires</a>
@@ -68,13 +67,13 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
           <div class="side__account">
             <ng-container *ngIf="!connecte()">
               <a class="side__pro" routerLink="/praticien">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
-              <a class="side__help" href="#aide">{{ ar() ? 'المساعدة' : "Centre d'aide" }}</a>
+              <a class="side__help" [routerLink]="pre() + '/aide'">{{ ar() ? 'المساعدة' : "Centre d'aide" }}</a>
               <a class="side__help" [routerLink]="ar() ? '/' : '/ar'" [attr.lang]="ar() ? 'fr' : 'ar'">{{ ar() ? 'Français' : 'العربية' }}</a>
               <a class="side__login" (click)="seConnecter()" tabindex="0" role="button">{{ ar() ? 'تسجيل الدخول' : 'Se connecter' }}</a>
               <a class="side__signup" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ ar() ? 'إنشاء حساب' : 'Créer un compte' }}</a>
             </ng-container>
             <ng-container *ngIf="connecte()">
-              <a class="side__help" href="#aide">Centre d'aide</a>
+              <a class="side__help" routerLink="/aide">Centre d'aide</a>
               <app-cloche-notifications />
               <a routerLink="/moi" routerLinkActive="actif">Mon compte</a>
             </ng-container>
@@ -97,10 +96,12 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
             <div class="siteft__cols">
               <div class="siteft__col">
                 <h4>{{ ar() ? 'طبيبي' : 'Tabibi' }}</h4>
+                <a [routerLink]="pre() + '/aide'">{{ ar() ? 'مركز المساعدة' : "Centre d'aide" }}</a>
                 <a routerLink="/verifier">{{ ar() ? 'التحقق من وصفة طبية' : 'Vérifier une ordonnance' }}</a>
                 <a href="/legal/mentions-legales.html">{{ ar() ? 'الإشعارات القانونية' : 'Mentions légales' }}</a>
                 <a href="/legal/cgu.html">{{ ar() ? 'شروط الاستخدام' : "Conditions d'utilisation" }}</a>
                 <a href="/legal/confidentialite.html">{{ ar() ? 'الخصوصية' : 'Confidentialité' }}</a>
+                <a routerLink="/supprimer-mon-compte">{{ ar() ? 'حذف الحساب' : 'Supprimer mon compte' }}</a>
                 <a href="mailto:contact@tabibi.doctor">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
                 <a routerLink="/praticien">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
               </div>
@@ -112,7 +113,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
               <div class="siteft__col">
                 <h4>{{ ar() ? 'الولايات' : 'Villes' }}</h4>
                 <a *ngFor="let w of wilayasPied" [routerLink]="[pre() + '/wilayas', w.slug]">{{ ar() ? w.nomAr : w.nom }}</a>
-                <a [routerLink]="pre() + '/specialites'" class="siteft__tout">{{ ar() ? 'جميع الولايات ←' : 'Toutes les wilayas →' }}</a>
+                <a [routerLink]="pre() + '/wilayas'" class="siteft__tout">{{ ar() ? 'جميع الولايات ←' : 'Toutes les wilayas →' }}</a>
               </div>
             </div>
 
