@@ -8,6 +8,7 @@ import { AnnuaireService } from '../annuaire/annuaire.service';
 import { of, throwError } from 'rxjs';
 import { Candidature, DemandeCandidature } from '../admin/admin.service';
 import { AuthService } from '../auth/auth.service';
+import { RoleService } from '../auth/role.service';
 import { CandidatureMedecinComponent } from './candidature-medecin.component';
 import { MedecinService } from './medecin.service';
 
@@ -42,12 +43,16 @@ describe('CandidatureMedecinComponent', () => {
   let fixture: ComponentFixture<CandidatureMedecinComponent>;
   let service: jasmine.SpyObj<MedecinService>;
   let annuaire: jasmine.SpyObj<AnnuaireService>;
+  let auth: { seConnecter: jasmine.Spy; actualiserRoles: jasmine.Spy };
+  let roles: { recharger: jasmine.Spy };
 
   beforeEach(() => {
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<MedecinService>('MedecinService', ['maCandidature', 'deposerCandidature']);
     service.maCandidature.and.returnValue(AUCUNE());
     annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin']);
+    auth = { seConnecter: jasmine.createSpy('seConnecter'), actualiserRoles: jasmine.createSpy('actualiserRoles').and.resolveTo() };
+    roles = { recharger: jasmine.createSpy('recharger').and.resolveTo(null) };
 
     TestBed.configureTestingModule({
       imports: [CandidatureMedecinComponent],
@@ -55,7 +60,8 @@ describe('CandidatureMedecinComponent', () => {
         provideRouter([]),
         { provide: MedecinService, useValue: service },
         { provide: AnnuaireService, useValue: annuaire },
-        { provide: AuthService, useValue: { seConnecter: jasmine.createSpy('seConnecter') } },
+        { provide: AuthService, useValue: auth },
+        { provide: RoleService, useValue: roles },
         { provide: LOCALE_ID, useValue: 'fr' },
       ],
     });
@@ -77,15 +83,16 @@ describe('CandidatureMedecinComponent', () => {
     return fixture.nativeElement.querySelector('form');
   }
 
-  function champ(nom: string): HTMLInputElement {
-    return fixture.nativeElement.querySelector(`input[name="${nom}"]`);
+  function champ(nom: string): HTMLInputElement | HTMLSelectElement {
+    return fixture.nativeElement.querySelector(`[name="${nom}"]`);
   }
 
   async function saisir(valeurs: Partial<DemandeCandidature>) {
     for (const [nom, valeur] of Object.entries(valeurs)) {
       const c = champ(nom);
+      if (!c) continue;
       c.value = valeur ?? '';
-      c.dispatchEvent(new Event('input'));
+      c.dispatchEvent(new Event(c instanceof HTMLSelectElement ? 'change' : 'input'));
     }
     await afficher();
   }
@@ -99,9 +106,17 @@ describe('CandidatureMedecinComponent', () => {
 
     expect(formulaire()).not.toBeNull();
     expect(texte()).not.toContain('Nouvelle candidature');
-    for (const nom of ['nomComplet', 'specialiteSlug', 'specialiteFr', 'wilayaCode', 'wilayaFr', 'ville', 'numeroOrdre', 'telephone']) {
+    for (const nom of ['nomComplet', 'specialiteSlug', 'wilayaCode', 'ville', 'numeroOrdre', 'telephone']) {
       expect(champ(nom)).withContext(nom).not.toBeNull();
     }
+    // Specialite et wilaya : listes du referentiel (slugs exacts), plus de saisie libre.
+    expect(champ('specialiteSlug') instanceof HTMLSelectElement).toBeTrue();
+    expect(champ('wilayaCode') instanceof HTMLSelectElement).toBeTrue();
+    const slugs = Array.from((champ('specialiteSlug') as HTMLSelectElement).options).map((o) => o.value);
+    expect(slugs).toContain('medecin-generaliste');
+    expect(slugs).not.toContain('generaliste');
+    expect(slugs).not.toContain('pharmacie');
+    expect((champ('wilayaCode') as HTMLSelectElement).options.length).toBe(70);
     expect(texte()).not.toContain('Aucune candidature deposee.');
   });
 
@@ -139,6 +154,12 @@ describe('CandidatureMedecinComponent', () => {
     expect(texte()).toContain('Votre candidature a été validée : vous figurez dans l\'annuaire.');
     expect(fixture.nativeElement.querySelector('a[href="/medecins/m1"]')).not.toBeNull();
     expect(formulaire()).toBeNull();
+    // Le role MEDECIN vient d'etre accorde : jeton et profil relus, acces direct a l'agenda.
+    expect(auth.actualiserRoles).toHaveBeenCalled();
+    await fixture.whenStable();
+    expect(roles.recharger).toHaveBeenCalled();
+    const agenda = fixture.nativeElement.querySelector('a[href="/medecin/agenda"]');
+    expect(agenda?.textContent).toContain('Ouvrir mon agenda');
   });
 
   it('affiche le motif d une candidature refusee et un formulaire de nouveau depot prerempli', async () => {
@@ -151,7 +172,7 @@ describe('CandidatureMedecinComponent', () => {
     expect(texte()).toContain('Nouvelle candidature');
     expect(champ('nomComplet').value).toBe('Dr Amina Belkacem');
     expect(champ('numeroOrdre').value).toBe('ORD-123');
-    expect(champ('wilayaFr').value).toBe('Alger');
+    expect(champ('wilayaCode').value).toBe('16');
   });
 
   it('affiche le { erreur } d un 409 et recharge la candidature existante', async () => {
