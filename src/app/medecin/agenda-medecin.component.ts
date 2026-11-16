@@ -55,8 +55,8 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
               <strong style="color:var(--ink)"><i class="fa fa-clock fa-xs" style="color:var(--blue)"></i> {{ r.debut | date:'HH:mm' }}</strong>
               <span class="badge-statut" [style.background]="r.statut === 'ABSENT' ? 'var(--red-l)' : 'var(--blue-l)'" [style.color]="r.statut === 'ABSENT' ? 'var(--red)' : 'var(--blue-d)'"
                     style="display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span><br>
-              <span style="color:var(--text2)"><i class="fa fa-user fa-xs"></i> {{ nom(r.patientId) }}</span>
-              <a *ngIf="telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">
+              <span style="color:var(--text2)"><i class="fa fa-user fa-xs"></i> {{ r.nomPatient || nom(r.patientId) }}</span>
+              <a *ngIf="r.telephonePatient || telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">
                 <i class="fa fa-phone fa-xs"></i> {{ tel }}
               </a>
             </div>

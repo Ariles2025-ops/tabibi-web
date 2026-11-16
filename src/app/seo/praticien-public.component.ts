@@ -3,6 +3,7 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
+import { libelleLangue } from '../fiche-medecin/fiche-infos';
 import { SPECIALITES_SEO, liensLangues, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
 import { StatutHttpService } from './statut-http';
 import { ecrireJsonLd, fil, typeSchemaOrg } from './donnees-structurees';
@@ -59,8 +60,17 @@ import { ecrireJsonLd, fil, typeSchemaOrg } from './donnees-structurees';
             <div><dt>{{ ar ? 'التخصص' : 'Spécialité' }}</dt><dd>{{ specialite }}</dd></div>
             <div *ngIf="m.ville && !ar"><dt>Ville</dt><dd>{{ m.ville }}</dd></div>
             <div *ngIf="wilaya"><dt>{{ ar ? 'الولاية' : 'Wilaya' }}</dt><dd>{{ wilaya }}</dd></div>
+            <div *ngIf="m.adresse"><dt>{{ ar ? 'العنوان' : 'Adresse' }}</dt><dd dir="auto">{{ m.adresse }}</dd></div>
+            <div *ngIf="m.telephoneCabinet"><dt>{{ ar ? 'هاتف العيادة' : 'Téléphone' }}</dt><dd dir="ltr"><a [href]="'tel:' + m.telephoneCabinet">{{ m.telephoneCabinet }}</a></dd></div>
+            <div *ngIf="m.horaires"><dt>{{ ar ? 'أوقات العمل' : 'Horaires' }}</dt><dd dir="auto">{{ m.horaires }}</dd></div>
+            <div *ngIf="m.langues?.length"><dt>{{ ar ? 'اللغات' : 'Langues' }}</dt><dd>{{ langues(m.langues) }}</dd></div>
             <div><dt>{{ ar ? 'الدفع' : 'Paiement' }}</dt><dd>{{ ar ? 'في العيادة (نقدًا أو ببطاقة الشفاء حسب الطبيب)' : 'Au cabinet (espèces ou carte Chifa selon le praticien)' }}</dd></div>
           </dl>
+        </section>
+
+        <section class="pp-bloc" *ngIf="m.presentation">
+          <h2>{{ ar ? 'تقديم' : 'Présentation' }}</h2>
+          <p dir="auto" style="white-space:pre-line">{{ m.presentation }}</p>
         </section>
 
         <section class="pp-bloc" *ngIf="confreres().length">
@@ -140,6 +150,10 @@ export class PraticienPublicComponent implements OnInit {
   lienAutreLangue = '/';
   wilayaSlug: string | null = null;
   lieu = '';
+
+  langues(codes: string[] | null | undefined): string {
+    return (codes ?? []).map((c) => libelleLangue(c, this.ar)).join(this.ar ? '، ' : ', ');
+  }
 
   ngOnInit() {
     this.ar = this.route.snapshot.data['langue'] === 'ar';

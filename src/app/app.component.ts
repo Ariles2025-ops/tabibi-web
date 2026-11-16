@@ -1,9 +1,10 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { ClocheNotificationsComponent } from './notifications/cloche-notifications.component';
+import { ApiDisponibleService } from './partage/api-disponible.service';
 import { PRELANCEMENT, VISIO_ACTIVE } from './lancement';
 import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
@@ -38,6 +39,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
             <div class="side__grouptitle">Espace médecin</div>
             <a routerLink="/medecin/agenda" routerLinkActive="actif">Agenda</a>
             <a routerLink="/medecin/disponibilites" routerLinkActive="actif">Disponibilités</a>
+            <a *ngIf="apiDisponible.ficheMedecin()" routerLink="/medecin/ma-fiche" routerLinkActive="actif">Ma fiche</a>
             <a routerLink="/medecin/ordonnances" routerLinkActive="actif">Mes ordonnances rédigées</a>
             <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">Téléconsultations<span *ngIf="!visio" class="pastille-bientot">Bientôt</span></a>
             <a routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
@@ -138,6 +140,14 @@ export class AppComponent implements OnInit {
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   private router = inject(Router);
+  apiDisponible = inject(ApiDisponibleService);
+
+  constructor() {
+    // « Ma fiche » n'apparait que si la route de l'API existe deja en production.
+    effect(() => {
+      if (this.estMedecin()) this.apiDisponible.sonderFiche();
+    });
+  }
 
   /** Menu « 3 barres » ouvert (vue telephone) ; referme a chaque changement de page. */
   menuOuvert = signal(false);

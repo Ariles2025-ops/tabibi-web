@@ -1,4 +1,4 @@
-import { Component, OnChanges, computed, inject, input, signal } from '@angular/core';
+import { Component, EventEmitter, OnChanges, Output, computed, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,12 @@ import { Observable } from 'rxjs';
 import { Creneau } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { DUREE_MAX_MINUTES, DUREE_MIN_MINUTES } from '../secretaire/secretaire.service';
+import { ApiDisponibleService } from '../partage/api-disponible.service';
+import { LangueService } from '../partage/langue.service';
+import { RdvTelephoneComponent } from './rdv-telephone.component';
+import { RdvTelephone, ResultatSemaineType, SemaineType } from './semaine-type';
+import { SemaineTypeComponent } from './semaine-type.component';
+import { RendezVous } from '../rendezvous/rendezvous.service';
 import { grouperParJour, valeurDateHeureLocale, styleOnglet } from './agenda-utils';
 
 /** Acces aux creneaux d'un agenda : celui du medecin connecte ou celui d'un cabinet rattache (secretaire). */
@@ -14,6 +20,10 @@ export interface SourceCreneaux {
   lister(): Observable<Creneau[]>;
   ouvrir(debutIso: string, dureeMinutes: number): Observable<Creneau>;
   supprimer(creneauId: string): Observable<void>;
+  /** Semaine type (facultatif : absent = fonction non proposee). */
+  semaineType?(corps: SemaineType): Observable<ResultatSemaineType>;
+  /** Rendez-vous pris au telephone (secretaire uniquement). */
+  rdvTelephone?(corps: RdvTelephone): Observable<RendezVous>;
 }
 
 /** Creneau que l'on vient d'ouvrir (message de confirmation). */
@@ -32,7 +42,7 @@ const SERIE_MAX = 48;
  */
 @Component({
     selector: 'app-gestion-creneaux',
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, SemaineTypeComponent, RdvTelephoneComponent],
     template: `
     <section style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:20px;margin:0 0 24px">
       <div role="tablist" style="display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap">
@@ -40,6 +50,10 @@ const SERIE_MAX = 48;
                 [ngStyle]="ongletStyle(mode() === 'unique')">Un créneau</button>
         <button type="button" role="tab" [attr.aria-selected]="mode() === 'serie'" (click)="changerMode('serie')"
                 [ngStyle]="ongletStyle(mode() === 'serie')">Une série</button>
+        <button *ngIf="source().semaineType && api.semaineType()" type="button" role="tab" [attr.aria-selected]="mode() === 'semaine'"
+                (click)="changerMode('semaine')" [ngStyle]="ongletStyle(mode() === 'semaine')" [attr.lang]="langue.ar() ? 'ar' : null">
+          {{ langue.t('Semaine type', 'الأسبوع النموذجي') }}
+        </button>
       </div>
 
       <form *ngIf="mode() === 'unique'" (ngSubmit)="ouvrir()" #f="ngForm" style="display:grid;gap:12px;max-width:380px">
@@ -91,6 +105,9 @@ const SERIE_MAX = 48;
         </div>
       </form>
 
+      <app-semaine-type *ngIf="mode() === 'semaine' && source().semaineType as appel" [appel]="appel" [message403]="message403()"
+                        (cree)="charger()" />
+
       <p *ngIf="succes() as c" style="color:var(--blue);margin:12px 0 0">
         Créneau ouvert le {{ c.debut | date:'EEEE d MMMM à HH:mm' }} ({{ c.dureeMinutes }} min).
         <a *ngIf="lienAgenda() as lien" [routerLink]="lien" style="color:var(--blue)">Voir l'agenda</a>
@@ -127,7 +144,13 @@ const SERIE_MAX = 48;
                     style="padding:8px 14px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
               Supprimer
             </button>
+            <button *ngIf="source().rdvTelephone && api.rdvTelephone() && rdvPour() !== c.id" type="button" class="bouton-secondaire rdv-telephone-bouton"
+                    (click)="rdvPour.set(c.id)" [attr.lang]="langue.ar() ? 'ar' : null" style="padding:8px 14px">
+              {{ langue.t('RDV pris au téléphone', 'موعد عبر الهاتف') }}
+            </button>
           </ng-container>
+          <app-rdv-telephone *ngIf="c.disponible && rdvPour() === c.id && source().rdvTelephone as appelRdv" [creneauId]="c.id" [appel]="appelRdv"
+                             [message403]="message403()" (annule)="rdvPour.set(null)" (fait)="rdvEnregistre()" />
         </li>
       </ul>
     </div>
@@ -135,6 +158,10 @@ const SERIE_MAX = 48;
 })
 export class GestionCreneauxComponent implements OnChanges {
   private auth = inject(AuthService);
+  api = inject(ApiDisponibleService);
+  langue = inject(LangueService);
+  /** Emis apres un rendez-vous pris au telephone (la page recharge l'agenda). */
+  @Output() rdvPris = new EventEmitter<void>();
 
   source = input.required<SourceCreneaux>();
   /** Message affiche sur un 403. */
@@ -142,7 +169,9 @@ export class GestionCreneauxComponent implements OnChanges {
   /** Lien « Voir l'agenda » apres ouverture d'un creneau (aucun si null). */
   lienAgenda = input<string | null>(null);
 
-  mode = signal<'unique' | 'serie'>('unique');
+  mode = signal<'unique' | 'serie' | 'semaine'>('unique');
+  /** Creneau libre dont le formulaire « RDV pris au telephone » est ouvert. */
+  rdvPour = signal<string | null>(null);
   creneaux = signal<Creneau[]>([]);
   jours = computed(() => grouperParJour(this.creneaux()));
   charge = signal(false);
@@ -177,7 +206,13 @@ export class GestionCreneauxComponent implements OnChanges {
     this.charger();
   }
 
-  changerMode(mode: 'unique' | 'serie') {
+  rdvEnregistre() {
+    this.rdvPour.set(null);
+    this.charger();
+    this.rdvPris.emit();
+  }
+
+  changerMode(mode: 'unique' | 'serie' | 'semaine') {
     this.mode.set(mode);
     this.erreur.set('');
   }

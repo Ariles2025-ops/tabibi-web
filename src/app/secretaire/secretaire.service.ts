@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Creneau } from '../annuaire/annuaire.service';
 import { ConfigService } from '../config/config.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
+import { RdvTelephone, ResultatSemaineType, SemaineType } from '../medecin/semaine-type';
 
 /** Rattachement d'une secretaire au cabinet d'un medecin, tel que renvoye par l'API (au medecin comme a la secretaire). */
 export interface Rattachement {
@@ -87,6 +88,16 @@ export class SecretaireService {
   /** Creneaux a venir du medecin, libres et reserves (403 sans rattachement). */
   creneaux(medecinId: string): Observable<Creneau[]> {
     return this.http.get<Creneau[]>(`${this.base}/api/secretaire/medecins/${medecinId}/creneaux`);
+  }
+
+  /** Semaine type pour le medecin (404 tant que l'API ne l'a pas ; 403 sans rattachement). */
+  semaineType(medecinId: string, corps: SemaineType): Observable<ResultatSemaineType> {
+    return this.http.post<ResultatSemaineType>(`${this.base}/api/secretaire/medecins/${medecinId}/creneaux/semaine-type`, corps);
+  }
+
+  /** Rendez-vous pris au telephone sur un creneau libre (409 si le creneau vient d'etre pris). */
+  prendreRdvTelephone(medecinId: string, corps: RdvTelephone): Observable<RendezVous> {
+    return this.http.post<RendezVous>(`${this.base}/api/secretaire/medecins/${medecinId}/rendezvous`, corps);
   }
 
   /** Supprime un creneau libre du medecin (204 ; 409 s'il est reserve). */

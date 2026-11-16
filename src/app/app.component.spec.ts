@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { AppComponent } from './app.component';
 import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
+import { ApiDisponibleService } from './partage/api-disponible.service';
 import { NotificationService } from './notifications/notification.service';
 
 /** Test de fumee de la barre de navigation : liens publics, cloche des connectes, sections du medecin, de la pharmacie, de la secretaire et de l'administrateur. */
@@ -40,6 +41,7 @@ describe('AppComponent', () => {
         { provide: AuthService, useValue: auth },
         { provide: RoleService, useValue: roleService },
         { provide: NotificationService, useValue: notifications },
+        { provide: ApiDisponibleService, useValue: { ficheMedecin: signal(true), sonderFiche: () => undefined } },
       ],
     });
     fixture = TestBed.createComponent(AppComponent);
