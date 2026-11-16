@@ -51,13 +51,15 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
   let listeAttente: jasmine.SpyObj<ListeAttenteService>;
   let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy };
   let naviguer: jasmine.Spy;
+  let annuaireSpy: jasmine.SpyObj<AnnuaireService>;
 
   beforeEach(() => {
     registerLocaleData(localeFr);
     const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'creneaux', 'reclamable']);
     annuaire.medecin.and.returnValue(of(MEDECIN));
     annuaire.creneaux.and.returnValue(of([]));
-    annuaire.reclamable.and.returnValue(of({ reclamable: true }));
+    annuaire.reclamable.and.returnValue(of({ reclamable: false }));
+    annuaireSpy = annuaire;
     messagerie = jasmine.createSpyObj<MessagerieService>('MessagerieService', ['ouvrir']);
     avis = jasmine.createSpyObj<AvisService>('AvisService', ['synthese']);
     avis.synthese.and.returnValue(of(SYNTHESE));
@@ -201,14 +203,15 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
     expect(boutonInscrire()!.disabled).toBeFalse();
   });
 
-  it('propose au praticien de reclamer une fiche qui n appartient a aucun compte', async () => {
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
+  it('fiche non reclamee : ni « Écrire » ni liste d attente, mais « pas encore sur Tabibi » et lien vers /praticien', async () => {
+    annuaireSpy.reclamable.and.returnValue(of({ reclamable: true }));
+    await afficher();
 
+    expect(boutonEcrire()).toBeUndefined();
+    expect(boutonInscrire()).toBeUndefined();
+    expect(texte()).toContain("Ce praticien n'est pas encore sur Tabibi");
     const lien: HTMLAnchorElement = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>)
-      .find((a) => a.textContent?.includes('Réclamer ma fiche'))!;
-    expect(lien).toBeTruthy();
-    expect(lien.getAttribute('href')).toBe('/medecin/candidature?fiche=m1');
+      .find((a) => a.textContent?.includes("C'est votre fiche ?"))!;
+    expect(lien.getAttribute('href')).toBe('/praticien');
   });
 });

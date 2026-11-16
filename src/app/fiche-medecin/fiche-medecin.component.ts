@@ -32,7 +32,7 @@ import { MessagerieService } from '../messagerie/messagerie.service';
               <span class="fm-badge fm-badge--neutre"><i class="fa fa-wallet fa-xs"></i> Paiement au cabinet</span>
             </div>
           </div>
-          <div class="fm-hero-act">
+          <div class="fm-hero-act" *ngIf="!reclamable()">
             <button type="button" class="fm-btn fm-btn--sec" (click)="ecrire()" [disabled]="ouvertureMessagerie()">
               <i class="fa fa-comment-dots"></i> {{ ouvertureMessagerie() ? 'Ouverture…' : 'Écrire au médecin' }}
             </button>
@@ -98,8 +98,15 @@ import { MessagerieService } from '../messagerie/messagerie.service';
 
             <p *ngIf="!charge() && !erreur() && creneaux().length === 0" class="fm-vide">Aucun créneau disponible pour le moment.</p>
 
+            <!-- Fiche importee, sans compte : personne ne lirait un message ni une liste d'attente -->
+            <div *ngIf="reclamable()" class="fm-attente fm-absent">
+              <p><strong>Ce praticien n'est pas encore sur Tabibi</strong>
+                Sa fiche vient de l'annuaire public : il ne reçoit pas encore de messages ni de demandes de rendez-vous en ligne.</p>
+              <a routerLink="/praticien" class="fm-link">C'est votre fiche ? <i class="fa fa-arrow-right fa-xs"></i></a>
+            </div>
+
             <!-- Liste d'attente -->
-            <div *ngIf="!charge()" class="fm-attente">
+            <div *ngIf="!charge() && !reclamable()" class="fm-attente">
               <p>
                 <strong>{{ creneaux().length === 0 ? 'Aucun créneau ne vous est proposé ?' : 'Aucun créneau ne vous convient ?' }}</strong>
                 Inscrivez-vous sur la liste d'attente de ce praticien. Vous serez notifié dès qu'un créneau se libère.
@@ -129,15 +136,6 @@ import { MessagerieService } from '../messagerie/messagerie.service';
                 <li><i class="fa fa-bolt"></i><div><strong>Confirmation immédiate</strong><span>Votre rendez-vous est enregistré dès la réservation.</span></div></li>
                 <li><i class="fa fa-calendar-xmark"></i><div><strong>Un empêchement ?</strong><span>Annulez depuis « Mes rendez-vous » pour libérer la place.</span></div></li>
               </ul>
-            </section>
-
-            <section *ngIf="reclamable()" class="fm-card fm-reclame">
-              <i class="fa fa-user-doctor"></i>
-              <div>
-                <strong>Vous êtes ce praticien ?</strong>
-                <span>Réclamez gratuitement cette fiche pour gérer vos rendez-vous.</span>
-              </div>
-              <a routerLink="/medecin/candidature" [queryParams]="{ fiche: m.id }" class="fm-btn fm-btn--sec">Réclamer ma fiche</a>
             </section>
 
             <section class="fm-card">
@@ -234,10 +232,6 @@ import { MessagerieService } from '../messagerie/messagerie.service';
     .fm-pratique div { display:flex; flex-direction:column; gap:2px; }
     .fm-pratique strong { font-size:14px; color:var(--ink); }
     .fm-pratique span { font-size:13px; color:var(--text3); }
-    .fm-reclame { display:flex; align-items:center; gap:14px; border-style:dashed; border-color:var(--pastille-bd); }
-    .fm-reclame > i { font-size:22px; color:var(--blue); }
-    .fm-reclame div { flex:1; display:flex; flex-direction:column; gap:2px; font-size:14px; }
-    .fm-reclame span { color:var(--text3); font-size:13px; }
 
     .fm-err { color:var(--red); font-size:14px; margin:0; }
     .fm-muted { color:var(--text3); font-size:14px; margin:0; }
@@ -254,8 +248,6 @@ import { MessagerieService } from '../messagerie/messagerie.service';
       .fm-ava { width:60px; height:60px; font-size:20px; }
       .fm-hero-act { grid-column:1 / -1; }
       .fm-hero-act .fm-btn { width:100%; }
-      .fm-reclame { flex-wrap:wrap; }
-      .fm-reclame .fm-btn { width:100%; }
     }
   `],
 })
