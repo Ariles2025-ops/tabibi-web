@@ -249,7 +249,7 @@ export class MesRendezVousComponent implements OnInit {
 
   /** Historique : un rendez-vous confirme dont l'heure est passee est « Terminé » (et non « Confirmé »). */
   libelleStatutPasse(rdv: RendezVous): string {
-    return rdv.statut === 'CONFIRME' ? 'Terminé' : libelleStatutRendezVous(rdv.statut);
+    return rdv.statut === 'CONFIRME' || rdv.statut === 'RESERVE' ? 'Terminé' : libelleStatutRendezVous(rdv.statut);
   }
 
   /** Vrai si un avis a deja ete depose sur ce rendez-vous (« Avis donné » a la place du bouton). */
