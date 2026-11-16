@@ -1,0 +1,53 @@
+# Agent « chasse aux erreurs » : chaque matin, lit le résumé des erreurs des dernières 24 h sur le serveur
+# (type d'exception et emplacement dans le code seulement, AUCUNE donnée personnelle),
+# puis l'agent développeur Claude corrige celles qui viennent du code et ouvre une PR claude/… (fusion seule si vert).
+name: Chasse aux erreurs
+on:
+  schedule:
+    - cron: '30 5 * * *'
+  workflow_dispatch:
+concurrency:
+  group: chasse-aux-erreurs
+  cancel-in-progress: false
+jobs:
+  chasser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Résumé des erreurs (sans données personnelles)
+        id: erreurs
+        env:
+          CLE: ${{ secrets.TABIBI_ERREURS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$CLE" > ~/.ssh/cle && chmod 600 ~/.ssh/cle
+          echo '129.151.227.16 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOliVdxVmjQnoT9IOqIPOtCWsM+d5Cw/uYP5U4XKs6xz' > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/cle -o StrictHostKeyChecking=yes ubuntu@129.151.227.16 erreurs > tout.json
+          jq '[.groupes[] | select(.conteneur | test("^(tabibi-web-1)$"))]' tout.json > erreurs.json
+          echo "nombre=$(jq length erreurs.json)" >> "$GITHUB_OUTPUT"
+          cat erreurs.json
+      - uses: actions/checkout@v4
+        if: steps.erreurs.outputs.nombre != '0'
+        with:
+          fetch-depth: 0
+          clean: false
+      - uses: anthropics/claude-code-action@v1
+        if: steps.erreurs.outputs.nombre != '0'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Voici les erreurs de production des dernières 24 h pour ${{ github.repository }} (fichier erreurs.json à la racine) :
+            type d'exception, composant, premier emplacement dans le code, nombre. Aucune donnée personnelle n'y figure.
+            Pour chaque erreur qui vient d'un vrai défaut du code de ce dépôt : trouve la cause, corrige, ajoute un test qui
+            reproduit le problème, et ouvre UNE PR vers main sur une branche claude/erreurs-${{ github.run_id }} qui explique en français.
+            Pour une erreur qui ne vient pas du code (réseau, service externe, client qui envoie n'importe quoi) : ne change rien,
+            mais ouvre un ticket qui l'explique si elle revient plus de 20 fois.
+            Règles : ne pousse jamais sur main, ne supprime aucun test, ne touche à aucun secret, ne lance aucun déploiement.
+          claude_args: --max-turns 50 --allowedTools "Bash(gh pr create:*),Bash(gh issue create:*),Bash(gh issue list:*),Bash(git:*),Bash(npm ci),Bash(npm run *),Bash(npx ng *),Bash(./mvnw *),Bash(mvn *),Bash(jq *),Read,Edit,Write,Glob,Grep"
