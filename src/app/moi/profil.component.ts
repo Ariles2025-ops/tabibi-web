@@ -71,7 +71,7 @@ function formulaireVide(): DemandeProfil {
               </select>
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Langue
+              Langue préférée
               <select class="champ" [(ngModel)]="formulaire.langue" name="langue" style="color:#10241F;font-size:1rem">
                 <option *ngFor="let l of langues" [value]="l.code">{{ l.libelle }}</option>
               </select>
