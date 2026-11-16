@@ -65,4 +65,50 @@ describe('AnnuaireSeoComponent', () => {
     f = creer({ specialite: 'ORL', wilaya: 'oran' });
     expect(f.componentInstance.cible).toBe('avec un ORL à Oran');
   });
+
+  describe('JSON-LD', () => {
+    const ld = (id: string) => {
+      const el = document.head.querySelector(`script#${id}`);
+      return el ? JSON.parse(el.textContent || '{}') : null;
+    };
+    afterEach(() => document.head.querySelectorAll('script[type="application/ld+json"]').forEach((e) => e.remove()));
+
+    it('FR : BreadcrumbList + FAQPage (memes questions que la FAQ visible) sur /specialites/:s/:w', () => {
+      const f = creer({ specialite: 'cardiologue', wilaya: 'oran' });
+      const fil = ld('ld-fil');
+      expect(fil['@type']).toBe('BreadcrumbList');
+      expect(fil.itemListElement.map((e: { name: string }) => e.name)).toEqual(['Accueil', 'Annuaire', 'Cardiologue', 'Oran']);
+      const faq = ld('ld-faq');
+      expect(faq['@type']).toBe('FAQPage');
+      expect(faq.mainEntity.length).toBeGreaterThanOrEqual(3);
+      expect(faq.mainEntity[faq.mainEntity.length - 3].name).toBe('Comment prendre rendez-vous avec un cardiologue à Oran ?');
+      expect((f.nativeElement as HTMLElement).querySelectorAll('.seo-faq details').length).toBe(faq.mainEntity.length);
+      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://tabibi.doctor/specialites/cardiologue/oran');
+      expect(document.head.querySelector('link[rel="alternate"][hreflang="ar"]')).toBeTruthy();
+    });
+
+    it('AR : FAQPage en arabe, canonical /ar, pas de FAQ pour une page introuvable', () => {
+      TestBed.configureTestingModule({});
+      reponse = { status: jasmine.createSpy('status') };
+      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher']);
+      annuaire.rechercher.and.returnValue(of([]));
+      TestBed.configureTestingModule({
+        imports: [AnnuaireSeoComponent],
+        providers: [
+          provideRouter([]),
+          { provide: ActivatedRoute, useValue: { snapshot: { data: { langue: 'ar' } }, paramMap: of(convertToParamMap({ specialite: 'cardiologue', wilaya: 'oran' })) } },
+          { provide: AnnuaireService, useValue: annuaire },
+          { provide: REPONSE_HTTP, useValue: reponse },
+        ],
+      });
+      TestBed.createComponent(AnnuaireSeoComponent).detectChanges();
+      expect(ld('ld-faq').inLanguage).toBe('ar');
+      expect(ld('ld-faq').mainEntity[0].name).toMatch(/[\u0600-\u06FF]/);
+      expect(ld('ld-fil').itemListElement[0].name).toBe('الرئيسية');
+      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://tabibi.doctor/ar/specialites/cardiologue/oran');
+      TestBed.resetTestingModule();
+      creer({ specialite: 'nimportequoi' });
+      expect(ld('ld-faq')).toBeNull();
+    });
+  });
 });
