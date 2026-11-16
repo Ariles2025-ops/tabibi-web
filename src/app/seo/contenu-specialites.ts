@@ -178,4 +178,52 @@ export const CONTENU_SPECIALITES: Record<string, { fr: ContenuSpecialite; ar: Co
       ],
     },
   },
+  'medecin-generaliste': {
+    fr: {
+      apropos: 'Le médecin généraliste joue un rôle crucial en tant qu\'intermédiaire entre le patient et les spécialistes. Il est recommandé de consulter ce professionnel de santé pour des examens de routine et des soins non urgents.',
+      faq: [
+        { q: 'Peut-on consulter un médecin généraliste pour des symptômes courants?', r: 'Oui, il est courant de consulter un médecin généraliste pour des maux d\'estomac, des rhumes ou des douleurs musculaires bénins.' },
+        { q: 'Quelles sont les situations dans lesquelles il vaut mieux contacter un médecin généraliste?', r: 'Il est préférable de contacter un médecin généraliste si vous avez des questions sur votre santé globale ou si vous avez besoin d\'un suivi régulier comme pour la gestion d\'une affection chronique.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب العام هو طبيب عام يقدم الرعاية الصحية الأولية ويقوم بالفحوصات الجسمانية والتشخيص البسيط. يُستشير الطبيب العام في حالات الطوارئ الأولية والمشكلات الصحية البسيطة التي لا تتطلب عناية طبية متخصصة.',
+      faq: [
+        { q: 'هل يمكن للطبيب العام تقديم فحوصات متخصصة؟', r: 'لا، الطبيب العام يقدم الرعاية الصحية الأولية والفحوصات البسيطة فقط. الفحوصات المتخصصة تكون تحت رعاية الأطباء المتخصصين.' },
+        { q: 'متى أحتاج إلى استشارة الطبيب العام؟', r: 'يجب استشارة الطبيب العام في حالات الطوارئ الأولية والمشاكل الصحية البسيطة مثل الصداع أو الحمى.' },
+      ],
+    },
+  },
+  ophtalmologue: {
+    fr: {
+      apropos: 'Un ophtalmologue est un médecin spécialisé dans le diagnostic et le traitement des maladies oculaires et des troubles de la vision. Il est conseillé de consulter un ophtalmologue régulièrement, notamment lorsqu\'on observe des modifications dans sa vision ou des symptômes douloureux aux yeux.',
+      faq: [
+        { q: 'Quels symptômes devraient m\'amener à consulter un ophtalmologue ?', r: 'Si vous constatez des douleurs oculaires persistantes, des larmoiements excessifs, des modifications dans votre champ de vision ou des yeux rouges, il est recommandé de consulter un ophtalmologue rapidement.' },
+        { q: 'Dois-je consulter un ophtalmologue si je n\'ai pas de symptômes particuliers ?', r: 'Bien que vous n\'ayez pas de symptômes, une visite régulière chez l\'ophtalmologue est recommandée pour détecter précocement des problèmes de santé oculaire et maintenir une bonne santé visuelle.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب العيون متخصص في تشخيص وعلاج أمراض العين والجفن. يُنصح بالاستشارة الطبية عند الشعور بأي تغييرات غير طبيعية في الرؤية أو الإحساس بالألم في العين.',
+      faq: [
+        { q: 'هل يمكن لطبيب العيون علاج مشاكل الرؤية الموروثة؟', r: 'نعم، يمكن لطبيب العيون متابعة وعلاج العديد من مشاكل الرؤية الموروثة، مثل قصر النظر والبصيرة الحادة.' },
+        { q: 'متى يجب الاتصال بطبيب العيون؟', r: 'يجب الاتصال بطبيب العيون عند الشعور بأي ألم في العين أو تغيرات في الرؤية مثل ضبابية الرؤية أو تغيرات في حساسية الضوء.' },
+      ],
+    },
+  },
+  'ORL': {
+    fr: {
+      apropos: 'L\'ORL (Otolaryngologie) est une spécialité médicale qui se charge de l\'évaluation et du traitement des maladies touchant l\'oreille, le nez, la gargarique et la bouche. Il est recommandé de consulter un ORL lorsque vous souffrez de problèmes persistants d\'ouïe, de maux de tête persistants, ou d\'obstruction du nez.',
+      faq: [
+        { q: 'Quels sont les symptômes courants qui peuvent nécessiter une consultation chez un ORL ?', r: 'Les symptômes comme des problèmes d\'ouïe, des douleurs à la tête, des saignements de nez fréquents, ou une sensation de congestion dans l\'oreille peuvent indiquer le besoin d\'une consultation chez un ORL.' },
+        { q: 'Est-il normal d\'avoir des saignements de nez ?', r: 'Des saignements de nez occasionnels sont souvent normaux, mais s\'ils sont fréquents ou accompagnés d\'autres symptômes, il est préférable de consulter un ORL pour évaluer la cause sous-jacente.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الأنف والأذن والحنجرة هو متخصص في علاج الأمراض المرتبطة بالأنف والأذن والحنجرة. يُشجع الاستشارة مع هذا الطبيب عند الشعور بأي أعراض غير طبيعية في هذه المناطق، مثل التهاب الأذن أو صعوبات في التنفس من الأنف.',
+      faq: [
+        { q: 'هل يمكن لطبيب الأنف والأذن والحنجرة تشخيص أمراض الأذن فقط؟', r: 'لا، طبيب الأنف والأذن والحنجرة متخصص في علاج الأمراض المتعلقة بالأنف والأذن والحنجرة على حد سواء.' },
+        { q: 'ما هي الأعراض التي يجب استشارة طبيب الأنف والأذن والحنجرة بشأنها؟', r: 'الأعراض مثل التهاب الأنف المستمر، ضعف السمع، صعوبات في البلع، أو تغييرات في نسيج اللسان والحنجرة تستلزم استشارة هذا الطبيب.' },
+      ],
+    },
+  },
 };
