@@ -4,6 +4,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { TEXTES_SEO, TextesSeo } from './textes-seo';
+import { CONTENU_SPECIALITES } from './contenu-specialites';
 import { liensLangues } from './referentiel-seo';
 import {
   SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo, lienPraticien,
@@ -87,6 +88,11 @@ import {
 
       <p *ngIf="introuvable" class="seo-muet">{{ t.introuvable }} <a [routerLink]="p + '/specialites'">{{ t.voirTout }}</a></p>
 
+      <!-- Presentation editoriale de la specialite (contenu unique, FR/AR) -->
+      <section class="seo-bloc seo-apropos" *ngIf="apropos && !introuvable">
+        <p>{{ apropos }}</p>
+      </section>
+
       <!-- Maillage : autres wilayas pour cette specialite -->
       <section class="seo-bloc" *ngIf="specialite && !introuvable">
         <h2>{{ t.autreWilaya(nomS(specialite)) }}</h2>
@@ -108,6 +114,7 @@ import {
 
       <section class="seo-faq" *ngIf="!index && !introuvable">
         <h2>{{ t.faq }}</h2>
+        <details *ngFor="let f of faqSpe"><summary>{{ f.q }}</summary><p>{{ f.r }}</p></details>
         <details><summary>{{ t.q1(cible) }}</summary><p>{{ t.r1 }}</p></details>
         <details><summary>{{ t.q2 }}</summary><p>{{ t.r2 }}</p></details>
         <details><summary>{{ t.q3 }}</summary>
@@ -138,6 +145,7 @@ import {
     .seo-med__txt small { color:var(--text3); font-size:13px; }
     .seo-resa { font-size:12px; font-weight:700; color:var(--vert); background:#E7F1EC; padding:3px 10px; border-radius:999px; }
     .seo-note { color:var(--text3); font-size:13px; margin:14px 0 0; }
+    .seo-apropos p { color:var(--text3); line-height:1.65; max-width:72ch; margin:0; }
     .seo-liens { display:flex; flex-wrap:wrap; gap:8px; }
     .seo-bloc h2 small { font-size:13px; font-weight:700; color:var(--text3); margin-inline-start:6px; }
     .seo-cartes { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr)); gap:10px; }
@@ -202,6 +210,9 @@ export class AnnuaireSeoComponent implements OnInit {
   sousTitre = '';
   intro = '';
   cible = '';
+  /** Contenu éditorial unique de la spécialité (vide si la spécialité n'en a pas encore). */
+  apropos = '';
+  faqSpe: { q: string; r: string }[] = [];
 
   medecins = signal<Medecin[]>([]);
   charge = signal(false);
@@ -223,6 +234,11 @@ export class AnnuaireSeoComponent implements OnInit {
     this.wilaya = wilSlug ? WILAYAS_SEO.find((w) => w.slug === wilSlug) ?? null : null;
     this.introuvable = (!!specSlug && !this.specialite) || (!!wilSlug && !this.wilaya);
     this.index = !specSlug && !wilSlug;
+    const contenuSpe = this.specialite && !this.introuvable
+      ? CONTENU_SPECIALITES[this.specialite.slug]?.[this.ar ? 'ar' : 'fr']
+      : undefined;
+    this.apropos = contenuSpe?.apropos ?? '';
+    this.faqSpe = contenuSpe?.faq ?? [];
     this.medecins.set([]);
     // Page de liste : « Chargement » des le rendu serveur (sinon « Aucun praticien » s'afficherait un instant).
     this.charge.set(!(!specSlug && !wilSlug));
