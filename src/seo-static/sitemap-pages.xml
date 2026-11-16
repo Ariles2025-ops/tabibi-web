@@ -3,6 +3,9 @@
   <url><loc>https://tabibi.doctor/</loc></url>
   <url><loc>https://tabibi.doctor/praticien</loc></url>
   <url><loc>https://tabibi.doctor/specialites</loc></url>
+  <url><loc>https://tabibi.doctor/wilayas</loc></url>
+  <url><loc>https://tabibi.doctor/aide</loc></url>
+  <url><loc>https://tabibi.doctor/supprimer-mon-compte</loc></url>
   <url><loc>https://tabibi.doctor/specialites/allergologue</loc></url>
   <url><loc>https://tabibi.doctor/specialites/anesthesiste</loc></url>
   <url><loc>https://tabibi.doctor/specialites/cardiologue</loc></url>
@@ -32,6 +35,7 @@
   <url><loc>https://tabibi.doctor/specialites/orthodontiste</loc></url>
   <url><loc>https://tabibi.doctor/specialites/orthophoniste</loc></url>
   <url><loc>https://tabibi.doctor/specialites/orthopediste</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie</loc></url>
   <url><loc>https://tabibi.doctor/specialites/pneumologue</loc></url>
   <url><loc>https://tabibi.doctor/specialites/podologue</loc></url>
   <url><loc>https://tabibi.doctor/specialites/psychiatre</loc></url>
@@ -2110,6 +2114,75 @@
   <url><loc>https://tabibi.doctor/specialites/orthopediste/ksar-el-boukhari</loc></url>
   <url><loc>https://tabibi.doctor/specialites/orthopediste/bou-saada</loc></url>
   <url><loc>https://tabibi.doctor/specialites/orthopediste/el-abiodh-sidi-cheikh</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/adrar</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/chlef</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/laghouat</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/oum-el-bouaghi</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/batna</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/bejaia</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/biskra</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/bechar</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/blida</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/bouira</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/tamanrasset</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/tebessa</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/tlemcen</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/tiaret</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/tizi-ouzou</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/alger</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/djelfa</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/jijel</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/setif</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/saida</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/skikda</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/sidi-bel-abbes</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/annaba</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/guelma</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/constantine</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/medea</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/mostaganem</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/m-sila</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/mascara</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/ouargla</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/oran</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/el-bayadh</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/illizi</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/bordj-bou-arreridj</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/boumerdes</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/el-tarf</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/tindouf</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/tissemsilt</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/el-oued</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/khenchela</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/souk-ahras</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/tipaza</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/mila</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/ain-defla</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/naama</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/ain-temouchent</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/ghardaia</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/relizane</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/timimoun</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/bordj-badji-mokhtar</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/ouled-djellal</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/beni-abbes</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/in-salah</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/in-guezzam</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/touggourt</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/djanet</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/el-m-ghair</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/el-meniaa</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/aflou</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/barika</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/el-kantara</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/bir-el-ater</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/el-aricha</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/ksar-chellala</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/ain-ouessara</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/messaad</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/ksar-el-boukhari</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/bou-saada</loc></url>
+  <url><loc>https://tabibi.doctor/specialites/pharmacie/el-abiodh-sidi-cheikh</loc></url>
   <url><loc>https://tabibi.doctor/specialites/pneumologue/adrar</loc></url>
   <url><loc>https://tabibi.doctor/specialites/pneumologue/chlef</loc></url>
   <url><loc>https://tabibi.doctor/specialites/pneumologue/laghouat</loc></url>
