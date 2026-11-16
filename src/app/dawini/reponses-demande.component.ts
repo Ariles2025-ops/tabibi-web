@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
-import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } from './dawini.service';
+import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin, libelleWilaya } from './dawini.service';
 
 /**
  * Reponses des pharmacies a l'une de mes demandes (GET /api/dawini/besoins/{id}/reponses, les plus anciennes
@@ -23,7 +23,7 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } fro
       <ng-container *ngIf="connecte()">
         <ng-container *ngIf="besoin() as b">
           <p style="color:var(--text3);margin:0 0 16px">
-            {{ libelleStatut(b.statut) }} · Wilaya {{ b.wilayaCode }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
+            {{ libelleStatut(b.statut) }} · {{ wilaya(b.wilayaCode) }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
             · publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}<ng-container *ngIf="b.clotureLe"> · clôturée le {{ b.clotureLe | date:'d MMMM à HH:mm' }}</ng-container>
             <ng-container *ngIf="b.precision"><br>{{ b.precision }}</ng-container>
           </p>
@@ -58,6 +58,8 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleStatutBesoin } fro
   `,
 })
 export class ReponsesDemandeComponent implements OnInit {
+  /** Nom de la wilaya (referentiel) plutot que son code. */
+  wilaya = libelleWilaya;
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
   private service = inject(DawiniService);

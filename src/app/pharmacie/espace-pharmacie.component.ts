@@ -4,7 +4,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../auth/auth.service';
-import { Besoin, DawiniService, DemandeReponse, libelleReponses } from '../dawini/dawini.service';
+import { Besoin, DawiniService, DemandeReponse, libelleReponses, libelleWilaya } from '../dawini/dawini.service';
 import { Profil, ProfilService } from '../moi/profil.service';
 import { OrdonnanceService, Verification } from '../ordonnances/ordonnance.service';
 
@@ -86,7 +86,7 @@ function formulaireVide(): FormulaireReponse {
         <li *ngFor="let b of besoins()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
           <strong>{{ b.medicament }}</strong>
           <span style="color:var(--text3)">
-            · Wilaya {{ b.wilayaCode }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
+            · {{ wilaya(b.wilayaCode) }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
             · publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }} · {{ libelleReponses(b.nombreReponses) }}
           </span>
           <p *ngIf="b.precision" style="margin:6px 0 0">{{ b.precision }}</p>
@@ -166,6 +166,8 @@ function formulaireVide(): FormulaireReponse {
   `,
 })
 export class EspacePharmacieComponent implements OnInit {
+  /** Nom de la wilaya (referentiel) plutot que son code. */
+  wilaya = libelleWilaya;
   private auth = inject(AuthService);
   private service = inject(DawiniService);
   private http = inject(HttpClient);

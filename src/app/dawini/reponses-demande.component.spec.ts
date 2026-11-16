@@ -105,7 +105,7 @@ describe('ReponsesDemandeComponent', () => {
 
     expect(service.reponses).toHaveBeenCalledWith('b1');
     expect(fixture.nativeElement.querySelector('h1').textContent).toContain('Amoxicilline 1 g');
-    expect(texte()).toContain('Ouverte · Wilaya 16 · Bab Ezzouar');
+    expect(texte()).toContain('Ouverte · Alger · Bab Ezzouar');
     expect(texte()).toContain('Boîte de 14 comprimés');
     const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
     expect(items.length).toBe(2);

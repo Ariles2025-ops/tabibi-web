@@ -162,7 +162,7 @@ describe('EspacePharmacieComponent', () => {
     await chercher('16');
     expect(service.besoinsOuverts).toHaveBeenCalledWith('16');
     expect(texte()).toContain('Amoxicilline 1 g');
-    expect(texte()).toContain('Wilaya 16 · Bab Ezzouar');
+    expect(texte()).toContain('Alger · Bab Ezzouar');
     expect(texte()).toContain('Boîte de 14 comprimés');
     expect(texte()).toContain('2 réponses');
     expect(formulaireReponse()).not.toBeNull();

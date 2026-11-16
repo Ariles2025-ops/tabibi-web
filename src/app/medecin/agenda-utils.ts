@@ -46,9 +46,17 @@ export function rendezVousPasses(liste: RendezVous[], maintenant = Date.now()): 
   return grouperParJour(liste.filter((r) => Date.parse(r.debut) < borne), 'decroissant');
 }
 
+/**
+ * Rendez-vous en cours de validite : CONFIRME, ou RESERVE (statut renvoye par la reservation du patient) traite
+ * comme confirme — les actions (honorer, absent, annuler) restent proposees au medecin et a la secretaire.
+ */
+export function estConfirme(r: { statut: string }): boolean {
+  return r.statut === 'CONFIRME' || r.statut === 'RESERVE';
+}
+
 /** Un rendez-vous ne peut etre marque honore qu'une fois commence, et s'il est confirme. */
 export function peutHonorer(r: RendezVous, maintenant = Date.now()): boolean {
-  return r.statut === 'CONFIRME' && Date.parse(r.debut) <= maintenant;
+  return estConfirme(r) && Date.parse(r.debut) <= maintenant;
 }
 
 /** Un patient ne peut etre signale absent que sur un rendez-vous confirme deja commence (memes regles que « honore »). */
@@ -58,7 +66,7 @@ export function peutMarquerAbsent(r: RendezVous, maintenant = Date.now()): boole
 
 /** Une teleconsultation ne se propose que sur un rendez-vous confirme qui n'a pas encore commence. */
 export function peutProposerTeleconsultation(r: RendezVous, maintenant = Date.now()): boolean {
-  return r.statut === 'CONFIRME' && Date.parse(r.debut) > maintenant;
+  return estConfirme(r) && Date.parse(r.debut) > maintenant;
 }
 
 /** Action en cours sur un element d'une liste (seul le bouton clique affiche « … »). */

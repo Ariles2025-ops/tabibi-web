@@ -91,7 +91,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
             <div class="bc-note">Confirmation immédiate · Paiement au cabinet</div>
           </div>
           <div class="badge-float bf1"><span class="dot" style="background:var(--blue)"><i class="fa fa-check"></i></span><span><b>RDV confirmé</b><small>Rappel dans votre espace Tabibi</small></span></div>
-          <div class="badge-float bf2"><span class="dot" style="background:#D4A437"><i class="fa fa-star"></i></span><span><b>Médecin vérifié</b><small>Identité contrôlée</small></span></div>
+          <div class="badge-float bf2"><span class="dot" style="background:#D4A437"><i class="fa fa-star"></i></span><span><b>Médecin vérifié</b><small>Numéro d'ordre contrôlé</small></span></div>
         </div>
       </div>
 
@@ -102,7 +102,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     </section>
 
     <div class="v4strip" aria-label="Garanties Tabibi" *ngIf="!enRecherche">
-      <div class="item"><i class="fa fa-shield-halved" aria-hidden="true"></i> <span>Médecins vérifiés</span></div>
+      <div class="item"><i class="fa fa-shield-halved" aria-hidden="true"></i> <span>Numéro d'ordre vérifié avant activation</span></div>
       <div class="item"><i class="fa fa-calendar-check" aria-hidden="true"></i> <span>RDV en 30 secondes</span></div>
       <div class="item"><i class="fa fa-server" aria-hidden="true"></i> <span>Vos données protégées (loi 18-07)</span></div>
       <div class="item"><i class="fa fa-lock" aria-hidden="true"></i> <span>Paiement au cabinet</span></div>
@@ -141,7 +141,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
           <div class="dl-feat">
             <span class="dl-feat__ic"><i class="fa fa-calendar-check" aria-hidden="true"></i></span>
             <h3>Réservez en ligne</h3>
-            <p>Trouvez un médecin vérifié et prenez rendez-vous en 30 secondes, 24h/24.</p>
+            <p>Trouvez un médecin et prenez rendez-vous en 30 secondes, 24h/24.</p>
           </div>
           <div class="dl-feat">
             <span class="dl-feat__ic"><i class="fa fa-comment-medical" aria-hidden="true"></i></span>
@@ -160,7 +160,6 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     <section class="section" *ngIf="!enRecherche" style="padding-top:0">
       <div style="padding:0 var(--gutter)">
         <div class="dl-stats">
-          <div class="dl-stat"><div class="dl-stat__n">130 000+</div><div class="dl-stat__l">Patients accompagnés</div></div>
           <div class="dl-stat"><div class="dl-stat__n">75 000+</div><div class="dl-stat__l">Médecins référencés</div></div>
           <div class="dl-stat"><div class="dl-stat__n">69</div><div class="dl-stat__l">Wilayas couvertes</div></div>
         </div>
@@ -206,7 +205,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
           <h3 *ngIf="!resultats().length">Créez un compte pour voir les médecins</h3>
           <p>La liste des médecins et leurs disponibilités sont réservées aux membres de Tabibi — c'est gratuit.</p>
           <div class="docs-gate__btns">
-            <a class="bouton" (click)="seConnecter()" tabindex="0" role="button" style="cursor:pointer">Créer un compte</a>
+            <a class="bouton" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">Créer un compte</a>
             <a class="bouton-secondaire" (click)="seConnecter()" tabindex="0" role="button" style="cursor:pointer">Se connecter</a>
           </div>
         </div>
@@ -254,9 +253,9 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       </div>
       <div class="v4-cmp" role="group" aria-label="Comparatif Tabibi vs annuaires classiques">
         <div class="v4-cmp-h"><span></span><strong>Tabibi</strong><span>Annuaires classiques</span></div>
-        <div class="v4-cmp-r"><span>Identité, diplôme et cabinet vérifiés</span><strong class="y">✓</strong><span class="n">—</span></div>
+        <div class="v4-cmp-r"><span>Numéro d'ordre vérifié avant activation</span><strong class="y">✓</strong><span class="n">—</span></div>
         <div class="v4-cmp-r"><span>Données de santé protégées (loi 18-07)</span><strong class="y">✓</strong><span class="n">—</span></div>
-        <div class="v4-cmp-r"><span>FR · AR · EN avec arabe RTL soigné</span><strong class="y">✓</strong><span class="n">partiel</span></div>
+        <div class="v4-cmp-r"><span>Français et arabe, avec un arabe RTL soigné</span><strong class="y">✓</strong><span class="n">partiel</span></div>
         <div class="v4-cmp-r"><span>Paiement au cabinet — espèces ou Chifa, gratuit patients</span><strong class="y">✓</strong><span class="n">variable</span></div>
         <div class="v4-cmp-r"><span>Réservation instantanée + rappels dans votre espace</span><strong class="y">✓</strong><span class="n">—</span></div>
       </div>
@@ -277,9 +276,9 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       <div class="v4-sechead"><span class="v4-eyebrow">FAQ</span><h2>Questions fréquentes</h2></div>
       <div class="v4-faq">
         <details open><summary><span>L'application est-elle gratuite ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Oui, Tabibi est 100 % gratuite pour les patients. Vous réglez uniquement la consultation, directement au cabinet — en espèces ou avec la carte Chifa.</p></details>
-        <details><summary><span>Comment savez-vous qu'un médecin est fiable ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Chaque praticien passe une vérification avant publication : identité, diplôme et cabinet. Le badge « Vérifié » n'apparaît qu'après validation.</p></details>
+        <details><summary><span>Comment savez-vous qu'un médecin est fiable ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Un praticien qui rejoint Tabibi fournit son numéro d'inscription à l'Ordre : notre équipe le vérifie avant d'activer son compte. Le badge « Vérifié » n'apparaît qu'après cette validation.</p></details>
         <details><summary><span>Mes données de santé sont-elles protégées ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Vos informations sont chiffrées et ne sont accessibles qu'à vous et aux médecins que vous consultez, avec votre consentement.</p></details>
-        <details><summary><span>Je suis médecin, comment rejoindre Tabibi ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Réclamez votre fiche depuis l'espace médecin, gérez vos disponibilités et recevez vos rendez-vous en ligne.</p></details>
+        <details><summary><span>Je suis médecin, comment rejoindre Tabibi ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Réclamez votre fiche depuis la page <a routerLink="/praticien" style="color:var(--vert);font-weight:700">Vous êtes praticien ?</a>, gérez vos disponibilités et recevez vos rendez-vous en ligne.</p></details>
       </div>
     </section>
   `,
@@ -496,6 +495,8 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
 
   /** Bouton « Se connecter » du cadenas sur les resultats floutes. */
   seConnecter() { this.auth.seConnecter(); }
+  /** « Créer un compte » : formulaire d'inscription (en pre-lancement, page /bientot). */
+  sInscrire() { this.auth.sInscrireParEmail(); }
 
   /** Clic sur le bouton « Rechercher » : lance la recherche et fait defiler vers la liste des resultats. */
   lancerRecherche() {

@@ -4,7 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
-import { ActionEnCours, peutHonorer, peutMarquerAbsent, rendezVousAVenir, rendezVousPasses, styleOnglet } from '../medecin/agenda-utils';
+import { ActionEnCours, estConfirme, peutHonorer, peutMarquerAbsent, rendezVousAVenir, rendezVousPasses, styleOnglet } from '../medecin/agenda-utils';
 import { GestionCreneauxComponent, SourceCreneaux } from '../medecin/gestion-creneaux.component';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from '../medecin/patients.service';
 import { abregerIdentifiant } from '../messagerie/messagerie.service';
@@ -69,21 +69,21 @@ import { Rattachement, SecretaireService } from './secretaire.service';
                 <span style="color:var(--text2)">{{ nom(r.patientId) }}</span>
                 <a *ngIf="telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">{{ tel }}</a>
               </div>
-              <div *ngIf="r.statut === 'CONFIRME' && aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div *ngIf="estConfirme(r) && aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <span style="color:var(--text2);font-size:.9rem">Annuler ce rendez-vous ? Le patient sera prévenu.</span>
                 <button type="button" class="bouton" (click)="annuler(r)" [disabled]="enCours() !== null">
                   {{ estEnCours(r, 'annuler') ? 'Annulation…' : 'Oui' }}
                 </button>
                 <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">Non</button>
               </div>
-              <div *ngIf="r.statut === 'CONFIRME' && absentAConfirmer() === r.id" class="confirmation-absent" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div *ngIf="estConfirme(r) && absentAConfirmer() === r.id" class="confirmation-absent" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <span style="color:var(--text2);font-size:.9rem">Signaler le patient absent à ce rendez-vous ?</span>
                 <button type="button" class="bouton" (click)="marquerAbsent(r)" [disabled]="enCours() !== null">
                   {{ estEnCours(r, 'absent') ? 'Enregistrement…' : 'Oui' }}
                 </button>
                 <button type="button" class="bouton-secondaire" (click)="absentAConfirmer.set(null)" [disabled]="enCours() !== null">Non</button>
               </div>
-              <div *ngIf="r.statut === 'CONFIRME' && aConfirmer() !== r.id && absentAConfirmer() !== r.id" style="display:flex;gap:8px;flex-wrap:wrap">
+              <div *ngIf="estConfirme(r) && aConfirmer() !== r.id && absentAConfirmer() !== r.id" style="display:flex;gap:8px;flex-wrap:wrap">
                 <button *ngIf="peutHonorer(r)" type="button" class="bouton" (click)="honorer(r)" [disabled]="enCours() !== null">
                   {{ estEnCours(r, 'honorer') ? 'Enregistrement…' : 'Marquer honoré' }}
                 </button>
@@ -205,6 +205,9 @@ export class EspaceSecretaireComponent implements OnInit {
   telephone(patientId: string): string {
     return telephonePatient(this.repertoire(), patientId);
   }
+
+  /** CONFIRME ou RESERVE : actions proposees (voir agenda-utils). */
+  estConfirme = estConfirme;
 
   peutHonorer(r: RendezVous): boolean {
     return peutHonorer(r, Date.now());
