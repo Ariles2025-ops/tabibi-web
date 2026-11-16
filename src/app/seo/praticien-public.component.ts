@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { SPECIALITES_SEO, liensLangues, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
 import { StatutHttpService } from './statut-http';
+import { ecrireJsonLd, fil, typeSchemaOrg } from './donnees-structurees';
 
 /**
  * Page publique et referencee d'un praticien : /praticiens/:id/:slug (une page par fiche de l'annuaire).
@@ -212,24 +213,30 @@ export class PraticienPublicComponent implements OnInit {
     }
     canonique.setAttribute('href', url);
 
-    // Donnees structurees schema.org (Physician) pour les resultats enrichis.
+    // Donnees structurees schema.org : fiche (Physician / Dentist / Pharmacy) et fil d'Ariane.
+    const racine = 'https://tabibi.doctor';
     const donnees = {
       '@context': 'https://schema.org',
-      '@type': 'Physician',
+      '@type': typeSchemaOrg(m.specialiteSlug),
       name: m.nomComplet,
       medicalSpecialty: this.specialite,
       inLanguage: this.ar ? 'ar' : 'fr',
       url,
-      address: { '@type': 'PostalAddress', addressLocality: m.ville || m.wilayaFr, addressRegion: m.wilayaFr, addressCountry: 'DZ' },
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: this.ar ? this.wilaya : (m.ville || m.wilayaFr),
+        addressRegion: this.wilaya || m.wilayaFr,
+        addressCountry: 'DZ',
+      },
     };
-    let script = this.document.head.querySelector<HTMLScriptElement>('script#ld-praticien');
-    if (!script) {
-      script = this.document.createElement('script');
-      script.id = 'ld-praticien';
-      script.type = 'application/ld+json';
-      this.document.head.appendChild(script);
+    ecrireJsonLd(this.document, 'ld-praticien', donnees);
+    const etapes = [{ nom: this.ar ? 'الرئيسية' : 'Accueil', url: `${racine}${this.p || '/'}` }];
+    if (this.specialiteConnue) etapes.push({ nom: this.specialite, url: `${racine}${this.p}/specialites/${m.specialiteSlug}` });
+    if (this.specialiteConnue && this.wilayaSlug) {
+      etapes.push({ nom: this.wilaya, url: `${racine}${this.p}/specialites/${m.specialiteSlug}/${this.wilayaSlug}` });
     }
-    script.textContent = JSON.stringify(donnees);
+    etapes.push({ nom: m.nomComplet, url });
+    ecrireJsonLd(this.document, 'ld-fil', fil(etapes));
   }
 
   initiales(m: Medecin): string {
