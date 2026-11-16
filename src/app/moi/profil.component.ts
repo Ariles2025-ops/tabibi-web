@@ -30,10 +30,9 @@ function formulaireVide(): DemandeProfil {
  * backend ; un 400 affiche le motif { erreur } renvoye.
  */
 @Component({
-  selector: 'app-profil',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
+    selector: 'app-profil',
+    imports: [CommonModule, FormsModule, RouterLink],
+    template: `
     <main style="max-width:640px;margin:32px auto;padding:0 16px">
       <p style="margin:0 0 16px"><a routerLink="/moi" style="color:var(--vert)">Retour à mon compte</a></p>
       <h1 style="color:var(--vert);margin:0 0 8px">Mon profil</h1>
@@ -90,7 +89,7 @@ function formulaireVide(): DemandeProfil {
         </form>
       </ng-container>
     </main>
-  `,
+  `
 })
 export class ProfilComponent implements OnInit {
   private auth = inject(AuthService);

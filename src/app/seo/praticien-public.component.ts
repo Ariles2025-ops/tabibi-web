@@ -12,10 +12,9 @@ import { StatutHttpService } from './statut-http';
  * maillage vers les confreres de la meme specialite et wilaya. Rendue cote serveur pour les moteurs de recherche.
  */
 @Component({
-  selector: 'app-praticien-public',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-praticien-public',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main class="pp" [attr.dir]="ar ? 'rtl' : null" [attr.lang]="ar ? 'ar' : 'fr'">
       <p *ngIf="charge()" class="pp-muet">{{ ar ? 'جارٍ التحميل…' : 'Chargement…' }}</p>
 
@@ -86,7 +85,7 @@ import { StatutHttpService } from './statut-http';
       </ng-container>
     </main>
   `,
-  styles: [`
+    styles: [`
     .pp { max-width:960px; margin:0 auto; padding:24px var(--gutter, 16px) 48px; color:var(--ink); }
     .pp-muet { color:var(--text3); }
     .pp-haut { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
@@ -117,7 +116,7 @@ import { StatutHttpService } from './statut-http';
     .pp-plus a, .pp-liens a { color:var(--vert); font-weight:700; text-decoration:none; }
     .pp-liens { display:flex; flex-wrap:wrap; gap:8px; }
     .pp-liens a { padding:7px 12px; border:1px solid var(--border); border-radius:999px; background:#fff; font-size:13px; }
-  `],
+  `]
 })
 export class PraticienPublicComponent implements OnInit {
   private route = inject(ActivatedRoute);

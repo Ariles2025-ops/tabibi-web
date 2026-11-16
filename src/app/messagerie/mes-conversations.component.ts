@@ -13,10 +13,9 @@ import { Conversation, MessagerieService, abregerIdentifiant } from './messageri
  * chaque ligne mene au fil et affiche le nombre de messages non lus.
  */
 @Component({
-  selector: 'app-mes-conversations',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-mes-conversations',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 16px">Messagerie</h1>
 
@@ -47,7 +46,7 @@ import { Conversation, MessagerieService, abregerIdentifiant } from './messageri
         </p>
       </ng-container>
     </main>
-  `,
+  `
 })
 export class MesConversationsComponent implements OnInit {
   private auth = inject(AuthService);

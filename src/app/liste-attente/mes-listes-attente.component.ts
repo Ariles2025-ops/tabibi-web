@@ -11,10 +11,9 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
  * d'abord, avec le nom du praticien lu dans l'annuaire et le retrait (POST /api/liste-attente/{id}/retirer).
  */
 @Component({
-  selector: 'app-mes-listes-attente',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-mes-listes-attente',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">Mes listes d'attente</h1>
       <p style="color:var(--text3);margin:0 0 20px">
@@ -54,7 +53,7 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
         </p>
       </ng-container>
     </main>
-  `,
+  `
 })
 export class MesListesAttenteComponent implements OnInit {
   private auth = inject(AuthService);

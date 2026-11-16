@@ -22,10 +22,9 @@ interface Raccourci { lien: string; libelle: string; }
  * du compte (confirmation en deux temps dans la page, puis DELETE /api/moi et deconnexion).
  */
 @Component({
-  selector: 'app-moi',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-moi',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main style="max-width:640px;margin:40px auto;padding:0 16px">
       <h1 style="color:var(--vert)">Mon compte</h1>
       <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:12px;max-width:420px">
@@ -65,7 +64,7 @@ interface Raccourci { lien: string; libelle: string; }
         </section>
       </div>
     </main>
-  `,
+  `
 })
 export class MoiComponent implements OnInit {
   private auth = inject(AuthService);

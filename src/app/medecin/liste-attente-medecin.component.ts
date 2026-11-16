@@ -12,10 +12,9 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
  * s'ouvre ou se libere.
  */
 @Component({
-  selector: 'app-liste-attente-medecin',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-liste-attente-medecin',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--blue);margin:0 0 8px">Liste d'attente</h1>
       <p style="color:var(--text3);margin:0 0 20px">
@@ -44,7 +43,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
         <a routerLink="/medecin/disponibilites" style="color:var(--blue)">Ouvrir des créneaux</a>
       </p>
     </main>
-  `,
+  `
 })
 export class ListeAttenteMedecinComponent implements OnInit {
   private auth = inject(AuthService);

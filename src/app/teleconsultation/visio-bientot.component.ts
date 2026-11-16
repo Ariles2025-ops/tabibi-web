@@ -3,10 +3,9 @@ import { RouterLink } from '@angular/router';
 
 /** Remplace les pages de teleconsultation tant que la visio n'est pas ouverte (VISIO_ACTIVE). */
 @Component({
-  selector: 'app-visio-bientot',
-  standalone: true,
-  imports: [RouterLink],
-  template: `
+    selector: 'app-visio-bientot',
+    imports: [RouterLink],
+    template: `
     <main style="max-width:640px;margin:48px auto;padding:0 16px;text-align:center">
       <span style="display:inline-block;background:#D4A437;color:#10241F;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:999px">Bientôt</span>
       <h1 style="color:var(--vert);margin:16px 0 10px">Téléconsultation</h1>
@@ -15,6 +14,6 @@ import { RouterLink } from '@angular/router';
       </p>
       <a class="bouton" routerLink="/">Retour à l'accueil</a>
     </main>
-  `,
+  `
 })
 export class VisioBientotComponent {}

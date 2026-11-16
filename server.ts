@@ -1,5 +1,5 @@
 import { APP_BASE_HREF } from '@angular/common';
-import { CommonEngine } from '@angular/ssr';
+import { CommonEngine } from '@angular/ssr/node';
 import express, { Request, Response } from 'express';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
@@ -68,7 +68,12 @@ export function app(): express.Express {
   // Page sans rendu serveur (le navigateur rend tout), servie en secours : index.csr.html avec SSR, sinon index.html.
   const cheminCsr = [join(browserDistFolder, 'index.csr.html'), join(browserDistFolder, 'index.html')].find((c) => existsSync(c));
   const pageCsr = cheminCsr ? readFileSync(cheminCsr, 'utf-8') : '';
-  const commonEngine = new CommonEngine();
+  // Noms de domaine autorises pour le rendu serveur (protection SSRF, CVE-2026-27739 corrigee dans Angular 19.2.21) :
+  // le domaine du site, www, et les adresses locales (sondes de sante du conteneur). Liste etendue par TABIBI_SSR_HOTES.
+  const domaine = process.env['DOMAINE']?.trim() || 'tabibi.doctor';
+  const hotesAutorises = [domaine, `www.${domaine}`, 'localhost', '127.0.0.1',
+    ...(process.env['TABIBI_SSR_HOTES'] || '').split(',').map((h) => h.trim()).filter(Boolean)];
+  const commonEngine = new CommonEngine({ allowedHosts: hotesAutorises });
   const entetes = entetesSecurite(configurationDepuisEnvironnement(process.env));
 
   server.disable('x-powered-by');

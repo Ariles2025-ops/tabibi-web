@@ -18,10 +18,9 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
  * 409 : le motif { erreur } du backend est affiche (avis deja donne, rendez-vous non honore...).
  */
 @Component({
-  selector: 'app-deposer-avis',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
+    selector: 'app-deposer-avis',
+    imports: [CommonModule, FormsModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <p style="margin:0 0 16px"><a routerLink="/mes-rendez-vous" style="color:var(--vert)">Retour à mes rendez-vous</a></p>
       <h1 style="color:var(--vert);margin:0 0 8px">Donner mon avis</h1>
@@ -68,7 +67,7 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
         </form>
       </ng-container>
     </main>
-  `,
+  `
 })
 export class DeposerAvisComponent implements OnInit {
   private route = inject(ActivatedRoute);

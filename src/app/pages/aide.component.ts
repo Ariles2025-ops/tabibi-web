@@ -28,10 +28,9 @@ const AR: Question[] = [
 
 /** Centre d'aide public (/aide et /ar/aide) : questions frequentes courtes et contact. */
 @Component({
-  selector: 'app-aide',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  template: `
+    selector: 'app-aide',
+    imports: [CommonModule, RouterLink],
+    template: `
     <main class="pg" [attr.dir]="ar ? 'rtl' : null" [attr.lang]="ar ? 'ar' : 'fr'">
       <div class="pg-haut">
         <a [routerLink]="ar ? '/ar' : '/'" class="pg-retour">{{ ar ? 'الرئيسية' : 'Accueil' }}</a>
@@ -48,7 +47,7 @@ const AR: Question[] = [
       <a class="bouton" href="mailto:contact@tabibi.doctor">{{ ar ? 'اتصل بنا' : 'Nous contacter' }}</a>
     </main>
   `,
-  styles: [`
+    styles: [`
     .pg { max-width:760px; margin:0 auto; padding:24px var(--gutter, 16px) 48px; color:var(--ink); }
     .pg-haut { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px; }
     .pg-retour { color:var(--vert); font-weight:600; font-size:13px; text-decoration:none; }
@@ -60,7 +59,7 @@ const AR: Question[] = [
     .pg-faq summary { cursor:pointer; font-weight:700; }
     .pg-faq p { color:var(--text3); margin:8px 0 0; line-height:1.55; }
     .pg-faq a { color:var(--vert); font-weight:700; }
-  `],
+  `]
 })
 export class AideComponent implements OnInit {
   private route = inject(ActivatedRoute);

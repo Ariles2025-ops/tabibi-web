@@ -19,10 +19,9 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
  * apres chaque envoi, et la relecture s'arrete a la destruction du composant.
  */
 @Component({
-  selector: 'app-conversation',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
+    selector: 'app-conversation',
+    imports: [CommonModule, FormsModule, RouterLink],
+    template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <p style="margin:0 0 16px"><a routerLink="/messagerie" style="color:var(--vert)">Retour à la messagerie</a></p>
       <h1 style="color:var(--vert);margin:0 0 16px">{{ interlocuteur() ?? 'Conversation' }}</h1>
@@ -54,7 +53,7 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
         </form>
       </ng-container>
     </main>
-  `,
+  `
 })
 export class ConversationComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);

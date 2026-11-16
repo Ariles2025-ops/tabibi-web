@@ -21,10 +21,9 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
  * (legacy-accueil.css). Seules les donnees changent : la recherche interroge l'API v2.
  */
 @Component({
-  selector: 'app-annuaire',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
+    selector: 'app-annuaire',
+    imports: [CommonModule, FormsModule, RouterLink],
+    template: `
     <section class="hero-mobile">
       <div class="hz">
         <div class="hero-col-l">
@@ -282,7 +281,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       </div>
     </section>
   `,
-  styles: [`
+    styles: [`
     .ac-liste { position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:40; margin:0; padding:6px; list-style:none; background:#fff; border:1px solid var(--border); border-radius:var(--r12); box-shadow:var(--s1); max-height:340px; overflow-y:auto; }
     .ac-item { display:flex; flex-direction:column; gap:2px; padding:9px 12px; border-radius:8px; text-decoration:none; color:var(--ink); }
     .ac-item:hover, .ac-item:focus { background:#E7F1EC; outline:none; }
@@ -372,7 +371,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       .dl-field { width:100%; border:1px solid var(--border); border-radius:12px; }
       .dl-btn { width:100%; justify-content:center; padding:14px; border-radius:12px; }
     }
-  `],
+  `]
 })
 export class AnnuaireComponent implements OnInit, OnDestroy {
   readonly visio = VISIO_ACTIVE;
