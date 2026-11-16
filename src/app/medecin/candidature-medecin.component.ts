@@ -6,6 +6,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { Candidature, DemandeCandidature, libelleStatutCandidature } from '../admin/admin.service';
 import { AuthService } from '../auth/auth.service';
+import { RoleService } from '../auth/role.service';
+import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
 import { MedecinService } from './medecin.service';
 
 /** Champs du formulaire, vides ou prerempli depuis une candidature refusee. */
@@ -47,10 +49,13 @@ function formulaireVide(): DemandeCandidature {
           Déposée le {{ c.deposeeLe | date:'d MMMM yyyy à HH:mm' }}<ng-container *ngIf="c.traiteeLe"> · traitée le {{ c.traiteeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container>
         </span>
         <p *ngIf="c.statut === 'EN_ATTENTE'" style="margin:10px 0 0">Votre candidature est en cours d'examen.</p>
-        <p *ngIf="c.statut === 'VALIDEE'" style="margin:10px 0 0;color:var(--vert)">
-          Votre candidature a été validée : vous figurez dans l'annuaire.
-          <a [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">Voir ma fiche</a>
-        </p>
+        <div *ngIf="c.statut === 'VALIDEE'" style="margin:10px 0 0">
+          <p style="margin:0 0 10px;color:var(--vert)">
+            Votre candidature a été validée : vous figurez dans l'annuaire.
+            <a [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">Voir ma fiche</a>
+          </p>
+          <a class="bouton" routerLink="/medecin/agenda">Ouvrir mon agenda</a>
+        </div>
         <p *ngIf="c.statut === 'REFUSEE'" style="margin:10px 0 0;color:#b3261e">
           Votre candidature a été refusée<ng-container *ngIf="c.motifRefus"> · Motif : {{ c.motifRefus }}</ng-container>.
           Vous pouvez en déposer une nouvelle ci-dessous.
@@ -69,21 +74,18 @@ function formulaireVide(): DemandeCandidature {
             <input class="champ" [(ngModel)]="demande.numeroOrdre" name="numeroOrdre" required style="color:#10241F;font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Spécialité (code) *
-            <input class="champ" [(ngModel)]="demande.specialiteSlug" name="specialiteSlug" required
-                   placeholder="Ex. generaliste, cardiologue, dermatologue, pediatre" style="color:#10241F;font-size:1rem">
+            Spécialité *
+            <select class="champ" [(ngModel)]="demande.specialiteSlug" name="specialiteSlug" required style="color:#10241F;font-size:1rem">
+              <option value="">Choisissez votre spécialité</option>
+              <option *ngFor="let sp of specialites" [value]="sp.slug">{{ sp.nom }}</option>
+            </select>
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Spécialité (libellé affiché)
-            <input class="champ" [(ngModel)]="demande.specialiteFr" name="specialiteFr" placeholder="Ex. Cardiologue" style="color:#10241F;font-size:1rem">
-          </label>
-          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Wilaya (code) *
-            <input class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required placeholder="Ex. 16" style="color:#10241F;font-size:1rem">
-          </label>
-          <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Wilaya (libellé affiché)
-            <input class="champ" [(ngModel)]="demande.wilayaFr" name="wilayaFr" placeholder="Ex. Alger" style="color:#10241F;font-size:1rem">
+            Wilaya *
+            <select class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required style="color:#10241F;font-size:1rem">
+              <option value="">Choisissez votre wilaya</option>
+              <option *ngFor="let w of wilayas" [value]="w.code">{{ w.code }} · {{ w.nom }}</option>
+            </select>
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Ville
@@ -109,6 +111,12 @@ export class CandidatureMedecinComponent implements OnInit {
   private service = inject(MedecinService);
   private route = inject(ActivatedRoute);
   private annuaire = inject(AnnuaireService);
+  private roles = inject(RoleService);
+
+  /** Listes du referentiel (slugs et codes exacts) : une specialite saisie a la main ne s'afficherait nulle part. */
+  readonly specialites = SPECIALITES_SEO.filter((sp) => sp.slug !== 'pharmacie')
+    .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  readonly wilayas = WILAYAS_SEO;
 
   /** Fiche de l'annuaire reclamee (parametre ?fiche=) ; null pour une nouvelle candidature. */
   ficheReclamee: string | null = null;
@@ -178,12 +186,14 @@ export class CandidatureMedecinComponent implements OnInit {
   }
 
   deposer() {
+    const specialiteSlug = this.demande.specialiteSlug.trim();
+    const wilayaCode = this.demande.wilayaCode.trim();
     const demande: DemandeCandidature = {
       nomComplet: this.demande.nomComplet.trim(),
-      specialiteSlug: this.demande.specialiteSlug.trim(),
-      specialiteFr: this.demande.specialiteFr.trim(),
-      wilayaCode: this.demande.wilayaCode.trim(),
-      wilayaFr: this.demande.wilayaFr.trim(),
+      specialiteSlug,
+      specialiteFr: SPECIALITES_SEO.find((sp) => sp.slug === specialiteSlug)?.nom ?? this.demande.specialiteFr.trim(),
+      wilayaCode,
+      wilayaFr: WILAYAS_SEO.find((w) => w.code === wilayaCode)?.nom ?? this.demande.wilayaFr.trim(),
       ville: this.demande.ville.trim(),
       numeroOrdre: this.demande.numeroOrdre.trim(),
       telephone: this.demande.telephone.trim(),
@@ -228,6 +238,10 @@ export class CandidatureMedecinComponent implements OnInit {
   /** Affiche la candidature ; le formulaire (prerempli) n'est propose que si elle a ete refusee. */
   private afficher(c: Candidature) {
     this.candidature.set(c);
+    if (c.statut === 'VALIDEE') {
+      // Le role MEDECIN vient d'etre accorde : on relit le jeton puis le profil pour ouvrir l'espace medecin.
+      this.auth.actualiserRoles().then(() => this.roles.recharger());
+    }
     const refusee = c.statut === 'REFUSEE';
     this.formulaireVisible.set(refusee);
     if (refusee) {

@@ -100,7 +100,7 @@ describe('MesDemandesComponent', () => {
     expect(items.length).toBe(2);
     expect(items[0].textContent).toContain('Amoxicilline 1 g');
     expect(items[0].textContent).toContain('Ouverte');
-    expect(items[0].textContent).toContain('Wilaya 16 · Bab Ezzouar');
+    expect(items[0].textContent).toContain('Alger · Bab Ezzouar');
     expect(items[0].textContent).toContain('3 réponses');
     expect(items[0].querySelector('a')?.getAttribute('href')).toBe('/dawini/b1');
     expect(items[1].textContent).toContain('Insuline');

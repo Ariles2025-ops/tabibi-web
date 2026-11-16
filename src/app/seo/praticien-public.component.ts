@@ -4,6 +4,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { SPECIALITES_SEO, liensLangues, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
+import { StatutHttpService } from './statut-http';
 
 /**
  * Page publique et referencee d'un praticien : /praticiens/:id/:slug (une page par fiche de l'annuaire).
@@ -125,6 +126,7 @@ export class PraticienPublicComponent implements OnInit {
   private meta = inject(Meta);
   private document = inject(DOCUMENT);
   private destroyRef = inject(DestroyRef);
+  private statut = inject(StatutHttpService);
 
   medecin = signal<(Medecin & { reservable?: boolean }) | null>(null);
   confreres = signal<Medecin[]>([]);
@@ -174,8 +176,10 @@ export class PraticienPublicComponent implements OnInit {
           error: () => undefined,
         });
       },
-      error: () => {
+      error: (e: { status?: number }) => {
         this.charge.set(false);
+        // Fiche inexistante : vraie 404 au rendu serveur (une API indisponible ne doit pas desindexer la page).
+        if (e?.status === 404) this.statut.introuvable();
         this.title.setTitle('Praticien introuvable | Tabibi');
         this.meta.updateTag({ name: 'robots', content: 'noindex' });
       },

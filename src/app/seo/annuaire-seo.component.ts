@@ -5,9 +5,10 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { TEXTES_SEO, TextesSeo } from './textes-seo';
 import { CONTENU_SPECIALITES } from './contenu-specialites';
-import { liensLangues } from './referentiel-seo';
+import { StatutHttpService } from './statut-http';
 import {
-  SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo, lienPraticien,
+  SLUG_PHARMACIE, SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo,
+  avecArticle, liensLangues, lienPraticien,
 } from './referentiel-seo';
 
 /**
@@ -52,6 +53,13 @@ import {
           </div>
         </section>
         <section class="seo-bloc">
+          <h2>{{ t.pharmacies }}</h2>
+          <p class="seo-muet">{{ t.pharmaciesIntro }}</p>
+          <a [routerLink]="[p + '/specialites', slugPharmacie]" class="seo-carte seo-carte--seule">
+            <span class="seo-carte__ic" aria-hidden="true"><i class="fa fa-prescription-bottle-medical"></i></span>{{ t.pharmacies }}
+          </a>
+        </section>
+        <section class="seo-bloc">
           <h2>{{ t.wilayas }} <small>{{ wilayasAlpha.length }}</small></h2>
           <div class="seo-colonnes">
             <a *ngFor="let w of wilayasAlpha" [routerLink]="[p + '/wilayas', w.slug]" [attr.title]="t.medecinsA(nomW(w))">
@@ -83,7 +91,7 @@ import {
             </a>
           </li>
         </ul>
-        <p class="seo-note">{{ t.note }}</p>
+        <p class="seo-note" *ngIf="!pharmacie">{{ t.note }}</p>
       </section>
 
       <p *ngIf="introuvable" class="seo-muet">{{ t.introuvable }} <a [routerLink]="p + '/specialites'">{{ t.voirTout }}</a></p>
@@ -103,6 +111,13 @@ import {
         </div>
       </section>
 
+      <!-- Pharmacies de la wilaya : rubrique a part (le backend ne les melange plus aux medecins) -->
+      <p class="seo-bloc" *ngIf="wilaya && !specialite && !introuvable">
+        <a [routerLink]="[p + '/specialites', slugPharmacie, wilaya.slug]" class="seo-carte seo-carte--seule">
+          <span class="seo-carte__ic" aria-hidden="true"><i class="fa fa-prescription-bottle-medical"></i></span>{{ t.pharmaciesA(nomW(wilaya)) }}
+        </a>
+      </p>
+
       <!-- Maillage : autres specialites dans cette wilaya -->
       <section class="seo-bloc" *ngIf="wilaya && !introuvable">
         <h2>{{ t.specialitesA(nomW(wilaya), !!specialite) }}</h2>
@@ -112,7 +127,7 @@ import {
         </div>
       </section>
 
-      <section class="seo-faq" *ngIf="!index && !introuvable">
+      <section class="seo-faq" *ngIf="!index && !introuvable && !pharmacie">
         <h2>{{ t.faq }}</h2>
         <details *ngFor="let f of faqSpe"><summary>{{ f.q }}</summary><p>{{ f.r }}</p></details>
         <details><summary>{{ t.q1(cible) }}</summary><p>{{ t.r1 }}</p></details>
@@ -151,6 +166,7 @@ import {
     .seo-cartes { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr)); gap:10px; }
     .seo-carte { display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fff; border:1px solid var(--border); border-radius:14px; color:var(--ink); text-decoration:none; font-weight:600; font-size:14px; }
     .seo-carte:hover { border-color:var(--vert); color:var(--vert); }
+    .seo-carte--seule { display:inline-flex; }
     .seo-carte__ic { flex:none; width:32px; height:32px; border-radius:10px; background:#E7F1EC; color:var(--vert); display:grid; place-items:center; font-size:13px; }
     .seo-colonnes { columns:4 180px; column-gap:24px; background:#fff; border:1px solid var(--border); border-radius:16px; padding:14px 18px; }
     .seo-colonnes a { display:flex; justify-content:space-between; gap:8px; break-inside:avoid; padding:7px 4px; border-bottom:1px solid #f0ece3; color:var(--ink); text-decoration:none; font-size:14px; }
@@ -172,11 +188,14 @@ export class AnnuaireSeoComponent implements OnInit {
   private document = inject(DOCUMENT);
   private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
   private destroyRef = inject(DestroyRef);
+  private statut = inject(StatutHttpService);
+  readonly slugPharmacie = SLUG_PHARMACIE;
 
   readonly specialites: SpecialiteSeo[] = trierAvecPrincipales(SPECIALITES_SEO, (s) => s.slug, SPECIALITES_PRINCIPALES);
   readonly wilayas: WilayaSeo[] = trierAvecPrincipales(WILAYAS_SEO, (w) => w.code, WILAYAS_PRINCIPALES);
 
   /** Listes completes, par ordre alphabetique (maillage lisible). */
+  /** Specialites medicales (sans les pharmacies, qui ont leur rubrique a part). */
   specialitesAlpha: SpecialiteSeo[] = [];
   wilayasAlpha: WilayaSeo[] = [];
 
@@ -206,6 +225,8 @@ export class AnnuaireSeoComponent implements OnInit {
   wilaya: WilayaSeo | null = null;
   index = false;
   introuvable = false;
+  /** Page de la rubrique Pharmacies (/specialites/pharmacie[/:wilaya]). */
+  pharmacie = false;
   titre = '';
   sousTitre = '';
   intro = '';
@@ -223,7 +244,7 @@ export class AnnuaireSeoComponent implements OnInit {
     this.p = this.ar ? '/ar' : '';
     this.t = TEXTES_SEO[this.ar ? 'ar' : 'fr'];
     const tri = this.ar ? 'ar' : 'fr';
-    this.specialitesAlpha = [...SPECIALITES_SEO].sort((a, b) => this.nomS(a).localeCompare(this.nomS(b), tri));
+    this.specialitesAlpha = SPECIALITES_SEO.filter((x) => x.slug !== SLUG_PHARMACIE).sort((a, b) => this.nomS(a).localeCompare(this.nomS(b), tri));
     this.wilayasAlpha = [...WILAYAS_SEO].sort((a, b) => this.nomW(a).localeCompare(this.nomW(b), tri));
     const abonnement = this.route.paramMap.subscribe((p) => this.afficher(p.get('specialite'), p.get('wilaya')));
     this.destroyRef.onDestroy(() => abonnement.unsubscribe());
@@ -234,6 +255,7 @@ export class AnnuaireSeoComponent implements OnInit {
     this.wilaya = wilSlug ? WILAYAS_SEO.find((w) => w.slug === wilSlug) ?? null : null;
     this.introuvable = (!!specSlug && !this.specialite) || (!!wilSlug && !this.wilaya);
     this.index = !specSlug && !wilSlug;
+    this.pharmacie = this.specialite?.slug === SLUG_PHARMACIE;
     const contenuSpe = this.specialite && !this.introuvable
       ? CONTENU_SPECIALITES[this.specialite.slug]?.[this.ar ? 'ar' : 'fr']
       : undefined;
@@ -251,6 +273,7 @@ export class AnnuaireSeoComponent implements OnInit {
       this.titre = t.pageIntrouvable;
       this.intro = '';
       description = t.descIntrouvable;
+      this.statut.introuvable();
     } else if (this.index) {
       this.titre = t.titreIndex;
       this.intro = t.introIndex;
@@ -258,16 +281,16 @@ export class AnnuaireSeoComponent implements OnInit {
     } else if (s && w) {
       chemin = `/specialites/${s.slug}/${w.slug}`;
       this.titre = t.titreSpecWil(ns, nw);
-      this.cible = t.cibleSpecWil(ns, nw);
+      this.cible = t.cibleSpecWil(ns, nw, avecArticle(s));
       this.sousTitre = t.sousTitreSpecWil(ns, nw);
-      this.intro = t.introSpecWil(ns, nw);
+      this.intro = t.introSpecWil(ns, nw, avecArticle(s));
       description = t.descSpecWil(ns, nw);
     } else if (s) {
       chemin = `/specialites/${s.slug}`;
       this.titre = t.titreSpec(ns);
-      this.cible = t.cibleSpec(ns);
+      this.cible = t.cibleSpec(ns, avecArticle(s));
       this.sousTitre = t.sousTitreSpec(ns);
-      this.intro = t.introSpec(ns);
+      this.intro = t.introSpec(ns, avecArticle(s));
       description = t.descSpec(ns);
     } else {
       chemin = `/wilayas/${w!.slug}`;
@@ -278,8 +301,16 @@ export class AnnuaireSeoComponent implements OnInit {
       description = t.descWil(nw);
     }
 
+    if (this.pharmacie && !this.introuvable) {
+      // Pharmacies : pas de « prendre rendez-vous », titre au pluriel.
+      this.titre = w ? t.pharmaciesA(nw) : t.titreSpec(t.pharmacies);
+      this.sousTitre = this.titre;
+      this.intro = t.introPharma(w ? nw : null);
+      description = t.descPharma(w ? nw : null);
+    }
+
     this.lienAutreLangue = (this.ar ? '' : '/ar') + chemin;
-    this.title.setTitle(`${this.titre} — ${t.suffixeTitre} | Tabibi`);
+    this.title.setTitle(this.pharmacie || this.introuvable ? `${this.titre} | Tabibi` : `${this.titre} — ${t.suffixeTitre} | Tabibi`);
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Tabibi` });
     this.meta.updateTag({ property: 'og:description', content: description });

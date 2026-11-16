@@ -35,20 +35,28 @@ export interface TextesSeo {
   introIndex: string;
   descIndex: string;
   titreSpecWil: (s: string, w: string) => string;
-  cibleSpecWil: (s: string, w: string) => string;
+  /** `u` : nom avec son article accorde (« une sage-femme »), ignore en arabe. */
+  cibleSpecWil: (s: string, w: string, u: string) => string;
   sousTitreSpecWil: (s: string, w: string) => string;
-  introSpecWil: (s: string, w: string) => string;
+  introSpecWil: (s: string, w: string, u: string) => string;
   descSpecWil: (s: string, w: string) => string;
   titreSpec: (s: string) => string;
-  cibleSpec: (s: string) => string;
+  cibleSpec: (s: string, u: string) => string;
   sousTitreSpec: (s: string) => string;
-  introSpec: (s: string) => string;
+  introSpec: (s: string, u: string) => string;
   descSpec: (s: string) => string;
   titreWil: (w: string) => string;
   cibleWil: (w: string) => string;
   sousTitreWil: (w: string) => string;
   introWil: (w: string) => string;
   descWil: (w: string) => string;
+  /** Rubrique Pharmacies (a part des medecins) : lien depuis les pages wilaya, textes sans « rendez-vous ». */
+  pharmacies: string;
+  pharmaciesA: (w: string) => string;
+  pharmaciesIntro: string;
+  /** w : nom de la wilaya, ou null pour toute l'Algerie. */
+  introPharma: (w: string | null) => string;
+  descPharma: (w: string | null) => string;
 }
 
 const fr: TextesSeo = {
@@ -84,20 +92,25 @@ const fr: TextesSeo = {
   introIndex: 'Retrouvez les praticiens référencés sur Tabibi par spécialité ou par wilaya, puis prenez rendez-vous en ligne gratuitement.',
   descIndex: "Annuaire Tabibi : toutes les spécialités médicales et les 69 wilayas d'Algérie. Trouvez un médecin et prenez rendez-vous en ligne.",
   titreSpecWil: (s, w) => `${s} à ${w}`,
-  cibleSpecWil: (s, w) => `avec un ${s.toLowerCase()} à ${w}`,
+  cibleSpecWil: (_s, w, u) => `avec ${u} à ${w}`,
   sousTitreSpecWil: (s, w) => `Praticiens : ${s} à ${w}`,
-  introSpecWil: (s, w) => `Trouvez un ${s.toLowerCase()} à ${w} et prenez rendez-vous en ligne avec Tabibi. Paiement au cabinet, rappel avant le rendez-vous.`,
+  introSpecWil: (_s, w, u) => `Trouvez ${u} à ${w} et prenez rendez-vous en ligne avec Tabibi. Paiement au cabinet, rappel avant le rendez-vous.`,
   descSpecWil: (s, w) => `${s} à ${w} : liste des praticiens référencés sur Tabibi. Prenez rendez-vous en ligne, paiement au cabinet.`,
   titreSpec: (s) => `${s} en Algérie`,
-  cibleSpec: (s) => `avec un ${s.toLowerCase()}`,
+  cibleSpec: (_s, u) => `avec ${u}`,
   sousTitreSpec: (s) => `Praticiens : ${s}`,
-  introSpec: (s) => `Trouvez un ${s.toLowerCase()} près de chez vous, dans toutes les wilayas d'Algérie, et prenez rendez-vous en ligne avec Tabibi.`,
+  introSpec: (_s, u) => `Trouvez ${u} près de chez vous, dans toutes les wilayas d'Algérie, et prenez rendez-vous en ligne avec Tabibi.`,
   descSpec: (s) => `${s} en Algérie : praticiens référencés sur Tabibi dans les 69 wilayas. Choisissez votre wilaya et prenez rendez-vous en ligne.`,
   titreWil: (w) => `Médecins à ${w}`,
   cibleWil: (w) => `avec un médecin à ${w}`,
   sousTitreWil: (w) => `Praticiens à ${w}`,
   introWil: (w) => `Généralistes, spécialistes et dentistes à ${w} : trouvez un praticien et prenez rendez-vous en ligne avec Tabibi.`,
   descWil: (w) => `Médecins à ${w} : praticiens référencés sur Tabibi, toutes spécialités. Prenez rendez-vous en ligne, paiement au cabinet.`,
+  pharmacies: 'Pharmacies',
+  pharmaciesA: (w) => `Pharmacies à ${w}`,
+  pharmaciesIntro: "Les pharmacies ont leur propre rubrique, à part des médecins : adresses par wilaya, et bientôt la recherche de médicaments avec Dawini.",
+  introPharma: (w) => `Pharmacies ${w ? 'à ' + w : 'en Algérie'} : retrouvez les officines référencées sur Tabibi. Bientôt, demandez la disponibilité d'un médicament avec Dawini.`,
+  descPharma: (w) => `Pharmacies ${w ? 'à ' + w : 'en Algérie'} : officines référencées sur Tabibi, avec leur ville. Dawini, la recherche de médicaments en pharmacie, arrive bientôt.`,
 };
 
 const ar: TextesSeo = {
@@ -147,6 +160,11 @@ const ar: TextesSeo = {
   sousTitreWil: (w) => `الأطباء في ${w}`,
   introWil: (w) => `أطباء عامون وأخصائيون وأطباء أسنان في ${w}: ابحث عن طبيب واحجز موعدك عبر الإنترنت مع طبيبي.`,
   descWil: (w) => `أطباء في ${w}: أطباء مسجلون في طبيبي من جميع التخصصات. احجز موعدك عبر الإنترنت، والدفع في العيادة.`,
+  pharmacies: 'الصيدليات',
+  pharmaciesA: (w) => `الصيدليات في ${w}`,
+  pharmaciesIntro: 'للصيدليات قسم خاص بها منفصل عن الأطباء: العناوين حسب الولاية، وقريبًا البحث عن الأدوية مع دوايني.',
+  introPharma: (w) => `الصيدليات ${w ? 'في ' + w : 'في الجزائر'}: تصفّح الصيدليات المسجلة في طبيبي. قريبًا، اسأل عن توفر دواء مع دوايني.`,
+  descPharma: (w) => `الصيدليات ${w ? 'في ' + w : 'في الجزائر'}: صيدليات مسجلة في طبيبي مع مدينتها. دوايني، البحث عن الأدوية في الصيدليات، قريبًا.`,
 };
 
 export const TEXTES_SEO: Record<'fr' | 'ar', TextesSeo> = { fr, ar };

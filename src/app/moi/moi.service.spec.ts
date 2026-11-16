@@ -42,4 +42,16 @@ describe('MoiService', () => {
 
     http.expectOne('http://localhost:8080/api/moi').flush(PROFIL);
   });
+
+  it('supprime le compte par DELETE /api/moi (204)', () => {
+    const service = configurer('https://api.tabibi.dz');
+    let fini = false;
+    service.supprimer().subscribe({ complete: () => (fini = true) });
+
+    const requete = http.expectOne('https://api.tabibi.dz/api/moi');
+    expect(requete.request.method).toBe('DELETE');
+    requete.flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(fini).toBeTrue();
+  });
 });

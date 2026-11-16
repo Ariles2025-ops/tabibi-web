@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { Besoin, DawiniService, DemandeReponse, Reponse, formaterPrix, libelleReponses, libelleStatutBesoin } from './dawini.service';
+import { Besoin, DawiniService, DemandeReponse, Reponse, formaterPrix, libelleReponses, libelleStatutBesoin, libelleWilaya } from './dawini.service';
 
 const BASE = 'http://localhost:8080';
 
@@ -148,6 +148,13 @@ describe('DawiniService', () => {
       expect(libelleReponses(0)).toBe('0 réponse');
       expect(libelleReponses(1)).toBe('1 réponse');
       expect(libelleReponses(3)).toBe('3 réponses');
+    });
+
+    it('affiche le nom de la wilaya au lieu de son code', () => {
+      expect(libelleWilaya('16')).toBe('Alger');
+      expect(libelleWilaya('31')).toBe('Oran');
+      expect(libelleWilaya('99')).toBe('Wilaya 99');
+      expect(libelleWilaya(null)).toBe('');
     });
   });
 });

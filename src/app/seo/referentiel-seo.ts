@@ -1,192 +1,239 @@
 /** Referentiel fige pour les pages de referencement (genere depuis assets/referentiel.json). */
-export interface SpecialiteSeo { slug: string; nom: string; nomAr: string; }
+/**
+ * `article` : article indefini francais accorde (« une sage-femme », « une clinique privée », « un ORL »),
+ * utilise par les textes des pages (textes-seo.ts) au lieu d'un « un » fixe.
+ */
+export interface SpecialiteSeo { slug: string; nom: string; nomAr: string; article: 'un' | 'une'; }
 export interface WilayaSeo { code: string; nom: string; nomAr: string; slug: string; }
 
 export const SPECIALITES_SEO: SpecialiteSeo[] = [
  {
   "slug": "allergologue",
   "nom": "Allergologue",
-  "nomAr": "طبيب الحساسية"
+  "nomAr": "طبيب الحساسية",
+  "article": "un"
  },
  {
   "slug": "anesthesiste",
   "nom": "Anesthésiste-réanimateur",
-  "nomAr": "طبيب التخدير والإنعاش"
+  "nomAr": "طبيب التخدير والإنعاش",
+  "article": "un"
  },
  {
   "slug": "cardiologue",
   "nom": "Cardiologue",
-  "nomAr": "طبيب القلب"
+  "nomAr": "طبيب القلب",
+  "article": "un"
  },
  {
   "slug": "centre-sante",
   "nom": "Centre de santé",
-  "nomAr": "مركز صحي"
+  "nomAr": "مركز صحي",
+  "article": "un"
  },
  {
   "slug": "chirurgien",
   "nom": "Chirurgien général",
-  "nomAr": "جراح عام"
+  "nomAr": "جراح عام",
+  "article": "un"
  },
  {
   "slug": "chirurgien-orthopediste",
   "nom": "Chirurgien orthopédiste",
-  "nomAr": "جراح العظام"
+  "nomAr": "جراح العظام",
+  "article": "un"
  },
  {
   "slug": "clinique-privee",
   "nom": "Clinique privée",
-  "nomAr": "عيادة خاصة"
+  "nomAr": "عيادة خاصة",
+  "article": "une"
  },
  {
   "slug": "dentiste",
   "nom": "Dentiste",
-  "nomAr": "طبيب الأسنان"
+  "nomAr": "طبيب الأسنان",
+  "article": "un"
  },
  {
   "slug": "dermatologue",
   "nom": "Dermatologue",
-  "nomAr": "طبيب الجلد"
+  "nomAr": "طبيب الجلد",
+  "article": "un"
  },
  {
   "slug": "endocrinologue",
   "nom": "Endocrinologue",
-  "nomAr": "طبيب الغدد الصماء"
+  "nomAr": "طبيب الغدد الصماء",
+  "article": "un"
  },
  {
   "slug": "gastro-enterologue",
   "nom": "Gastro-entérologue",
-  "nomAr": "طبيب الجهاز الهضمي"
+  "nomAr": "طبيب الجهاز الهضمي",
+  "article": "un"
  },
  {
   "slug": "gynecologue",
   "nom": "Gynécologue",
-  "nomAr": "طبيب النساء والتوليد"
+  "nomAr": "طبيب النساء والتوليد",
+  "article": "un"
  },
  {
   "slug": "hematologue",
   "nom": "Hématologue",
-  "nomAr": "طبيب أمراض الدم"
+  "nomAr": "طبيب أمراض الدم",
+  "article": "un"
  },
  {
   "slug": "hopital",
   "nom": "Hôpital",
-  "nomAr": "مستشفى"
+  "nomAr": "مستشفى",
+  "article": "un"
  },
  {
   "slug": "kinesitherapeute",
   "nom": "Kinésithérapeute",
-  "nomAr": "أخصائي العلاج الطبيعي"
+  "nomAr": "أخصائي العلاج الطبيعي",
+  "article": "un"
  },
  {
   "slug": "laboratoire",
   "nom": "Laboratoire d'analyses",
-  "nomAr": "مخبر التحاليل الطبية"
+  "nomAr": "مخبر التحاليل الطبية",
+  "article": "un"
  },
  {
   "slug": "medecin-sport",
   "nom": "Médecin du sport",
-  "nomAr": "طبيب الرياضة"
+  "nomAr": "طبيب الرياضة",
+  "article": "un"
  },
  {
   "slug": "medecin-travail",
   "nom": "Médecin du travail",
-  "nomAr": "طبيب العمل"
+  "nomAr": "طبيب العمل",
+  "article": "un"
  },
  {
   "slug": "medecin-generaliste",
   "nom": "Médecin généraliste",
-  "nomAr": "طبيب عام"
+  "nomAr": "طبيب عام",
+  "article": "un"
  },
  {
   "slug": "neurologue",
   "nom": "Neurologue",
-  "nomAr": "طبيب الأعصاب"
+  "nomAr": "طبيب الأعصاب",
+  "article": "un"
  },
  {
   "slug": "nutritionniste",
   "nom": "Nutritionniste",
-  "nomAr": "أخصائي التغذية"
+  "nomAr": "أخصائي التغذية",
+  "article": "un"
  },
  {
   "slug": "nephrologue",
   "nom": "Néphrologue",
-  "nomAr": "طبيب الكلى"
+  "nomAr": "طبيب الكلى",
+  "article": "un"
  },
  {
   "slug": "ORL",
   "nom": "ORL",
-  "nomAr": "طبيب الأنف والأذن والحنجرة"
+  "nomAr": "طبيب الأنف والأذن والحنجرة",
+  "article": "un"
  },
  {
   "slug": "oncologue",
   "nom": "Oncologue",
-  "nomAr": "طبيب الأورام"
+  "nomAr": "طبيب الأورام",
+  "article": "un"
  },
  {
   "slug": "ophtalmologue",
   "nom": "Ophtalmologue",
-  "nomAr": "طبيب العيون"
+  "nomAr": "طبيب العيون",
+  "article": "un"
  },
  {
   "slug": "opticien",
   "nom": "Opticien",
-  "nomAr": "أخصائي البصريات"
+  "nomAr": "أخصائي البصريات",
+  "article": "un"
  },
  {
   "slug": "orthodontiste",
   "nom": "Orthodontiste",
-  "nomAr": "أخصائي تقويم الأسنان"
+  "nomAr": "أخصائي تقويم الأسنان",
+  "article": "un"
  },
  {
   "slug": "orthophoniste",
   "nom": "Orthophoniste",
-  "nomAr": "أخصائي تقويم النطق"
+  "nomAr": "أخصائي تقويم النطق",
+  "article": "un"
  },
  {
   "slug": "orthopediste",
   "nom": "Orthopédiste",
-  "nomAr": "أخصائي العظام"
+  "nomAr": "أخصائي العظام",
+  "article": "un"
+ },
+ {
+  "slug": "pharmacie",
+  "nom": "Pharmacie",
+  "nomAr": "صيدلية",
+  "article": "une"
  },
  {
   "slug": "pneumologue",
   "nom": "Pneumologue",
-  "nomAr": "طبيب الأمراض الصدرية"
+  "nomAr": "طبيب الأمراض الصدرية",
+  "article": "un"
  },
  {
   "slug": "podologue",
   "nom": "Podologue",
-  "nomAr": "أخصائي أمراض القدم"
+  "nomAr": "أخصائي أمراض القدم",
+  "article": "un"
  },
  {
   "slug": "psychiatre",
   "nom": "Psychiatre",
-  "nomAr": "طبيب نفسي"
+  "nomAr": "طبيب نفسي",
+  "article": "un"
  },
  {
   "slug": "pediatre",
   "nom": "Pédiatre",
-  "nomAr": "طبيب الأطفال"
+  "nomAr": "طبيب الأطفال",
+  "article": "un"
  },
  {
   "slug": "radiologue",
   "nom": "Radiologue",
-  "nomAr": "طبيب الأشعة"
+  "nomAr": "طبيب الأشعة",
+  "article": "un"
  },
  {
   "slug": "rhumatologue",
   "nom": "Rhumatologue",
-  "nomAr": "طبيب الروماتيزم"
+  "nomAr": "طبيب الروماتيزم",
+  "article": "un"
  },
  {
   "slug": "sage-femme",
   "nom": "Sage-femme",
-  "nomAr": "قابلة"
+  "nomAr": "قابلة",
+  "article": "une"
  },
  {
   "slug": "urologue",
   "nom": "Urologue",
-  "nomAr": "طبيب المسالك البولية"
+  "nomAr": "طبيب المسالك البولية",
+  "article": "un"
  }
 ];
 
@@ -610,6 +657,17 @@ export const WILAYAS_SEO: WilayaSeo[] = [
 /** Specialites et wilayas mises en avant (pied de page, haut des pages). */
 export const SPECIALITES_PRINCIPALES = ['medecin-generaliste', 'cardiologue', 'dentiste', 'pediatre', 'gynecologue', 'dermatologue', 'ophtalmologue', 'ORL', 'psychiatre', 'radiologue'];
 export const WILAYAS_PRINCIPALES = ['16', '31', '25', '23', '9', '19', '6', '15', '5', '13'];
+
+/** Slug de la rubrique Pharmacies : a part des medecins (le backend les exclut des listes sans specialite). */
+export const SLUG_PHARMACIE = 'pharmacie';
+
+/**
+ * « un cardiologue », « une sage-femme », « un ORL » : article accorde puis nom en minuscules, sauf les sigles.
+ */
+export function avecArticle(s: SpecialiteSeo): string {
+  const nom = /^[A-Z]{2,}$/.test(s.nom) ? s.nom : s.nom.toLowerCase();
+  return `${s.article} ${nom}`;
+}
 
 /** Partie lisible d'une adresse : minuscules sans accents, mots separes par des tirets. */
 export function slugifier(texte: string): string {

@@ -37,6 +37,12 @@ export class RoleService {
     return this.chargement;
   }
 
+  /** Relit le profil apres un changement de roles (jeton rafraichi par AuthService.actualiserRoles). */
+  recharger(): Promise<Moi | null> {
+    this.chargement = null;
+    return this.charger();
+  }
+
   private async lireProfil(): Promise<Moi | null> {
     if (!this.auth.estConnecte()) return null;
     try {

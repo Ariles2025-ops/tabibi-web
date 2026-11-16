@@ -6,6 +6,7 @@ import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CONFIGURATION_PAR_DEFAUT, ConfigurationApplication, configurationDepuisEnvironnement, configurationServeur } from './src/app/config/config.service';
 import bootstrap from './src/main.server';
+import { REPONSE_HTTP } from './src/app/seo/statut-http';
 
 /**
  * Serveur node du front web (image Docker) : fichiers statiques du build et rendu cote serveur (SSR) des pages par
@@ -157,7 +158,9 @@ export function app(): express.Express {
         publicPath: browserDistFolder,
         // Pas de CSS critique inline : l'attribut onload qu'il ajoute serait bloque par script-src 'self'.
         inlineCriticalCss: false,
-        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
+        // REPONSE_HTTP : une page « introuvable » (route inconnue, specialite, wilaya ou praticien inexistant)
+        // pose le statut 404 sur la reponse (StatutHttpService), au lieu d'un 200 (soft 404).
+        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }, { provide: REPONSE_HTTP, useValue: res }],
       })
       .then((html) => {
         clearTimeout(delai);

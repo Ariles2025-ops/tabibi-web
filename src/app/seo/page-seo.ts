@@ -1,0 +1,28 @@
+import { Meta, Title } from '@angular/platform-browser';
+import { liensLangues } from './referentiel-seo';
+
+/** Titre, description, robots, lien canonique et hreflang d'une page publique simple (chemin sans prefixe /ar). */
+export function referencerPage(
+  doc: Document, title: Title, meta: Meta,
+  page: { titre: string; description: string; chemin: string; ar: boolean; indexable?: boolean; bilingue?: boolean },
+): void {
+  title.setTitle(`${page.titre} | Tabibi`);
+  meta.updateTag({ name: 'description', content: page.description });
+  meta.updateTag({ property: 'og:title', content: `${page.titre} | Tabibi` });
+  meta.updateTag({ property: 'og:description', content: page.description });
+  meta.updateTag({ property: 'og:locale', content: page.ar ? 'ar_DZ' : 'fr_DZ' });
+  meta.updateTag({ name: 'robots', content: page.indexable === false ? 'noindex' : 'index, follow' });
+  let lien = doc.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!lien) {
+    lien = doc.createElement('link');
+    lien.setAttribute('rel', 'canonical');
+    doc.head.appendChild(lien);
+  }
+  lien.setAttribute('href', `https://tabibi.doctor${page.ar ? '/ar' : ''}${page.chemin === '/' && page.ar ? '' : page.chemin}`);
+  if (page.bilingue !== false) {
+    liensLangues(doc, page.chemin);
+  } else {
+    doc.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((l) => l.remove());
+  }
+  doc.documentElement.setAttribute('lang', page.ar ? 'ar' : 'fr');
+}

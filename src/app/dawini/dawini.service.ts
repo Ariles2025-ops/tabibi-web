@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
+import { wilayaParCode } from '../seo/referentiel-seo';
 
 /**
  * Besoin de medicament publie par un patient (Dawini). `patientId` vaut null dans la vue remise aux pharmacies ;
@@ -72,6 +73,12 @@ export function formaterPrix(prixDa: number | null | undefined): string {
 /** « 0 réponse », « 1 réponse », « 3 réponses ». */
 export function libelleReponses(nombre: number): string {
   return `${nombre} ${nombre > 1 ? 'réponses' : 'réponse'}`;
+}
+
+/** Nom de la wilaya d'un besoin (« Alger » plutot que « Wilaya 16 ») ; code brut si inconnu du referentiel. */
+export function libelleWilaya(code: string | null | undefined): string {
+  if (!code) return '';
+  return wilayaParCode(String(code))?.nom ?? `Wilaya ${code}`;
 }
 
 /**

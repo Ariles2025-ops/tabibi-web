@@ -7,7 +7,7 @@ import { RendezVous } from '../rendezvous/rendezvous.service';
 import { libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
 import { TeleconsultationService } from '../teleconsultation/teleconsultation.service';
 import { VISIO_ACTIVE } from '../lancement';
-import { ActionEnCours, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
+import { ActionEnCours, estConfirme, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
 import { MedecinService } from './medecin.service';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from './patients.service';
 
@@ -89,7 +89,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
                       [disabled]="enCours() !== null">
                 {{ estEnCours(r, 'teleconsultation') ? 'Envoi…' : 'Proposer une téléconsultation' }}
               </button>
-              <button *ngIf="r.statut === 'CONFIRME'" type="button" (click)="demanderAnnulation(r)" [disabled]="enCours() !== null"
+              <button *ngIf="estConfirme(r)" type="button" (click)="demanderAnnulation(r)" [disabled]="enCours() !== null"
                       style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
                 Annuler
               </button>
@@ -176,6 +176,9 @@ export class AgendaMedecinComponent implements OnInit {
   telephone(patientId: string): string {
     return telephonePatient(this.repertoire(), patientId);
   }
+
+  /** CONFIRME ou RESERVE : actions proposees (voir agenda-utils). */
+  estConfirme = estConfirme;
 
   peutHonorer(r: RendezVous): boolean {
     return peutHonorer(r, Date.now());

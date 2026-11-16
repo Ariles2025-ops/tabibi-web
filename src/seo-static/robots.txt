@@ -2,9 +2,19 @@ User-agent: *
 Allow: /
 Disallow: /moi
 Disallow: /medecin/
+Disallow: /medecins/
 Disallow: /admin
 Disallow: /secretaire
 Disallow: /pharmacie
 Disallow: /invitations
+Disallow: /bientot
+Disallow: /mes-
+Disallow: /messagerie
+Disallow: /dawini
+Disallow: /notifications
+Disallow: /liste-attente
+Disallow: /ordonnances
+Disallow: /avis
+Disallow: /teleconsultations
 
 Sitemap: https://tabibi.doctor/sitemap.xml

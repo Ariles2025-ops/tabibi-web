@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { ProfilService } from '../moi/profil.service';
-import { Besoin, DawiniService, DemandeBesoin, libelleReponses, libelleStatutBesoin } from './dawini.service';
+import { Besoin, DawiniService, DemandeBesoin, libelleReponses, libelleStatutBesoin, libelleWilaya } from './dawini.service';
 
 /** Champs du formulaire de publication, vides. */
 function formulaireVide(wilayaCode = ''): Required<DemandeBesoin> {
@@ -77,7 +77,7 @@ interface OptionWilaya { code: string; nom: string; }
                 <strong>{{ b.medicament }}</strong>
                 <span style="color:var(--text3)"> · {{ libelleStatut(b.statut) }}</span><br>
                 <span style="color:var(--text3)">
-                  Wilaya {{ b.wilayaCode }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
+                  {{ wilaya(b.wilayaCode) }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
                   · publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}
                 </span>
               </span>
@@ -91,6 +91,8 @@ interface OptionWilaya { code: string; nom: string; }
   `,
 })
 export class MesDemandesComponent implements OnInit {
+  /** Nom de la wilaya (referentiel) plutot que son code. */
+  wilaya = libelleWilaya;
   private auth = inject(AuthService);
   private service = inject(DawiniService);
   private profils = inject(ProfilService);
