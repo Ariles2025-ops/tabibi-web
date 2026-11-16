@@ -13,6 +13,12 @@ export interface Medecin {
   ville: string;
   /** Vrai si le medecin a des creneaux libres a venir (le serveur trie ces medecins en premier). */
   reservable?: boolean;
+  /** Informations facultatives saisies par le medecin (absentes tant qu'il ne les a pas renseignees). */
+  adresse?: string | null;
+  telephoneCabinet?: string | null;
+  horaires?: string | null;
+  presentation?: string | null;
+  langues?: string[] | null;
 }
 
 /** Creneau de consultation propose par un medecin. */

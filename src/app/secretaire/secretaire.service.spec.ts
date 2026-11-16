@@ -117,4 +117,22 @@ describe('SecretaireService', () => {
     expect(suppression.request.method).toBe('DELETE');
     suppression.flush(null, { status: 204, statusText: 'No Content' });
   });
+
+  it('cree une semaine type sur POST /api/secretaire/medecins/{id}/creneaux/semaine-type', () => {
+    const corps = { jours: ['LUNDI'], debut: '09:00', fin: '12:30', dureeMinutes: 20, aPartirDu: '2026-11-23', nombreSemaines: 4 };
+    service.semaineType('m1', corps).subscribe((r) => expect(r).toEqual({ crees: 3, ignores: 1 }));
+    const req = http.expectOne(`${BASE}/api/secretaire/medecins/m1/creneaux/semaine-type`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(corps);
+    req.flush({ crees: 3, ignores: 1 });
+  });
+
+  it('enregistre un rendez-vous pris au telephone sur POST /api/secretaire/medecins/{id}/rendezvous', () => {
+    const corps = { creneauId: 'c1', nomPatient: 'Amine', telephonePatient: '0550123456' };
+    service.prendreRdvTelephone('m1', corps).subscribe();
+    const req = http.expectOne(`${BASE}/api/secretaire/medecins/m1/rendezvous`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(corps);
+    req.flush(CONFIRME);
+  });
 });
