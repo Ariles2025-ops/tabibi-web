@@ -14,7 +14,7 @@ import { SPECIALITES_PRINCIPALES, SPECIALITES_SEO, WILAYAS_PRINCIPALES, WILAYAS_
         <h1>Lancement prochainement</h1>
         <p>Tabibi ouvre très bientôt la prise de rendez-vous en ligne avec les médecins de toute l'Algérie.
            La création de compte et la connexion seront disponibles dès le lancement.</p>
-        <a class="bouton" routerLink="/specialites">Parcourir l'annuaire des médecins</a>
+        <a class="bouton" routerLink="/specialites">Trouver un médecin</a>
       </section>
 
       <section class="bt-bloc">

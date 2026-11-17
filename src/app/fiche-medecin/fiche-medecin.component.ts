@@ -101,7 +101,7 @@ import { MessagerieService } from '../messagerie/messagerie.service';
             <!-- Fiche importee, sans compte : personne ne lirait un message ni une liste d'attente -->
             <div *ngIf="reclamable()" class="fm-attente fm-absent">
               <p><strong>Ce praticien n'est pas encore sur Tabibi</strong>
-                Sa fiche vient de l'annuaire public : il ne reçoit pas encore de messages ni de demandes de rendez-vous en ligne.</p>
+                Sa fiche provient de sources publiques : il ne reçoit pas encore de messages ni de demandes de rendez-vous en ligne.</p>
               <a routerLink="/praticien" class="fm-link">C'est votre fiche ? <i class="fa fa-arrow-right fa-xs"></i></a>
             </div>
 

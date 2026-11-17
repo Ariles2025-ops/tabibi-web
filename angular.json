@@ -40,7 +40,10 @@
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "karmaConfig": "karma.conf.js",
-            "assets": ["src/assets"],
+            "assets": [
+              "src/assets",
+              { "glob": "index.html", "input": "src", "output": "/garde-vocabulaire" }
+            ],
             "styles": ["src/styles.css"]
           }
         }

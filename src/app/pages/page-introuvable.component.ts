@@ -15,7 +15,7 @@ import { StatutHttpService } from '../seo/statut-http';
       <p class="pg-intro">{{ ar ? 'الرابط غير صحيح أو أن الصفحة لم تعد موجودة.' : "Le lien est erroné ou la page n'existe plus." }}</p>
       <div class="pg-liens">
         <a class="bouton" [routerLink]="ar ? '/ar' : '/'">{{ ar ? 'العودة إلى الرئيسية' : "Retour à l'accueil" }}</a>
-        <a class="bouton-secondaire" [routerLink]="ar ? '/ar/specialites' : '/specialites'">{{ ar ? 'دليل الأطباء' : 'Annuaire des médecins' }}</a>
+        <a class="bouton-secondaire" [routerLink]="ar ? '/ar/specialites' : '/specialites'">{{ ar ? 'الأطباء' : 'Médecins' }}</a>
       </div>
     </main>
   `,
