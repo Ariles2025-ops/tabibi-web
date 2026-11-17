@@ -108,7 +108,10 @@ describe('AnnuaireSeoComponent', () => {
           { provide: REPONSE_HTTP, useValue: reponse },
         ],
       });
-      TestBed.createComponent(AnnuaireSeoComponent).detectChanges();
+      const fixture = TestBed.createComponent(AnnuaireSeoComponent);
+      fixture.detectChanges();
+      // Le fil d'Ariane arabe ramene a l'accueil arabe, pas a l'accueil francais.
+      expect(fixture.nativeElement.querySelector('.seo-accueil')?.getAttribute('href')).toBe('/ar');
       expect(noeud('FAQPage').inLanguage).toBe('ar');
       expect(noeud('FAQPage').mainEntity[0].name).toMatch(/[\u0600-\u06FF]/);
       expect(noeud('BreadcrumbList').itemListElement[0].name).toBe('الرئيسية');

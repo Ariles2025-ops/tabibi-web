@@ -103,4 +103,11 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     creer('fr', { ...dentiste, specialiteSlug: 'pharmacie', specialiteFr: 'Pharmacie' });
     expect(ld('ld-praticien')['@type']).toBe('Pharmacy');
   });
+
+  it('AR : le fil d Ariane « الرئيسية » mene a l accueil arabe /ar, FR : a l accueil /', () => {
+    const accueil = (el: HTMLElement) => el.querySelector('.pp-accueil')?.getAttribute('href');
+    expect(accueil(creer('ar', dentiste))).toBe('/ar');
+    TestBed.resetTestingModule();
+    expect(accueil(creer('fr', dentiste))).toBe('/');
+  });
 });
