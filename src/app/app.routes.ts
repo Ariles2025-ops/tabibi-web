@@ -43,7 +43,6 @@ import { InvitationsComponent } from './secretaire/invitations.component';
 import { BientotComponent } from './bientot.component';
 import { AnnuaireSeoComponent } from './seo/annuaire-seo.component';
 import { PraticienPublicComponent } from './seo/praticien-public.component';
-import { AccueilArComponent } from './seo/accueil-ar.component';
 import { WilayasIndexComponent } from './pages/wilayas-index.component';
 import { AideComponent } from './pages/aide.component';
 import { SupprimerCompteComponent } from './pages/supprimer-compte.component';
@@ -134,7 +133,7 @@ export const routes: Routes = [
   { path: 'praticiens/:id', component: PraticienPublicComponent },
   { path: 'praticiens/:id/:slug', component: PraticienPublicComponent },
   // Versions arabes des pages publiques (memes composants, langue en donnee de route).
-  { path: 'ar', component: AccueilArComponent, pathMatch: 'full' },
+  { path: 'ar', component: AnnuaireComponent, pathMatch: 'full', data: { langue: 'ar' } },
   { path: 'ar/specialites', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
   { path: 'ar/specialites/:specialite', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
   { path: 'ar/specialites/:specialite/:wilaya', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
