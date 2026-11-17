@@ -33,6 +33,15 @@ nbar="$(curl -fsS "$SITE/ar/specialites/medecin-generaliste/alger?$cb" | grep -o
 accueil_ar="$(curl -fsS "$SITE/ar?$cb")"   # pas de « curl | grep -q » : avec pipefail, grep -q coupe curl (SIGPIPE) = faux echec
 case "$accueil_ar" in *'lang="ar"'*) ok "accueil arabe (/ar)" ;; *) ko "accueil arabe absent" ;; esac
 
+# 3b3. Referencement de la marque : les accueils FR et AR portent canonical, hreflang et JSON-LD Organization.
+accueil_fr="$(curl -fsS "$SITE/?$cb")"
+for page in fr ar; do
+  if [ "$page" = fr ]; then html="$accueil_fr"; else html="$accueil_ar"; fi
+  case "$html" in *'rel="canonical"'*) ok "accueil $page : balise canonical" ;; *) ko "accueil $page sans balise canonical" ;; esac
+  case "$html" in *'"@type":"Organization"'*) ok "accueil $page : JSON-LD Organization" ;; *) ko "accueil $page sans JSON-LD Organization" ;; esac
+done
+case "$accueil_fr" in *'Tabibi Doctor (Tabibi DZ)'*) ok "accueil FR : titre de marque" ;; *) ko "accueil FR sans « Tabibi Doctor (Tabibi DZ) »" ;; esac
+
 # 3c. Anti-copie : la liste complete des fiches n'est pas publique.
 code="$(curl -s -o /dev/null -w '%{http_code}' "https://api.tabibi.doctor/api/medecins/plan?$cb")"
 [ "$code" = "404" ] && ok "liste complete des fiches fermee au public (404)" || ko "liste complete des fiches accessible depuis Internet (HTTP $code)"

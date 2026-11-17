@@ -3,7 +3,8 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
-import { SPECIALITES_PRINCIPALES, SPECIALITES_SEO, WILAYAS_PRINCIPALES, WILAYAS_SEO, liensLangues } from './referentiel-seo';
+import { SPECIALITES_PRINCIPALES, SPECIALITES_SEO, WILAYAS_PRINCIPALES, WILAYAS_SEO } from './referentiel-seo';
+import { ACCUEIL_AR, referencerAccueil } from './marque';
 
 /**
  * Accueil en arabe (/ar) : recherche par specialite et wilaya qui mene aux pages arabes de l'annuaire
@@ -97,22 +98,13 @@ export class AccueilArComponent implements OnInit {
   wilaya = '';
 
   ngOnInit() {
-    const description = 'طبيبي: احجز موعدك مع طبيب في الجزائر. أكثر من 75 000 طبيب في الولايات الـ69، حسب التخصص والولاية. الدفع في العيادة.';
-    this.title.setTitle('طبيبي — احجز موعدك مع طبيب في الجزائر');
-    this.meta.updateTag({ name: 'description', content: description });
-    this.meta.updateTag({ property: 'og:title', content: 'طبيبي — احجز موعدك مع طبيب في الجزائر' });
-    this.meta.updateTag({ property: 'og:description', content: description });
+    this.title.setTitle(ACCUEIL_AR.titre);
+    this.meta.updateTag({ name: 'description', content: ACCUEIL_AR.description });
+    this.meta.updateTag({ property: 'og:title', content: ACCUEIL_AR.titre });
+    this.meta.updateTag({ property: 'og:description', content: ACCUEIL_AR.description });
     this.meta.updateTag({ property: 'og:locale', content: 'ar_DZ' });
     this.meta.updateTag({ name: 'robots', content: 'index, follow' });
-    let canonique = this.document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (!canonique) {
-      canonique = this.document.createElement('link');
-      canonique.setAttribute('rel', 'canonical');
-      this.document.head.appendChild(canonique);
-    }
-    canonique.setAttribute('href', 'https://tabibi.doctor/ar');
-    liensLangues(this.document, '');
-    this.document.documentElement.setAttribute('lang', 'ar');
+    referencerAccueil(this.document, true);
   }
 
   /** Recherche : specialite et/ou wilaya vers la page arabe correspondante de l'annuaire. */

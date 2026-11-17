@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { liensLangues } from '../seo/referentiel-seo';
+import { Meta, Title } from '@angular/platform-browser';
+import { ACCUEIL_FR, referencerAccueil } from '../seo/marque';
 import { VISIO_ACTIVE } from '../lancement';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -378,6 +379,8 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
 export class AnnuaireComponent implements OnInit, OnDestroy {
   readonly visio = VISIO_ACTIVE;
   private doc = inject(DOCUMENT);
+  private title = inject(Title);
+  private meta = inject(Meta);
   private service = inject(AnnuaireService);
   private http = inject(HttpClient);
   private auth = inject(AuthService);
@@ -409,8 +412,13 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Accueil francais <-> arabe (/ar) pour les moteurs de recherche.
-    liensLangues(this.doc, '');
-    this.doc.documentElement.setAttribute('lang', 'fr');
+    this.title.setTitle(ACCUEIL_FR.titre);
+    this.meta.updateTag({ name: 'description', content: ACCUEIL_FR.description });
+    this.meta.updateTag({ property: 'og:title', content: ACCUEIL_FR.titre });
+    this.meta.updateTag({ property: 'og:description', content: ACCUEIL_FR.description });
+    this.meta.updateTag({ property: 'og:locale', content: 'fr_DZ' });
+    this.meta.updateTag({ name: 'robots', content: 'index, follow' });
+    referencerAccueil(this.doc, false);
     // Charge le referentiel wilayas/specialites. URL relative : SSR-safe, et catchError evite tout plantage si le fichier est indisponible.
     this.http
       .get<Referentiel>('/assets/referentiel.json')
@@ -426,7 +434,9 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
     this.abonnementParams = this.route.queryParamMap.subscribe((p) => {
       const specialite = p.get('specialite');
       const wilaya = p.get('wilaya');
-      if (!specialite && !wilaya) return;
+      const q = p.get('q');
+      if (!specialite && !wilaya && !q) return;
+      this.q = q ?? '';
       this.specialite = specialite ?? '';
       this.wilaya = wilaya ?? '';
       this.auth.pret().then(() => {
