@@ -22,7 +22,7 @@ describe('Suppression de compte : libelles identiques a l\'appli', () => {
     });
     const fixture = TestBed.createComponent(AideComponent);
     fixture.detectChanges();
-    return fixture.componentInstance.questions.find((q) => q.lien?.vers === '/supprimer-mon-compte')!;
+    return fixture.componentInstance.questions.find((q) => q.lien?.vers.endsWith('/supprimer-mon-compte'))!;
   }
 
   it('l\'aide française cite « Mon profil » pour l\'appli et « Mon compte » pour le site', () => {
@@ -35,5 +35,36 @@ describe('Suppression de compte : libelles identiques a l\'appli', () => {
     const r = aide('ar').r;
     expect(r).toContain('ملفي الشخصي');
     expect(r).toContain('حسابي');
+  });
+
+  function pageSuppression(langue?: string) {
+    TestBed.configureTestingModule({
+      imports: [SupprimerCompteComponent],
+      providers: [provideRouter([]), { provide: ActivatedRoute, useValue: { snapshot: { data: { langue } } } }],
+    });
+    const fixture = TestBed.createComponent(SupprimerCompteComponent);
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('la page arabe est en arabe, avec les libellés de l\'appli (« ملفي الشخصي », « حذف حسابي ») et sans texte français', () => {
+    const page = pageSuppression('ar');
+    const texte = page.textContent ?? '';
+    expect(page.querySelector('main')?.getAttribute('dir')).toBe('rtl');
+    expect(texte).toContain('ملفي الشخصي');
+    expect(texte).toContain('حسابي');
+    expect(texte).toContain('حذف حسابي');
+    expect(texte).not.toContain('Supprimer mon compte');
+    expect(page.querySelector('a[href="/supprimer-mon-compte"]')?.textContent).toContain('Français');
+  });
+
+  it('la page française propose le lien vers la version arabe', () => {
+    const page = pageSuppression();
+    expect(page.querySelector('a[href="/ar/supprimer-mon-compte"]')).not.toBeNull();
+    expect(page.textContent).not.toContain('حذف حسابي');
+  });
+
+  it('l\'aide arabe renvoie vers la page de suppression arabe', () => {
+    expect(aide('ar').lien?.vers).toBe('/ar/supprimer-mon-compte');
   });
 });
