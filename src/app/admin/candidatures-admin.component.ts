@@ -27,7 +27,7 @@ const STATUTS_FILTRE = [
         <h1 style="color:var(--vert);margin:0">Candidatures</h1>
         <label style="display:flex;align-items:center;gap:8px;color:var(--text3);font-size:.9rem">
           Statut
-          <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:#10241F;font-size:1rem">
+          <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:var(--tbi-ink);font-size:1rem">
             <option *ngFor="let s of statuts" [value]="s.valeur">{{ s.libelle }}</option>
           </select>
         </label>
@@ -67,7 +67,7 @@ const STATUTS_FILTRE = [
           <form *ngIf="c.statut === 'EN_ATTENTE'" (ngSubmit)="refuser(c)"
                 style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 0">
             <input class="champ" [(ngModel)]="motifs[c.id]" [name]="'motif-' + c.id" placeholder="Motif du refus (obligatoire)"
-                   required style="flex:1;min-width:220px;color:#10241F;font-size:1rem">
+                   required style="flex:1;min-width:220px;color:var(--tbi-ink);font-size:1rem">
             <button type="submit" [disabled]="enCours() !== null || !motifRenseigne(c) || aConfirmer()?.id === c.id"
                     style="padding:11px 18px;background:#fff;color:#b3261e;border:1.5px solid #f0c9c6;border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
               Refuser

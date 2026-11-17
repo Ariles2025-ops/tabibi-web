@@ -286,7 +286,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     styles: [`
     .ac-liste { position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:40; margin:0; padding:6px; list-style:none; background:#fff; border:1px solid var(--border); border-radius:var(--r12); box-shadow:var(--s1); max-height:340px; overflow-y:auto; }
     .ac-item { display:flex; flex-direction:column; gap:2px; padding:9px 12px; border-radius:8px; text-decoration:none; color:var(--ink); }
-    .ac-item:hover, .ac-item:focus { background:#E7F1EC; outline:none; }
+    .ac-item:hover, .ac-item:focus { background:var(--tbi-mint); outline:none; }
     .ac-nom { font-weight:700; line-height:1.25; }
     .ac-meta { font-size:12px; color:var(--text3); }
 

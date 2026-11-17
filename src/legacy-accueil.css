@@ -3,7 +3,7 @@
    TABIBI UI — Design system premium partagé · [UI 2026-07-09]
    ---------------------------------------------------------------------
    Extrait de la landing validée (tabibi-landing-final.html) :
-   émeraude #0F7560 · ivoire #FBF9F4 · sable #F4EEE2 · or #D4A437 ·
+   émeraude #0F7560 · ivoire #FBF9F4 · sable var(--tbi-sand) · or #D4A437 ·
    lignes #E7E0D2 · encre #0F2A24 · Plus Jakarta Sans (+ Cairo AR/RTL).
 
    USAGE : charger APRÈS styles/app.css + styles/components.css :
@@ -161,7 +161,7 @@ nav.tab-bar{
 .v4-live { font-size:.72em; font-weight:800; text-transform:uppercase; letter-spacing:.04em;
            background:var(--color-success-light, #e3f3e6); color:var(--color-success-hover, #1d6b3a);
            border-radius:var(--rfull, 999px); padding:2px 8px; vertical-align:middle; }
-.link-disabled::after { content:"  •  Bientôt"; font-size:.75em; color:#556070; font-style:italic; font-weight:400; } /* [FIX-DESIGN-2026-05-19] WCAG AA contrast */
+.link-disabled::after { content:"  •  Bientôt"; font-size:.75em; color:var(--tbi-slate); font-style:italic; font-weight:400; } /* [FIX-DESIGN-2026-05-19] WCAG AA contrast */
 .social-disabled { opacity:.4; pointer-events:none; cursor:not-allowed; filter:grayscale(.5); }
 .appstore-disabled { opacity:.5; pointer-events:none; cursor:not-allowed; filter:grayscale(.5); }
 /* Fallback fonts si Google Fonts ne charge pas */
@@ -187,7 +187,7 @@ body { font-family: var(--font-latin); }
   --red:#D21010; --red-d:#991b1b; --red-l:#fff0f0;
   --amber:#F59E0B; --amber-l:#fffbeb;
   --white:#fff; --bg:#f8fafc; --bg2:#f1f5f9;
-  --border:#e2e8f0; --text:#0f172a; --text2:#475569; --text3:#556070; --text4:#94a3b8;
+  --border:#e2e8f0; --text:#0f172a; --text2:#475569; --text3:var(--tbi-slate); --text4:#94a3b8;
   --s1:0 1px 3px rgba(0,0,0,.04); --s2:0 4px 12px rgba(0,0,0,.06);
   --s3:0 12px 36px rgba(0,0,0,.08); --s4:0 24px 64px rgba(0,0,0,.12);
   --sb:0 4px 14px rgba(15,117,96,.24); --sg:0 4px 14px rgba(15,117,96,.24);
@@ -696,23 +696,23 @@ body.recherche-active [data-replier-recherche]{ display:none !important; }
 }
 
 /* ═══ [V4 2026-07-08] Accueil « avec visages » — design tabibi-landing-v4 ═══
-   Ambiance ivoire (#FBF9F4) + sable (#F4EEE2) + lignes chaudes (#E7E0D2),
+   Ambiance ivoire (#FBF9F4) + sable (var(--tbi-sand)) + lignes chaudes (#E7E0D2),
    boutons pilule, carte de réservation produit dans le héro (Doctolib-style).
    Peau + 1 bloc décoratif — la logique app (recherche, i18n, auth) est intacte. */
-:root{ --bg:#FBF9F4; --bg2:#F4EEE2; --border:#E7E0D2; --blue-l:#E7F1EC;
-       --pastille:#F4EEE2; --pastille-bd:#E7E0D2; }
+:root{ --bg:#FBF9F4; --bg2:var(--tbi-sand); --border:#E7E0D2; --blue-l:var(--tbi-mint);
+       --pastille:var(--tbi-sand); --pastille-bd:#E7E0D2; }
 .btn{ border-radius:999px; }
-.hero-mobile{ background:linear-gradient(180deg,#FBF9F4,#F4EEE2); }
+.hero-mobile{ background:linear-gradient(180deg,#FBF9F4,var(--tbi-sand)); }
 .hero-flag{ display:none; }  /* v4 : pas de drapeau dans le héro (demande fondateur) */
 .hero-visual{ position:relative; max-width:420px; margin:22px auto 6px; }
 .bookcard{ position:relative; background:#fff; border:1px solid #E7E0D2; border-radius:24px; padding:24px; box-shadow:0 40px 90px rgba(6,82,64,.16); z-index:2; text-align:start; }
-.bookcard-ghost{ position:absolute; inset:26px -10px -14px 26px; background:#F4EEE2; border-radius:26px; transform:rotate(3.5deg); z-index:1; }
+.bookcard-ghost{ position:absolute; inset:26px -10px -14px 26px; background:var(--tbi-sand); border-radius:26px; transform:rotate(3.5deg); z-index:1; }
 .bc-doc{ display:flex; align-items:center; gap:13px; padding-bottom:16px; border-bottom:1px solid #E7E0D2; }
 .bc-ava{ width:54px; height:54px; border-radius:16px; object-fit:cover; flex:none; }
 .bc-id{ flex:1; min-width:0; }
 .bc-id b{ font-size:16.5px; font-weight:800; display:block; line-height:1.2; }
 .bc-id small{ font-size:12.5px; color:var(--text3); font-weight:500; }
-.bc-verified{ display:inline-flex; align-items:center; gap:5px; color:#0F7560; background:#F4EEE2; padding:5px 9px; border-radius:8px; font-weight:700; font-size:12px; }
+.bc-verified{ display:inline-flex; align-items:center; gap:5px; color:#0F7560; background:var(--tbi-sand); padding:5px 9px; border-radius:8px; font-weight:700; font-size:12px; }
 .bc-day{ font-size:11.5px; font-weight:700; color:#0F7560; margin:15px 0 9px; text-transform:uppercase; letter-spacing:.6px; }
 .bc-slots{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 .bc-slots span{ border:1.5px solid #E7E0D2; border-radius:11px; padding:9px 0; text-align:center; font-size:14px; font-weight:700; color:var(--ink); background:#fff; }
@@ -754,7 +754,7 @@ body.recherche-active [data-replier-recherche]{ display:none !important; }
 .v4-doccard .vname{ font-size:16px; font-weight:800; color:var(--ink); }
 .v4-doccard .spec{ font-size:13px; color:var(--text3); margin:2px 0 10px; }
 .v4-doccard .meta{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; }
-.v4-verified{ display:inline-flex; align-items:center; gap:5px; color:#0F7560; background:#F4EEE2; padding:4px 8px; border-radius:8px; font-weight:700; font-size:11.5px; }
+.v4-verified{ display:inline-flex; align-items:center; gap:5px; color:#0F7560; background:var(--tbi-sand); padding:4px 8px; border-radius:8px; font-weight:700; font-size:11.5px; }
 /* [A11Y 2026-09-14] #D4A437 sur blanc = 2,29:1. L'or de marque ne peut pas
    etre du texte ; variante texte #7D5E18 = 6,02:1. L'etoile reste doree a
    l'oeil, elle devient lisible. */
@@ -771,7 +771,7 @@ body.recherche-active [data-replier-recherche]{ display:none !important; }
 .v4-rstars{ color:#D4A437; letter-spacing:2.5px; font-size:14px; margin-bottom:8px; }
 .v4-rev blockquote{ font-size:13.5px; line-height:1.55; color:var(--ink); font-weight:500; margin:0; }
 .v4-rev figcaption{ margin-top:10px; font-size:12px; color:var(--text3); font-weight:600; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.v4-rbadge{ display:inline-flex; align-items:center; gap:4px; background:#F4EEE2; color:#0F7560; border-radius:7px; padding:3px 8px; font-size:10.5px; font-weight:700; }
+.v4-rbadge{ display:inline-flex; align-items:center; gap:4px; background:var(--tbi-sand); color:#0F7560; border-radius:7px; padding:3px 8px; font-size:10.5px; font-weight:700; }
 .v4-tele{ background:linear-gradient(120deg,rgba(11,122,91,.07),rgba(198,161,91,.09)); border-top:1px solid #E7E0D2; border-bottom:1px solid #E7E0D2; padding:22px var(--gutter); display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
 .v4-tele .ti{ width:48px; height:48px; border-radius:14px; background:#0F7560; color:#fff; display:grid; place-items:center; flex:none; font-size:19px; }
 .v4-tele h3{ font-size:17px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0; color:var(--ink); }
@@ -782,7 +782,7 @@ body.recherche-active [data-replier-recherche]{ display:none !important; }
 .v4-tele .cta{ margin-inline-start:auto; }
 .v4-cmp{ margin:0 var(--gutter); background:#fff; border:1px solid #E7E0D2; border-radius:20px; overflow:hidden; }
 .v4-cmp-h,.v4-cmp-r{ display:grid; grid-template-columns:1fr 52px 86px; align-items:center; padding:12px 14px; gap:8px; }
-.v4-cmp-h{ background:#F4EEE2; font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--text2); font-weight:700; }
+.v4-cmp-h{ background:var(--tbi-sand); font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:var(--text2); font-weight:700; }
 .v4-cmp-h strong{ color:#0F7560; text-align:center; }
 .v4-cmp-h span:last-child{ text-align:center; }
 .v4-cmp-r{ border-top:1px solid #E7E0D2; font-size:13px; font-weight:500; color:var(--ink); }
@@ -848,7 +848,7 @@ body.recherche-active [data-replier-recherche]{ display:none !important; }
 .dwh-mock-req .b{ margin-inline-start:auto; background:rgba(212,164,55,.92); color:#fff; border-radius:999px; padding:3px 9px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
 .dwh-mock-resp{ background:#fff; border-radius:18px; padding:14px; box-shadow:0 18px 44px rgba(2,30,22,.35); }
 .dwh-mock-resp .top{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:800; color:var(--ink); flex-wrap:wrap; }
-.dwh-mock-resp .ok{ margin-inline-start:auto; display:inline-flex; align-items:center; gap:5px; background:#E7F1EC; color:#0F7560; border-radius:999px; padding:4px 10px; font-size:11px; font-weight:700; }
+.dwh-mock-resp .ok{ margin-inline-start:auto; display:inline-flex; align-items:center; gap:5px; background:var(--tbi-mint); color:#0F7560; border-radius:999px; padding:4px 10px; font-size:11px; font-weight:700; }
 .dwh-mock-resp small{ display:block; font-size:11.5px; color:var(--text3); margin:5px 0 10px; }
 .dwh-mock-actions{ display:flex; gap:8px; }
 .dwh-mock-actions span{ flex:1; text-align:center; border:1.5px solid #E7E0D2; border-radius:999px; padding:7px 6px; font-size:11.5px; font-weight:700; color:#0F7560; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
@@ -894,7 +894,7 @@ body.recherche-active [data-replier-recherche]{ display:none !important; }
 
 /* ═══ [MODAL 2026-07-09] Bottom-sheet « Mon espace » premium (tokens landing) ═══ */
 .modal-sheet .modal-close{ width:32px; height:32px; border-radius:50%; background:transparent; border:none; color:#8C9B93; font-size:20px; font-weight:400; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s, color .15s; }
-.modal-sheet .modal-close:hover{ background:#F4EEE2; color:#0F2A24; }
+.modal-sheet .modal-close:hover{ background:var(--tbi-sand); color:#0F2A24; }
 .tbm-user{ display:flex; align-items:center; gap:12px; padding:14px; background:#FBF9F4; border:1px solid #E7E0D2; border-radius:16px; box-shadow:0 6px 18px rgba(16,40,34,.05); margin-bottom:16px; }
 .tbm-ava{ width:46px; height:46px; border-radius:50%; background:linear-gradient(145deg,#189C7F,#0F7560); color:#fff; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; flex-shrink:0; box-shadow:0 0 0 2px #fff, 0 0 0 3.5px #D4A437; }
 .tbm-user b{ font-size:15px; font-weight:800; color:#0F2A24; display:block; line-height:1.25; }
@@ -913,9 +913,9 @@ body.recherche-active [data-replier-recherche]{ display:none !important; }
 .tbm-empty a{ font-size:12.5px; font-weight:700; color:#0F7560; text-decoration:none; border-bottom:1px dashed #0F7560; cursor:pointer; }
 .tbm-cta{ box-shadow:0 10px 24px rgba(15,117,96,.25); }
 .tbm-logout{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:11px; background:transparent; border:1px solid #E7E0D2; border-radius:999px; color:#8A5B52; font-size:13.5px; font-weight:600; cursor:pointer; font-family:inherit; transition:background .15s, border-color .15s; }
-.tbm-logout:hover{ background:#F4EEE2; border-color:#DCCFC0; }
+.tbm-logout:hover{ background:var(--tbi-sand); border-color:#DCCFC0; }
 
 /* Photo de la medecin de la carte d'accueil : cadree sur le visage, et le badge « RDV confirme » ne la cache plus. */
-.bc-ava--photo{ width:64px; height:64px; border-radius:18px; background:#E7F1EC url(/assets/img/medecin-accueil.webp) no-repeat; background-size:280%; background-position:68% 12%; box-shadow:0 0 0 3px #fff, 0 6px 16px rgba(6,82,64,.18); }
+.bc-ava--photo{ width:64px; height:64px; border-radius:18px; background:var(--tbi-mint) url(/assets/img/medecin-accueil.webp) no-repeat; background-size:280%; background-position:68% 12%; box-shadow:0 0 0 3px #fff, 0 6px 16px rgba(6,82,64,.18); }
 .hero-visual .bf1{ top:-64px; }
 .hero-visual{ margin-top:56px; }

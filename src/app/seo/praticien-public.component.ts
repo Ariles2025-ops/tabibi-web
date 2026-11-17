@@ -110,11 +110,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     .pp-fil a { color:var(--vert); text-decoration:none; font-weight:600; }
     .pp-carte { display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow:var(--s2); padding:24px; margin-bottom:28px; }
     .pp-id { display:flex; gap:16px; align-items:center; min-width:0; flex:1 1 320px; }
-    .pp-ava { flex:none; width:72px; height:72px; border-radius:20px; background:#E7F1EC; color:var(--vert); font-weight:800; font-size:24px; display:grid; place-items:center; }
+    .pp-ava { flex:none; width:72px; height:72px; border-radius:20px; background:var(--tbi-mint); color:var(--vert); font-weight:800; font-size:24px; display:grid; place-items:center; }
     .pp-id__txt { min-width:0; }
     .pp-id h1 { margin:0 0 4px; font-size:clamp(1.4rem,3vw,1.9rem); font-weight:800; letter-spacing:-.02em; overflow-wrap:anywhere; }
     .pp-id p { margin:0; color:var(--text3); }
-    .pp-resa { display:inline-block; margin-top:8px; font-size:12px; font-weight:700; color:var(--vert); background:#E7F1EC; padding:3px 10px; border-radius:999px; }
+    .pp-resa { display:inline-block; margin-top:8px; font-size:12px; font-weight:700; color:var(--vert); background:var(--tbi-mint); padding:3px 10px; border-radius:999px; }
     .pp-action { display:flex; flex-direction:column; gap:8px; align-items:flex-start; max-width:300px; }
     .pp-btn { text-decoration:none; }
     .pp-action small { color:var(--text3); font-size:12px; line-height:1.4; }

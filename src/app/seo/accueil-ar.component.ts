@@ -65,7 +65,7 @@ import { ACCUEIL_AR, referencerAccueil } from './marque';
     styles: [`
     .aa { max-width:1100px; margin:0 auto; padding:24px var(--gutter, 16px) 48px; color:var(--ink); }
     .aa-hero { background:linear-gradient(155deg, var(--vert) 0%, #0a4d3e 100%); color:#fff; border-radius:24px; padding:40px 24px; text-align:center; box-shadow:var(--s2); }
-    .aa-pastille { display:inline-block; background:#D4A437; color:#10241F; font-weight:800; font-size:13px; padding:6px 14px; border-radius:999px; }
+    .aa-pastille { display:inline-block; background:#D4A437; color:var(--tbi-ink); font-weight:800; font-size:13px; padding:6px 14px; border-radius:999px; }
     .aa-hero h1 { color:#fff !important; margin:16px 0 10px; font-size:clamp(1.8rem,5vw,2.8rem); font-weight:800; line-height:1.25; text-wrap:balance; }
     .aa-hero p { margin:0 auto 24px; max-width:56ch; color:rgba(255,255,255,.9); line-height:1.7; }
     .aa-recherche { display:grid; grid-template-columns:1fr 1fr auto; gap:10px; background:#fff; border-radius:18px; padding:10px; max-width:820px; margin:0 auto; text-align:start; }

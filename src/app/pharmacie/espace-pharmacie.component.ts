@@ -42,7 +42,7 @@ function formulaireVide(): FormulaireReponse {
       <form (ngSubmit)="chercher()" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:0 0 20px">
         <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
           Wilaya *
-          <select class="champ" [(ngModel)]="wilayaCode" name="wilayaCode" required style="min-width:200px;color:#10241F;font-size:1rem">
+          <select class="champ" [(ngModel)]="wilayaCode" name="wilayaCode" required style="min-width:200px;color:var(--tbi-ink);font-size:1rem">
             <option value="">Choisissez votre wilaya</option>
             <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.code }} — {{ w.nom }}</option>
           </select>
@@ -96,21 +96,21 @@ function formulaireVide(): FormulaireReponse {
             <p *ngIf="!profil()" class="nom-manquant" style="margin:0;color:#b3261e;font-size:.9rem">Renseignez d'abord le nom de votre pharmacie ci-dessus</p>
             <fieldset style="border:0;padding:0;margin:0;display:flex;gap:16px;align-items:center;flex-wrap:wrap;color:var(--text3);font-size:.9rem">
               <legend style="padding:0;margin:0 0 4px">Médicament disponible *</legend>
-              <label style="display:flex;gap:6px;align-items:center;color:#10241F;font-size:1rem">
+              <label style="display:flex;gap:6px;align-items:center;color:var(--tbi-ink);font-size:1rem">
                 <input type="radio" [name]="'disponible-' + b.id" [value]="true" [(ngModel)]="f.disponible"> Oui
               </label>
-              <label style="display:flex;gap:6px;align-items:center;color:#10241F;font-size:1rem">
+              <label style="display:flex;gap:6px;align-items:center;color:var(--tbi-ink);font-size:1rem">
                 <input type="radio" [name]="'disponible-' + b.id" [value]="false" [(ngModel)]="f.disponible"> Non
               </label>
             </fieldset>
             <div style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
               <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
                 Prix (DA)
-                <input class="champ" type="number" min="0" step="1" [(ngModel)]="f.prixDa" [name]="'prix-' + b.id" placeholder="Ex. 850" style="color:#10241F;font-size:1rem">
+                <input class="champ" type="number" min="0" step="1" [(ngModel)]="f.prixDa" [name]="'prix-' + b.id" placeholder="Ex. 850" style="color:var(--tbi-ink);font-size:1rem">
               </label>
               <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
                 Commentaire
-                <input class="champ" [(ngModel)]="f.commentaire" [name]="'commentaire-' + b.id" placeholder="Ex. Disponible jusqu'à 19 h" style="color:#10241F;font-size:1rem">
+                <input class="champ" [(ngModel)]="f.commentaire" [name]="'commentaire-' + b.id" placeholder="Ex. Disponible jusqu'à 19 h" style="color:var(--tbi-ink);font-size:1rem">
               </label>
             </div>
             <div>

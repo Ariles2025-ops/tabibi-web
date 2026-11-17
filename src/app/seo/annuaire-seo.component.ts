@@ -172,11 +172,11 @@ import {
     .seo-medecins { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr)); gap:12px; }
     .seo-med { display:flex; align-items:center; gap:12px; padding:14px 16px; background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow:var(--s1); text-decoration:none; color:inherit; height:100%; box-sizing:border-box; flex-wrap:wrap; }
     .seo-med:hover { border-color:var(--vert); }
-    .seo-ava { flex:none; width:44px; height:44px; border-radius:14px; background:#E7F1EC; color:var(--vert); font-weight:800; display:grid; place-items:center; }
+    .seo-ava { flex:none; width:44px; height:44px; border-radius:14px; background:var(--tbi-mint); color:var(--vert); font-weight:800; display:grid; place-items:center; }
     .seo-med__txt { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
     .seo-med__txt strong { font-size:15px; overflow-wrap:anywhere; }
     .seo-med__txt small { color:var(--text3); font-size:13px; }
-    .seo-resa { font-size:12px; font-weight:700; color:var(--vert); background:#E7F1EC; padding:3px 10px; border-radius:999px; }
+    .seo-resa { font-size:12px; font-weight:700; color:var(--vert); background:var(--tbi-mint); padding:3px 10px; border-radius:999px; }
     .seo-note { color:var(--text3); font-size:13px; margin:14px 0 0; }
     .seo-apropos p { color:var(--text3); line-height:1.65; max-width:72ch; margin:0; }
     .seo-liens { display:flex; flex-wrap:wrap; gap:8px; }
@@ -185,7 +185,7 @@ import {
     .seo-carte { display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fff; border:1px solid var(--border); border-radius:14px; color:var(--ink); text-decoration:none; font-weight:600; font-size:14px; }
     .seo-carte:hover { border-color:var(--vert); color:var(--vert); }
     .seo-carte--seule { display:inline-flex; }
-    .seo-carte__ic { flex:none; width:32px; height:32px; border-radius:10px; background:#E7F1EC; color:var(--vert); display:grid; place-items:center; font-size:13px; }
+    .seo-carte__ic { flex:none; width:32px; height:32px; border-radius:10px; background:var(--tbi-mint); color:var(--vert); display:grid; place-items:center; font-size:13px; }
     .seo-colonnes { columns:4 180px; column-gap:24px; background:#fff; border:1px solid var(--border); border-radius:16px; padding:14px 18px; }
     .seo-colonnes a { display:flex; justify-content:space-between; gap:8px; break-inside:avoid; padding:7px 4px; border-bottom:1px solid #f0ece3; color:var(--ink); text-decoration:none; font-size:14px; }
     .seo-colonnes a:hover, .seo-colonnes a.actif { color:var(--vert); font-weight:700; }
@@ -235,7 +235,10 @@ export class AnnuaireSeoComponent implements OnInit {
   /** Specialite d'un praticien dans la langue de la page (slug connu), sinon le libelle de la base. */
   specialiteDe(m: Medecin): string {
     const s = SPECIALITES_SEO.find((x) => x.slug === m.specialiteSlug);
-    return s ? this.nomS(s) : m.specialiteFr;
+    if (s) return this.nomS(s);
+    // Page arabe : jamais le libelle francais de la base (« Médecin… ») ; on reprend la specialite de la page, sinon « طبيب ».
+    if (this.ar) return this.specialite && this.specialite.slug !== SLUG_PHARMACIE ? this.nomS(this.specialite) : 'طبيب';
+    return m.specialiteFr;
   }
 
   lieuDe(m: Medecin): string {

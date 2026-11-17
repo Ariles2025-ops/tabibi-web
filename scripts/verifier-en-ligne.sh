@@ -45,7 +45,10 @@ for page in fr ar; do
   case "$html" in *'rel="canonical"'*) ok "accueil $page : balise canonical" ;; *) ko "accueil $page sans balise canonical" ;; esac
   case "$html" in *'"@type":"Organization"'*) ok "accueil $page : JSON-LD Organization" ;; *) ko "accueil $page sans JSON-LD Organization" ;; esac
 done
-case "$accueil_fr" in *'Tabibi Doctor (Tabibi DZ)'*) ok "accueil FR : titre de marque" ;; *) ko "accueil FR sans « Tabibi Doctor (Tabibi DZ) »" ;; esac
+titre_fr="$(printf '%s' "$accueil_fr" | tr '\n' ' ' | sed -n 's/.*<title[^>]*>\([^<]*\)<\/title>.*/\1/p')"
+titre_ar="$(printf '%s' "$accueil_ar" | tr '\n' ' ' | sed -n 's/.*<title[^>]*>\([^<]*\)<\/title>.*/\1/p')"
+case "$titre_fr" in *'Ndawik'*) ok "accueil FR : titre de marque (Ndawik)" ;; *) ko "accueil FR : le <title> doit contenir « Ndawik » (trouve : « ${titre_fr:-aucun <title>} »)" ;; esac
+case "$titre_ar" in *'نداويك'*) ok "accueil AR : titre de marque (نداويك)" ;; *) ko "accueil AR : le <title> doit contenir « نداويك » (trouve : « ${titre_ar:-aucun <title>} »)" ;; esac
 
 # 3c. Anti-copie : la liste complete des fiches n'est pas publique.
 code="$(curl -s -o /dev/null -w '%{http_code}' "https://api.tabibi.doctor/api/medecins/plan?$cb")"

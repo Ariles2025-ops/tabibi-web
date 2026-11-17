@@ -55,7 +55,7 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
 
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Commentaire (facultatif)
-            <textarea class="champ" [(ngModel)]="commentaire" name="commentaire" rows="4" style="color:#10241F;font-size:1rem;resize:vertical"></textarea>
+            <textarea class="champ" [(ngModel)]="commentaire" name="commentaire" rows="4" style="color:var(--tbi-ink);font-size:1rem;resize:vertical"></textarea>
             <span [style.color]="commentaireTropLong() ? '#b3261e' : 'var(--text3)'">{{ commentaire.length }} / {{ maxCommentaire }}</span>
           </label>
 
