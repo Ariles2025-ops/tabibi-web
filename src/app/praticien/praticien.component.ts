@@ -26,7 +26,7 @@ import { WILAYAS_SEO } from '../seo/referentiel-seo';
         <div class="prat-hero__in">
           <div class="prat-hero__txt">
             <span class="prat-eyebrow">Espace praticien</span>
-            <h1>Développez votre cabinet avec <span class="acc">Tabibi</span></h1>
+            <h1>Développez votre cabinet avec <span class="acc">Ndawik</span></h1>
             <p>Recevez vos rendez-vous en ligne, réduisez les absences grâce aux rappels automatiques et gagnez en visibilité auprès des patients de votre wilaya — <b>gratuitement</b>.</p>
             <div class="prat-cta">
               <button type="button" class="prat-btn-blanc" (click)="versFiche()">Trouver ma fiche et créer mon compte</button>
@@ -75,7 +75,7 @@ import { WILAYAS_SEO } from '../seo/referentiel-seo';
       </section>
 
       <section class="prat-sec">
-        <h2 class="prat-h2">Comment rejoindre Tabibi ?</h2>
+        <h2 class="prat-h2">Comment rejoindre Ndawik ?</h2>
         <div class="prat-steps">
           <div class="prat-step"><span class="prat-num">1</span><h3>Trouvez votre fiche</h3><p>Cherchez votre nom, puis créez votre compte en un clic (ou déposez une candidature si votre fiche n'existe pas).</p></div>
           <div class="prat-step"><span class="prat-num">2</span><h3>Vérification</h3><p>Ajoutez votre numéro d'inscription à l'ordre : notre équipe confirme que c'est bien vous.</p></div>
@@ -84,10 +84,10 @@ import { WILAYAS_SEO } from '../seo/referentiel-seo';
       </section>
 
       <section class="prat-sec prat-sec--soft">
-        <h2 class="prat-h2">Pourquoi les praticiens choisissent Tabibi</h2>
+        <h2 class="prat-h2">Pourquoi les praticiens choisissent Ndawik</h2>
         <div class="prat-feats">
           <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-calendar-check" aria-hidden="true"></i></span><h3>Agenda en ligne</h3><p>Vos créneaux se remplissent tout seuls, sans appels téléphoniques à gérer.</p></div>
-          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-bell" aria-hidden="true"></i></span><h3>Moins d'absences</h3><p>Un rappel automatique est envoyé au patient dans son espace Tabibi avant chaque rendez-vous.</p></div>
+          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-bell" aria-hidden="true"></i></span><h3>Moins d'absences</h3><p>Un rappel automatique est envoyé au patient dans son espace Ndawik avant chaque rendez-vous.</p></div>
           <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-magnifying-glass" aria-hidden="true"></i></span><h3>Plus de visibilité</h3><p>Les patients de votre wilaya vous trouvent facilement par spécialité.</p></div>
           <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-shield-halved" aria-hidden="true"></i></span><h3>Données protégées</h3><p>Vos données et celles de vos patients sont chiffrées et protégées (loi 18-07).</p></div>
         </div>
@@ -207,8 +207,8 @@ export class PraticienComponent {
 
   constructor() {
     referencerPage(this.document, this.title, this.meta, {
-      titre: 'Espace praticien : rejoignez Tabibi Doctor',
-      description: 'Médecin, clinique ou pharmacie en Algérie : revendiquez votre fiche et rejoignez Tabibi Doctor (tabibi.doctor, Tabibi DZ).',
+      titre: 'Espace praticien : rejoignez Ndawik Doctor',
+      description: 'Médecin, clinique ou pharmacie en Algérie : revendiquez votre fiche et rejoignez Ndawik Doctor (tabibi.doctor, Ndawik DZ).',
       chemin: '/praticien',
       ar: false,
       bilingue: false,
@@ -269,7 +269,7 @@ export class PraticienComponent {
     }
     this.erreur.set('');
     const corps = [
-      'Demande pour rejoindre Tabibi (praticien)',
+      'Demande pour rejoindre Ndawik (praticien)',
       '',
       'Nom complet : ' + this.nom,
       'Spécialité : ' + this.specialite,

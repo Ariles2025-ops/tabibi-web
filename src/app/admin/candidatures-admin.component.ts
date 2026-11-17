@@ -79,7 +79,7 @@ const STATUTS_FILTRE = [
                  [style.background]="conf.action === 'valider' ? 'var(--green-l)' : 'var(--red-l)'"
                  style="margin:12px 0 0;border-radius:var(--r12);padding:12px 14px;display:grid;gap:8px">
               <strong [style.color]="conf.action === 'valider' ? 'var(--green)' : 'var(--red)'">
-                {{ conf.action === 'valider' ? 'Valider cette candidature ? Le praticien sera publié sur Tabibi.' : 'Refuser cette candidature ? Le praticien recevra le motif.' }}
+                {{ conf.action === 'valider' ? 'Valider cette candidature ? Le praticien sera publié sur Ndawik.' : 'Refuser cette candidature ? Le praticien recevra le motif.' }}
               </strong>
               <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;color:var(--ink);font-size:.95rem">
                 <dt style="color:var(--text3)">Nom</dt><dd style="margin:0">{{ c.nomComplet }}</dd>
@@ -181,7 +181,7 @@ export class CandidaturesAdminComponent implements OnInit {
     const conf = this.aConfirmer();
     if (!conf || conf.id !== c.id) return;
     if (conf.action === 'valider') {
-      this.traiter(c, this.service.valider(c.id), `Candidature de ${c.nomComplet} validée : le praticien figure désormais sur Tabibi.`);
+      this.traiter(c, this.service.valider(c.id), `Candidature de ${c.nomComplet} validée : le praticien figure désormais sur Ndawik.`);
     } else {
       const motif = (this.motifs[c.id] ?? '').trim();
       this.traiter(c, this.service.refuser(c.id, motif), `Candidature de ${c.nomComplet} refusée ; le praticien est prévenu du motif.`);

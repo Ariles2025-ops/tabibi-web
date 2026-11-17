@@ -55,7 +55,7 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
                      style="margin:12px 0 0;padding:12px;border:1px solid var(--vert);border-radius:8px;background:#f3faf7">
               <p style="margin:0 0 10px">
                 En rejoignant cette téléconsultation, vous acceptez qu'elle se déroule en vidéo via un service tiers
-                (Jitsi Meet). Aucun enregistrement n'est réalisé par Tabibi.
+                (Jitsi Meet). Aucun enregistrement n'est réalisé par Ndawik.
               </p>
               <button type="button" class="bouton" (click)="consentir(t)" [disabled]="enCours() !== null">
                 {{ enCours() === t.id ? 'Enregistrement…' : 'Je donne mon consentement' }}

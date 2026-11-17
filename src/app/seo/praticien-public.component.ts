@@ -54,7 +54,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
           </div>
           <div class="pp-action">
             <a class="bouton pp-btn" [routerLink]="['/medecins', m.id]">{{ reservable() ? (ar ? 'احجز موعدًا' : 'Prendre rendez-vous') : (ar ? 'عرض الصفحة' : 'Voir la fiche') }}</a>
-            <small *ngIf="reservable()">{{ ar ? 'المواعيد المتاحة والحجز بحساب طبيبي مجاني. الدفع في العيادة.' : 'Disponibilités et réservation avec un compte Tabibi gratuit. Paiement au cabinet.' }}</small>
+            <small *ngIf="reservable()">{{ ar ? 'المواعيد المتاحة والحجز بحساب نداويك مجاني. الدفع في العيادة.' : 'Disponibilités et réservation avec un compte Ndawik gratuit. Paiement au cabinet.' }}</small>
           </div>
         </section>
 
@@ -175,7 +175,7 @@ export class PraticienPublicComponent implements OnInit {
 
   /** Titre de l'onglet d'une fiche absente, dans la langue de la page (comme la page 404). */
   private titreIntrouvable(): string {
-    return this.ar ? 'الطبيب غير موجود | طبيبي' : 'Praticien introuvable | Tabibi';
+    return this.ar ? 'الطبيب غير موجود | نداويك' : 'Praticien introuvable | Ndawik';
   }
 
   private charger(id: string) {
@@ -232,15 +232,15 @@ export class PraticienPublicComponent implements OnInit {
     const ou = this.lieu ? (this.ar ? ` في ${this.lieu}` : ` à ${this.lieu}`) : '';
     const titre = `${m.nomComplet} — ${this.specialite}${ou}`;
     const description = this.ar
-      ? `${m.nomComplet}، ${this.specialite}${ou}. اطّلع على صفحة الطبيب${this.reservable() ? ' واحجز موعدك عبر الإنترنت مع طبيبي. الدفع في العيادة.' : ' على طبيبي.'}`
-      : `${m.nomComplet}, ${this.specialite}${ou}. Consultez la fiche sur Tabibi.${this.reservable() ? ' Prenez rendez-vous en ligne. Paiement au cabinet.' : ''}`;
+      ? `${m.nomComplet}، ${this.specialite}${ou}. اطّلع على صفحة الطبيب${this.reservable() ? ' واحجز موعدك عبر الإنترنت مع نداويك. الدفع في العيادة.' : ' على نداويك.'}`
+      : `${m.nomComplet}, ${this.specialite}${ou}. Consultez la fiche sur Ndawik.${this.reservable() ? ' Prenez rendez-vous en ligne. Paiement au cabinet.' : ''}`;
     const chemin = `/praticiens/${m.id}/${slugifier(m.nomComplet)}`;
     const url = `https://tabibi.doctor${this.p}${chemin}`;
     this.lienAutreLangue = (this.ar ? '' : '/ar') + chemin;
     liensLangues(this.document, chemin);
     poserLangueDocument(this.document, this.ar);
     this.meta.updateTag({ property: 'og:locale', content: this.ar ? 'ar_DZ' : 'fr_DZ' });
-    this.title.setTitle(`${titre} | Tabibi`);
+    this.title.setTitle(`${titre} | Ndawik`);
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ name: 'robots', content: 'index, follow' });
     this.meta.updateTag({ property: 'og:title', content: titre });

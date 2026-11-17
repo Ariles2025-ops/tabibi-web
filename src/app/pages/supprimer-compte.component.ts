@@ -15,13 +15,13 @@ import { referencerPage } from '../seo/page-seo';
     template: `
     <main class="pg">
       <a routerLink="/" class="pg-retour">Accueil</a>
-      <h1>Supprimer mon compte Tabibi</h1>
-      <p class="pg-intro">Vous pouvez supprimer votre compte Tabibi à tout moment, gratuitement, depuis l'application mobile, depuis le site ou par e-mail.</p>
+      <h1>Supprimer mon compte Ndawik</h1>
+      <p class="pg-intro">Vous pouvez supprimer votre compte Ndawik à tout moment, gratuitement, depuis l'application mobile, depuis le site ou par e-mail.</p>
 
       <section class="pg-carte">
         <h2>1. Dans l'application ou sur le site</h2>
         <ol>
-          <li>Connectez-vous à votre compte Tabibi.</li>
+          <li>Connectez-vous à votre compte Ndawik.</li>
           <li>Dans l'application, ouvrez <strong>Mon profil</strong> ; sur le site, ouvrez <strong>Mon compte</strong>.</li>
           <li>Choisissez <strong>Supprimer mon compte</strong>, puis confirmez.</li>
         </ol>
@@ -73,7 +73,7 @@ export class SupprimerCompteComponent implements OnInit {
   ngOnInit() {
     referencerPage(this.document, this.title, this.meta, {
       titre: 'Supprimer mon compte',
-      description: "Comment supprimer votre compte Tabibi : depuis l'application (Mon profil) ou le site (Mon compte) puis « Supprimer mon compte », ou par e-mail à contact@tabibi.doctor.",
+      description: "Comment supprimer votre compte Ndawik : depuis l'application (Mon profil) ou le site (Mon compte) puis « Supprimer mon compte », ou par e-mail à contact@tabibi.doctor.",
       chemin: '/supprimer-mon-compte',
       ar: false,
       bilingue: false,

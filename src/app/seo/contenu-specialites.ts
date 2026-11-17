@@ -66,7 +66,7 @@ export const CONTENU_SPECIALITES: Record<string, { fr: ContenuSpecialite; ar: Co
         },
         {
           q: 'Le dentiste pose-t-il des prothèses et des implants ?',
-          r: "Oui. Selon les cabinets, le dentiste réalise couronnes, bridges, prothèses amovibles et implants. La fiche du praticien et la prise de rendez-vous en ligne sont accessibles gratuitement avec un compte Tabibi.",
+          r: "Oui. Selon les cabinets, le dentiste réalise couronnes, bridges, prothèses amovibles et implants. La fiche du praticien et la prise de rendez-vous en ligne sont accessibles gratuitement avec un compte Ndawik.",
         },
       ],
     },
@@ -80,7 +80,7 @@ export const CONTENU_SPECIALITES: Record<string, { fr: ContenuSpecialite; ar: Co
         },
         {
           q: 'هل يركّب طبيب الأسنان التركيبات والزرعات؟',
-          r: 'نعم. حسب العيادات، يقوم الطبيب بالتيجان والجسور والأطقم المتحرّكة وزرع الأسنان. وصفحة الطبيب والحجز عبر الإنترنت متاحة مجانًا بحساب طبيبي.',
+          r: 'نعم. حسب العيادات، يقوم الطبيب بالتيجان والجسور والأطقم المتحرّكة وزرع الأسنان. وصفحة الطبيب والحجز عبر الإنترنت متاحة مجانًا بحساب نداويك.',
         },
       ],
     },

@@ -2,7 +2,7 @@ import { TEXTES_SEO } from './textes-seo';
 import { ACCUEIL_AR, ACCUEIL_FR } from './marque';
 
 /**
- * Garde de vocabulaire : Tabibi est une plateforme medicale, pas un annuaire. Les mots « annuaire » et « دليل »
+ * Garde de vocabulaire : Ndawik est une plateforme medicale, pas un annuaire. Les mots « annuaire » et « دليل »
  * ne doivent reapparaitre ni dans index.html (title, description, og:, twitter:, JSON-LD) ni dans les titres et
  * descriptions SEO. Le code (AnnuaireComponent...) garde son nom : seuls les textes affiches comptent.
  */

@@ -79,7 +79,7 @@ describe('SecretairesComponent', () => {
   it('liste les secretaires rattachees, les plus anciens rattachements d abord, avec l explication du champ', async () => {
     await afficher();
 
-    expect(texte()).toContain('Adresse e-mail du compte Tabibi de votre secrétaire');
+    expect(texte()).toContain('Adresse e-mail du compte Ndawik de votre secrétaire');
     expect(texte()).toContain("Elle reçoit une invitation à accepter depuis ses notifications.");
     expect(fixture.nativeElement.querySelector('input[name="email"]').getAttribute('type')).toBe('email');
     const items = lignes();
@@ -101,7 +101,7 @@ describe('SecretairesComponent', () => {
     await afficher();
 
     expect(service.rattacherSecretaire).not.toHaveBeenCalled();
-    expect(texte()).toContain("Indiquez l'adresse e-mail du compte Tabibi de votre secrétaire.");
+    expect(texte()).toContain("Indiquez l'adresse e-mail du compte Ndawik de votre secrétaire.");
   });
 
   it('rattache la secretaire par e-mail (nettoye), confirme, vide le champ et recharge', async () => {
@@ -134,7 +134,7 @@ describe('SecretairesComponent', () => {
 
   it('affiche le { erreur } d un 400 (aucun compte avec cet e-mail) sans recharger', async () => {
     service.rattacherSecretaire.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: "Aucun compte Tabibi n'utilise cette adresse e-mail : nadia@exemple.dz" } })),
+      throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: "Aucun compte Ndawik n'utilise cette adresse e-mail : nadia@exemple.dz" } })),
     );
     await afficher();
 
@@ -142,7 +142,7 @@ describe('SecretairesComponent', () => {
     soumettre();
     await afficher();
 
-    expect(texte()).toContain("Aucun compte Tabibi n'utilise cette adresse e-mail : nadia@exemple.dz");
+    expect(texte()).toContain("Aucun compte Ndawik n'utilise cette adresse e-mail : nadia@exemple.dz");
     expect(service.secretaires).toHaveBeenCalledTimes(1);
   });
 

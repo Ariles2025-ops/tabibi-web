@@ -3,17 +3,17 @@ import { ACCUEIL_AR, ACCUEIL_FR, organisationJsonLd, referencerAccueil, siteWebJ
 /** Garde SEO de marque : titre, canonical, hreflang et JSON-LD Organization / WebSite de l'accueil. */
 describe('marque (SEO accueil)', () => {
   it('les titres et descriptions portent la marque', () => {
-    expect(ACCUEIL_FR.titre).toContain('Tabibi Doctor (Tabibi DZ)');
-    expect(ACCUEIL_FR.description).toContain('tabibi.doctor');
-    expect(ACCUEIL_AR.titre).toContain('طبيبي');
-    expect(ACCUEIL_AR.description).toContain('tabibi.doctor');
+    expect(ACCUEIL_FR.titre).toContain('Ndawik : trouvez un médecin et prenez rendez-vous en Algérie');
+    expect(ACCUEIL_FR.description).toContain('Ndawik');
+    expect(ACCUEIL_AR.titre).toContain('نداويك');
+    expect(ACCUEIL_AR.description).toContain('نداويك');
   });
 
   it('Organization : nom, alias, logo absolu, zone', () => {
     const o = organisationJsonLd() as any;
     expect(o['@type']).toBe('Organization');
-    expect(o.name).toBe('Tabibi Doctor');
-    expect(o.alternateName).toEqual(['Tabibi DZ', 'Tabibi Algérie', 'طبيبي']);
+    expect(o.name).toBe('Ndawik');
+    expect(o.alternateName).toEqual(['Tabibi', 'Tabibi Doctor', 'Tabibi DZ', 'نداويك']);
     expect(o.logo).toMatch(/^https:\/\/tabibi\.doctor\//);
     expect(o.areaServed.name).toBe('Algérie');
   });

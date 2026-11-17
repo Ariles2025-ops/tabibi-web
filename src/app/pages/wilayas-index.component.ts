@@ -18,8 +18,8 @@ import { referencerPage } from '../seo/page-seo';
       <header>
         <h1>{{ ar ? 'الأطباء حسب الولاية' : 'Médecins par wilaya' }}</h1>
         <p class="pg-intro">{{ ar
-          ? 'اختر ولايتك من بين الولايات الـ69 لتصفّح الأطباء المسجلين في طبيبي وحجز موعدك عبر الإنترنت.'
-          : 'Choisissez votre wilaya parmi les 69 wilayas d\\'Algérie pour voir les praticiens référencés sur Tabibi et prendre rendez-vous en ligne.' }}</p>
+          ? 'اختر ولايتك من بين الولايات الـ69 لتصفّح الأطباء المسجلين في نداويك وحجز موعدك عبر الإنترنت.'
+          : 'Choisissez votre wilaya parmi les 69 wilayas d\\'Algérie pour voir les praticiens référencés sur Ndawik et prendre rendez-vous en ligne.' }}</p>
       </header>
       <div class="pg-colonnes">
         <a *ngFor="let w of wilayas" [routerLink]="[p + '/wilayas', w.slug]">
@@ -60,8 +60,8 @@ export class WilayasIndexComponent implements OnInit {
     referencerPage(this.document, this.title, this.meta, {
       titre: this.ar ? 'الأطباء حسب الولاية — الولايات الـ69' : 'Médecins par wilaya — les 69 wilayas',
       description: this.ar
-        ? 'جميع ولايات الجزائر الـ69: تصفّح الأطباء المسجلين في طبيبي في ولايتك واحجز موعدك عبر الإنترنت.'
-        : "Les 69 wilayas d'Algérie : trouvez les médecins référencés sur Tabibi dans votre wilaya et prenez rendez-vous en ligne.",
+        ? 'جميع ولايات الجزائر الـ69: تصفّح الأطباء المسجلين في نداويك في ولايتك واحجز موعدك عبر الإنترنت.'
+        : "Les 69 wilayas d'Algérie : trouvez les médecins référencés sur Ndawik dans votre wilaya et prenez rendez-vous en ligne.",
       chemin: '/wilayas',
       ar: this.ar,
     });

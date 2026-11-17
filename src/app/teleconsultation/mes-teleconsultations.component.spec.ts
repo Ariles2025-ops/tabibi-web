@@ -13,7 +13,7 @@ import { Teleconsultation, TeleconsultationService } from './teleconsultation.se
 
 const CONSENTEMENT =
   "En rejoignant cette téléconsultation, vous acceptez qu'elle se déroule en vidéo via un service tiers (Jitsi Meet). " +
-  "Aucun enregistrement n'est réalisé par Tabibi.";
+  "Aucun enregistrement n'est réalisé par Ndawik.";
 
 const SANS_CONSENTEMENT: Teleconsultation = {
   id: 't1',

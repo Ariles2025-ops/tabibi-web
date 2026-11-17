@@ -14,9 +14,9 @@ import { SPECIALITES_PRINCIPALES, SPECIALITES_SEO, WILAYAS_PRINCIPALES, WILAYAS_
       <section class="bt-hero">
         <span class="bt-pastille">{{ ar ? 'قريبًا' : 'Bientôt disponible' }}</span>
         <h1>{{ ar ? 'الإطلاق قريبًا' : 'Lancement prochainement' }}</h1>
-        <p *ngIf="!ar">Tabibi ouvre très bientôt la prise de rendez-vous en ligne avec les médecins de toute l'Algérie.
+        <p *ngIf="!ar">Ndawik ouvre très bientôt la prise de rendez-vous en ligne avec les médecins de toute l'Algérie.
            La création de compte et la connexion seront disponibles dès le lancement.</p>
-        <p *ngIf="ar">تفتح طبيبي قريبًا جدًا حجز المواعيد عبر الإنترنت مع الأطباء في كامل الجزائر.
+        <p *ngIf="ar">تفتح نداويك قريبًا جدًا حجز المواعيد عبر الإنترنت مع الأطباء في كامل الجزائر.
            سيكون إنشاء الحساب وتسجيل الدخول متاحين فور الإطلاق.</p>
         <a class="bouton" [routerLink]="ar ? '/ar/specialites' : '/specialites'">{{ ar ? 'ابحث عن طبيب' : 'Trouver un médecin' }}</a>
       </section>
@@ -60,7 +60,7 @@ export class BientotComponent implements OnInit {
   ngOnInit() {
     referencerPage(this.document, this.title, this.meta, {
       titre: this.ar ? 'الإطلاق قريبًا' : 'Lancement prochainement',
-      description: this.ar ? 'تفتح طبيبي قريبًا حجز المواعيد عبر الإنترنت مع الأطباء في الجزائر.' : "Tabibi ouvre bientôt la prise de rendez-vous en ligne avec les médecins d'Algérie.",
+      description: this.ar ? 'تفتح نداويك قريبًا حجز المواعيد عبر الإنترنت مع الأطباء في الجزائر.' : "Ndawik ouvre bientôt la prise de rendez-vous en ligne avec les médecins d'Algérie.",
       chemin: '/bientot', ar: this.ar, indexable: false, bilingue: false,
     });
     if (!this.ar) remettreDocumentFrancais(this.document);

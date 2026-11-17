@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 /** Configuration de l'application, lue a l'execution dans `assets/config.json` (remplace au deploiement). */
 export interface ConfigurationApplication {
-  /** Origine de l'API Tabibi, sans barre oblique finale (ex. https://api.tabibi.dz). */
+  /** Origine de l'API Ndawik, sans barre oblique finale (ex. https://api.tabibi.dz). */
   apiUrl: string;
   /** Issuer OIDC du realm Keycloak (ex. https://auth.tabibi.dz/realms/tabibi). */
   keycloakIssuer: string;
