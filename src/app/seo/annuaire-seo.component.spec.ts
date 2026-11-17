@@ -73,7 +73,10 @@ describe('AnnuaireSeoComponent', () => {
     };
     /** Noeud du @graph unique par type. */
     const noeud = (type: string) => ld('ld-page')?.['@graph'].find((n: { '@type': string }) => n['@type'] === type);
-    afterEach(() => document.head.querySelectorAll('script[type="application/ld+json"]').forEach((e) => e.remove()));
+    // Ordre des tests aleatoire : d'autres specs (accueil) peuvent laisser leurs blocs JSON-LD dans le <head>.
+    const viderJsonLd = () => document.head.querySelectorAll('script[type="application/ld+json"]').forEach((e) => e.remove());
+    beforeEach(viderJsonLd);
+    afterEach(viderJsonLd);
 
     it('FR : BreadcrumbList + FAQPage (memes questions que la FAQ visible) sur /specialites/:s/:w', () => {
       const f = creer({ specialite: 'cardiologue', wilaya: 'oran' });
