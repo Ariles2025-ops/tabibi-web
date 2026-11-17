@@ -122,24 +122,34 @@ export function app(): express.Express {
       + fichiers.map((f) => `  <sitemap><loc>${site}/${f}</loc></sitemap>\n`).join('') + '</sitemapindex>\n';
   }));
   // Pages specialite x wilaya x commune : uniquement les combinaisons d'au moins 3 praticiens (pas de page vide).
-  // Source : GET /api/medecins/communes -> [{ specialite, wilaya (code), ville, nombre }] (a creer cote backend,
-  // voir le ticket) ; tant que la route manque, ces deux plans sont vides (le reste du site n'est pas touche).
+  // Source : GET /api/medecins/communes?specialite=&wilaya= -> [{ slug, nom, nombre }], une requete par couple
+  // specialite x wilaya (resultat garde 12 h, requetes limitees en parallele).
   server.get(/^\/sitemap-communes(-ar)?\.xml$/, (req, res) => {
     const prefixe = (req.params as unknown as string[])[0] ? '/ar' : '';
     return envoyerXml(res, `communes${prefixe}`, async () => {
-      const r = await fetch(`${api}/api/medecins/communes`);
-      const lignes = r.ok ? ((await r.json()) as { specialite: string; wilaya: string; ville: string; nombre: number }[]) : [];
-      const groupes = new Map<string, number>();
-      for (const l of lignes) {
-        const w = WILAYAS_SEO.find((x) => x.code === String(l.wilaya));
-        const c = slugCommune(l.ville);
-        if (!w || !c || c === w.slug || l.specialite === 'pharmacie' || !SPECIALITES_SEO.some((x) => x.slug === l.specialite)) continue;
-        const cle = `${l.specialite}/${w.slug}/${c}`;
-        groupes.set(cle, (groupes.get(cle) || 0) + (Number(l.nombre) || 0));
-      }
-      const urls = [...groupes.entries()].filter(([, n]) => n >= MIN_PRATICIENS_COMMUNE).map(([cle]) => cle).sort();
+      const couples = SPECIALITES_SEO.filter((x) => x.slug !== 'pharmacie')
+        .flatMap((sp) => WILAYAS_SEO.map((w) => ({ sp, w })));
+      const urls: string[] = [];
+      let prochain = 0, echecs = 0;
+      const ouvrier = async () => {
+        while (prochain < couples.length) {
+          const { sp, w } = couples[prochain++];
+          try {
+            const r = await fetch(`${api}/api/medecins/communes?specialite=${encodeURIComponent(sp.slug)}&wilaya=${encodeURIComponent(w.code)}`);
+            if (!r.ok) throw new Error(`API ${r.status}`);
+            const lignes = (await r.json()) as { slug: string; nombre: number }[];
+            for (const l of lignes) {
+              const c = slugCommune(l.slug);
+              if (c && c === l.slug && c !== w.slug && (Number(l.nombre) || 0) >= MIN_PRATICIENS_COMMUNE) urls.push(`${sp.slug}/${w.slug}/${c}`);
+            }
+          } catch { echecs++; }
+        }
+      };
+      await Promise.all(Array.from({ length: 8 }, ouvrier));
+      // Un plan incomplet ne doit pas etre garde 12 h en cache : on le refuse (503) si la moitie des appels a echoue.
+      if (echecs > couples.length / 2) throw new Error(`API communes indisponible (${echecs}/${couples.length})`);
       return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        + urls.map((u) => `  <url><loc>${site}${prefixe}/specialites/${u}</loc></url>\n`).join('')
+        + urls.sort().map((u) => `  <url><loc>${site}${prefixe}/specialites/${u}</loc></url>\n`).join('')
         + '</urlset>\n';
     });
   });
