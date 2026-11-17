@@ -17,6 +17,9 @@ describe('marque (SEO accueil)', () => {
     expect(o.alternateName).toEqual(['Tabibi', 'Tabibi Doctor', 'Tabibi DZ', 'نداويك']);
     expect(o.logo).toMatch(/^https:\/\/ndawik\.com\//);
     expect(o.areaServed.name).toBe('Algérie');
+    expect(o.url).toBe('https://ndawik.com/');
+    expect(o.logo).toBe('https://ndawik.com/icon-512.png');
+    expect(o.sameAs).toContain('https://play.google.com/store/apps/details?id=dz.tabibi.app');
   });
 
   it('WebSite : SearchAction vers la recherche du site', () => {
