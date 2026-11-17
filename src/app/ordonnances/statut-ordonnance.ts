@@ -10,5 +10,5 @@ const LIBELLES_STATUT_ORDONNANCE: Partial<Record<string, string>> = {
 
 export function libelleStatutOrdonnance(statut: string | null | undefined): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_ORDONNANCE[statut] ?? libelleStatutGenerique(statut);
+  return LIBELLES_STATUT_ORDONNANCE[statut.trim().toUpperCase()] ?? libelleStatutGenerique(statut);
 }
