@@ -63,6 +63,13 @@ for chemin in /supprimer-mon-compte /legal/confidentialite /legal/mentions-legal
   [ "$code" = "200" ] && ok "$chemin (200)" || ko "$chemin repond HTTP $code (200 attendu)"
 done
 
+# 6b. Anciennes adresses de l'ancien site (Search Console) : 301 puis 200 (curl -L), jamais 404.
+for chemin in /seo/tipaza-neurologue /seo/mostaganem-endocrinologue /seo/boumerdes-gastro-enterologue /seo/tipaza-gastro-enterologue \
+  "/index.html?specialty=cardiologue&wilaya=alger" /index.html /about /blog /blog/ /ar/seo/tipaza-neurologue; do
+  code="$(curl -sL -o /dev/null -w '%{http_code}' "$SITE$chemin")"
+  [ "$code" = "200" ] && ok "$chemin (200)" || ko "$chemin repond HTTP $code (200 attendu)"
+done
+
 # 7. robots.txt ferme les pages privees (pas de « curl | grep -q », voir 3b2).
 robots="$(curl -fsS "$SITE/robots.txt?$cb")"
 for regle in "Disallow: /bientot" "Disallow: /medecins/" "Disallow: /mes-"; do

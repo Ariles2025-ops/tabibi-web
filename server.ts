@@ -6,6 +6,7 @@ import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CONFIGURATION_PAR_DEFAUT, ConfigurationApplication, configurationDepuisEnvironnement, configurationServeur } from './src/app/config/config.service';
 import bootstrap from './src/main.server';
+import { redirectionIndex, redirectionSeo } from './src/app/seo/anciennes-adresses';
 import { REPONSE_HTTP } from './src/app/seo/statut-http';
 
 /**
@@ -133,6 +134,11 @@ export function app(): express.Express {
   server.get(/^\/legal\/(confidentialite|mentions-legales|cgu)\/?$/, (req, res) => {
     res.redirect(301, `/legal/${(req.params as unknown as string[])[0]}.html`);
   });
+
+  // Anciennes adresses de l'ancien site, encore affichees par Google : 301 vers les pages actuelles (jamais de 404).
+  server.get(/^(\/ar)?\/seo\/[^/]+\/?$/, (req, res) => res.redirect(301, redirectionSeo(req.path) || '/'));
+  server.get('/index.html', (req, res) => res.redirect(301, redirectionIndex(req.query['specialty'], req.query['wilaya'])));
+  server.get(/^\/(about|blog)\/?$/, (_req, res) => res.redirect(301, '/'));
 
   // Fichiers du build (chemins avec extension) : bundles a empreinte en cache long, index et config jamais.
   // Un fichier introuvable est un 404, pas une page rendue (favicon, sondes de robots).
