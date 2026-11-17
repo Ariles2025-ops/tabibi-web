@@ -250,9 +250,14 @@ export class MesRendezVousComponent implements OnInit {
     return libelleStatutRendezVous(statut);
   }
 
-  /** Historique : un rendez-vous confirme dont l'heure est passee est « Terminé » (et non « Confirmé »). */
+  /**
+   * Historique, vocabulaire patient : « Terminé » pour une consultation effectuee (confirmee passee ou HONORE),
+   * « Non honoré » pour ABSENT (libelle neutre). Les agendas medecin / secretaire gardent « Honoré » / « Absent ».
+   */
   libelleStatutPasse(rdv: RendezVous): string {
-    return rdv.statut === 'CONFIRME' || rdv.statut === 'RESERVE' ? 'Terminé' : libelleStatutRendezVous(rdv.statut);
+    if (rdv.statut === 'CONFIRME' || rdv.statut === 'RESERVE' || rdv.statut === 'HONORE') return 'Terminé';
+    if (rdv.statut === 'ABSENT') return 'Non honoré';
+    return libelleStatutRendezVous(rdv.statut);
   }
 
   /** Vrai si un avis a deja ete depose sur ce rendez-vous (« Avis donné » a la place du bouton). */
