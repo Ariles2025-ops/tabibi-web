@@ -316,11 +316,13 @@ export class GestionCreneauxComponent implements OnChanges {
   supprimer(c: Creneau) {
     this.suppression.set(c.id);
     this.erreurListe.set('');
+    this.succesSerie.set('');
     this.source().supprimer(c.id).subscribe({
       next: () => {
         this.suppression.set(null);
         this.aConfirmer.set(null);
         this.charger();
+        this.succesSerie.set('Créneau supprimé.');
       },
       error: (e: HttpErrorResponse) => {
         this.suppression.set(null);

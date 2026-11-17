@@ -24,6 +24,7 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
       <ng-container *ngIf="connecte()">
         <p *ngIf="charge()">Chargement…</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
+        <p *ngIf="succes()" role="status" style="color:var(--vert)">{{ succes() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let i of inscriptions()"
@@ -71,6 +72,8 @@ export class MesListesAttenteComponent implements OnInit {
   /** Inscription dont le retrait attend la confirmation du patient (confirmation dans la page). */
   aConfirmer = signal<string | null>(null);
   erreur = signal('');
+  /** Confirmation apres un retrait (comme dans l'appli). */
+  succes = signal('');
 
   async ngOnInit() {
     await this.auth.pret();
@@ -108,11 +111,13 @@ export class MesListesAttenteComponent implements OnInit {
   retirer(inscription: InscriptionAttente) {
     this.enCours.set(inscription.id);
     this.erreur.set('');
+    this.succes.set('');
     this.service.retirer(inscription.id).subscribe({
       next: () => {
         this.enCours.set(null);
         this.aConfirmer.set(null);
         this.inscriptions.update((liste) => liste.filter((i) => i.id !== inscription.id));
+        this.succes.set("Retrait de la liste d'attente effectué.");
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);

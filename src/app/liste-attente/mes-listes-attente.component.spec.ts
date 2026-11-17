@@ -95,6 +95,8 @@ describe('MesListesAttenteComponent', () => {
     expect(lignes().length).toBe(1);
     expect(texte()).not.toContain('Dr Karim Haddad');
     expect(service.mes).toHaveBeenCalledTimes(1);
+    // Comme dans l'appli : confirmation du retrait.
+    expect(texte()).toContain("Retrait de la liste d'attente effectué.");
   });
 
   it('ne retire rien sans confirmation, et « Non, rester inscrit » annule', async () => {

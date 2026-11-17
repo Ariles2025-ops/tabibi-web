@@ -98,6 +98,9 @@ describe('MesRendezVousComponent (avis)', () => {
     fixture.detectChanges();
     bouton('Oui, annuler')!.click();
     expect(rendezVous.annuler).toHaveBeenCalledWith('r1');
+    fixture.detectChanges();
+    // Comme « Rendez-vous annulé » dans l'appli : confirmation visible après l'annulation.
+    expect(fixture.nativeElement.textContent).toContain('Rendez-vous annulé.');
   });
 
   it('affiche « Terminé » (et non « Confirmé ») pour un rendez-vous confirme deja passe', async () => {
