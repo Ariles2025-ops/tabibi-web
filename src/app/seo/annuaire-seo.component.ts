@@ -520,6 +520,11 @@ function trierAvecPrincipales<T>(liste: T[], cle: (t: T) => string, principales:
   return [...tete, ...liste.filter((t) => !principales.includes(cle(t)))];
 }
 
+/** « de » + nom, avec élision devant une voyelle ou un h muet : « de Béjaïa », « d'Alger », « d'Oran ». */
+export function dePlace(nom: string): string {
+  return /^[AEIOUHÀÂÄÉÈÊËÎÏÔÖÙÛÜ]/i.test(nom.trim()) ? `d'${nom}` : `de ${nom}`;
+}
+
 /** Textes propres aux pages commune (FR / AR). */
 const TEXTES_COMMUNE = {
   fr: {
@@ -527,12 +532,12 @@ const TEXTES_COMMUNE = {
     sousTitre: (s: string, c: string) => `Praticiens : ${s} à ${c}`,
     cible: (s: string, c: string, a: string) => `${a} à ${c}`,
     intro: (s: string, c: string, w: string, n: number) =>
-      `${n} praticiens (${s}) exercent à ${c}, dans la wilaya de ${w}. Consultez leur fiche, comparez et prenez rendez-vous en ligne avec Ndawik.`,
+      `${n} praticiens (${s}) exercent à ${c}, dans la wilaya ${dePlace(w)}. Consultez leur fiche, comparez et prenez rendez-vous en ligne avec Ndawik.`,
     description: (s: string, c: string, w: string, n: number) =>
       `${s} à ${c} (${w}) : ${n} praticiens référencés sur Ndawik. Consultez les fiches et prenez rendez-vous en ligne.`,
-    communes: (s: string, w: string) => `${s} dans les communes de ${w}`,
+    communes: (s: string, w: string) => `${s} dans les communes ${dePlace(w)}`,
     voisines: (s: string, w: string) => `${s} dans les communes voisines (${w})`,
-    toute: (s: string, w: string) => `Voir tous les praticiens (${s}) de ${w}`,
+    toute: (s: string, w: string) => `Voir tous les praticiens (${s}) ${dePlace(w)}`,
     titreCommune: (s: string, c: string, w: string) => `${s} à ${c} (${w})`,
   },
   ar: {

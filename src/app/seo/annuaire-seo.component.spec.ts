@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
-import { AnnuaireSeoComponent } from './annuaire-seo.component';
+import { AnnuaireSeoComponent, dePlace } from './annuaire-seo.component';
 import { REPONSE_HTTP } from './statut-http';
 
 /** Pages de l'annuaire : vraie 404 au rendu serveur, rubrique Pharmacies a part, accords « un / une ». */
@@ -202,5 +202,11 @@ describe('AnnuaireSeoComponent', () => {
     const ligne = f.nativeElement.querySelector('.seo-med__txt small').textContent as string;
     expect(ligne).toContain('طبيب أمراض الدم');
     expect(ligne).not.toContain('Médecin');
+  });
+
+  it('elide « de » devant une wilaya commencant par une voyelle (d\'Alger, d\'Oran, de Blida)', () => {
+    expect(dePlace('Alger')).toBe("d'Alger");
+    expect(dePlace('Oran')).toBe("d'Oran");
+    expect(dePlace('Blida')).toBe('de Blida');
   });
 });
