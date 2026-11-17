@@ -58,7 +58,8 @@ describe('Page commune', () => {
     expect(f.componentInstance.titre).toBe('Pédiatre à Bab Ezzouar (Alger)');
     expect(document.title).toContain('Pédiatre à Bab Ezzouar (Alger) — prendre rendez-vous | Tabibi');
     expect(f.nativeElement.querySelectorAll('.seo-med').length).toBe(3);
-    const ld = JSON.parse(document.head.querySelector('script#ld-liste')!.textContent!);
+    const graphe = JSON.parse(document.head.querySelector('script#ld-page')!.textContent!)['@graph'] as { '@type': string }[];
+    const ld = graphe.find((n) => n['@type'] === 'ItemList') as unknown as { itemListElement: { item: { address: { addressLocality: string } } }[] };
     expect(ld.itemListElement.length).toBe(3);
     expect(ld.itemListElement[0].item.address.addressLocality).toBe('Bab Ezzouar');
   });
