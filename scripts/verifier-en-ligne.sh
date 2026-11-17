@@ -29,6 +29,11 @@ nb="$(curl -fsS "$SITE/specialites/medecin-generaliste/alger?$cb" | grep -o 'cla
 nbar="$(curl -fsS "$SITE/ar/specialites/medecin-generaliste/alger?$cb" | grep -o 'class="seo-med"' | wc -l | tr -d ' ')"
 [ "${nbar:-0}" -gt 0 ] && ok "page arabe : $nbar medecins rendus" || ko "aucun medecin rendu sur /ar/specialites/medecin-generaliste/alger"
 
+# 3b1. Donnees structurees : ItemList + MedicalWebPage dans le JSON-LD de /specialites/pediatre/setif.
+ld_page="$(curl -fsS "$SITE/specialites/pediatre/setif?$cb")"
+case "$ld_page" in *'"@type":"ItemList"'*) ok "JSON-LD ItemList sur /specialites/pediatre/setif" ;; *) ko "\"@type\":\"ItemList\" absent de /specialites/pediatre/setif" ;; esac
+case "$ld_page" in *'"@type":"MedicalWebPage"'*) ok "JSON-LD MedicalWebPage sur /specialites/pediatre/setif" ;; *) ko "\"@type\":\"MedicalWebPage\" absent de /specialites/pediatre/setif" ;; esac
+
 # 3b2. L'accueil arabe est rendu cote serveur.
 accueil_ar="$(curl -fsS "$SITE/ar?$cb")"   # pas de « curl | grep -q » : avec pipefail, grep -q coupe curl (SIGPIPE) = faux echec
 case "$accueil_ar" in *'lang="ar"'*) ok "accueil arabe (/ar)" ;; *) ko "accueil arabe absent" ;; esac

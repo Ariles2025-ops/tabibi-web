@@ -6,7 +6,7 @@ import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { TEXTES_SEO, TextesSeo } from './textes-seo';
 import { CONTENU_SPECIALITES } from './contenu-specialites';
 import { StatutHttpService } from './statut-http';
-import { ecrireJsonLd, faqPage, fil } from './donnees-structurees';
+import { ecrireJsonLd, fil, pageAnnuaire } from './donnees-structurees';
 import {
   SLUG_PHARMACIE, SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo,
   avecArticle, liensLangues, lienPraticien,
@@ -235,6 +235,8 @@ export class AnnuaireSeoComponent implements OnInit {
   apropos = '';
   faqSpe: { q: string; r: string }[] = [];
 
+  private cheminLd = '';
+  private description = '';
   medecins = signal<Medecin[]>([]);
   charge = signal(false);
   erreur = signal(false);
@@ -319,6 +321,8 @@ export class AnnuaireSeoComponent implements OnInit {
     this.lienCanonique(`https://tabibi.doctor${this.p}${chemin}`);
     liensLangues(this.document, chemin);
     this.document.documentElement.setAttribute('lang', this.ar ? 'ar' : 'fr');
+    this.cheminLd = chemin;
+    this.description = description;
     this.donneesStructurees(chemin);
 
     // La liste vient de l API publique ; elle est aussi rendue cote serveur pour les moteurs de recherche.
@@ -326,7 +330,7 @@ export class AnnuaireSeoComponent implements OnInit {
       this.charge.set(true);
       this.erreur.set(false);
       this.annuaire.rechercher(s?.slug, w?.code).subscribe({
-        next: (liste) => { this.medecins.set(liste); this.charge.set(false); },
+        next: (liste) => { this.medecins.set(liste); this.charge.set(false); this.donneesStructurees(this.cheminLd); },
         error: () => { this.erreur.set(true); this.charge.set(false); },
       });
     }
@@ -343,13 +347,45 @@ export class AnnuaireSeoComponent implements OnInit {
     ];
   }
 
-  /** JSON-LD : fil d'Ariane (toutes les pages valides) et FAQPage (memes conditions que la FAQ visible). */
+  /** JSON-LD : un seul bloc @graph (MedicalWebPage, ItemList des praticiens affiches, fil d'Ariane, FAQPage). */
   private donneesStructurees(chemin: string) {
-    if (this.introuvable) {
-      ecrireJsonLd(this.document, 'ld-fil', null);
-      ecrireJsonLd(this.document, 'ld-faq', null);
+    // Anciens blocs separes : retires au profit du bloc unique.
+    ecrireJsonLd(this.document, 'ld-fil', null);
+    ecrireJsonLd(this.document, 'ld-faq', null);
+    if (this.introuvable || this.index) {
+      ecrireJsonLd(this.document, 'ld-page', null);
+      if (this.index) this.ecrireFilSeul(chemin);
       return;
     }
+    const racine = `https://tabibi.doctor${this.p}`;
+    const etapes = this.etapesFil(chemin);
+    const avecFaq = !this.pharmacie;
+    ecrireJsonLd(this.document, 'ld-page', pageAnnuaire({
+      url: `${racine}${chemin}`,
+      nom: this.titre,
+      description: this.description,
+      langue: this.ar ? 'ar' : 'fr',
+      specialite: this.specialite && !this.pharmacie ? this.nomS(this.specialite) : undefined,
+      verifieLe: new Date().toISOString().slice(0, 10),
+      etapes,
+      praticiens: this.medecins().map((m) => ({
+        nom: m.nomComplet,
+        url: `https://tabibi.doctor${this.lien(m).join('/')}`,
+        specialiteSlug: m.specialiteSlug,
+        specialite: this.specialiteDe(m),
+        ville: m.ville,
+        region: this.regionDe(m),
+      })),
+      faq: avecFaq ? this.faqVisible() : undefined,
+    }));
+  }
+
+  private regionDe(m: Medecin): string {
+    const w = WILAYAS_SEO.find((x) => x.code === m.wilayaCode);
+    return (w ? this.nomW(w) : m.wilayaFr) || '';
+  }
+
+  private etapesFil(chemin: string) {
     const racine = `https://tabibi.doctor${this.p}`;
     const etapes = [
       { nom: this.t.accueil, url: `https://tabibi.doctor${this.p || '/'}` },
@@ -358,9 +394,12 @@ export class AnnuaireSeoComponent implements OnInit {
     if (this.specialite) etapes.push({ nom: this.nomS(this.specialite), url: `${racine}/specialites/${this.specialite.slug}` });
     if (this.wilaya) etapes.push({ nom: this.nomW(this.wilaya), url: `${racine}${chemin}` });
     if (this.index) etapes.pop();
-    ecrireJsonLd(this.document, 'ld-fil', fil(etapes));
-    const avecFaq = !this.index && !this.pharmacie;
-    ecrireJsonLd(this.document, 'ld-faq', avecFaq ? faqPage(this.faqVisible(), this.ar ? 'ar' : 'fr') : null);
+    return etapes;
+  }
+
+  /** Index : fil d'Ariane seul (pas de liste de praticiens). */
+  private ecrireFilSeul(chemin: string) {
+    ecrireJsonLd(this.document, 'ld-fil', fil(this.etapesFil(chemin)));
   }
 
   private lienCanonique(url: string) {
