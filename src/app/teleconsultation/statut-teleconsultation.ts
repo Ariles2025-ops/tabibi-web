@@ -1,3 +1,5 @@
+import { libelleStatutGenerique } from '../partage/statut-generique';
+
 /** Libelles francais des statuts de teleconsultation connus ; un statut inconnu est affiche tel quel. */
 const LIBELLES_STATUT_TELECONSULTATION: Partial<Record<string, string>> = {
   PLANIFIEE: 'Planifiée',
@@ -8,5 +10,5 @@ const LIBELLES_STATUT_TELECONSULTATION: Partial<Record<string, string>> = {
 
 export function libelleStatutTeleconsultation(statut: string | null | undefined): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_TELECONSULTATION[statut] ?? statut;
+  return LIBELLES_STATUT_TELECONSULTATION[statut] ?? libelleStatutGenerique(statut);
 }

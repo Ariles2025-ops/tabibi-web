@@ -8,8 +8,8 @@ describe('libelleStatutTeleconsultation', () => {
     expect(libelleStatutTeleconsultation('ANNULEE')).toBe('Annulée');
   });
 
-  it('affiche tel quel un statut inconnu et rien pour un statut absent', () => {
-    expect(libelleStatutTeleconsultation('REPORTEE')).toBe('REPORTEE');
+  it('rend un statut inconnu lisible et rien pour un statut absent', () => {
+    expect(libelleStatutTeleconsultation('REPORTEE')).toBe('Reportee');
     expect(libelleStatutTeleconsultation(null)).toBe('');
     expect(libelleStatutTeleconsultation(undefined)).toBe('');
   });
