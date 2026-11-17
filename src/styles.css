@@ -28,7 +28,7 @@ button:disabled { opacity:.6; cursor:default; }
   .side__nav { flex-direction:column; align-items:stretch; gap:3px; padding:0; }
   .side__nav a { display:block; padding:10px 12px; border-radius:10px; }
   .side__nav a:hover { background:rgba(255,255,255,.12); }
-  .side__nav a.actif { background:rgba(255,255,255,.18); font-weight:700; }
+  .side__nav a.actif { background:rgba(0,0,0,.22); font-weight:700; }
   .side__group { display:block; margin-top:14px; border-top:1px solid rgba(255,255,255,.18); padding-top:10px; }
   .side__grouptitle { text-transform:uppercase; letter-spacing:.05em; font-size:.72rem; padding:4px 12px; opacity:.85; width:auto; }
   .side__account { margin:auto 0 0; padding-top:14px; border-top:1px solid rgba(255,255,255,.18); flex-direction:column; align-items:stretch; gap:3px; }
@@ -91,7 +91,7 @@ button:disabled { opacity:.6; cursor:default; }
   .side__nav { flex-direction:row; align-items:center; flex-wrap:wrap; gap:4px; padding:0; flex:1 1 auto; min-width:0; }
   .side__nav a { display:inline-block; padding:8px 12px; border-radius:999px; }
   .side__nav a:hover { background:rgba(255,255,255,.14); }
-  .side__nav a.actif { background:rgba(255,255,255,.2); font-weight:700; }
+  .side__nav a.actif { background:rgba(0,0,0,.22); font-weight:700; }
   .side__group { display:contents; margin:0; border:0; padding:0; }
   .side__grouptitle { display:none; }
   .side__account { margin-inline-start:auto; flex-direction:row; align-items:center; gap:14px; padding-top:0; border-top:0; }
@@ -112,7 +112,7 @@ button:disabled { opacity:.6; cursor:default; }
   .side__nav.ouvert { display:flex; }
   .side__nav a { display:block; padding:12px 12px; border-radius:10px; font-size:16px; }
   .side__nav a:hover { background:rgba(255,255,255,.12); }
-  .side__nav a.actif { background:rgba(255,255,255,.18); font-weight:700; }
+  .side__nav a.actif { background:rgba(0,0,0,.22); font-weight:700; }
   .side__group { display:block; margin-top:10px; border-top:1px solid rgba(255,255,255,.18); padding-top:8px; }
   .side__grouptitle { display:block; text-transform:uppercase; letter-spacing:.05em; font-size:.72rem; padding:4px 12px; opacity:.85; width:auto; }
   .side__account { margin:10px 0 0; padding-top:10px; border-top:1px solid rgba(255,255,255,.18); flex-direction:column; align-items:stretch; gap:2px; }
