@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AnnuaireService, Creneau, Medecin } from '../annuaire/annuaire.service';
 import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { AuthService } from '../auth/auth.service';
+import { RoleService } from '../auth/role.service';
 import { SyntheseAvisComponent } from '../avis/synthese-avis.component';
 import { ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { MessagerieService } from '../messagerie/messagerie.service';
@@ -32,11 +33,12 @@ import { MessagerieService } from '../messagerie/messagerie.service';
               <span class="fm-badge fm-badge--neutre"><i class="fa fa-wallet fa-xs"></i> Paiement au cabinet</span>
             </div>
           </div>
-          <div class="fm-hero-act" *ngIf="!reclamable()">
+          <div class="fm-hero-act" *ngIf="!reclamable() && !messagerieReservee()">
             <button type="button" class="fm-btn fm-btn--sec" (click)="ecrire()" [disabled]="ouvertureMessagerie()">
               <i class="fa fa-comment-dots"></i> {{ ouvertureMessagerie() ? 'Ouverture…' : 'Écrire au médecin' }}
             </button>
           </div>
+          <p *ngIf="!reclamable() && messagerieReservee()" class="fm-hero-msg">La messagerie est réservée aux patients.</p>
           <p *ngIf="erreurMessagerie()" class="fm-err fm-hero-msg">{{ erreurMessagerie() }}</p>
         </header>
 
@@ -273,6 +275,7 @@ export class FicheMedecinComponent implements OnInit {
   private annuaire = inject(AnnuaireService);
   private rendezVous = inject(RendezVousService);
   private auth = inject(AuthService);
+  private roleService = inject(RoleService);
   private messagerie = inject(MessagerieService);
   private listeAttente = inject(ListeAttenteService);
   private router = inject(Router);
@@ -315,6 +318,11 @@ export class FicheMedecinComponent implements OnInit {
   erreur = signal('');
   /** Vrai pendant l'ouverture de la conversation avec le medecin. */
   ouvertureMessagerie = signal(false);
+  /** Vrai pour un compte medecin / secretaire / pharmacie / admin : l'API reserve la messagerie au role PATIENT. */
+  messagerieReservee = computed(() => {
+    const r = this.roleService.roles();
+    return ['MEDECIN', 'SECRETAIRE', 'PHARMACIE', 'ADMIN'].some((x) => r.includes(x));
+  });
   erreurMessagerie = signal('');
   /** Message une fois inscrit sur la liste d'attente du praticien (ou deja inscrit, 409) ; vide sinon. */
   inscription = signal('');
@@ -322,6 +330,7 @@ export class FicheMedecinComponent implements OnInit {
   erreurInscription = signal('');
 
   ngOnInit() {
+    this.roleService.charger();
     this.route.paramMap.subscribe((params) => this.charger(params.get('id') ?? ''));
   }
 
@@ -434,6 +443,8 @@ export class FicheMedecinComponent implements OnInit {
       this.auth.seConnecter();
       return;
     }
+    await this.roleService.charger();
+    if (this.messagerieReservee()) return;
     this.ouvertureMessagerie.set(true);
     this.erreurMessagerie.set('');
     this.messagerie.ouvrir(this.medecinId).subscribe({
