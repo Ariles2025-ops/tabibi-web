@@ -33,7 +33,8 @@ interface Raccourci { lien: string; libelle: string; }
         <button type="button" class="bouton-secondaire" (click)="sInscrireParEmail()">Créer un compte</button>
       </div>
       <div *ngIf="connecte()">
-        <p>Connecté en tant que <b>{{ moi()?.nom }}</b></p>
+        <p *ngIf="moi()?.nom?.trim() as nom; else sansNom">Connecté en tant que <b>{{ nom }}</b></p>
+        <ng-template #sansNom><p>Vous êtes connecté(e).</p></ng-template>
         <p *ngIf="rolesAffiches().length">{{ rolesAffiches().length > 1 ? 'Rôles' : 'Rôle' }} : {{ rolesAffiches().join(', ') }}</p>
         <nav aria-label="Accès rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0">
           <a *ngFor="let r of raccourcis(); let premier = first" [class.bouton]="premier" [class.bouton-secondaire]="!premier" [routerLink]="r.lien">{{ r.libelle }}</a>
