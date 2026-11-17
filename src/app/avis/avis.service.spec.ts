@@ -153,11 +153,11 @@ describe('AvisService', () => {
   });
 
   describe('libelleStatutAvis', () => {
-    it('traduit les statuts connus et affiche tel quel un statut inconnu', () => {
+    it('traduit les statuts connus et rend un statut inconnu lisible', () => {
       expect(libelleStatutAvis('PUBLIE')).toBe('Publié');
       expect(libelleStatutAvis('SIGNALE')).toBe('Signalé');
       expect(libelleStatutAvis('MASQUE')).toBe('Masqué');
-      expect(libelleStatutAvis('ARCHIVE')).toBe('ARCHIVE');
+      expect(libelleStatutAvis('ARCHIVE')).toBe('Archive');
       expect(libelleStatutAvis(null)).toBe('');
     });
   });
