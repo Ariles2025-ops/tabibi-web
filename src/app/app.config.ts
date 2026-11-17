@@ -7,6 +7,7 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { routes } from './app.routes';
 import { authInterceptor } from './auth/auth.interceptor';
+import { erreurApiInterceptor } from './partage/erreur-api.interceptor';
 import { ConfigService } from './config/config.service';
 
 // Dates et nombres en francais (DatePipe : « jeudi 18 septembre à 14:30 »).
@@ -27,7 +28,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideOAuthClient(),
     // fetch plutot que XMLHttpRequest : recommande des que l'application est aussi rendue cote serveur.
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, erreurApiInterceptor])),
     { provide: APP_INITIALIZER, useFactory: chargerConfiguration, multi: true },
     { provide: LOCALE_ID, useValue: 'fr' },
     // Heure de l'Algerie (UTC+1, sans heure d'ete) pour toutes les dates : identiques aux notifications, quel que
