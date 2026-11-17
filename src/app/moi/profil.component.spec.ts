@@ -106,6 +106,12 @@ describe('ProfilComponent', () => {
     expect(texte()).not.toContain('Dernière mise à jour');
   });
 
+  it('rappelle, comme l\'appli, que ces informations ne sont visibles que du patient et de ses praticiens', async () => {
+    await afficher();
+
+    expect(texte()).toContain('Ces informations ne sont visibles que de vous et des praticiens que vous consultez.');
+  });
+
   it('preremplit le formulaire avec le profil enregistre', async () => {
     service.monProfil.and.returnValue(of(PROFIL));
     await afficher();

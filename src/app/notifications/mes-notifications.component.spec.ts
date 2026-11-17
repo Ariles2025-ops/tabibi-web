@@ -109,6 +109,26 @@ describe('MesNotificationsComponent', () => {
     expect(service.mesNotifications).toHaveBeenCalledTimes(2);
   });
 
+  it('« Tout marquer comme lu » confirme le nombre de notifications marquees, comme l\'appli', async () => {
+    service.toutMarquerLu.and.returnValue(of(2));
+    await afficher();
+
+    bouton('Tout marquer comme lu')!.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('2 notification(s) marquée(s) lue(s)');
+  });
+
+  it('« Tout marquer comme lu » sans rien a marquer affiche « Aucune notification à marquer »', async () => {
+    service.toutMarquerLu.and.returnValue(of(0));
+    await afficher();
+
+    bouton('Tout marquer comme lu')!.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Aucune notification à marquer');
+  });
+
   it('affiche un message quand il n y a aucune notification', async () => {
     service.mesNotifications.and.returnValue(of([]));
     await afficher();

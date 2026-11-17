@@ -78,6 +78,7 @@ function formulaireVide(): DemandeProfil {
             </label>
           </div>
           <p style="color:var(--text3);font-size:.9rem;margin:0">* Champ obligatoire.</p>
+          <p class="profil-confidentialite" style="color:var(--text3);font-size:.9rem;margin:0">Ces informations ne sont visibles que de vous et des praticiens que vous consultez.</p>
           <p *ngIf="succes()" style="color:var(--vert);margin:0">{{ succes() }}</p>
           <p *ngIf="erreur()" style="color:#b3261e;margin:0">{{ erreur() }}</p>
           <div>
