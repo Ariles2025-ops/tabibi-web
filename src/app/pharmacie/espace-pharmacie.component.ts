@@ -8,9 +8,6 @@ import { Besoin, DawiniService, DemandeReponse, libelleReponses, libelleWilaya }
 import { Profil, ProfilService } from '../moi/profil.service';
 import { OrdonnanceService, Verification } from '../ordonnances/ordonnance.service';
 
-/** Cle localStorage du nom de la pharmacie (confort : prerempli d'une visite a l'autre, jamais indispensable). */
-const CLE_NOM_PHARMACIE = 'tabibi.pharmacie.nom';
-
 /** Champs d'une reponse en cours de saisie pour une demande. */
 interface FormulaireReponse {
   /** null tant qu'aucun bouton oui / non n'est coche. */
@@ -28,7 +25,7 @@ function formulaireVide(): FormulaireReponse {
  * Espace pharmacie (role PHARMACIE, Dawini) : profil de la pharmacie (nom + wilaya, GET / PUT /api/moi/profil),
  * verification / delivrance d'une ordonnance par son code, choix de la wilaya puis demandes de medicaments ouvertes
  * (GET /api/dawini/besoins?wilaya=, sans identite de patient) et, pour chacune, un formulaire de reponse
- * (POST /api/dawini/besoins/{id}/reponses) : nom de la pharmacie (memorise dans localStorage), disponible oui / non,
+ * (POST /api/dawini/besoins/{id}/reponses) : nom de la pharmacie (celui du profil, impose par l'API), disponible oui / non,
  * prix en dinars et commentaire facultatifs. Le patient est prevenu par l'API.
  */
 @Component({
@@ -95,10 +92,8 @@ function formulaireVide(): FormulaireReponse {
 
           <form *ngIf="!repondus().has(b.id) && !b.dejaRepondu && formulaires[b.id] as f" (ngSubmit)="repondre(b)"
                 style="display:grid;gap:10px;margin:12px 0 0;padding:12px;border:1px solid var(--border);border-radius:8px;background:#f8faf9">
-            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Nom de la pharmacie{{ profil() ? '' : ' *' }}
-              <input class="champ" [(ngModel)]="nomPharmacie" [name]="'nom-' + b.id" [required]="!profil()" placeholder="Ex. Pharmacie El Amel" style="color:#10241F;font-size:1rem">
-            </label>
+            <p *ngIf="profil() as p" class="nom-reponse" style="margin:0;color:var(--text3);font-size:.9rem">Répondre au nom de : <strong>{{ p.nomComplet }}</strong></p>
+            <p *ngIf="!profil()" class="nom-manquant" style="margin:0;color:#b3261e;font-size:.9rem">Renseignez d'abord le nom de votre pharmacie ci-dessus</p>
             <fieldset style="border:0;padding:0;margin:0;display:flex;gap:16px;align-items:center;flex-wrap:wrap;color:var(--text3);font-size:.9rem">
               <legend style="padding:0;margin:0 0 4px">Médicament disponible *</legend>
               <label style="display:flex;gap:6px;align-items:center;color:#10241F;font-size:1rem">
@@ -119,7 +114,7 @@ function formulaireVide(): FormulaireReponse {
               </label>
             </div>
             <div>
-              <button type="submit" class="bouton" [disabled]="enCours() !== null">
+              <button type="submit" class="bouton" [disabled]="enCours() !== null || !profil()">
                 {{ enCours() === b.id ? 'Envoi…' : 'Répondre' }}
               </button>
             </div>
@@ -177,8 +172,6 @@ export class EspacePharmacieComponent implements OnInit {
   wilayaCode = '';
   /** Wilayas du referentiel (assets/referentiel.json) : code attendu par l'API + libelle FR. */
   wilayas = signal<{ code: string; nom: string }[]>([]);
-  /** Nom de la pharmacie, commun a toutes les reponses, relu depuis localStorage s'il a deja ete saisi. */
-  nomPharmacie = '';
   besoins = signal<Besoin[]>([]);
   /** Reponse en cours de saisie, par identifiant de demande. */
   formulaires: Record<string, FormulaireReponse> = {};
@@ -213,7 +206,6 @@ export class EspacePharmacieComponent implements OnInit {
   erreurOrdonnance = signal('');
 
   ngOnInit() {
-    this.nomPharmacie = lireNomMemorise();
     this.http
       .get<{ wilayas?: { code: string; nom: string }[] }>('/assets/referentiel.json')
       .pipe(catchError(() => of({ wilayas: [] })))
@@ -236,7 +228,6 @@ export class EspacePharmacieComponent implements OnInit {
   private appliquerProfil(p: Profil) {
     this.profil.set(p);
     this.profilManquant.set(false);
-    if (p.nomComplet) this.nomPharmacie = p.nomComplet;
     if (p.wilayaCode) {
       this.wilayaCode = p.wilayaCode;
       this.charger(p.wilayaCode);
@@ -356,14 +347,14 @@ export class EspacePharmacieComponent implements OnInit {
 
   repondre(b: Besoin) {
     const f = this.formulaires[b.id] ?? formulaireVide();
-    const nomPharmacie = this.nomPharmacie.trim();
+    // Le nom vient du profil (l'API l'impose) ; sans profil, on oriente vers le formulaire de profil.
+    const nomPharmacie = this.profil()?.nomComplet?.trim() ?? '';
     const prixSaisi = f.prixDa === null || f.prixDa === undefined ? '' : String(f.prixDa).trim();
     const prixDa = prixSaisi === '' ? null : Number(prixSaisi);
     const commentaire = f.commentaire.trim();
     this.succes.set('');
-    // Avec un profil, le nom peut rester vide : le serveur le complete depuis le profil.
-    if (!nomPharmacie && !this.profil()) {
-      this.erreur.set('Indiquez le nom de votre pharmacie.');
+    if (!this.profil()) {
+      this.erreur.set("Renseignez d'abord le nom de votre pharmacie ci-dessus.");
       return;
     }
     if (f.disponible === null) {
@@ -380,7 +371,6 @@ export class EspacePharmacieComponent implements OnInit {
     this.service.repondre(b.id, demande).subscribe({
       next: () => {
         this.enCours.set(null);
-        if (nomPharmacie) memoriserNom(nomPharmacie);
         this.repondus.update((ids) => new Set(ids).add(b.id));
         this.succes.set(`Réponse envoyée pour « ${b.medicament} » : le patient est prévenu.`);
         this.charger(b.wilayaCode);
@@ -405,26 +395,5 @@ export class EspacePharmacieComponent implements OnInit {
 
   libelleReponses(nombre: number): string {
     return libelleReponses(nombre);
-  }
-}
-
-/**
- * Nom memorise, ou chaine vide si le stockage est indisponible (navigation privee, stockage bloque, rendu cote
- * serveur ou localStorage n'existe pas).
- */
-function lireNomMemorise(): string {
-  try {
-    return typeof localStorage === 'undefined' ? '' : (localStorage.getItem(CLE_NOM_PHARMACIE) ?? '');
-  } catch {
-    return '';
-  }
-}
-
-/** Memorise le nom pour la prochaine visite ; un stockage indisponible n'empeche rien. */
-function memoriserNom(nom: string): void {
-  try {
-    if (typeof localStorage !== 'undefined') localStorage.setItem(CLE_NOM_PHARMACIE, nom);
-  } catch {
-    // Stockage indisponible : le nom sera simplement a ressaisir.
   }
 }
