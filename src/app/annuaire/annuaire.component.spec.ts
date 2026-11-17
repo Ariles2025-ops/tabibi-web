@@ -44,6 +44,49 @@ describe('AnnuaireComponent : reperes d accessibilite', () => {
   });
 });
 
+/** Hors connexion, pas de cadenas quand il n'y a rien a debloquer (aucun resultat ou erreur). */
+describe('AnnuaireComponent : cadenas sans resultat', () => {
+  function creer(retour: Subject<Medecin[]>) {
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher']);
+    annuaire.rechercher.and.returnValue(retour);
+    TestBed.configureTestingModule({
+      imports: [AnnuaireComponent],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: { estConnecte: () => false, pret: () => Promise.resolve() } },
+        { provide: AnnuaireService, useValue: annuaire },
+      ],
+    });
+    const fixture = TestBed.createComponent(AnnuaireComponent);
+    fixture.componentInstance.q = 'zzz';
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('aucun resultat : message « Aucun médecin trouvé » sans cadenas', () => {
+    const retour = new Subject<Medecin[]>();
+    const fixture = creer(retour);
+    fixture.componentInstance.rechercher();
+    retour.next([]);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.docs-gate')).toBeNull();
+    expect(el.textContent).toContain('Aucun médecin trouvé');
+    expect(el.textContent).not.toContain('Créez un compte pour voir');
+  });
+
+  it('avec des resultats : le cadenas reste affiche', () => {
+    const retour = new Subject<Medecin[]>();
+    const fixture = creer(retour);
+    fixture.componentInstance.rechercher();
+    retour.next([{ id: 'a', nomComplet: 'A' } as Medecin]);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.docs-gate')).not.toBeNull();
+  });
+});
+
 /** Le champ ne promet que ce que l'API fait : GET /api/medecins?q= ne filtre que sur le nom. */
 describe('AnnuaireComponent : libelle du champ de recherche', () => {
   it('annonce « Nom du médecin », sans promettre specialite ni etablissement', () => {

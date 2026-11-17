@@ -199,11 +199,10 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       </div>
 
       <!-- Hors connexion : les premiers resultats sont floutes (non cliquables) sous le cadenas, avec leur nombre. -->
-      <div class="docs-gate" [class.docs-gate--solo]="resultats().length === 0" *ngIf="!connecte() && !charge()">
+      <div class="docs-gate" *ngIf="!connecte() && !charge() && !erreur() && resultats().length > 0">
         <div class="docs-gate__card">
           <span class="docs-gate__ic"><i class="fa fa-lock" aria-hidden="true"></i></span>
-          <h3 *ngIf="resultats().length">{{ resultats().length >= 50 ? '50+' : resultats().length }} {{ resultats().length > 1 ? 'médecins trouvés' : 'médecin trouvé' }}</h3>
-          <h3 *ngIf="!resultats().length">Créez un compte pour voir les médecins</h3>
+          <h3>{{ resultats().length >= 50 ? '50+' : resultats().length }} {{ resultats().length > 1 ? 'médecins trouvés' : 'médecin trouvé' }}</h3>
           <p>La liste des médecins et leurs disponibilités sont réservées aux membres de Tabibi — c'est gratuit.</p>
           <div class="docs-gate__btns">
             <a class="bouton" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">Créer un compte</a>
@@ -366,7 +365,6 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     .docs-gate__card h3 { margin:0 0 6px; font-size:18px; font-weight:800; color:var(--ink); line-height:1.25; }
     .docs-gate__card p { margin:0 0 16px; font-size:13px; color:var(--text3); line-height:1.5; }
     .docs-gate__btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
-    .docs-gate--solo { position:static; inset:auto; padding:8px var(--gutter) 24px; }
 
     @media (max-width:760px) {
       .dl-search { flex-direction:column; border-radius:20px; padding:8px; gap:6px; margin-top:14px; }
