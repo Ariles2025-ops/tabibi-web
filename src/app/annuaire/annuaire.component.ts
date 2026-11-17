@@ -1,7 +1,8 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
-import { ACCUEIL_FR, referencerAccueil } from '../seo/marque';
+import { ACCUEIL_AR, ACCUEIL_FR, referencerAccueil } from '../seo/marque';
+import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
 import { VISIO_ACTIVE } from '../lancement';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -17,33 +18,41 @@ interface OptionSpecialite { slug: string; nom: string; }
 /** Contenu de assets/referentiel.json. */
 interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]; }
 
+/** Libelles arabes des wilayas (par code) et des specialites (par slug), repris du referentiel SEO. */
+const WILAYAS_AR = new Map(WILAYAS_SEO.map((w) => [w.code, w.nomAr]));
+const SPECIALITES_AR = new Map([...SPECIALITES_SEO.map((s): [string, string] => [s.slug, s.nomAr]), ['autre', 'تخصص آخر']]);
+
+/** Lien Google Play de l'appli Ndawik (bouton du hero). */
+const GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=dz.tabibi.app';
+
 /**
- * Accueil public : le design (hero, cartes) est repris tel quel de l'ancien site
- * (legacy-accueil.css). Seules les donnees changent : la recherche interroge l'API v2.
+ * Accueil public, en francais (/) et en arabe (/ar, donnee de route `langue: 'ar'`) : la meme page,
+ * memes sections dans le meme ordre, traduite et mise en page de droite a gauche en arabe.
+ * Le design (hero, cartes) est repris de l'ancien site (legacy-accueil.css) ; la recherche interroge l'API v2.
  */
 @Component({
     selector: 'app-annuaire',
     imports: [CommonModule, FormsModule, RouterLink],
     template: `
-    <main id="contenu">
+    <main id="contenu" [attr.dir]="ar() ? 'rtl' : null" [attr.lang]="ar() ? 'ar' : null">
     <section class="hero-mobile">
       <div class="hz">
         <div class="hero-col-l">
-          <div class="hero-badge"><span class="hero-dot" aria-hidden="true"></span><span>75 000+ médecins référencés en Algérie</span></div>
-          <h1 class="hero-title">Votre santé ne devrait jamais attendre.</h1>
-          <p class="hero-sub">Prenez rendez-vous avec un médecin partout en Algérie — 69 wilayas, 24h/24.</p>
+          <div class="hero-badge"><span class="hero-dot" aria-hidden="true"></span><span>{{ t('75 000+ médecins référencés en Algérie', 'أكثر من 75 000 طبيب مُدرَج في الجزائر') }}</span></div>
+          <h1 class="hero-title">{{ t('Votre santé ne devrait jamais attendre.', 'صحتك لا تحتمل الانتظار.') }}</h1>
+          <p class="hero-sub">{{ t('Prenez rendez-vous avec un médecin partout en Algérie — 69 wilayas, 24h/24.', 'احجز موعدك مع طبيب في أي مكان من الجزائر — 69 ولاية، على مدار الساعة.') }}</p>
           <div class="dl-search" role="search" id="hero-recherche">
             <div class="dl-field dl-field--text" style="position:relative">
               <i class="fa fa-magnifying-glass dl-ic" aria-hidden="true"></i>
               <input class="dl-input" type="search" [(ngModel)]="q" (input)="surSaisie()" (focus)="surFocus()" (blur)="masquerBientot()"
                      (keyup.enter)="lancerRecherche()"
-                     placeholder="Nom du médecin" autocomplete="off" aria-label="Nom du médecin"
+                     [placeholder]="t('Nom du médecin', 'اسم الطبيب')" autocomplete="off" [attr.aria-label]="t('Nom du médecin', 'اسم الطبيب')"
                      role="combobox" aria-autocomplete="list" aria-controls="ac-suggestions" [attr.aria-expanded]="suggestionsVisibles() && suggestions().length > 0">
               <ul id="ac-suggestions" class="ac-liste" role="listbox" *ngIf="connecte() && suggestionsVisibles() && suggestions().length">
                 <li *ngFor="let s of suggestions()" role="option">
                   <a class="ac-item" [routerLink]="['/medecins', s.id]" (click)="choisirSuggestion()">
                     <span class="ac-nom" dir="auto">{{ s.nomComplet }}</span>
-                    <span class="ac-meta">{{ s.specialiteFr }} · {{ s.wilayaFr }}</span>
+                    <span class="ac-meta">{{ specialiteDe(s) }} · {{ wilayaDe(s) }}</span>
                   </a>
                 </li>
               </ul>
@@ -51,85 +60,95 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
             <div class="dl-sep" aria-hidden="true"></div>
             <label class="dl-field dl-field--wil">
               <i class="fa fa-location-dot dl-ic" aria-hidden="true"></i>
-              <select class="dl-select" [(ngModel)]="wilaya" (change)="surFiltre()" aria-label="Où ?">
-                <option value="">Où ?</option>
-                <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.nom }}</option>
+              <select class="dl-select" [(ngModel)]="wilaya" (change)="surFiltre()" [attr.aria-label]="t('Où ?', 'أين؟')">
+                <option value="">{{ t('Où ?', 'أين؟') }}</option>
+                <option *ngFor="let w of wilayas()" [value]="w.code">{{ nomWilaya(w.code, w.nom) }}</option>
               </select>
             </label>
-            <button type="button" class="dl-btn" (click)="lancerRecherche()" aria-label="Rechercher">
-              <span>Rechercher</span><i class="fa fa-arrow-right" aria-hidden="true"></i>
+            <button type="button" class="dl-btn" (click)="lancerRecherche()" [attr.aria-label]="t('Rechercher', 'بحث')">
+              <span>{{ t('Rechercher', 'بحث') }}</span><i class="fa fa-arrow-right" aria-hidden="true"></i>
             </button>
           </div>
           <div class="dl-refine">
             <label class="dl-chip">
               <i class="fa fa-stethoscope" aria-hidden="true"></i>
-              <select [(ngModel)]="specialite" (change)="surFiltre()" aria-label="Spécialité">
-                <option value="">Toutes les spécialités</option>
-                <option *ngFor="let s of specialites()" [value]="s.slug">{{ s.nom }}</option>
+              <select [(ngModel)]="specialite" (change)="surFiltre()" [attr.aria-label]="t('Spécialité', 'التخصص')">
+                <option value="">{{ t('Toutes les spécialités', 'جميع التخصصات') }}</option>
+                <option *ngFor="let s of specialites()" [value]="s.slug">{{ nomSpecialite(s.slug, s.nom) }}</option>
               </select>
             </label>
           </div>
-          <div class="v4-paynote"><i class="fa fa-credit-card" aria-hidden="true"></i> <span>Paiement au cabinet — espèces ou carte Chifa. Aucun prépaiement en ligne.</span></div>
+          <div class="hero-stores">
+            <a class="store" [href]="googlePlay" target="_blank" rel="noopener">
+              <i class="fa-brands fa-google-play" aria-hidden="true"></i>
+              <span><small>{{ t('Disponible sur', 'متوفر على') }}</small>Google Play</span>
+            </a>
+            <span class="store store--bientot" aria-disabled="true">
+              <i class="fa-brands fa-apple" aria-hidden="true"></i>
+              <span><small>{{ t('Bientôt sur', 'قريبًا على') }}</small>App Store</span>
+            </span>
+          </div>
+          <div class="v4-paynote"><i class="fa fa-credit-card" aria-hidden="true"></i> <span>{{ t('Paiement au cabinet — espèces ou carte Chifa. Aucun prépaiement en ligne.', 'الدفع في العيادة — نقدًا أو ببطاقة الشفاء. لا دفع مسبق عبر الإنترنت.') }}</span></div>
         </div>
 
         <div class="hero-stats" *ngIf="!enRecherche">
-          <div class="hero-stat"><div class="hs-n">75 000+</div><div class="hs-l">Médecins référencés</div></div>
-          <div class="hero-stat"><div class="hs-n">69</div><div class="hs-l">Wilayas</div></div>
-          <div class="hero-stat"><div class="hs-n">24/7</div><div class="hs-l">Réservation</div></div>
+          <div class="hero-stat"><div class="hs-n" dir="ltr">75 000+</div><div class="hs-l">{{ t('Médecins référencés', 'طبيب مُدرَج') }}</div></div>
+          <div class="hero-stat"><div class="hs-n">69</div><div class="hs-l">{{ t('Wilayas', 'ولاية') }}</div></div>
+          <div class="hero-stat"><div class="hs-n" dir="ltr">24/7</div><div class="hs-l">{{ t('Réservation', 'حجز المواعيد') }}</div></div>
         </div>
 
         <div class="hero-visual" aria-hidden="true" *ngIf="!enRecherche">
           <div class="bookcard-ghost"></div>
           <div class="bookcard">
             <div class="bc-doc">
-              <div class="bc-ava bc-ava--photo" role="img" aria-label="Photo de la médecin"></div>
-              <div class="bc-id"><b>Dr. Sofiane M.</b><small>Généraliste · Constantine</small></div>
-              <span class="bc-verified"><i class="fa fa-check"></i> <span>Vérifié</span></span>
+              <div class="bc-ava bc-ava--photo" role="img" [attr.aria-label]="t('Photo de la médecin', 'صورة الطبيبة')"></div>
+              <div class="bc-id"><b>{{ t('Dr. Sofiane M.', 'د. سفيان م.') }}</b><small>{{ t('Généraliste · Constantine', 'طبيب عام · قسنطينة') }}</small></div>
+              <span class="bc-verified"><i class="fa fa-check"></i> <span>{{ t('Vérifié', 'موثَّق') }}</span></span>
             </div>
-            <div class="bc-day">Aujourd'hui · 12 créneaux disponibles</div>
+            <div class="bc-day">{{ t("Aujourd'hui · 12 créneaux disponibles", 'اليوم · 12 موعدًا متاحًا') }}</div>
             <div class="bc-slots"><span dir="ltr">09:00</span><span dir="ltr">09:30</span><span class="sel" dir="ltr">10:30</span><span dir="ltr">11:00</span><span dir="ltr">14:00</span><span dir="ltr">15:30</span></div>
-            <div class="bc-btn"><i class="fa fa-check"></i> <span>Confirmer le RDV</span> · <span dir="ltr">10:30</span></div>
-            <div class="bc-note">Confirmation immédiate · Paiement au cabinet</div>
+            <div class="bc-btn"><i class="fa fa-check"></i> <span>{{ t('Confirmer le RDV', 'تأكيد الموعد') }}</span> · <span dir="ltr">10:30</span></div>
+            <div class="bc-note">{{ t('Confirmation immédiate · Paiement au cabinet', 'تأكيد فوري · الدفع في العيادة') }}</div>
           </div>
-          <div class="badge-float bf1"><span class="dot" style="background:var(--blue)"><i class="fa fa-check"></i></span><span><b>RDV confirmé</b><small>Rappel dans votre espace Ndawik</small></span></div>
-          <div class="badge-float bf2"><span class="dot" style="background:#D4A437"><i class="fa fa-star"></i></span><span><b>Médecin vérifié</b><small>Numéro d'ordre contrôlé</small></span></div>
+          <div class="badge-float bf1"><span class="dot" style="background:var(--blue)"><i class="fa fa-check"></i></span><span><b>{{ t('RDV confirmé', 'تم تأكيد الموعد') }}</b><small>{{ t('Rappel dans votre espace Ndawik', 'تذكير في فضائك على نداويك') }}</small></span></div>
+          <div class="badge-float bf2"><span class="dot" style="background:#D4A437"><i class="fa fa-star"></i></span><span><b>{{ t('Médecin vérifié', 'طبيب موثَّق') }}</b><small>{{ t("Numéro d'ordre contrôlé", 'رقم التسجيل في النقابة مُراقَب') }}</small></span></div>
         </div>
       </div>
 
       <a routerLink="/praticien" *ngIf="!enRecherche" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:12px 14px;background:#fff;border:1.5px dashed var(--pastille-bd);border-radius:var(--r12);color:var(--ink);text-decoration:none;font-size:13px">
-        <span><i class="fa fa-user-doctor" style="margin-right:6px;color:var(--vert)"></i> Vous êtes praticien ? Réclamez votre fiche</span>
+        <span><i class="fa fa-user-doctor" style="margin-inline-end:6px;color:var(--vert)"></i> {{ t('Vous êtes praticien ? Réclamez votre fiche', 'هل أنت طبيب؟ طالِب بصفحتك') }}</span>
         <i class="fa fa-arrow-right" style="opacity:.7"></i>
       </a>
     </section>
 
-    <div class="v4strip" aria-label="Garanties Ndawik" *ngIf="!enRecherche">
-      <div class="item"><i class="fa fa-shield-halved" aria-hidden="true"></i> <span>Numéro d'ordre vérifié avant activation</span></div>
-      <div class="item"><i class="fa fa-calendar-check" aria-hidden="true"></i> <span>RDV en 30 secondes</span></div>
-      <div class="item"><i class="fa fa-server" aria-hidden="true"></i> <span>Vos données protégées (loi 18-07)</span></div>
-      <div class="item"><i class="fa fa-lock" aria-hidden="true"></i> <span>Paiement au cabinet</span></div>
+    <div class="v4strip" [attr.aria-label]="t('Garanties Ndawik', 'ضمانات نداويك')" *ngIf="!enRecherche">
+      <div class="item"><i class="fa fa-shield-halved" aria-hidden="true"></i> <span>{{ t("Numéro d'ordre vérifié avant activation", 'التحقق من رقم التسجيل في النقابة قبل التفعيل') }}</span></div>
+      <div class="item"><i class="fa fa-calendar-check" aria-hidden="true"></i> <span>{{ t('RDV en 30 secondes', 'موعد في 30 ثانية') }}</span></div>
+      <div class="item"><i class="fa fa-server" aria-hidden="true"></i> <span>{{ t('Vos données protégées (loi 18-07)', 'بياناتك محمية (القانون 18-07)') }}</span></div>
+      <div class="item"><i class="fa fa-lock" aria-hidden="true"></i> <span>{{ t('Paiement au cabinet', 'الدفع في العيادة') }}</span></div>
     </div>
 
     <section class="dwh" id="sec-dawini" *ngIf="!enRecherche">
       <div class="dwh-card">
         <div class="dwh-l">
-          <span class="dwh-new"><i class="fa fa-wand-magic-sparkles" aria-hidden="true"></i> <span>Nouveau</span></span>
-          <h2><span class="dwh-name">Dawini</span> — trouvez votre médicament en pharmacie</h2>
-          <p>Décrivez le médicament que vous cherchez : les pharmacies partenaires de votre wilaya voient votre demande et vous indiquent sa disponibilité et son prix.</p>
+          <span class="dwh-new"><i class="fa fa-wand-magic-sparkles" aria-hidden="true"></i> <span>{{ t('Nouveau', 'جديد') }}</span></span>
+          <h2><span class="dwh-name">{{ t('Dawini', 'داويني') }}</span> — {{ t('trouvez votre médicament en pharmacie', 'اعثر على دوائك في الصيدلية') }}</h2>
+          <p>{{ t('Décrivez le médicament que vous cherchez : les pharmacies partenaires de votre wilaya voient votre demande et vous indiquent sa disponibilité et son prix.', 'صِف الدواء الذي تبحث عنه: تطّلع الصيدليات الشريكة في ولايتك على طلبك وتخبرك بتوفّره وسعره.') }}</p>
           <div class="dwh-points">
-            <span><i class="fa fa-clock" aria-hidden="true"></i> <span>Disponibilité indiquée par la pharmacie</span></span>
-            <span><i class="fa fa-location-dot" aria-hidden="true"></i> <span>Pharmacies de votre wilaya</span></span>
-            <span><i class="fa fa-lock" aria-hidden="true"></i> <span>Votre identité n'est pas communiquée aux pharmacies</span></span>
+            <span><i class="fa fa-clock" aria-hidden="true"></i> <span>{{ t('Disponibilité indiquée par la pharmacie', 'الصيدلية هي من يحدد التوفّر') }}</span></span>
+            <span><i class="fa fa-location-dot" aria-hidden="true"></i> <span>{{ t('Pharmacies de votre wilaya', 'صيدليات ولايتك') }}</span></span>
+            <span><i class="fa fa-lock" aria-hidden="true"></i> <span>{{ t("Votre identité n'est pas communiquée aux pharmacies", 'لا تُرسَل هويتك إلى الصيدليات') }}</span></span>
           </div>
-          <a class="btn btn-primary btn-lg dwh-cta" routerLink="/dawini"><i class="fa fa-prescription-bottle-medical" aria-hidden="true"></i> <span>Chercher un médicament</span></a>
+          <a class="btn btn-primary btn-lg dwh-cta" routerLink="/dawini"><i class="fa fa-prescription-bottle-medical" aria-hidden="true"></i> <span>{{ t('Chercher un médicament', 'ابحث عن دواء') }}</span></a>
         </div>
         <div class="dwh-r" aria-hidden="true">
           <div class="dwh-mock">
-            <div class="dwh-mock-req"><i class="fa fa-pills"></i> Amoxicilline 1g <span class="b">Envoyée aux pharmacies</span></div>
+            <div class="dwh-mock-req"><i class="fa fa-pills"></i> {{ t('Amoxicilline 1g', 'أموكسيسيلين 1 غ') }} <span class="b">{{ t('Envoyée aux pharmacies', 'أُرسلت إلى الصيدليات') }}</span></div>
             <div class="dwh-mock-resp">
-              <div class="top">Pharmacie El Chifa <span class="ok"><i class="fa fa-check"></i> <span>Disponible</span></span></div>
-              <small>Alger-Centre · générique disponible</small>
+              <div class="top">{{ t('Pharmacie El Chifa', 'صيدلية الشفاء') }} <span class="ok"><i class="fa fa-check"></i> <span>{{ t('Disponible', 'متوفر') }}</span></span></div>
+              <small>{{ t('Alger-Centre · générique disponible', 'الجزائر الوسطى · الدواء الجنيس متوفر') }}</small>
                           </div>
-            <div style="text-align:center;font-size:10px;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.78);font-weight:700">Aperçu — exemple</div>
+            <div style="text-align:center;font-size:10px;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.78);font-weight:700">{{ t('Aperçu — exemple', 'معاينة — مثال') }}</div>
           </div>
         </div>
       </div>
@@ -137,22 +156,22 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
 
     <section class="section" *ngIf="!enRecherche" style="padding-top:8px">
       <div style="padding:0 var(--gutter)">
-        <h2 class="sec-title" style="text-align:center;margin-bottom:18px">Votre compagnon santé au quotidien</h2>
+        <h2 class="sec-title" style="text-align:center;margin-bottom:18px">{{ t('Votre compagnon santé au quotidien', 'رفيقك الصحي كل يوم') }}</h2>
         <div class="dl-feats">
           <div class="dl-feat">
             <span class="dl-feat__ic"><i class="fa fa-calendar-check" aria-hidden="true"></i></span>
-            <h3>Réservez en ligne</h3>
-            <p>Trouvez un médecin et prenez rendez-vous en 30 secondes, 24h/24.</p>
+            <h3>{{ t('Réservez en ligne', 'احجز عبر الإنترنت') }}</h3>
+            <p>{{ t('Trouvez un médecin et prenez rendez-vous en 30 secondes, 24h/24.', 'اعثر على طبيب واحجز موعدك في 30 ثانية، على مدار الساعة.') }}</p>
           </div>
           <div class="dl-feat">
             <span class="dl-feat__ic"><i class="fa fa-comment-medical" aria-hidden="true"></i></span>
-            <h3>Suivi et rappels</h3>
-            <p>Retrouvez vos rendez-vous et leurs rappels dans votre espace Ndawik, pour ne jamais les oublier.</p>
+            <h3>{{ t('Suivi et rappels', 'المتابعة والتذكير') }}</h3>
+            <p>{{ t('Retrouvez vos rendez-vous et leurs rappels dans votre espace Ndawik, pour ne jamais les oublier.', 'تجد مواعيدك وتذكيراتها في فضائك على نداويك، حتى لا تنساها أبدًا.') }}</p>
           </div>
           <div class="dl-feat">
             <span class="dl-feat__ic"><i class="fa fa-shield-halved" aria-hidden="true"></i></span>
-            <h3>Vos données protégées</h3>
-            <p>Vos informations de santé sont chiffrées et protégées (loi 18-07).</p>
+            <h3>{{ t('Vos données protégées', 'بياناتك محمية') }}</h3>
+            <p>{{ t('Vos informations de santé sont chiffrées et protégées (loi 18-07).', 'معلوماتك الصحية مشفّرة ومحمية (القانون 18-07).') }}</p>
           </div>
         </div>
       </div>
@@ -161,22 +180,22 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     <section class="section" *ngIf="!enRecherche" style="padding-top:0">
       <div style="padding:0 var(--gutter)">
         <div class="dl-stats">
-          <div class="dl-stat"><div class="dl-stat__n">75 000+</div><div class="dl-stat__l">Médecins référencés</div></div>
-          <div class="dl-stat"><div class="dl-stat__n">69</div><div class="dl-stat__l">Wilayas couvertes</div></div>
+          <div class="dl-stat"><div class="dl-stat__n" dir="ltr">75 000+</div><div class="dl-stat__l">{{ t('Médecins référencés', 'طبيب مُدرَج') }}</div></div>
+          <div class="dl-stat"><div class="dl-stat__n">69</div><div class="dl-stat__l">{{ t('Wilayas couvertes', 'ولاية مغطّاة') }}</div></div>
         </div>
       </div>
     </section>
 
     <section class="section" id="sec-docs" *ngIf="enRecherche">
       <div class="sec-head" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 var(--gutter);margin-bottom:14px">
-        <h2 class="sec-title">Résultats de votre recherche</h2>
-        <span style="color:var(--text3);font-size:13px;font-weight:600" *ngIf="!charge() && resultats().length">{{ resultats().length >= 50 ? (connecte() ? '50 premiers résultats — affinez votre recherche' : '50+ médecins trouvés') : resultats().length + (resultats().length > 1 ? ' médecins trouvés' : ' médecin trouvé') }}</span>
+        <h2 class="sec-title">{{ t('Résultats de votre recherche', 'نتائج بحثك') }}</h2>
+        <span style="color:var(--text3);font-size:13px;font-weight:600" *ngIf="!charge() && resultats().length">{{ texteCompte() }}</span>
       </div>
 
-      <p *ngIf="charge()" style="padding:0 var(--gutter);color:var(--text3)">Recherche…</p>
+      <p *ngIf="charge()" style="padding:0 var(--gutter);color:var(--text3)">{{ t('Recherche…', 'جارٍ البحث…') }}</p>
       <p *ngIf="erreur()" style="padding:0 var(--gutter);color:#b3261e">
         {{ erreur() }}
-        <button type="button" (click)="rechercher()" style="margin-left:8px;background:none;border:0;color:var(--vert);font-weight:700;text-decoration:underline;cursor:pointer;font:inherit;padding:0">Réessayer</button>
+        <button type="button" (click)="rechercher()" style="margin-inline-start:8px;background:none;border:0;color:var(--vert);font-weight:700;text-decoration:underline;cursor:pointer;font:inherit;padding:0">{{ t('Réessayer', 'إعادة المحاولة') }}</button>
       </p>
 
       <div class="docs-wrap">
@@ -186,14 +205,14 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
             <div class="doc-ava">{{ initiales(m) }}</div>
             <div style="flex:1;min-width:0">
               <div class="doc-name" dir="auto">{{ m.nomComplet }}</div>
-              <div class="doc-spec"><i class="fa fa-stethoscope fa-xs"></i>{{ m.specialiteFr }}</div>
-              <div class="doc-loc"><i class="fa fa-location-dot fa-xs"></i>{{ m.ville || m.wilayaFr }} ({{ m.wilayaFr }})</div>
+              <div class="doc-spec"><i class="fa fa-stethoscope fa-xs"></i>{{ specialiteDe(m) }}</div>
+              <div class="doc-loc"><i class="fa fa-location-dot fa-xs"></i>{{ m.ville || wilayaDe(m) }} ({{ wilayaDe(m) }})</div>
             </div>
           </div>
           <div class="doc-footer">
-            <span *ngIf="m.reservable" class="badge-reservable" style="display:inline-flex;align-items:center;gap:6px;background:var(--green-l);color:var(--green);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px"><i class="fa fa-calendar-check fa-xs" aria-hidden="true"></i>Réservable en ligne</span>
+            <span *ngIf="m.reservable" class="badge-reservable" style="display:inline-flex;align-items:center;gap:6px;background:var(--green-l);color:var(--green);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px"><i class="fa fa-calendar-check fa-xs" aria-hidden="true"></i>{{ t('Réservable en ligne', 'الحجز متاح عبر الإنترنت') }}</span>
             <span *ngIf="!m.reservable"></span>
-            <span class="btn btn-sm doc-btn-ghost"><i class="fa fa-arrow-right"></i> Voir la fiche</span>
+            <span class="btn btn-sm doc-btn-ghost"><i class="fa fa-arrow-right"></i> {{ t('Voir la fiche', 'عرض الصفحة') }}</span>
           </div>
         </article>
       </div>
@@ -202,18 +221,18 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       <div class="docs-gate" *ngIf="!connecte() && !charge() && !erreur() && resultats().length > 0">
         <div class="docs-gate__card">
           <span class="docs-gate__ic"><i class="fa fa-lock" aria-hidden="true"></i></span>
-          <h3>{{ resultats().length >= 50 ? '50+' : resultats().length }} {{ resultats().length > 1 ? 'médecins trouvés' : 'médecin trouvé' }}</h3>
-          <p>La liste des médecins et leurs disponibilités sont réservées aux membres de Ndawik — c'est gratuit.</p>
+          <h3>{{ texteNombre() }}</h3>
+          <p>{{ t("La liste des médecins et leurs disponibilités sont réservées aux membres de Ndawik — c'est gratuit.", 'قائمة الأطباء ومواعيدهم المتاحة مخصّصة لأعضاء نداويك — والتسجيل مجاني.') }}</p>
           <div class="docs-gate__btns">
-            <a class="bouton" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">Créer un compte</a>
-            <a class="bouton-secondaire" (click)="seConnecter()" tabindex="0" role="button" style="cursor:pointer">Se connecter</a>
+            <a class="bouton" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ t('Créer un compte', 'إنشاء حساب') }}</a>
+            <a class="bouton-secondaire" (click)="seConnecter()" tabindex="0" role="button" style="cursor:pointer">{{ t('Se connecter', 'تسجيل الدخول') }}</a>
           </div>
         </div>
       </div>
 
       </div>
       <p *ngIf="!charge() && !erreur() && resultats().length === 0" style="text-align:center;color:var(--text3);padding:32px var(--gutter)">
-        Aucun médecin trouvé. Essayez un autre nom ou une autre wilaya.
+        {{ t('Aucun médecin trouvé. Essayez un autre nom ou une autre wilaya.', 'لم نعثر على أي طبيب. جرّب اسمًا آخر أو ولاية أخرى.') }}
       </p>
     </section>
 
@@ -221,8 +240,8 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       <div class="v4-revgrid">
         <figure class="v4-rev" style="grid-column:1 / -1;max-width:600px;margin:0 auto;text-align:center">
           <div style="font-size:22px;color:#D4A437;margin-bottom:8px" aria-hidden="true"><i class="fa fa-star"></i></div>
-          <blockquote style="font-weight:800">Premiers avis à venir</blockquote>
-          <figcaption style="justify-content:center">Chaque avis publié ici sera lié à un rendez-vous réel et vérifié.</figcaption>
+          <blockquote style="font-weight:800">{{ t('Premiers avis à venir', 'أولى التقييمات قريبًا') }}</blockquote>
+          <figcaption style="justify-content:center">{{ t('Chaque avis publié ici sera lié à un rendez-vous réel et vérifié.', 'كل تقييم يُنشر هنا سيكون مرتبطًا بموعد حقيقي تم التحقق منه.') }}</figcaption>
         </figure>
       </div>
     </section>
@@ -230,34 +249,34 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     <div class="v4-tele" *ngIf="!enRecherche">
       <span class="ti"><i class="fa fa-video" aria-hidden="true"></i></span>
       <div>
-        <h3>Téléconsultation <span *ngIf="!visio" class="pastille-bientot">Bientôt</span></h3>
-        <p *ngIf="visio">Après la prise de rendez-vous, votre médecin peut vous proposer une téléconsultation : vous la retrouvez alors dans votre espace Ndawik et consultez à distance, où que vous soyez en Algérie.</p>
-        <p *ngIf="!visio">Bientôt, consultez votre médecin à distance par vidéo, où que vous soyez en Algérie. En attendant, prenez rendez-vous au cabinet.</p>
+        <h3>{{ t('Téléconsultation', 'الاستشارة عن بُعد') }} <span *ngIf="!visio" class="pastille-bientot">{{ t('Bientôt', 'قريبًا') }}</span></h3>
+        <p *ngIf="visio">{{ t('Après la prise de rendez-vous, votre médecin peut vous proposer une téléconsultation : vous la retrouvez alors dans votre espace Ndawik et consultez à distance, où que vous soyez en Algérie.', 'بعد حجز الموعد، يمكن لطبيبك أن يقترح عليك استشارة عن بُعد: تجدها حينها في فضائك على نداويك وتستشيره عن بُعد أينما كنت في الجزائر.') }}</p>
+        <p *ngIf="!visio">{{ t('Bientôt, consultez votre médecin à distance par vidéo, où que vous soyez en Algérie. En attendant, prenez rendez-vous au cabinet.', 'قريبًا، استشر طبيبك عن بُعد عبر الفيديو أينما كنت في الجزائر. وفي الأثناء، احجز موعدًا في العيادة.') }}</p>
       </div>
-      <a class="btn btn-primary cta" href="#hero-recherche">Trouver un médecin</a>
+      <a class="btn btn-primary cta" href="#hero-recherche">{{ t('Trouver un médecin', 'ابحث عن طبيب') }}</a>
     </div>
 
     <section class="section" *ngIf="!enRecherche" style="background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
-      <div class="sec-hdr" style="padding-bottom:16px"><h2 class="sec-title" style="font-size:18px">Comment prendre RDV en ligne ?</h2></div>
+      <div class="sec-hdr" style="padding-bottom:16px"><h2 class="sec-title" style="font-size:18px">{{ t('Comment prendre RDV en ligne ?', 'كيف تحجز موعدًا عبر الإنترنت؟') }}</h2></div>
       <div class="steps-col">
-        <div class="step-row"><div class="step-num">1</div><div class="step-info"><div class="step-title">Recherchez</div><div class="step-desc">Filtrez par nom, ville ou spécialité.</div></div></div>
-        <div class="step-row"><div class="step-num">2</div><div class="step-info"><div class="step-title">Réservez</div><div class="step-desc">Choisissez un créneau et confirmez votre RDV en ligne.</div></div></div>
-        <div class="step-row" style="padding-bottom:0"><div class="step-num">3</div><div class="step-info"><div class="step-title">Consultez</div><div class="step-desc">Confirmation immédiate : retrouvez votre rendez-vous dans votre espace Ndawik et rencontrez votre médecin.</div></div></div>
+        <div class="step-row"><div class="step-num">1</div><div class="step-info"><div class="step-title">{{ t('Recherchez', 'ابحث') }}</div><div class="step-desc">{{ t('Filtrez par nom, ville ou spécialité.', 'صفِّ النتائج حسب الاسم أو المدينة أو التخصص.') }}</div></div></div>
+        <div class="step-row"><div class="step-num">2</div><div class="step-info"><div class="step-title">{{ t('Réservez', 'احجز') }}</div><div class="step-desc">{{ t('Choisissez un créneau et confirmez votre RDV en ligne.', 'اختر موعدًا متاحًا وأكّد حجزك عبر الإنترنت.') }}</div></div></div>
+        <div class="step-row" style="padding-bottom:0"><div class="step-num">3</div><div class="step-info"><div class="step-title">{{ t('Consultez', 'استشر') }}</div><div class="step-desc">{{ t('Confirmation immédiate : retrouvez votre rendez-vous dans votre espace Ndawik et rencontrez votre médecin.', 'تأكيد فوري: تجد موعدك في فضائك على نداويك وتلتقي بطبيبك.') }}</div></div></div>
       </div>
     </section>
 
     <section class="section" id="sec-diff" style="padding-top:0" *ngIf="!enRecherche">
       <div class="v4-sechead">
-        <span class="v4-eyebrow">La différence Ndawik</span>
-        <h2>Pourquoi choisir Ndawik ?</h2>
+        <span class="v4-eyebrow">{{ t('La différence Ndawik', 'ما يميّز نداويك') }}</span>
+        <h2>{{ t('Pourquoi choisir Ndawik ?', 'لماذا تختار نداويك؟') }}</h2>
       </div>
-      <div class="v4-cmp" role="group" aria-label="Comparatif Ndawik et services classiques">
-        <div class="v4-cmp-h"><span></span><strong>Ndawik</strong><span>Services classiques</span></div>
-        <div class="v4-cmp-r"><span>Numéro d'ordre vérifié avant activation</span><strong class="y">✓</strong><span class="n">—</span></div>
-        <div class="v4-cmp-r"><span>Données de santé protégées (loi 18-07)</span><strong class="y">✓</strong><span class="n">—</span></div>
-        <div class="v4-cmp-r"><span>Français et arabe, avec un arabe RTL soigné</span><strong class="y">✓</strong><span class="n">partiel</span></div>
-        <div class="v4-cmp-r"><span>Paiement au cabinet — espèces ou Chifa, gratuit patients</span><strong class="y">✓</strong><span class="n">variable</span></div>
-        <div class="v4-cmp-r"><span>Réservation instantanée + rappels dans votre espace</span><strong class="y">✓</strong><span class="n">—</span></div>
+      <div class="v4-cmp" role="group" [attr.aria-label]="t('Comparatif Ndawik et services classiques', 'مقارنة بين نداويك والخدمات التقليدية')">
+        <div class="v4-cmp-h"><span></span><strong>{{ t('Ndawik', 'نداويك') }}</strong><span>{{ t('Services classiques', 'الخدمات التقليدية') }}</span></div>
+        <div class="v4-cmp-r"><span>{{ t("Numéro d'ordre vérifié avant activation", 'التحقق من رقم التسجيل في النقابة قبل التفعيل') }}</span><strong class="y">✓</strong><span class="n">—</span></div>
+        <div class="v4-cmp-r"><span>{{ t('Données de santé protégées (loi 18-07)', 'بيانات صحية محمية (القانون 18-07)') }}</span><strong class="y">✓</strong><span class="n">—</span></div>
+        <div class="v4-cmp-r"><span>{{ t('Français et arabe, avec un arabe RTL soigné', 'بالفرنسية والعربية، مع واجهة عربية متقنة من اليمين إلى اليسار') }}</span><strong class="y">✓</strong><span class="n">{{ t('partiel', 'جزئي') }}</span></div>
+        <div class="v4-cmp-r"><span>{{ t('Paiement au cabinet — espèces ou Chifa, gratuit patients', 'الدفع في العيادة — نقدًا أو بالشفاء، مجاني للمرضى') }}</span><strong class="y">✓</strong><span class="n">{{ t('variable', 'متفاوت') }}</span></div>
+        <div class="v4-cmp-r"><span>{{ t('Réservation instantanée + rappels dans votre espace', 'حجز فوري + تذكيرات في فضائك') }}</span><strong class="y">✓</strong><span class="n">—</span></div>
       </div>
     </section>
 
@@ -265,20 +284,20 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
       <div style="padding:0 var(--gutter)">
         <div style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);padding:24px;text-align:center;box-shadow:var(--s1)">
           <div style="font-size:24px;margin-bottom:10px;color:var(--vert)"><i class="fa fa-user-doctor"></i></div>
-          <h2 style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px">Vous êtes praticien ?</h2>
-          <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Réclamez votre fiche sur Ndawik et recevez vos rendez-vous en ligne.</p>
-          <a class="btn btn-primary btn-lg" routerLink="/praticien"><i class="fa fa-user-plus"></i> <span>Faire une demande</span></a>
+          <h2 style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px">{{ t('Vous êtes praticien ?', 'هل أنت طبيب؟') }}</h2>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:16px">{{ t('Réclamez votre fiche sur Ndawik et recevez vos rendez-vous en ligne.', 'طالِب بصفحتك على نداويك واستقبل مواعيدك عبر الإنترنت.') }}</p>
+          <a class="btn btn-primary btn-lg" routerLink="/praticien"><i class="fa fa-user-plus"></i> <span>{{ t('Faire une demande', 'تقديم طلب') }}</span></a>
         </div>
       </div>
     </section>
 
     <section class="section" id="sec-faq" style="padding-top:0" *ngIf="!enRecherche">
-      <div class="v4-sechead"><span class="v4-eyebrow">FAQ</span><h2>Questions fréquentes</h2></div>
+      <div class="v4-sechead"><span class="v4-eyebrow">{{ t('FAQ', 'الأسئلة الشائعة') }}</span><h2>{{ t('Questions fréquentes', 'أسئلة متكررة') }}</h2></div>
       <div class="v4-faq">
-        <details open><summary><span>L'application est-elle gratuite ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Oui, Ndawik est 100 % gratuite pour les patients. Vous réglez uniquement la consultation, directement au cabinet — en espèces ou avec la carte Chifa.</p></details>
-        <details><summary><span>Comment savez-vous qu'un médecin est fiable ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Un praticien qui rejoint Ndawik fournit son numéro d'inscription à l'Ordre : notre équipe le vérifie avant d'activer son compte. Le badge « Vérifié » n'apparaît qu'après cette validation.</p></details>
-        <details><summary><span>Mes données de santé sont-elles protégées ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Vos informations sont chiffrées et ne sont accessibles qu'à vous et aux médecins que vous consultez, avec votre consentement.</p></details>
-        <details><summary><span>Je suis médecin, comment rejoindre Ndawik ?</span><span class="pl" aria-hidden="true">+</span></summary><p>Réclamez votre fiche depuis la page <a routerLink="/praticien" style="color:var(--vert);font-weight:700">Vous êtes praticien ?</a>, gérez vos disponibilités et recevez vos rendez-vous en ligne.</p></details>
+        <details open><summary><span>{{ t("L'application est-elle gratuite ?", 'هل التطبيق مجاني؟') }}</span><span class="pl" aria-hidden="true">+</span></summary><p>{{ t('Oui, Ndawik est 100 % gratuite pour les patients. Vous réglez uniquement la consultation, directement au cabinet — en espèces ou avec la carte Chifa.', 'نعم، نداويك مجاني 100% للمرضى. لا تدفع إلا ثمن الاستشارة، مباشرة في العيادة — نقدًا أو ببطاقة الشفاء.') }}</p></details>
+        <details><summary><span>{{ t("Comment savez-vous qu'un médecin est fiable ?", 'كيف تتأكدون من أن الطبيب موثوق؟') }}</span><span class="pl" aria-hidden="true">+</span></summary><p>{{ t("Un praticien qui rejoint Ndawik fournit son numéro d'inscription à l'Ordre : notre équipe le vérifie avant d'activer son compte. Le badge « Vérifié » n'apparaît qu'après cette validation.", 'كل طبيب ينضم إلى نداويك يقدّم رقم تسجيله في نقابة الأطباء، ويتحقق منه فريقنا قبل تفعيل حسابه. ولا تظهر شارة « موثَّق » إلا بعد هذا التحقق.') }}</p></details>
+        <details><summary><span>{{ t('Mes données de santé sont-elles protégées ?', 'هل بياناتي الصحية محمية؟') }}</span><span class="pl" aria-hidden="true">+</span></summary><p>{{ t("Vos informations sont chiffrées et ne sont accessibles qu'à vous et aux médecins que vous consultez, avec votre consentement.", 'معلوماتك مشفّرة، ولا يطّلع عليها إلا أنت والأطباء الذين تستشيرهم، بموافقتك.') }}</p></details>
+        <details><summary><span>{{ t('Je suis médecin, comment rejoindre Ndawik ?', 'أنا طبيب، كيف أنضم إلى نداويك؟') }}</span><span class="pl" aria-hidden="true">+</span></summary><p>{{ t('Réclamez votre fiche depuis la page', 'طالِب بصفحتك من صفحة') }} <a routerLink="/praticien" style="color:var(--vert);font-weight:700">{{ t('Vous êtes praticien ?', 'هل أنت طبيب؟') }}</a>{{ t(', gérez vos disponibilités et recevez vos rendez-vous en ligne.', '، ثم حدّد أوقات توفّرك واستقبل مواعيدك عبر الإنترنت.') }}</p></details>
       </div>
     </section>
     </main>
@@ -366,6 +385,17 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     .docs-gate__card p { margin:0 0 16px; font-size:13px; color:var(--text3); line-height:1.5; }
     .docs-gate__btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
 
+    /* Boutons de telechargement de l'appli sous la recherche (style .store global, cf. pied de page). */
+    .hero-stores { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; justify-content:center; }
+    .hero-stores .store { text-align:start; }
+    @media (min-width:1024px) { .hero-stores { justify-content:flex-start; } }
+
+    /* Accueil arabe (/ar) : de droite a gauche. Fleches retournees, chip et lignes remis dans le sens de lecture
+       (legacy-accueil.css inverse .step-row/.doc-row/.doc-footer en RTL, ce qui les remettait de gauche a droite). */
+    [dir="rtl"] .fa-arrow-right { transform:scaleX(-1); }
+    [dir="rtl"] .dl-chip { padding:0 14px 0 8px; }
+    [dir="rtl"] .step-row, [dir="rtl"] .doc-row, [dir="rtl"] .doc-footer { flex-direction:row; }
+
     @media (max-width:760px) {
       .dl-search { flex-direction:column; border-radius:20px; padding:8px; gap:6px; margin-top:14px; }
       .dl-sep { display:none; }
@@ -384,6 +414,9 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private route = inject(ActivatedRoute);
   private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
+  /** Vrai sur l'accueil arabe (/ar, donnee de route `langue: 'ar'`) : textes en arabe, page de droite a gauche. */
+  readonly ar = signal(this.route.snapshot?.data?.['langue'] === 'ar');
+  readonly googlePlay = GOOGLE_PLAY;
   /** Etat de connexion : hors connexion, les resultats sont floutes et on invite a creer un compte. */
   connecte = signal(false);
   q = ''; specialite = ''; wilaya = '';
@@ -423,17 +456,22 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
       )
       .subscribe(({ r, ok }) => {
         if (ok) this.resultats.set(r);
-        else this.erreur.set('Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.');
+        else this.erreur.set(this.t(
+          'Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.',
+          'تعذّر الاتصال بالخادم. تحقّق من اتصالك بالإنترنت وأعد المحاولة.',
+        ));
         this.charge.set(false);
       });
-    // Accueil francais <-> arabe (/ar) pour les moteurs de recherche.
-    this.title.setTitle(ACCUEIL_FR.titre);
-    this.meta.updateTag({ name: 'description', content: ACCUEIL_FR.description });
-    this.meta.updateTag({ property: 'og:title', content: ACCUEIL_FR.titre });
-    this.meta.updateTag({ property: 'og:description', content: ACCUEIL_FR.description });
-    this.meta.updateTag({ property: 'og:locale', content: 'fr_DZ' });
+    // Accueil francais (/) <-> arabe (/ar) pour les moteurs de recherche.
+    const ar = this.ar();
+    const accueil = ar ? ACCUEIL_AR : ACCUEIL_FR;
+    this.title.setTitle(accueil.titre);
+    this.meta.updateTag({ name: 'description', content: accueil.description });
+    this.meta.updateTag({ property: 'og:title', content: accueil.titre });
+    this.meta.updateTag({ property: 'og:description', content: accueil.description });
+    this.meta.updateTag({ property: 'og:locale', content: ar ? 'ar_DZ' : 'fr_DZ' });
     this.meta.updateTag({ name: 'robots', content: 'index, follow' });
-    referencerAccueil(this.doc, false);
+    referencerAccueil(this.doc, ar);
     // Charge le referentiel wilayas/specialites. URL relative : SSR-safe, et catchError evite tout plantage si le fichier est indisponible.
     this.http
       .get<Referentiel>('/assets/referentiel.json')
@@ -545,6 +583,43 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
     this.charge.set(true);
     this.erreur.set('');
     this.recherches.next();
+  }
+
+  /** Texte affiche selon la langue de la page : francais sur /, arabe sur /ar. */
+  t(fr: string, ar: string): string {
+    return this.ar() ? ar : fr;
+  }
+
+  /** Libelle d'une wilaya du formulaire : en arabe sur /ar quand il existe, sinon le libelle francais. */
+  nomWilaya(code: string, nom: string): string {
+    return (this.ar() && WILAYAS_AR.get(code)) || nom;
+  }
+
+  /** Libelle d'une specialite du formulaire : en arabe sur /ar quand il existe, sinon le libelle francais. */
+  nomSpecialite(slug: string, nom: string): string {
+    return (this.ar() && SPECIALITES_AR.get(slug)) || nom;
+  }
+
+  /** Specialite et wilaya d'un medecin renvoye par l'API, traduites sur /ar quand c'est possible. */
+  specialiteDe(m: Medecin): string { return this.nomSpecialite(m.specialiteSlug, m.specialiteFr); }
+  wilayaDe(m: Medecin): string { return this.nomWilaya(m.wilayaCode, m.wilayaFr); }
+
+  /** « 3 médecins trouvés » / « 50+ … » : nombre de medecins, accorde en francais ou en arabe. */
+  texteNombre(): string {
+    const n = this.resultats().length;
+    if (!this.ar()) return n >= 50 ? '50+ médecins trouvés' : `${n} ${n > 1 ? 'médecins trouvés' : 'médecin trouvé'}`;
+    if (n >= 50) return 'أكثر من 50 طبيبًا';
+    if (n === 1) return 'طبيب واحد';
+    if (n === 2) return 'طبيبان';
+    return n <= 10 ? `${n} أطباء` : `${n} طبيبًا`;
+  }
+
+  /** Compteur a cote du titre des resultats. */
+  texteCompte(): string {
+    if (this.resultats().length >= 50 && this.connecte()) {
+      return this.t('50 premiers résultats — affinez votre recherche', 'أول 50 نتيجة — دقّق بحثك');
+    }
+    return this.texteNombre();
   }
 
   /** Hors connexion, seules 6 cartes (floutees) sont rendues sous le cadenas. */
