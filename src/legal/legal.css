@@ -15,6 +15,7 @@ section { background: #fff; border: 1px solid var(--bord); border-radius: 14px; 
 section + section { margin-top: 32px; }
 h1 { font-size: 1.7rem; line-height: 1.25; margin: 18px 0 4px; color: var(--vert-fonce); }
 h2 { font-size: 1.1rem; margin: 28px 0 6px; color: var(--vert-fonce); }
+h2.titre-page { font-size: 1.7rem; line-height: 1.25; margin: 18px 0 4px; }
 .muted { color: var(--doux); font-size: .95rem; }
 .alerte { background: #fdf6e3; border-inline-start: 4px solid var(--or); padding: 10px 14px; border-radius: 8px; }
 a { color: var(--vert); }
