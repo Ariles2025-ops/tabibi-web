@@ -6,7 +6,7 @@ import { referencerPage } from '../seo/page-seo';
 
 /**
  * Page publique de suppression de compte (/supprimer-mon-compte) : explique la demarche, dans l'appli ou le site
- * (Mon compte → Supprimer mon compte) ou par e-mail. Adresse a declarer dans la Play Console (« URL de suppression
+ * (appli : Mon profil → Supprimer mon compte ; site : Mon compte → Supprimer mon compte) ou par e-mail. Adresse a declarer dans la Play Console (« URL de suppression
  * du compte ») ; exigence de Google Play et droit a l'effacement de la loi 18-07.
  */
 @Component({
@@ -22,7 +22,7 @@ import { referencerPage } from '../seo/page-seo';
         <h2>1. Dans l'application ou sur le site</h2>
         <ol>
           <li>Connectez-vous à votre compte Tabibi.</li>
-          <li>Ouvrez <strong>Mon compte</strong>.</li>
+          <li>Dans l'application, ouvrez <strong>Mon profil</strong> ; sur le site, ouvrez <strong>Mon compte</strong>.</li>
           <li>Choisissez <strong>Supprimer mon compte</strong>, puis confirmez.</li>
         </ol>
         <p>La suppression est immédiate et vous êtes déconnecté.</p>
@@ -73,7 +73,7 @@ export class SupprimerCompteComponent implements OnInit {
   ngOnInit() {
     referencerPage(this.document, this.title, this.meta, {
       titre: 'Supprimer mon compte',
-      description: "Comment supprimer votre compte Tabibi : depuis l'application ou le site (Mon compte → Supprimer mon compte) ou par e-mail à contact@tabibi.doctor.",
+      description: "Comment supprimer votre compte Tabibi : depuis l'application (Mon profil) ou le site (Mon compte) puis « Supprimer mon compte », ou par e-mail à contact@tabibi.doctor.",
       chemin: '/supprimer-mon-compte',
       ar: false,
       bilingue: false,
