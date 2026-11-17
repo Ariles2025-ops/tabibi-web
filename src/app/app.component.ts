@@ -117,6 +117,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
               <div class="siteft__col">
                 <h2>{{ ar() ? 'نداويك' : 'Ndawik' }}</h2>
                 <a [routerLink]="pre() + '/aide'">{{ ar() ? 'مركز المساعدة' : "Centre d'aide" }}</a>
+                <a [routerLink]="pre() + '/a-propos'">{{ ar() ? 'عن نداويك' : 'À propos' }}</a>
                 <a routerLink="/verifier">{{ ar() ? 'التحقق من وصفة طبية' : 'Vérifier une ordonnance' }}</a>
                 <a href="/legal/mentions-legales.html">{{ ar() ? 'الإشعارات القانونية' : 'Mentions légales' }}</a>
                 <a href="/legal/cgu.html">{{ ar() ? 'شروط الاستخدام' : "Conditions d'utilisation" }}</a>
