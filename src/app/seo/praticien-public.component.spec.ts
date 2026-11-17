@@ -64,6 +64,23 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     expect(annuaire.medecin).not.toHaveBeenCalled();
   });
 
+  it('fiche absente : titre de l onglet dans la langue de la page (FR et AR)', () => {
+    for (const [langue, attendu] of [['fr', 'Praticien introuvable | Tabibi'], ['ar', 'الطبيب غير موجود | طبيبي']] as const) {
+      TestBed.resetTestingModule();
+      const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'rechercher']);
+      TestBed.configureTestingModule({
+        imports: [PraticienPublicComponent],
+        providers: [
+          provideRouter([]),
+          { provide: ActivatedRoute, useValue: { snapshot: { data: { langue } }, paramMap: of(convertToParamMap({ id: 'n-importe-quoi' })) } },
+          { provide: AnnuaireService, useValue: annuaire },
+        ],
+      });
+      TestBed.createComponent(PraticienPublicComponent).detectChanges();
+      expect(document.title).toBe(attendu);
+    }
+  });
+
   const ld = (id: string) => {
     const el = document.head.querySelector(`script#${id}`);
     return el ? JSON.parse(el.textContent || '{}') : null;
