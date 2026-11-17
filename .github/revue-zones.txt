@@ -1,0 +1,26 @@
+Recherche de médecin : accueil, filtres spécialité/wilaya/commune, résultats, autocomplétion
+Fiche médecin publique (SEO) et fiche privée (connecté) : informations, créneaux, boutons
+Prise de rendez-vous patient : choix du créneau, confirmation, conflits, messages
+Mes rendez-vous patient : statuts, annulation, RDV passés, « Terminé », rappels
+Liste d'attente : inscription, alertes de créneau libéré, désinscription
+Messagerie patient et médecin : conversations, noms affichés, non-lus, rafraîchissement
+Ordonnances : rédaction par le médecin, consultation patient, vérification par code en pharmacie
+Dawini : recherche de médicament, réponses des pharmacies, statuts
+Espace pharmacie : demandes reçues, réponses, profil de la pharmacie
+Téléconsultation : demande, accord du patient, lien visio, statuts (la visio « Bientôt » est voulue)
+Avis : dépôt, affichage, modération, synthèse sur la fiche
+Notifications : cloche, types, textes, liens vers la bonne page
+Profil patient et suppression de compte : champs, validations, ce qui est effacé, promesses des textes
+Candidature médecin et validation par l'admin : formulaire, statuts, rôle MEDECIN
+Espace médecin - agenda, créneaux, semaine type, patient venu / absent
+Espace médecin - ma fiche, mes patients, invitations de secrétaires
+Espace secrétaire : invitations, accès au cabinet, RDV pris au téléphone
+Espace admin : validation, statistiques, outils
+Connexion, inscription, rôles, gardes de routes, pré-lancement (connexion vers /bientot est VOULU)
+Pages SEO en français : spécialité, wilaya, commune, praticien, plan du site, titres et descriptions
+Pages en arabe et sens RTL : traductions complètes, mélange français/arabe, mise en page
+Pages légales, aide, FAQ, mentions : cohérence avec ce que fait vraiment le produit
+Appli mobile - parcours patient (écrans, textes FR/AR, erreurs réseau, cohérence avec le site)
+Appli mobile - espaces médecin, secrétaire et pharmacie (cohérence avec le site et l'API)
+Textes envoyés : e-mails Keycloak, SMS, notifications push : ton, fautes, informations exactes
+Cas limites et erreurs : réseau absent, 404, 409, 500, listes vides, champs trop longs, dates et fuseau Africa/Algiers
