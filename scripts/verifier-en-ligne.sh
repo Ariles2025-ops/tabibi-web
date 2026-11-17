@@ -75,6 +75,19 @@ for chemin in /seo/tipaza-neurologue /seo/mostaganem-endocrinologue /seo/boumerd
   [ "$code" = "200" ] && ok "$chemin (200)" || ko "$chemin repond HTTP $code (200 attendu)"
 done
 
+# 6c. Pages commune (specialite x wilaya x commune) : une commune connue rend >= 3 praticiens (200), une inconnue repond 404.
+#     COMMUNE_TEST = specialite/wilaya/commune d'une page connue (au moins 3 praticiens).
+COMMUNE_TEST="${COMMUNE_TEST:-cardiologue/alger/bab-ezzouar}"
+for pre in "" "/ar"; do
+  html="$(curl -sL "$SITE$pre/specialites/$COMMUNE_TEST?$cb")"
+  nbc="$(printf '%s' "$html" | grep -o 'class="seo-med"' | wc -l | tr -d ' ')"
+  [ "${nbc:-0}" -ge 3 ] && ok "${pre:-/fr} commune $COMMUNE_TEST : $nbc praticiens rendus" || ko "${pre:-/fr} commune $COMMUNE_TEST : ${nbc:-0} praticien(s) (3 attendus)"
+  code="$(curl -s -o /dev/null -w '%{http_code}' "$SITE$pre/specialites/$COMMUNE_TEST?$cb")"
+  [ "$code" = "200" ] && ok "$pre/specialites/$COMMUNE_TEST (200)" || ko "$pre/specialites/$COMMUNE_TEST repond HTTP $code (200 attendu)"
+  code="$(curl -s -o /dev/null -w '%{http_code}' "$SITE$pre/specialites/cardiologue/alger/commune-inexistante-$cb")"
+  [ "$code" = "404" ] && ok "404 sur commune inexistante ($pre)" || ko "commune inexistante ($pre) repond HTTP $code (404 attendu)"
+done
+
 # 7. robots.txt ferme les pages privees (pas de « curl | grep -q », voir 3b2).
 robots="$(curl -fsS "$SITE/robots.txt?$cb")"
 for regle in "Disallow: /bientot" "Disallow: /medecins/" "Disallow: /mes-"; do

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
+import { libelleStatutGenerique } from '../partage/statut-generique';
 
 /** Bornes de la note et du commentaire, identiques aux regles du domaine backend (400 au-dela). */
 export const NOTE_MIN = 1;
@@ -53,7 +54,7 @@ const LIBELLES_STATUT_AVIS: Partial<Record<string, string>> = {
 
 export function libelleStatutAvis(statut: string | null | undefined): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_AVIS[statut] ?? statut;
+  return LIBELLES_STATUT_AVIS[statut] ?? libelleStatutGenerique(statut);
 }
 
 /** « 4,5 / 5 (12 avis) » au format francais (virgule decimale), ou « Aucun avis pour le moment ». */

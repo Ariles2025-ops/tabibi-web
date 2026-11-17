@@ -1,11 +1,12 @@
 import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { ClocheNotificationsComponent } from './notifications/cloche-notifications.component';
 import { ApiDisponibleService } from './partage/api-disponible.service';
 import { PRELANCEMENT, VISIO_ACTIVE } from './lancement';
+import { estPageFrancaiseSeule, remettreDocumentFrancais } from './seo/page-seo';
 import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
 @Component({
@@ -140,6 +141,7 @@ export class AppComponent implements OnInit {
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   private router = inject(Router);
+  private document = inject(DOCUMENT);
   apiDisponible = inject(ApiDisponibleService);
 
   constructor() {
@@ -181,6 +183,8 @@ export class AppComponent implements OnInit {
     this.router.events.subscribe((e) => {
       if (e instanceof NavigationEnd) {
         this.menuOuvert.set(false);
+        // Pages sans version arabe : on ne garde pas lang="ar" laisse par une page /ar visitee juste avant.
+        if (estPageFrancaiseSeule(e.urlAfterRedirects)) remettreDocumentFrancais(this.document);
         this.ar.set(e.urlAfterRedirects === '/ar' || e.urlAfterRedirects.startsWith('/ar/') || e.urlAfterRedirects.startsWith('/ar?'));
       }
     });

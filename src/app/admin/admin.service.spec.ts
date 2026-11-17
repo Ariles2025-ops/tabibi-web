@@ -121,11 +121,11 @@ describe('AdminService', () => {
   });
 
   describe('libelleStatutCandidature', () => {
-    it('traduit les statuts connus et affiche tel quel un statut inconnu', () => {
+    it('traduit les statuts connus et rend un statut inconnu lisible', () => {
       expect(libelleStatutCandidature('EN_ATTENTE')).toBe('En attente');
       expect(libelleStatutCandidature('VALIDEE')).toBe('Validée');
       expect(libelleStatutCandidature('REFUSEE')).toBe('Refusée');
-      expect(libelleStatutCandidature('ARCHIVEE')).toBe('ARCHIVEE');
+      expect(libelleStatutCandidature('ARCHIVEE')).toBe('Archivee');
       expect(libelleStatutCandidature(null)).toBe('');
     });
   });

@@ -37,7 +37,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
         <a routerLink="/medecin/teleconsultations" style="color:var(--blue)">Voir mes téléconsultations</a>
       </p>
       <p *ngIf="annule() as r" style="color:var(--blue)">
-        Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }} annulé : le créneau est de nouveau proposé et le patient est prévenu.
+        Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }} annulé : le créneau est de nouveau proposé<ng-container *ngIf="r.source !== 'TELEPHONE'"> et le patient est prévenu</ng-container>.
       </p>
       <p *ngIf="honore() as r" style="color:var(--blue)">
         Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }} marqué honoré.
@@ -62,7 +62,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
             </div>
 
             <div *ngIf="aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <span style="color:var(--text2);font-size:.9rem">Annuler ce rendez-vous ? Le patient sera prévenu.</span>
+              <span style="color:var(--text2);font-size:.9rem">Annuler ce rendez-vous ?<ng-container *ngIf="r.source !== 'TELEPHONE'"> Le patient sera prévenu.</ng-container></span>
               <button type="button" class="bouton" (click)="annuler(r)" [disabled]="enCours() !== null">
                 {{ estEnCours(r, 'annuler') ? 'Annulation…' : 'Oui' }}
               </button>
@@ -92,7 +92,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
                       style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
                 Annuler
               </button>
-              <a *ngIf="r.statut !== 'ANNULE' && r.statut !== 'ABSENT'" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
+              <a *ngIf="r.statut !== 'ANNULE' && r.statut !== 'ABSENT' && r.source !== 'TELEPHONE'" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
                  [queryParams]="{ patientId: r.patientId, rendezVousId: r.id }">Rédiger une ordonnance</a>
             </div>
           </li>

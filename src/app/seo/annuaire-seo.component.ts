@@ -7,6 +7,7 @@ import { TEXTES_SEO, TextesSeo } from './textes-seo';
 import { CONTENU_SPECIALITES } from './contenu-specialites';
 import { StatutHttpService } from './statut-http';
 import { ecrireJsonLd, fil, pageAnnuaire } from './donnees-structurees';
+import { Commune, communesDe, slugCommune } from './communes';
 import {
   SLUG_PHARMACIE, SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo,
   avecArticle, liensLangues, lienPraticien,
@@ -32,7 +33,10 @@ import {
           <a [routerLink]="p + '/specialites'">{{ t.annuaire }}</a>
           <ng-container *ngIf="specialite"><span>›</span>
             <a [routerLink]="[p + '/specialites', specialite.slug]">{{ nomS(specialite) }}</a></ng-container>
-          <ng-container *ngIf="wilaya"><span>›</span><span aria-current="page">{{ nomW(wilaya) }}</span></ng-container>
+          <ng-container *ngIf="wilaya && !communeSlug"><span>›</span><span aria-current="page">{{ nomW(wilaya) }}</span></ng-container>
+          <ng-container *ngIf="wilaya && communeSlug"><span>›</span>
+            <a [routerLink]="[p + '/specialites', specialite?.slug, wilaya.slug]">{{ nomW(wilaya) }}</a><span>›</span>
+            <span aria-current="page">{{ nomCommune }}</span></ng-container>
         </nav>
         <a class="seo-langue" [routerLink]="lienAutreLangue" [attr.hreflang]="ar ? 'fr' : 'ar'" [attr.lang]="ar ? 'fr' : 'ar'">{{ ar ? 'Français' : 'العربية' }}</a>
       </div>
@@ -101,8 +105,19 @@ import {
         <p>{{ apropos }}</p>
       </section>
 
+      <!-- Maillage : communes (>= 3 praticiens) de la wilaya, ou communes voisines depuis une page commune -->
+      <section class="seo-bloc" *ngIf="specialite && wilaya && !introuvable && !pharmacie && communesListe.length">
+        <h2>{{ communeSlug ? t2.voisines(nomS(specialite), nomW(wilaya)) : t2.communes(nomS(specialite), nomW(wilaya)) }}</h2>
+        <div class="seo-colonnes">
+          <a *ngFor="let c of communesListe" [routerLink]="[p + '/specialites', specialite.slug, wilaya.slug, c.slug]"
+             [class.actif]="c.slug === communeSlug" [attr.title]="t2.titreCommune(nomS(specialite), c.nom, nomW(wilaya))">
+            {{ c.nom }}<span class="seo-code">{{ c.medecins }}</span></a>
+        </div>
+        <p *ngIf="communeSlug" class="seo-note"><a [routerLink]="[p + '/specialites', specialite.slug, wilaya.slug]">{{ t2.toute(nomS(specialite), nomW(wilaya)) }}</a></p>
+      </section>
+
       <!-- Maillage : autres wilayas pour cette specialite -->
-      <section class="seo-bloc" *ngIf="specialite && !introuvable">
+      <section class="seo-bloc" *ngIf="specialite && !communeSlug && !introuvable">
         <h2>{{ t.autreWilaya(nomS(specialite)) }}</h2>
         <div class="seo-colonnes">
           <a *ngFor="let w of wilayasAlpha" [routerLink]="[p + '/specialites', specialite.slug, w.slug]"
@@ -119,7 +134,7 @@ import {
       </p>
 
       <!-- Maillage : autres specialites dans cette wilaya -->
-      <section class="seo-bloc" *ngIf="wilaya && !introuvable">
+      <section class="seo-bloc" *ngIf="wilaya && !communeSlug && !introuvable">
         <h2>{{ t.specialitesA(nomW(wilaya), !!specialite) }}</h2>
         <div class="seo-colonnes">
           <a *ngFor="let s of specialitesAlpha" [routerLink]="[p + '/specialites', s.slug, wilaya.slug]"
@@ -199,6 +214,12 @@ export class AnnuaireSeoComponent implements OnInit {
   specialitesAlpha: SpecialiteSeo[] = [];
   wilayasAlpha: WilayaSeo[] = [];
 
+  /** Page commune (/specialites/:specialite/:wilaya/:commune) : slug demande, nom affiche, communes de la wilaya (>= 3). */
+  communeSlug = '';
+  nomCommune = '';
+  communesListe: Commune[] = [];
+  t2 = TEXTES_COMMUNE.fr;
+
   /** Langue de la page (donnee de route) : '' en francais, '/ar' en arabe. */
   ar = false;
   p = '';
@@ -245,17 +266,22 @@ export class AnnuaireSeoComponent implements OnInit {
     this.ar = this.route.snapshot.data['langue'] === 'ar';
     this.p = this.ar ? '/ar' : '';
     this.t = TEXTES_SEO[this.ar ? 'ar' : 'fr'];
+    this.t2 = TEXTES_COMMUNE[this.ar ? 'ar' : 'fr'];
     const tri = this.ar ? 'ar' : 'fr';
     this.specialitesAlpha = SPECIALITES_SEO.filter((x) => x.slug !== SLUG_PHARMACIE).sort((a, b) => this.nomS(a).localeCompare(this.nomS(b), tri));
     this.wilayasAlpha = [...WILAYAS_SEO].sort((a, b) => this.nomW(a).localeCompare(this.nomW(b), tri));
-    const abonnement = this.route.paramMap.subscribe((p) => this.afficher(p.get('specialite'), p.get('wilaya')));
+    const abonnement = this.route.paramMap.subscribe((p) => this.afficher(p.get('specialite'), p.get('wilaya'), p.get('commune')));
     this.destroyRef.onDestroy(() => abonnement.unsubscribe());
   }
 
-  private afficher(specSlug: string | null, wilSlug: string | null) {
+  private afficher(specSlug: string | null, wilSlug: string | null, communeSlug: string | null = null) {
+    this.communeSlug = communeSlug || '';
+    this.nomCommune = '';
+    this.communesListe = [];
     this.specialite = specSlug ? SPECIALITES_SEO.find((s) => s.slug === specSlug) ?? null : null;
     this.wilaya = wilSlug ? WILAYAS_SEO.find((w) => w.slug === wilSlug) ?? null : null;
-    this.introuvable = (!!specSlug && !this.specialite) || (!!wilSlug && !this.wilaya);
+    this.introuvable = (!!specSlug && !this.specialite) || (!!wilSlug && !this.wilaya)
+      || (!!communeSlug && (this.specialite?.slug === SLUG_PHARMACIE || communeSlug !== slugCommune(communeSlug)));
     this.index = !specSlug && !wilSlug;
     this.pharmacie = this.specialite?.slug === SLUG_PHARMACIE;
     const contenuSpe = this.specialite && !this.introuvable
@@ -330,10 +356,55 @@ export class AnnuaireSeoComponent implements OnInit {
       this.charge.set(true);
       this.erreur.set(false);
       this.annuaire.rechercher(s?.slug, w?.code).subscribe({
-        next: (liste) => { this.medecins.set(liste); this.charge.set(false); this.donneesStructurees(this.cheminLd); },
+        next: (liste) => {
+          if (s && w && !this.pharmacie) this.appliquerCommunes(liste, s, w, chemin);
+          else this.medecins.set(liste);
+          this.charge.set(false);
+          this.donneesStructurees(this.cheminLd);
+        },
         error: () => { this.erreur.set(true); this.charge.set(false); },
       });
     }
+  }
+
+  /**
+   * Communes de la wilaya (>= 3 praticiens). Sur une page commune : ne garde que les praticiens de la commune ;
+   * moins de 3 => vraie 404 (pas de page vide, Google les penalise).
+   */
+  private appliquerCommunes(liste: Medecin[], s: SpecialiteSeo, w: WilayaSeo, chemin: string) {
+    this.communesListe = communesDe(liste, w.slug, [w.nom, w.nomAr, ...liste.map((m) => m.wilayaFr)]);
+    if (!this.communeSlug) { this.medecins.set(liste); return; }
+    const commune = this.communesListe.find((c) => c.slug === this.communeSlug);
+    if (!commune) {
+      this.introuvable = true;
+      this.medecins.set([]);
+      this.titre = this.t.pageIntrouvable;
+      this.intro = '';
+      this.meta.updateTag({ name: 'robots', content: 'noindex' });
+      this.statut.introuvable();
+      this.donneesStructurees(chemin);
+      return;
+    }
+    const gens = liste.filter((m) => slugCommune(m.ville) === commune.slug);
+    this.nomCommune = commune.nom;
+    this.medecins.set(gens);
+    const ns = this.nomS(s), nw = this.nomW(w), t2 = this.t2;
+    const chemCommune = `${chemin}/${commune.slug}`;
+    this.titre = t2.titre(ns, commune.nom, nw);
+    this.sousTitre = t2.sousTitre(ns, commune.nom);
+    this.cible = t2.cible(ns, commune.nom, avecArticle(s));
+    this.intro = t2.intro(ns, commune.nom, nw, gens.length);
+    const description = t2.description(ns, commune.nom, nw, gens.length);
+    this.description = description;
+    this.title.setTitle(`${this.titre} — ${this.t.suffixeTitre} | Tabibi`);
+    this.meta.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Tabibi` });
+    this.meta.updateTag({ property: 'og:description', content: description });
+    this.meta.updateTag({ name: 'robots', content: 'index, follow' });
+    this.lienCanonique(`https://tabibi.doctor${this.p}${chemCommune}`);
+    liensLangues(this.document, chemCommune);
+    this.lienAutreLangue = (this.ar ? '' : '/ar') + chemCommune;
+    this.donneesStructurees(chemin);
   }
 
   /** FAQ visible (memes textes que le bloc HTML) : base du JSON-LD FAQPage. */
@@ -361,7 +432,7 @@ export class AnnuaireSeoComponent implements OnInit {
     const etapes = this.etapesFil(chemin);
     const avecFaq = !this.pharmacie;
     ecrireJsonLd(this.document, 'ld-page', pageAnnuaire({
-      url: `${racine}${chemin}`,
+      url: `${racine}${chemin}${this.communeSlug && this.nomCommune ? '/' + this.communeSlug : ''}`,
       nom: this.titre,
       description: this.description,
       langue: this.ar ? 'ar' : 'fr',
@@ -393,6 +464,7 @@ export class AnnuaireSeoComponent implements OnInit {
     ];
     if (this.specialite) etapes.push({ nom: this.nomS(this.specialite), url: `${racine}/specialites/${this.specialite.slug}` });
     if (this.wilaya) etapes.push({ nom: this.nomW(this.wilaya), url: `${racine}${chemin}` });
+    if (this.communeSlug && this.nomCommune) etapes.push({ nom: this.nomCommune, url: `${racine}${chemin}/${this.communeSlug}` });
     if (this.index) etapes.pop();
     return etapes;
   }
@@ -428,3 +500,33 @@ function trierAvecPrincipales<T>(liste: T[], cle: (t: T) => string, principales:
   const tete = principales.map((p) => liste.find((t) => cle(t) === p)).filter((t): t is T => !!t);
   return [...tete, ...liste.filter((t) => !principales.includes(cle(t)))];
 }
+
+/** Textes propres aux pages commune (FR / AR). */
+const TEXTES_COMMUNE = {
+  fr: {
+    titre: (s: string, c: string, w: string) => `${s} à ${c} (${w})`,
+    sousTitre: (s: string, c: string) => `Praticiens : ${s} à ${c}`,
+    cible: (s: string, c: string, a: string) => `${a} à ${c}`,
+    intro: (s: string, c: string, w: string, n: number) =>
+      `${n} praticiens (${s}) exercent à ${c}, dans la wilaya de ${w}. Consultez leur fiche, comparez et prenez rendez-vous en ligne avec Tabibi.`,
+    description: (s: string, c: string, w: string, n: number) =>
+      `${s} à ${c} (${w}) : ${n} praticiens référencés sur Tabibi. Consultez les fiches et prenez rendez-vous en ligne.`,
+    communes: (s: string, w: string) => `${s} dans les communes de ${w}`,
+    voisines: (s: string, w: string) => `${s} dans les communes voisines (${w})`,
+    toute: (s: string, w: string) => `Voir tous les praticiens (${s}) de ${w}`,
+    titreCommune: (s: string, c: string, w: string) => `${s} à ${c} (${w})`,
+  },
+  ar: {
+    titre: (s: string, c: string, w: string) => `${s} في ${c} (${w})`,
+    sousTitre: (s: string, c: string) => `الأطباء: ${s} في ${c}`,
+    cible: (s: string, c: string, _a: string) => `${s} في ${c}`,
+    intro: (s: string, c: string, w: string, n: number) =>
+      `${n} من الأطباء (${s}) يمارسون في ${c} بولاية ${w}. اطّلع على ملفاتهم واحجز موعدك عبر طبيبي.`,
+    description: (s: string, c: string, w: string, n: number) =>
+      `${s} في ${c} (${w}): ${n} من الأطباء على طبيبي. اطّلع على الملفات واحجز موعدك عبر الإنترنت.`,
+    communes: (s: string, w: string) => `${s} في بلديات ${w}`,
+    voisines: (s: string, w: string) => `${s} في البلديات المجاورة (${w})`,
+    toute: (s: string, w: string) => `كل الأطباء (${s}) في ${w}`,
+    titreCommune: (s: string, c: string, w: string) => `${s} في ${c} (${w})`,
+  },
+};
