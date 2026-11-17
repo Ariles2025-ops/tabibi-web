@@ -32,7 +32,7 @@ import {
     <main class="seo" [attr.dir]="ar ? 'rtl' : null" [attr.lang]="ar ? 'ar' : 'fr'">
       <div class="seo-haut">
         <nav class="seo-fil" [attr.aria-label]="t.fil">
-          <a routerLink="/">{{ t.accueil }}</a><span>›</span>
+          <a [routerLink]="ar ? '/ar' : '/'" class="seo-accueil">{{ t.accueil }}</a><span>›</span>
           <a [routerLink]="p + '/specialites'">{{ t.annuaire }}</a>
           <ng-container *ngIf="specialite"><span>›</span>
             <a [routerLink]="[p + '/specialites', specialite.slug]">{{ nomS(specialite) }}</a></ng-container>

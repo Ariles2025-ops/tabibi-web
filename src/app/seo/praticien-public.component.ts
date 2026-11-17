@@ -33,7 +33,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       <ng-container *ngIf="medecin() as m">
         <div class="pp-haut">
           <nav class="pp-fil" [attr.aria-label]="ar ? 'مسار التصفح' : 'Fil d’Ariane'">
-            <a routerLink="/">{{ ar ? 'الرئيسية' : 'Accueil' }}</a><span>›</span>
+            <a [routerLink]="ar ? '/ar' : '/'" class="pp-accueil">{{ ar ? 'الرئيسية' : 'Accueil' }}</a><span>›</span>
             <a [routerLink]="p + '/specialites'">{{ ar ? 'الأطباء' : 'Médecins' }}</a>
             <ng-container *ngIf="specialiteConnue"><span>›</span>
               <a [routerLink]="[p + '/specialites', m.specialiteSlug]">{{ specialite }}</a></ng-container>
