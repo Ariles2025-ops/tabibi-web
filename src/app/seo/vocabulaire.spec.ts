@@ -1,4 +1,5 @@
 import { TEXTES_SEO } from './textes-seo';
+import { ACCUEIL_AR, ACCUEIL_FR } from './marque';
 
 /**
  * Garde de vocabulaire : Tabibi est une plateforme medicale, pas un annuaire. Les mots « annuaire » et « دليل »
@@ -13,6 +14,12 @@ describe('Vocabulaire : pas d\'« annuaire »', () => {
     expect(html).toContain('<title>');
     expect(html).toContain('75 000');
     expect(interdit.test(html)).toBeFalse();
+  });
+
+  it('les titres et descriptions d\'accueil (marque.ts) ne contiennent ni « annuaire » ni « دليل »', () => {
+    for (const [cle, v] of Object.entries({ ...ACCUEIL_FR, ar_titre: ACCUEIL_AR.titre, ar_description: ACCUEIL_AR.description })) {
+      expect(interdit.test(v)).withContext(cle).toBeFalse();
+    }
   });
 
   for (const langue of ['fr', 'ar'] as const) {
