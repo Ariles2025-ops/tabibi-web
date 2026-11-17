@@ -253,7 +253,7 @@ const GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=dz.tabibi.app
         <p *ngIf="visio">{{ t('Après la prise de rendez-vous, votre médecin peut vous proposer une téléconsultation : vous la retrouvez alors dans votre espace Ndawik et consultez à distance, où que vous soyez en Algérie.', 'بعد حجز الموعد، يمكن لطبيبك أن يقترح عليك استشارة عن بُعد: تجدها حينها في فضائك على نداويك وتستشيره عن بُعد أينما كنت في الجزائر.') }}</p>
         <p *ngIf="!visio">{{ t('Bientôt, consultez votre médecin à distance par vidéo, où que vous soyez en Algérie. En attendant, prenez rendez-vous au cabinet.', 'قريبًا، استشر طبيبك عن بُعد عبر الفيديو أينما كنت في الجزائر. وفي الأثناء، احجز موعدًا في العيادة.') }}</p>
       </div>
-      <a class="btn btn-primary cta" href="#hero-recherche">{{ t('Trouver un médecin', 'ابحث عن طبيب') }}</a>
+      <a class="bouton-secondaire cta" href="#hero-recherche">{{ t('Trouver un médecin', 'ابحث عن طبيب') }}</a>
     </div>
 
     <section class="section" *ngIf="!enRecherche" style="background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
@@ -308,6 +308,12 @@ const GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=dz.tabibi.app
     .ac-item:hover, .ac-item:focus { background:var(--tbi-mint); outline:none; }
     .ac-nom { font-weight:700; line-height:1.25; }
     .ac-meta { font-size:12px; color:var(--text3); }
+
+    /* Bouton « Trouver un médecin » (section Téléconsultation) : bouton secondaire de la charte, FR et AR. */
+    .v4-tele a.bouton-secondaire { display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; min-height:44px; padding:0 20px; border:1.5px solid #0F7560; border-radius:12px; background:#fff; color:#0F7560; font-weight:700; text-decoration:none; white-space:nowrap; }
+    .v4-tele a.bouton-secondaire:hover { background:rgba(15,117,96,.08); }
+    .v4-tele a.bouton-secondaire:focus-visible { outline:2px solid #0F7560; outline-offset:2px; }
+    @media (max-width:480px) { .v4-tele a.bouton-secondaire { width:100%; margin-inline-start:0; } }
 
     /* Recherche structuree facon Doctolib : deux listes sous le champ texte. */
     .rech-filtres { display:flex; gap:10px; margin-top:12px; }
