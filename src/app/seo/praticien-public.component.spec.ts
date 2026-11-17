@@ -12,10 +12,10 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     wilayaCode: '31', wilayaFr: 'Oran', ville: 'Oran',
   };
 
-  function creer(langue: 'fr' | 'ar', m: Medecin) {
+  function creer(langue: 'fr' | 'ar', m: Medecin, liste: Medecin[] = []) {
     const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'rechercher']);
     annuaire.medecin.and.returnValue(of(m));
-    annuaire.rechercher.and.returnValue(of([]));
+    annuaire.rechercher.and.returnValue(of(liste));
     TestBed.configureTestingModule({
       imports: [PraticienPublicComponent],
       providers: [
@@ -25,8 +25,27 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
         { provide: REPONSE_HTTP, useValue: { status: () => undefined } },
       ],
     });
-    TestBed.createComponent(PraticienPublicComponent).detectChanges();
+    const fixture = TestBed.createComponent(PraticienPublicComponent);
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
   }
+
+  const description = () => document.head.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+
+  it('fiche non reservable : « Voir la fiche », pas de badge ni de promesse de reservation', () => {
+    const el = creer('fr', dentiste, [{ ...dentiste, reservable: false }]);
+    expect(el.querySelector('.pp-resa')).toBeNull();
+    expect(el.querySelector('.pp-btn')?.textContent).toContain('Voir la fiche');
+    expect(el.querySelector('.pp-action small')).toBeNull();
+    expect(description()).not.toContain('rendez-vous');
+  });
+
+  it('reservable connu par la liste : badge, bouton et description de reservation', () => {
+    const el = creer('fr', dentiste, [{ ...dentiste, reservable: true }]);
+    expect(el.querySelector('.pp-resa')).toBeTruthy();
+    expect(el.querySelector('.pp-btn')?.textContent).toContain('Prendre rendez-vous');
+    expect(description()).toContain('rendez-vous');
+  });
 
   it('identifiant non UUID : vraie 404 au rendu serveur, sans appel a l API', () => {
     const status = jasmine.createSpy('status');

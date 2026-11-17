@@ -36,8 +36,9 @@ describe('Page commune', () => {
   let reponse: { status: jasmine.Spy };
   function creer(commune: string, liste: Medecin[]) {
     reponse = { status: jasmine.createSpy('status') };
-    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher']);
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
     annuaire.rechercher.and.returnValue(of(liste));
+    annuaire.communes.and.returnValue(of([{ slug: 'bab-ezzouar', nom: 'Bab Ezzouar', nombre: 8 }]));
     TestBed.configureTestingModule({
       imports: [AnnuaireSeoComponent],
       providers: [

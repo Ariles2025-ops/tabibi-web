@@ -87,6 +87,27 @@ describe('AnnuaireComponent : cadenas sans resultat', () => {
   });
 });
 
+/** Le champ ne promet que ce que l'API fait : GET /api/medecins?q= ne filtre que sur le nom. */
+describe('AnnuaireComponent : libelle du champ de recherche', () => {
+  it('annonce « Nom du médecin », sans promettre specialite ni etablissement', () => {
+    TestBed.configureTestingModule({
+      imports: [AnnuaireComponent],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: { estConnecte: () => false, pret: () => Promise.resolve() } },
+        { provide: AnnuaireService, useValue: {} },
+      ],
+    });
+    const fixture = TestBed.createComponent(AnnuaireComponent);
+    fixture.detectChanges();
+    const champ = fixture.nativeElement.querySelector('input[autocomplete="off"][placeholder]') as HTMLInputElement;
+    expect(champ.placeholder).toBe('Nom du médecin');
+    expect(champ.getAttribute('aria-label')).toBe('Nom du médecin');
+  });
+});
+
 /** Recherche de l'accueil : une nouvelle recherche annule la requete precedente (switchMap). */
 describe('AnnuaireComponent : recherche', () => {
   it('seule la derniere recherche met a jour les resultats', () => {

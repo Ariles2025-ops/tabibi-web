@@ -31,6 +31,9 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
           <p *ngSwitchCase="'ANNULEE'" class="verif-annulee" style="color:var(--red);font-weight:600">
             Annulée : cette ordonnance a été annulée par le médecin et ne doit pas être délivrée.
           </p>
+          <p *ngSwitchCase="'EXPIREE'" class="verif-expiree" style="color:var(--red);font-weight:600">
+            Expirée : cette ordonnance n'est plus valable et ne doit pas être délivrée.
+          </p>
           <ng-container *ngSwitchDefault>
             <p *ngIf="r.valide" style="color:var(--vert);font-weight:600">
               Ordonnance authentique, émise le {{ r.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}<ng-container *ngIf="r.statut"> ({{ libelleStatut(r.statut) }})</ng-container>.
