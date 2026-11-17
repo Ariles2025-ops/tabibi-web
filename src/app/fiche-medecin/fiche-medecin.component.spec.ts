@@ -9,6 +9,8 @@ import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { AvisService, SyntheseAvis } from '../avis/avis.service';
 import { InscriptionAttente, ListeAttenteService } from '../liste-attente/liste-attente.service';
+import { RoleService } from '../auth/role.service';
+import { signal } from '@angular/core';
 import { Conversation, MessagerieService } from '../messagerie/messagerie.service';
 import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { FicheMedecinComponent } from './fiche-medecin.component';
@@ -50,6 +52,7 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
   let avis: jasmine.SpyObj<AvisService>;
   let listeAttente: jasmine.SpyObj<ListeAttenteService>;
   let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy };
+  let roles: ReturnType<typeof signal<string[]>>;
   let naviguer: jasmine.Spy;
   let annuaireSpy: jasmine.SpyObj<AnnuaireService>;
 
@@ -67,6 +70,7 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
     listeAttente.mes.and.returnValue(of([]));
     auth = { pret: () => Promise.resolve(), estConnecte: () => true, seConnecter: jasmine.createSpy('seConnecter') };
 
+    roles = signal<string[]>(['PATIENT']);
     TestBed.configureTestingModule({
       imports: [FicheMedecinComponent],
       providers: [
@@ -78,6 +82,7 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
         { provide: AvisService, useValue: avis },
         { provide: ListeAttenteService, useValue: listeAttente },
         { provide: AuthService, useValue: auth },
+        { provide: RoleService, useValue: { roles, charger: () => Promise.resolve(null) } },
         { provide: LOCALE_ID, useValue: 'fr' },
       ],
     });
@@ -133,6 +138,14 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
     expect(texte()).toContain('Vous devez avoir un rendez-vous avec ce médecin pour lui écrire.');
     expect(naviguer).not.toHaveBeenCalled();
     expect(boutonEcrire()!.disabled).toBeFalse();
+  });
+
+  it('masque le bouton et explique que la messagerie est reservee aux patients pour un medecin', async () => {
+    roles.set(['PATIENT', 'MEDECIN']);
+    await afficher();
+
+    expect(boutonEcrire()).toBeUndefined();
+    expect(texte()).toContain('La messagerie est réservée aux patients.');
   });
 
   it('envoie un visiteur non connecte vers la connexion sans ouvrir de conversation', async () => {
