@@ -203,6 +203,36 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
     expect(boutonInscrire()!.disabled).toBeFalse();
   });
 
+  describe('reservation refusee (409)', () => {
+    const CRENEAU = { id: 'cr1', debut: '2026-12-01T09:00:00Z', fin: '2026-12-01T09:30:00Z' } as never;
+
+    it('affiche le message de l API quand le patient a deja un rendez-vous avec ce medecin', async () => {
+      const message = 'Vous avez déjà un rendez-vous à venir avec ce médecin : annulez-le pour en choisir un autre.';
+      TestBed.inject(RendezVousService).reserver = jasmine
+        .createSpy('reserver')
+        .and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: message } })));
+      await afficher();
+
+      await fixture.componentInstance.reserver(CRENEAU);
+      await afficher();
+
+      expect(texte()).toContain(message);
+      expect(texte()).not.toContain("Ce créneau vient d'être pris.");
+    });
+
+    it('se rabat sur « Ce créneau vient d\'être pris. » sans message de l API', async () => {
+      TestBed.inject(RendezVousService).reserver = jasmine
+        .createSpy('reserver')
+        .and.returnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+      await afficher();
+
+      await fixture.componentInstance.reserver(CRENEAU);
+      await afficher();
+
+      expect(texte()).toContain("Ce créneau vient d'être pris.");
+    });
+  });
+
   it('fiche non reclamee : ni « Écrire » ni liste d attente, mais « pas encore sur Tabibi » et lien vers /praticien', async () => {
     annuaireSpy.reclamable.and.returnValue(of({ reclamable: true }));
     await afficher();
