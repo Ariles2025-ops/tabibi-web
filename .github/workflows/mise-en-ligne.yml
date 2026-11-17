@@ -15,7 +15,9 @@ permissions:
   contents: read
 jobs:
   deployer:
-    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    # CI verte sur main : envoi direct (push) ou CI relancee sur main par le homelab quand un agent a fusionne
+    # (une fusion faite par GITHUB_TOKEN ne declenche pas la CI ; workflow_run ne regarde deja que la branche main).
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch'))
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
