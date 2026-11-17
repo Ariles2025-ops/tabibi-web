@@ -16,6 +16,16 @@ describe('AuthService', () => {
     expect(connexionFermee()).toBeTrue();
   });
 
+  it('pre-lancement sans acces equipe : aucune requete vers Keycloak (pas de discovery document)', async () => {
+    localStorage.removeItem('tabibi.equipe');
+    const auth = configurer('browser');
+
+    await auth.initialiser();
+
+    expect(oauth.configure).not.toHaveBeenCalled();
+    expect(oauth.loadDiscoveryDocumentAndTryLogin).not.toHaveBeenCalled();
+  });
+
   let oauth: jasmine.SpyObj<OAuthService>;
   let config: { charger: jasmine.Spy; keycloakIssuer: string; keycloakClientId: string };
 
