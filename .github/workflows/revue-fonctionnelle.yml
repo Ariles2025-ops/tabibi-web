@@ -11,7 +11,8 @@ on:
         description: "Numéro de zone (1 = première ligne de .github/revue-zones.txt) ; vide = rotation"
         required: false
 concurrency:
-  group: revue-fonctionnelle
+  # Une file par zone : plusieurs zones peuvent être revues en même temps (passage complet rapide).
+  group: revue-fonctionnelle-${{ github.event.inputs.zone || github.run_id }}
   cancel-in-progress: false
 permissions:
   contents: read
