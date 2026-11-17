@@ -7,10 +7,9 @@ export const SITE = 'https://ndawik.com';
 
 /**
  * Lien Google Play de l'appli Ndawik, ajoute dans `sameAs` de l'Organization des qu'il est renseigne.
- * A COMPLETER : coller ici l'adresse de la fiche Play Store (https://play.google.com/store/apps/details?id=…).
  * D'autres profils (Facebook, Instagram, LinkedIn…) peuvent etre ajoutes dans AUTRES_PROFILS.
  */
-export const LIEN_GOOGLE_PLAY = '';
+export const LIEN_GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=dz.tabibi.app';
 export const AUTRES_PROFILS: string[] = [];
 
 /** Titres et descriptions de l'accueil : la marque (Ndawik / نداويك) et « tabibi.doctor » y figurent. */
