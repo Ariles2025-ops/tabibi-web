@@ -8,6 +8,8 @@ import { CONFIGURATION_PAR_DEFAUT, ConfigurationApplication, configurationDepuis
 import bootstrap from './src/main.server';
 import { redirectionIndex, redirectionSeo } from './src/app/seo/anciennes-adresses';
 import { REPONSE_HTTP } from './src/app/seo/statut-http';
+import { MIN_PRATICIENS_COMMUNE, slugCommune } from './src/app/seo/communes';
+import { SPECIALITES_SEO, WILAYAS_SEO } from './src/app/seo/referentiel-seo';
 
 /**
  * Serveur node du front web (image Docker) : fichiers statiques du build et rendu cote serveur (SSR) des pages par
@@ -113,12 +115,34 @@ export function app(): express.Express {
   server.get('/sitemap.xml', (_req, res) => envoyerXml(res, 'index', async () => {
     const { total, taille } = await lirePlan(0);
     const pages = Math.ceil(total / taille);
-    const fichiers = ['sitemap-pages.xml', 'sitemap-pages-ar.xml',
+    const fichiers = ['sitemap-pages.xml', 'sitemap-pages-ar.xml', 'sitemap-communes.xml', 'sitemap-communes-ar.xml',
       ...Array.from({ length: pages }, (_, i) => `sitemap-praticiens-${i}.xml`),
       ...Array.from({ length: pages }, (_, i) => `sitemap-praticiens-ar-${i}.xml`)];
     return '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
       + fichiers.map((f) => `  <sitemap><loc>${site}/${f}</loc></sitemap>\n`).join('') + '</sitemapindex>\n';
   }));
+  // Pages specialite x wilaya x commune : uniquement les combinaisons d'au moins 3 praticiens (pas de page vide).
+  // Source : GET /api/medecins/communes -> [{ specialite, wilaya (code), ville, nombre }] (a creer cote backend,
+  // voir le ticket) ; tant que la route manque, ces deux plans sont vides (le reste du site n'est pas touche).
+  server.get(/^\/sitemap-communes(-ar)?\.xml$/, (req, res) => {
+    const prefixe = (req.params as unknown as string[])[0] ? '/ar' : '';
+    return envoyerXml(res, `communes${prefixe}`, async () => {
+      const r = await fetch(`${api}/api/medecins/communes`);
+      const lignes = r.ok ? ((await r.json()) as { specialite: string; wilaya: string; ville: string; nombre: number }[]) : [];
+      const groupes = new Map<string, number>();
+      for (const l of lignes) {
+        const w = WILAYAS_SEO.find((x) => x.code === String(l.wilaya));
+        const c = slugCommune(l.ville);
+        if (!w || !c || c === w.slug || l.specialite === 'pharmacie' || !SPECIALITES_SEO.some((x) => x.slug === l.specialite)) continue;
+        const cle = `${l.specialite}/${w.slug}/${c}`;
+        groupes.set(cle, (groupes.get(cle) || 0) + (Number(l.nombre) || 0));
+      }
+      const urls = [...groupes.entries()].filter(([, n]) => n >= MIN_PRATICIENS_COMMUNE).map(([cle]) => cle).sort();
+      return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + urls.map((u) => `  <url><loc>${site}${prefixe}/specialites/${u}</loc></url>\n`).join('')
+        + '</urlset>\n';
+    });
+  });
   server.get(/^\/sitemap-praticiens-(ar-)?(\d+)\.xml$/, (req, res) => {
     const prefixe = (req.params as unknown as string[])[0] ? '/ar' : '';
     const page = Number((req.params as unknown as string[])[1]);

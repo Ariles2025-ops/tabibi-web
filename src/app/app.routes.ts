@@ -123,6 +123,7 @@ export const routes: Routes = [
   { path: 'specialites', component: AnnuaireSeoComponent },
   { path: 'specialites/:specialite', component: AnnuaireSeoComponent },
   { path: 'specialites/:specialite/:wilaya', component: AnnuaireSeoComponent },
+  { path: 'specialites/:specialite/:wilaya/:commune', component: AnnuaireSeoComponent },
   { path: 'wilayas', component: WilayasIndexComponent },
   { path: 'wilayas/:wilaya', component: AnnuaireSeoComponent },
   // Centre d'aide et demarche de suppression de compte (URL declaree dans la Play Console), publics.
@@ -136,6 +137,7 @@ export const routes: Routes = [
   { path: 'ar/specialites', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
   { path: 'ar/specialites/:specialite', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
   { path: 'ar/specialites/:specialite/:wilaya', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
+  { path: 'ar/specialites/:specialite/:wilaya/:commune', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
   { path: 'ar/wilayas', component: WilayasIndexComponent, data: { langue: 'ar' } },
   { path: 'ar/wilayas/:wilaya', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
   { path: 'ar/aide', component: AideComponent, data: { langue: 'ar' } },
