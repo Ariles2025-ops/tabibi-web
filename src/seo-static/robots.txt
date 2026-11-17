@@ -17,4 +17,4 @@ Disallow: /ordonnances
 Disallow: /avis
 Disallow: /teleconsultations
 
-Sitemap: https://tabibi.doctor/sitemap.xml
+Sitemap: https://ndawik.com/sitemap.xml

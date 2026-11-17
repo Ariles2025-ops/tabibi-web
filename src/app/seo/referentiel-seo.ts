@@ -692,7 +692,7 @@ export function wilayaParCode(code: string | null | undefined): WilayaSeo | unde
  */
 export function liensLangues(doc: Document, chemin: string): void {
   doc.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((l) => l.remove());
-  const base = 'https://tabibi.doctor';
+  const base = 'https://ndawik.com';
   for (const [langue, url] of [['fr', base + chemin], ['ar', base + '/ar' + chemin], ['x-default', base + chemin]]) {
     const lien = doc.createElement('link');
     lien.setAttribute('rel', 'alternate');

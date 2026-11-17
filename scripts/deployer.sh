@@ -6,7 +6,7 @@
 set -euo pipefail
 SERVEUR="ubuntu@129.151.227.16"
 CLE="$HOME/.ssh/ma3lem_oracle"
-SITE="https://tabibi.doctor"
+SITE="https://ndawik.com"
 SHA="$(git rev-parse --short HEAD)"
 
 git archive HEAD src angular.json package.json package-lock.json server.ts tsconfig.json tsconfig.app.json > /tmp/tabibi-web.tar

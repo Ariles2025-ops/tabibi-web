@@ -3,7 +3,7 @@ import { liensLangues } from './referentiel-seo';
 import { poserLangueDocument } from './page-seo';
 
 /** Adresse du site (absolue, sans « / » final). */
-export const SITE = 'https://tabibi.doctor';
+export const SITE = 'https://ndawik.com';
 
 /**
  * Lien Google Play de l'appli Ndawik, ajoute dans `sameAs` de l'Organization des qu'il est renseigne.

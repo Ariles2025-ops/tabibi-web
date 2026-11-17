@@ -74,6 +74,7 @@ lance node au premier plan. Le meme build sert donc en recette et en production.
 | `TABIBI_API_URL` | `https://api.$DOMAINE` si `DOMAINE` est defini, sinon `http://localhost:8080` | origine de l'API (`apiUrl`), pour le navigateur et pour le rendu serveur |
 | `TABIBI_KEYCLOAK_ISSUER` | `https://auth.$DOMAINE/realms/tabibi` si `DOMAINE` est defini, sinon `http://localhost:8081/realms/tabibi` | issuer OIDC (`keycloakIssuer`) |
 | `TABIBI_KEYCLOAK_CLIENT_ID` | `tabibi-web` | client public OIDC (`keycloakClientId`) |
+| `SITE_DOMAINE` | `ndawik.com` | adresse publique du site (sitemaps, hotes autorises du rendu serveur) ; distincte de `DOMAINE`, qui reste `tabibi.doctor` pour l'API et Keycloak |
 | `DOMAINE` | (aucun) | domaine public, celui du `.env` de `docker-compose.prod.yml` (tabibi-backend) : en derive les deux URL ci-dessus, avec les hotes `api.` et `auth.` du Caddyfile |
 | `PORT` | `80` dans l'image (`4000` hors image) | port d'ecoute du serveur node |
 | `TABIBI_SSR_DELAI_MS` | `10000` | au-dela, la page est envoyee sans rendu serveur (voir « Rendu cote serveur ») |

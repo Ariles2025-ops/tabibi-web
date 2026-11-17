@@ -97,7 +97,7 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     expect(f.name).toBe('Dr Amine Benali');
     expect(f.medicalSpecialty).toBe('Dentiste');
     expect(f.inLanguage).toBe('fr');
-    expect(f.url).toBe('https://tabibi.doctor/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/dr-amine-benali');
+    expect(f.url).toBe('https://ndawik.com/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/dr-amine-benali');
     expect(f.address.addressRegion).toBe('Oran');
     const fil = ld('ld-fil');
     expect(fil['@type']).toBe('BreadcrumbList');
@@ -112,7 +112,7 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     const f = ld('ld-praticien');
     expect(f['@type']).toBe('Physician');
     expect(f.inLanguage).toBe('ar');
-    expect(f.url).toContain('https://tabibi.doctor/ar/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/');
+    expect(f.url).toContain('https://ndawik.com/ar/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/');
     expect(f.address.addressRegion).toBe('وهران');
     expect(ld('ld-fil').itemListElement[0].name).toBe('الرئيسية');
     expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(f.url);

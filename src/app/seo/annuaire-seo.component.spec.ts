@@ -89,7 +89,7 @@ describe('AnnuaireSeoComponent', () => {
       expect(faq.mainEntity.length).toBeGreaterThanOrEqual(3);
       expect(faq.mainEntity[faq.mainEntity.length - 3].name).toBe('Comment prendre rendez-vous avec un cardiologue à Oran ?');
       expect((f.nativeElement as HTMLElement).querySelectorAll('.seo-faq details').length).toBe(faq.mainEntity.length);
-      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://tabibi.doctor/specialites/cardiologue/oran');
+      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://ndawik.com/specialites/cardiologue/oran');
       expect(document.head.querySelector('link[rel="alternate"][hreflang="ar"]')).toBeTruthy();
     });
 
@@ -115,7 +115,7 @@ describe('AnnuaireSeoComponent', () => {
       expect(noeud('FAQPage').inLanguage).toBe('ar');
       expect(noeud('FAQPage').mainEntity[0].name).toMatch(/[\u0600-\u06FF]/);
       expect(noeud('BreadcrumbList').itemListElement[0].name).toBe('الرئيسية');
-      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://tabibi.doctor/ar/specialites/cardiologue/oran');
+      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://ndawik.com/ar/specialites/cardiologue/oran');
       TestBed.resetTestingModule();
       creer({ specialite: 'nimportequoi' });
       expect(ld('ld-page')).toBeNull();
@@ -149,7 +149,7 @@ describe('AnnuaireSeoComponent', () => {
       const item = noeud('ItemList').itemListElement[0].item;
       expect(item['@type']).toBe('Physician');
       expect(item.name).toBe('Dr Samir Benali');
-      expect(item.url).toBe('https://tabibi.doctor/praticiens/a1/dr-samir-benali');
+      expect(item.url).toBe('https://ndawik.com/praticiens/a1/dr-samir-benali');
       expect(item.address).toEqual({ '@type': 'PostalAddress', addressCountry: 'DZ', addressLocality: 'Sétif', addressRegion: 'Sétif' });
       const brut = document.head.querySelector('script#ld-page')!.textContent!;
       expect(brut).not.toContain('0555000000');
