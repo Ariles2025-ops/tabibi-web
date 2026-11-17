@@ -15,7 +15,7 @@ export const AUTRES_PROFILS: string[] = [];
 /** Titres et descriptions de l'accueil : la marque (Tabibi Doctor / Tabibi DZ / طبيبي) et « tabibi.doctor » y figurent. */
 export const ACCUEIL_FR = {
   titre: 'Tabibi Doctor (Tabibi DZ) : trouvez un médecin et prenez rendez-vous en Algérie',
-  description: 'Tabibi Doctor (tabibi.doctor), aussi appelé Tabibi DZ : l’annuaire de plus de 75 000 médecins, cliniques et pharmacies en Algérie. Trouvez un praticien par spécialité et par wilaya, et prenez rendez-vous en quelques clics.',
+  description: 'Tabibi Doctor (tabibi.doctor), aussi appelé Tabibi DZ : la plateforme médicale qui réunit plus de 75 000 médecins, cliniques et pharmacies en Algérie. Trouvez un praticien par spécialité et par wilaya, et prenez rendez-vous en quelques clics.',
 };
 export const ACCUEIL_AR = {
   titre: 'طبيبي Tabibi Doctor (Tabibi DZ): احجز موعدك مع طبيب في الجزائر',
