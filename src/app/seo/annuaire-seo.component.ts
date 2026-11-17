@@ -6,7 +6,7 @@ import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { TEXTES_SEO, TextesSeo } from './textes-seo';
 import { CONTENU_SPECIALITES } from './contenu-specialites';
 import { StatutHttpService } from './statut-http';
-import { ecrireJsonLd, faqPage, fil, typeSchemaOrg } from './donnees-structurees';
+import { ecrireJsonLd, fil, pageAnnuaire } from './donnees-structurees';
 import { Commune, communesDe, slugCommune } from './communes';
 import {
   SLUG_PHARMACIE, SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo,
@@ -256,6 +256,8 @@ export class AnnuaireSeoComponent implements OnInit {
   apropos = '';
   faqSpe: { q: string; r: string }[] = [];
 
+  private cheminLd = '';
+  private description = '';
   medecins = signal<Medecin[]>([]);
   charge = signal(false);
   erreur = signal(false);
@@ -345,6 +347,8 @@ export class AnnuaireSeoComponent implements OnInit {
     this.lienCanonique(`https://tabibi.doctor${this.p}${chemin}`);
     liensLangues(this.document, chemin);
     this.document.documentElement.setAttribute('lang', this.ar ? 'ar' : 'fr');
+    this.cheminLd = chemin;
+    this.description = description;
     this.donneesStructurees(chemin);
 
     // La liste vient de l API publique ; elle est aussi rendue cote serveur pour les moteurs de recherche.
@@ -356,6 +360,7 @@ export class AnnuaireSeoComponent implements OnInit {
           if (s && w && !this.pharmacie) this.appliquerCommunes(liste, s, w, chemin);
           else this.medecins.set(liste);
           this.charge.set(false);
+          this.donneesStructurees(this.cheminLd);
         },
         error: () => { this.erreur.set(true); this.charge.set(false); },
       });
@@ -390,6 +395,7 @@ export class AnnuaireSeoComponent implements OnInit {
     this.cible = t2.cible(ns, commune.nom, avecArticle(s));
     this.intro = t2.intro(ns, commune.nom, nw, gens.length);
     const description = t2.description(ns, commune.nom, nw, gens.length);
+    this.description = description;
     this.title.setTitle(`${this.titre} — ${this.t.suffixeTitre} | Tabibi`);
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Tabibi` });
@@ -412,14 +418,45 @@ export class AnnuaireSeoComponent implements OnInit {
     ];
   }
 
-  /** JSON-LD : fil d'Ariane (toutes les pages valides) et FAQPage (memes conditions que la FAQ visible). */
+  /** JSON-LD : un seul bloc @graph (MedicalWebPage, ItemList des praticiens affiches, fil d'Ariane, FAQPage). */
   private donneesStructurees(chemin: string) {
-    if (this.introuvable) {
-      ecrireJsonLd(this.document, 'ld-fil', null);
-      ecrireJsonLd(this.document, 'ld-faq', null);
-      ecrireJsonLd(this.document, 'ld-liste', null);
+    // Anciens blocs separes : retires au profit du bloc unique.
+    ecrireJsonLd(this.document, 'ld-fil', null);
+    ecrireJsonLd(this.document, 'ld-faq', null);
+    if (this.introuvable || this.index) {
+      ecrireJsonLd(this.document, 'ld-page', null);
+      if (this.index) this.ecrireFilSeul(chemin);
       return;
     }
+    const racine = `https://tabibi.doctor${this.p}`;
+    const etapes = this.etapesFil(chemin);
+    const avecFaq = !this.pharmacie;
+    ecrireJsonLd(this.document, 'ld-page', pageAnnuaire({
+      url: `${racine}${chemin}${this.communeSlug && this.nomCommune ? '/' + this.communeSlug : ''}`,
+      nom: this.titre,
+      description: this.description,
+      langue: this.ar ? 'ar' : 'fr',
+      specialite: this.specialite && !this.pharmacie ? this.nomS(this.specialite) : undefined,
+      verifieLe: new Date().toISOString().slice(0, 10),
+      etapes,
+      praticiens: this.medecins().map((m) => ({
+        nom: m.nomComplet,
+        url: `https://tabibi.doctor${this.lien(m).join('/')}`,
+        specialiteSlug: m.specialiteSlug,
+        specialite: this.specialiteDe(m),
+        ville: m.ville,
+        region: this.regionDe(m),
+      })),
+      faq: avecFaq ? this.faqVisible() : undefined,
+    }));
+  }
+
+  private regionDe(m: Medecin): string {
+    const w = WILAYAS_SEO.find((x) => x.code === m.wilayaCode);
+    return (w ? this.nomW(w) : m.wilayaFr) || '';
+  }
+
+  private etapesFil(chemin: string) {
     const racine = `https://tabibi.doctor${this.p}`;
     const etapes = [
       { nom: this.t.accueil, url: `https://tabibi.doctor${this.p || '/'}` },
@@ -429,34 +466,12 @@ export class AnnuaireSeoComponent implements OnInit {
     if (this.wilaya) etapes.push({ nom: this.nomW(this.wilaya), url: `${racine}${chemin}` });
     if (this.communeSlug && this.nomCommune) etapes.push({ nom: this.nomCommune, url: `${racine}${chemin}/${this.communeSlug}` });
     if (this.index) etapes.pop();
-    ecrireJsonLd(this.document, 'ld-fil', fil(etapes));
-    const avecFaq = !this.index && !this.pharmacie;
-    ecrireJsonLd(this.document, 'ld-liste', this.communeSlug && this.nomCommune ? this.listePraticiensLd() : null);
-    ecrireJsonLd(this.document, 'ld-faq', avecFaq ? faqPage(this.faqVisible(), this.ar ? 'ar' : 'fr') : null);
+    return etapes;
   }
 
-  /** ItemList de Physician / Dentist (nom, adresse = commune, wilaya) de la page commune. */
-  private listePraticiensLd(): object {
-    return {
-      '@context': 'https://schema.org',
-      '@type': 'ItemList',
-      itemListElement: this.medecins().map((m, i) => ({
-        '@type': 'ListItem',
-        position: i + 1,
-        item: {
-          '@type': typeSchemaOrg(m.specialiteSlug),
-          name: m.nomComplet,
-          medicalSpecialty: this.specialiteDe(m),
-          url: `https://tabibi.doctor${this.lien(m).join('/')}`,
-          address: {
-            '@type': 'PostalAddress',
-            addressLocality: this.nomCommune,
-            addressRegion: this.wilaya ? this.nomW(this.wilaya) : m.wilayaFr,
-            addressCountry: 'DZ',
-          },
-        },
-      })),
-    };
+  /** Index : fil d'Ariane seul (pas de liste de praticiens). */
+  private ecrireFilSeul(chemin: string) {
+    ecrireJsonLd(this.document, 'ld-fil', fil(this.etapesFil(chemin)));
   }
 
   private lienCanonique(url: string) {

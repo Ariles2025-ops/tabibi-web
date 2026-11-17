@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
-import { AnnuaireService } from '../annuaire/annuaire.service';
+import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AnnuaireSeoComponent } from './annuaire-seo.component';
 import { REPONSE_HTTP } from './statut-http';
 
@@ -71,14 +71,16 @@ describe('AnnuaireSeoComponent', () => {
       const el = document.head.querySelector(`script#${id}`);
       return el ? JSON.parse(el.textContent || '{}') : null;
     };
+    /** Noeud du @graph unique par type. */
+    const noeud = (type: string) => ld('ld-page')?.['@graph'].find((n: { '@type': string }) => n['@type'] === type);
     afterEach(() => document.head.querySelectorAll('script[type="application/ld+json"]').forEach((e) => e.remove()));
 
     it('FR : BreadcrumbList + FAQPage (memes questions que la FAQ visible) sur /specialites/:s/:w', () => {
       const f = creer({ specialite: 'cardiologue', wilaya: 'oran' });
-      const fil = ld('ld-fil');
+      const fil = noeud('BreadcrumbList');
       expect(fil['@type']).toBe('BreadcrumbList');
       expect(fil.itemListElement.map((e: { name: string }) => e.name)).toEqual(['Accueil', 'Médecins', 'Cardiologue', 'Oran']);
-      const faq = ld('ld-faq');
+      const faq = noeud('FAQPage');
       expect(faq['@type']).toBe('FAQPage');
       expect(faq.mainEntity.length).toBeGreaterThanOrEqual(3);
       expect(faq.mainEntity[faq.mainEntity.length - 3].name).toBe('Comment prendre rendez-vous avec un cardiologue à Oran ?');
@@ -102,13 +104,71 @@ describe('AnnuaireSeoComponent', () => {
         ],
       });
       TestBed.createComponent(AnnuaireSeoComponent).detectChanges();
-      expect(ld('ld-faq').inLanguage).toBe('ar');
-      expect(ld('ld-faq').mainEntity[0].name).toMatch(/[\u0600-\u06FF]/);
-      expect(ld('ld-fil').itemListElement[0].name).toBe('الرئيسية');
+      expect(noeud('FAQPage').inLanguage).toBe('ar');
+      expect(noeud('FAQPage').mainEntity[0].name).toMatch(/[\u0600-\u06FF]/);
+      expect(noeud('BreadcrumbList').itemListElement[0].name).toBe('الرئيسية');
       expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://tabibi.doctor/ar/specialites/cardiologue/oran');
       TestBed.resetTestingModule();
       creer({ specialite: 'nimportequoi' });
-      expect(ld('ld-faq')).toBeNull();
+      expect(ld('ld-page')).toBeNull();
+    });
+
+    it('un seul bloc @graph : MedicalWebPage + ItemList de Physician (sans telephone) + BreadcrumbList + FAQPage', () => {
+      reponse = { status: jasmine.createSpy('status') };
+      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher']);
+      annuaire.rechercher.and.returnValue(of<Medecin[]>([
+        { id: 'a1', nomComplet: 'Dr Samir Benali', specialiteSlug: 'pediatre', specialiteFr: 'Pédiatre', wilayaCode: '19',
+          wilayaFr: 'Sétif', ville: 'Sétif', telephoneCabinet: '0555000000', adresse: '12 rue privée' },
+      ] as Medecin[]));
+      TestBed.configureTestingModule({
+        imports: [AnnuaireSeoComponent],
+        providers: [
+          provideRouter([]),
+          { provide: ActivatedRoute, useValue: { snapshot: { data: {} }, paramMap: of(convertToParamMap({ specialite: 'pediatre', wilaya: 'setif' })) } },
+          { provide: AnnuaireService, useValue: annuaire },
+          { provide: REPONSE_HTTP, useValue: reponse },
+        ],
+      });
+      TestBed.createComponent(AnnuaireSeoComponent).detectChanges();
+      expect(document.head.querySelectorAll('script[type="application/ld+json"]').length).toBe(1);
+      const types = ld('ld-page')['@graph'].map((n: { '@type': string }) => n['@type']);
+      expect(types).toEqual(['MedicalWebPage', 'ItemList', 'BreadcrumbList', 'FAQPage']);
+      const page = noeud('MedicalWebPage');
+      expect(page.inLanguage).toBe('fr');
+      expect(page.lastReviewed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(page.about['@type']).toBe('MedicalSpecialty');
+      const item = noeud('ItemList').itemListElement[0].item;
+      expect(item['@type']).toBe('Physician');
+      expect(item.name).toBe('Dr Samir Benali');
+      expect(item.url).toBe('https://tabibi.doctor/praticiens/a1/dr-samir-benali');
+      expect(item.address).toEqual({ '@type': 'PostalAddress', addressCountry: 'DZ', addressLocality: 'Sétif', addressRegion: 'Sétif' });
+      const brut = document.head.querySelector('script#ld-page')!.textContent!;
+      expect(brut).not.toContain('0555000000');
+      expect(brut).not.toContain('telephone');
+      expect(brut).not.toContain('rue privée');
+    });
+
+    it('pharmacies : entrees Pharmacy, pas de MedicalSpecialty ni de FAQ', () => {
+      reponse = { status: jasmine.createSpy('status') };
+      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher']);
+      annuaire.rechercher.and.returnValue(of<Medecin[]>([
+        { id: 'p1', nomComplet: 'Pharmacie Centrale', specialiteSlug: 'pharmacie', specialiteFr: 'Pharmacie', wilayaCode: '16', wilayaFr: 'Alger', ville: 'Alger' },
+      ] as Medecin[]));
+      TestBed.configureTestingModule({
+        imports: [AnnuaireSeoComponent],
+        providers: [
+          provideRouter([]),
+          { provide: ActivatedRoute, useValue: { snapshot: { data: {} }, paramMap: of(convertToParamMap({ specialite: 'pharmacie', wilaya: 'alger' })) } },
+          { provide: AnnuaireService, useValue: annuaire },
+          { provide: REPONSE_HTTP, useValue: reponse },
+        ],
+      });
+      TestBed.createComponent(AnnuaireSeoComponent).detectChanges();
+      const item = noeud('ItemList').itemListElement[0].item;
+      expect(item['@type']).toBe('Pharmacy');
+      expect(item.medicalSpecialty).toBeUndefined();
+      expect(noeud('MedicalWebPage').about).toBeUndefined();
+      expect(noeud('FAQPage')).toBeUndefined();
     });
   });
 });
