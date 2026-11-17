@@ -30,7 +30,11 @@ export interface AvisPublic {
   note: number;
   commentaire: string | null;
   deposeLe: string;
-  /** true quand l'avis est deja signale ; renseigne par l'API pour le medecin concerne, absent sinon. */
+  /**
+   * true quand l'avis est deja signale. ATTENTION : l'API ne renvoie pas encore ce champ
+   * (AvisPublicVue = id, note, commentaire, deposeLe) ; il est prevu cote backend (PR coordonnee,
+   * reserve au medecin concerne). Tant qu'il est absent, seul l'etat en memoire s'applique.
+   */
   signale?: boolean;
 }
 
