@@ -151,7 +151,7 @@ describe('CandidatureMedecinComponent', () => {
     await afficher();
 
     expect(texte()).toContain('Validée');
-    expect(texte()).toContain('Votre candidature a été validée : vous figurez dans l\'annuaire.');
+    expect(texte()).toContain('Votre candidature a été validée : vous figurez sur Tabibi.');
     expect(fixture.nativeElement.querySelector('a[href="/medecins/m1"]')).not.toBeNull();
     expect(formulaire()).toBeNull();
     // Le role MEDECIN vient d'etre accorde : jeton et profil relus, acces direct a l'agenda.

@@ -26,7 +26,7 @@ function formulaireVide(): DemandeCandidature {
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">{{ ficheReclamee ? 'Réclamer ma fiche' : 'Ma candidature' }}</h1>
       <p *ngIf="!ficheReclamee" style="color:var(--text3);margin:0 0 20px">
-        Pour figurer dans l'annuaire Tabibi, déposez votre candidature : elle est examinée par un administrateur.
+        Pour figurer sur Tabibi, déposez votre candidature : elle est examinée par un administrateur.
       </p>
       <p *ngIf="ficheReclamee" style="color:var(--text3);margin:0 0 20px">
         Vérifiez les informations de votre fiche et ajoutez votre numéro d'inscription à l'ordre :
@@ -50,7 +50,7 @@ function formulaireVide(): DemandeCandidature {
         <p *ngIf="c.statut === 'EN_ATTENTE'" style="margin:10px 0 0">Votre candidature est en cours d'examen.</p>
         <div *ngIf="c.statut === 'VALIDEE'" style="margin:10px 0 0">
           <p style="margin:0 0 10px;color:var(--vert)">
-            Votre candidature a été validée : vous figurez dans l'annuaire.
+            Votre candidature a été validée : vous figurez sur Tabibi.
             <a [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">Voir ma fiche</a>
           </p>
           <a class="bouton" routerLink="/medecin/agenda">Ouvrir mon agenda</a>

@@ -7,7 +7,7 @@ import { referencerPage } from '../seo/page-seo';
 interface Question { q: string; r: string; lien?: { texte: string; vers: string }; }
 
 const FR: Question[] = [
-  { q: 'Comment prendre rendez-vous ?', r: "Recherchez un praticien par nom, spécialité ou wilaya, ouvrez sa fiche et choisissez un créneau libre. La prise de rendez-vous en ligne ouvre très bientôt : l'annuaire est déjà consultable." },
+  { q: 'Comment prendre rendez-vous ?', r: "Recherchez un praticien par nom, spécialité ou wilaya, ouvrez sa fiche et choisissez un créneau libre. La prise de rendez-vous en ligne ouvre très bientôt : la plateforme est déjà consultable." },
   { q: 'Tabibi est-il payant ?', r: "Non, Tabibi est gratuit pour les patients. La consultation se règle au cabinet, en espèces ou avec la carte Chifa selon le praticien. Aucun prépaiement n'est demandé." },
   { q: 'Comment annuler un rendez-vous ?', r: 'Depuis « Mes rendez-vous », annulez le rendez-vous : le créneau est libéré pour un autre patient.' },
   { q: 'Comment me connecter ?', r: 'Par téléphone (code SMS) ou par e-mail et mot de passe.' },
@@ -17,7 +17,7 @@ const FR: Question[] = [
 ];
 
 const AR: Question[] = [
-  { q: 'كيف أحجز موعدًا؟', r: 'ابحث عن طبيب بالاسم أو التخصص أو الولاية، افتح صفحته واختر موعدًا متاحًا. حجز المواعيد عبر الإنترنت متاح قريبًا جدًا، ودليل الأطباء متاح من الآن.' },
+  { q: 'كيف أحجز موعدًا؟', r: 'ابحث عن طبيب بالاسم أو التخصص أو الولاية، افتح صفحته واختر موعدًا متاحًا. حجز المواعيد عبر الإنترنت متاح قريبًا جدًا، ويمكنك البحث عن طبيب من الآن.' },
   { q: 'هل طبيبي مجاني؟', r: 'نعم، طبيبي مجاني للمرضى. تُدفع الاستشارة في العيادة نقدًا أو ببطاقة الشفاء حسب الطبيب، دون أي دفع مسبق.' },
   { q: 'كيف ألغي موعدًا؟', r: 'من صفحة «مواعيدي» ألغِ الموعد ليصبح متاحًا لمريض آخر.' },
   { q: 'كيف أسجّل الدخول؟', r: 'برقم الهاتف (رمز عبر رسالة قصيرة) أو بالبريد الإلكتروني وكلمة المرور.' },

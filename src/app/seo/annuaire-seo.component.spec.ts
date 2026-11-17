@@ -79,7 +79,7 @@ describe('AnnuaireSeoComponent', () => {
       const f = creer({ specialite: 'cardiologue', wilaya: 'oran' });
       const fil = noeud('BreadcrumbList');
       expect(fil['@type']).toBe('BreadcrumbList');
-      expect(fil.itemListElement.map((e: { name: string }) => e.name)).toEqual(['Accueil', 'Annuaire', 'Cardiologue', 'Oran']);
+      expect(fil.itemListElement.map((e: { name: string }) => e.name)).toEqual(['Accueil', 'Médecins', 'Cardiologue', 'Oran']);
       const faq = noeud('FAQPage');
       expect(faq['@type']).toBe('FAQPage');
       expect(faq.mainEntity.length).toBeGreaterThanOrEqual(3);

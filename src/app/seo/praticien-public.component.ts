@@ -26,14 +26,14 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       <ng-container *ngIf="!charge() && !medecin()">
         <h1>{{ ar ? 'الطبيب غير موجود' : 'Praticien introuvable' }}</h1>
         <p class="pp-muet">{{ ar ? 'هذه الصفحة لم تعد موجودة.' : "Cette fiche n'existe plus." }}
-          <a [routerLink]="p + '/specialites'">{{ ar ? 'تصفّح الدليل' : "Parcourir l'annuaire" }}</a></p>
+          <a [routerLink]="p + '/specialites'">{{ ar ? 'ابحث عن طبيب' : 'Trouver un médecin' }}</a></p>
       </ng-container>
 
       <ng-container *ngIf="medecin() as m">
         <div class="pp-haut">
           <nav class="pp-fil" [attr.aria-label]="ar ? 'مسار التصفح' : 'Fil d’Ariane'">
             <a routerLink="/">{{ ar ? 'الرئيسية' : 'Accueil' }}</a><span>›</span>
-            <a [routerLink]="p + '/specialites'">{{ ar ? 'دليل الأطباء' : 'Annuaire' }}</a>
+            <a [routerLink]="p + '/specialites'">{{ ar ? 'الأطباء' : 'Médecins' }}</a>
             <ng-container *ngIf="specialiteConnue"><span>›</span>
               <a [routerLink]="[p + '/specialites', m.specialiteSlug]">{{ specialite }}</a></ng-container>
             <ng-container *ngIf="specialiteConnue && wilayaSlug"><span>›</span>

@@ -16,7 +16,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
     <div class="lancement-bandeau" *ngIf="prelancement" role="status" [attr.dir]="ar() ? 'rtl' : null">
       <span class="lancement-bandeau__pastille">{{ ar() ? 'قريبًا' : 'Bientôt' }}</span>
       <strong>{{ ar() ? 'الإطلاق قريبًا' : 'Lancement prochainement' }}</strong>
-      <span class="lancement-bandeau__txt">{{ ar() ? '— حجز المواعيد عبر الإنترنت متاح قريبًا جدًا. تصفّح دليل الأطباء من الآن.' : "— la prise de rendez-vous en ligne ouvre très bientôt. Parcourez déjà l'annuaire des médecins." }}</span>
+      <span class="lancement-bandeau__txt">{{ ar() ? '— حجز المواعيد عبر الإنترنت متاح قريبًا جدًا. منصة طبية: ابحث عن طبيب من الآن.' : "— la prise de rendez-vous en ligne ouvre très bientôt. Trouvez déjà un médecin sur la plateforme." }}</span>
     </div>
     <div class="shell">
       <aside class="side">
