@@ -107,6 +107,8 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.querySelector('a[href="/mes-avis"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/dawini"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/liste-attente"]')).not.toBeNull();
+    // Page des invitations de cabinet (comme « Mon espace » de l'appli) : un patient invité doit pouvoir l'ouvrir.
+    expect(fixture.nativeElement.querySelector('a[href="/invitations"]')?.textContent).toContain('Invitations de cabinet');
     expect(texteNav()).not.toContain('Espace médecin');
     expect(texteNav()).not.toContain('Espace pharmacie');
     expect(texteNav()).not.toContain('Administration');

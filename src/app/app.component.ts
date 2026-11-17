@@ -35,6 +35,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
           <a *ngIf="estPatient()" routerLink="/mes-avis" routerLinkActive="actif">Mes avis</a>
           <a *ngIf="estPatient()" routerLink="/dawini" routerLinkActive="actif">Dawini</a>
           <a *ngIf="estPatient()" routerLink="/liste-attente" routerLinkActive="actif">Mes listes d'attente</a>
+          <a *ngIf="estPatient()" routerLink="/invitations" routerLinkActive="actif">Invitations de cabinet</a>
 
           <div *ngIf="estMedecin()" class="side__group">
             <div class="side__grouptitle">Espace médecin</div>
@@ -52,6 +53,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
           <div *ngIf="estSecretaire()" class="side__group">
             <div class="side__grouptitle">Espace secrétaire</div>
             <a routerLink="/secretaire" routerLinkActive="actif">Agenda du cabinet</a>
+            <a routerLink="/invitations" routerLinkActive="actif">Invitations de cabinet</a>
           </div>
 
           <div *ngIf="estPharmacie()" class="side__group">
