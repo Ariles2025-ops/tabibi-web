@@ -8,6 +8,7 @@ import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
+import { PatientsService } from '../medecin/patients.service';
 import { Moi } from '../moi/moi.service';
 import { ConversationComponent } from './conversation.component';
 import { Conversation, Message, MessagerieService } from './messagerie.service';
@@ -56,6 +57,7 @@ describe('ConversationComponent', () => {
   let fixture: ComponentFixture<ConversationComponent>;
   let service: jasmine.SpyObj<MessagerieService>;
   let annuaire: jasmine.SpyObj<AnnuaireService>;
+  let patients: jasmine.SpyObj<PatientsService>;
   let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy };
   let profil: Moi | null;
   let estMedecin: ReturnType<typeof signal<boolean>>;
@@ -69,6 +71,8 @@ describe('ConversationComponent', () => {
     service.messages.and.returnValue(of([DU_PATIENT, DU_MEDECIN]));
     annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin']);
     annuaire.medecin.and.returnValue(of(MEDECIN));
+    patients = jasmine.createSpyObj<PatientsService>('PatientsService', ['patientsDuMedecin']);
+    patients.patientsDuMedecin.and.returnValue(of(new Map()));
     auth = { pret: () => Promise.resolve(), estConnecte: () => true, seConnecter: jasmine.createSpy('seConnecter') };
 
     TestBed.configureTestingModule({
@@ -78,6 +82,7 @@ describe('ConversationComponent', () => {
         { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'c1' })) } },
         { provide: MessagerieService, useValue: service },
         { provide: AnnuaireService, useValue: annuaire },
+        { provide: PatientsService, useValue: patients },
         { provide: AuthService, useValue: auth },
         { provide: RoleService, useValue: { charger: () => Promise.resolve(profil), estMedecin } },
         { provide: LOCALE_ID, useValue: 'fr' },
@@ -152,6 +157,29 @@ describe('ConversationComponent', () => {
     expect(annuaire.medecin).not.toHaveBeenCalled();
 
     fixture.destroy();
+  }));
+
+  it('affiche le nom du patient (liste des patients du medecin) quand je suis le medecin', fakeAsync(() => {
+    profil = { sujet: MEDECIN_ID, nom: 'medecin.demo', roles: ['MEDECIN'] };
+    estMedecin.set(true);
+    patients.patientsDuMedecin.and.returnValue(
+      of(new Map([[PATIENT, { patientId: PATIENT, nomComplet: 'Lina Mansouri', telephone: null, email: null }]])),
+    );
+    afficher();
+
+    expect(fixture.nativeElement.querySelector('h1').textContent).toContain('Lina Mansouri');
+    expect(fixture.nativeElement.querySelector('h1').textContent).not.toContain('Patient 2222');
+
+    fixture.destroy();
+  }));
+
+  it('n abonne ni la route ni le minuteur de 30 s si la page est detruite avant la fin de ngOnInit', fakeAsync(() => {
+    fixture.detectChanges();
+    fixture.destroy();
+    tick(60_000);
+
+    expect(service.messages).not.toHaveBeenCalled();
+    expect(service.mesConversations).not.toHaveBeenCalled();
   }));
 
   it('active « Envoyer » des qu un texte est saisi, envoie le message puis recharge le fil et vide le champ', fakeAsync(() => {

@@ -59,6 +59,12 @@ export class AuthService {
     return this.navigateur && this.oauth.hasValidAccessToken();
   }
 
+  /** Page « Lancement prochainement » dans la langue de la page courante (/ar/... -> version arabe). */
+  private pageBientot(): string {
+    const url = this.router.url;
+    return url === '/ar' || url.startsWith('/ar/') || url.startsWith('/ar?') ? '/ar/bientot' : '/bientot';
+  }
+
   /**
    * Redirige vers la page de connexion Keycloak. Apres connexion, l'utilisateur
    * revient sur `retour` (la page courante par defaut), transmis via le `state` OIDC.
@@ -66,7 +72,7 @@ export class AuthService {
   async seConnecter(retour: string = this.router.url): Promise<void> {
     if (!this.navigateur) return;
     // Pre-lancement : pas de connexion, page « Lancement prochainement ».
-    if (connexionFermee()) { this.router.navigateByUrl('/bientot'); return; }
+    if (connexionFermee()) { this.router.navigateByUrl(this.pageBientot()); return; }
     await this.initialiser();
     // Mot de passe exige a chaque connexion, meme si une session Keycloak existe encore dans ce navigateur.
     this.oauth.initCodeFlow(retour, { prompt: 'login' });
@@ -80,7 +86,7 @@ export class AuthService {
    */
   async sInscrireParEmail(retour: string = this.router.url): Promise<void> {
     if (!this.navigateur) return;
-    if (connexionFermee()) { this.router.navigateByUrl('/bientot'); return; }
+    if (connexionFermee()) { this.router.navigateByUrl(this.pageBientot()); return; }
     await this.initialiser();
     const urlAuth = this.oauth.loginUrl || '';
     // Cibler l'endpoint precis (pas le "/auth" present dans l'hote auth.tabibi.doctor).

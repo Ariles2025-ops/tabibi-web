@@ -143,7 +143,7 @@ describe('DawiniService', () => {
     it('traduit le statut d un besoin et accorde le nombre de reponses', () => {
       expect(libelleStatutBesoin('OUVERT')).toBe('Ouverte');
       expect(libelleStatutBesoin('CLOTURE')).toBe('Clôturée');
-      expect(libelleStatutBesoin('ARCHIVE')).toBe('ARCHIVE');
+      expect(libelleStatutBesoin('ARCHIVE')).toBe('Archive');
       expect(libelleStatutBesoin(null)).toBe('');
       expect(libelleReponses(0)).toBe('0 réponse');
       expect(libelleReponses(1)).toBe('1 réponse');

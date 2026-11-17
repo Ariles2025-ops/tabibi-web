@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { liensLangues } from '../seo/referentiel-seo';
+import { Meta, Title } from '@angular/platform-browser';
+import { ACCUEIL_FR, referencerAccueil } from '../seo/marque';
 import { VISIO_ACTIVE } from '../lancement';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -378,6 +379,8 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
 export class AnnuaireComponent implements OnInit, OnDestroy {
   readonly visio = VISIO_ACTIVE;
   private doc = inject(DOCUMENT);
+  private title = inject(Title);
+  private meta = inject(Meta);
   private service = inject(AnnuaireService);
   private http = inject(HttpClient);
   private auth = inject(AuthService);
@@ -400,6 +403,9 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   /** Frappes successives dans le champ, pour l'autocompletion differee (debounce). */
   private saisie = new Subject<string>();
   private abonnementAuto: Subscription | null = null;
+  /** Demandes de recherche : switchMap annule la requete precedente, seule la derniere met a jour la liste. */
+  private recherches = new Subject<void>();
+  private abonnementRecherche: Subscription | null = null;
   /** Filtres passes dans l'URL (?specialite=…&wilaya=…), par exemple depuis les liens du pied de page. */
   private abonnementParams: Subscription | null = null;
   private masquage: any;
@@ -408,9 +414,28 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   get enRecherche(): boolean { return this.q.trim().length > 0 || !!this.specialite || !!this.wilaya; }
 
   ngOnInit() {
+    this.abonnementRecherche = this.recherches
+      .pipe(
+        switchMap(() =>
+          this.service.rechercher(this.specialite, this.wilaya, this.q).pipe(
+            map((r) => ({ r, ok: true })),
+            catchError(() => of({ r: [] as Medecin[], ok: false })),
+          ),
+        ),
+      )
+      .subscribe(({ r, ok }) => {
+        if (ok) this.resultats.set(r);
+        else this.erreur.set('Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.');
+        this.charge.set(false);
+      });
     // Accueil francais <-> arabe (/ar) pour les moteurs de recherche.
-    liensLangues(this.doc, '');
-    this.doc.documentElement.setAttribute('lang', 'fr');
+    this.title.setTitle(ACCUEIL_FR.titre);
+    this.meta.updateTag({ name: 'description', content: ACCUEIL_FR.description });
+    this.meta.updateTag({ property: 'og:title', content: ACCUEIL_FR.titre });
+    this.meta.updateTag({ property: 'og:description', content: ACCUEIL_FR.description });
+    this.meta.updateTag({ property: 'og:locale', content: 'fr_DZ' });
+    this.meta.updateTag({ name: 'robots', content: 'index, follow' });
+    referencerAccueil(this.doc, false);
     // Charge le referentiel wilayas/specialites. URL relative : SSR-safe, et catchError evite tout plantage si le fichier est indisponible.
     this.http
       .get<Referentiel>('/assets/referentiel.json')
@@ -426,7 +451,9 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
     this.abonnementParams = this.route.queryParamMap.subscribe((p) => {
       const specialite = p.get('specialite');
       const wilaya = p.get('wilaya');
-      if (!specialite && !wilaya) return;
+      const q = p.get('q');
+      if (!specialite && !wilaya && !q) return;
+      this.q = q ?? '';
       this.specialite = specialite ?? '';
       this.wilaya = wilaya ?? '';
       this.auth.pret().then(() => {
@@ -457,6 +484,8 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.abonnementRecherche?.unsubscribe();
+    this.abonnementRecherche = null;
     this.abonnementAuto?.unsubscribe();
     this.abonnementAuto = null;
     this.abonnementParams?.unsubscribe();
@@ -517,13 +546,7 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   rechercher() {
     this.charge.set(true);
     this.erreur.set('');
-    this.service.rechercher(this.specialite, this.wilaya, this.q).subscribe({
-      next: (r) => { this.resultats.set(r); this.charge.set(false); },
-      error: () => {
-        this.erreur.set('Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.');
-        this.charge.set(false);
-      },
-    });
+    this.recherches.next();
   }
 
   /** Hors connexion, seules 6 cartes (floutees) sont rendues sous le cadenas. */

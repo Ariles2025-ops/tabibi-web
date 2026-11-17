@@ -150,7 +150,7 @@ const SERIE_MAX = 48;
             </button>
           </ng-container>
           <app-rdv-telephone *ngIf="c.disponible && rdvPour() === c.id && source().rdvTelephone as appelRdv" [creneauId]="c.id" [appel]="appelRdv"
-                             [message403]="message403()" (annule)="rdvPour.set(null)" (fait)="rdvEnregistre()" />
+                             [message403]="message403()" (annule)="rdvPour.set(null)" (fait)="rdvEnregistre()" (disparu)="creneauDisparu($event)" />
         </li>
       </ul>
     </div>
@@ -210,6 +210,13 @@ export class GestionCreneauxComponent implements OnChanges {
     this.rdvPour.set(null);
     this.charger();
     this.rdvPris.emit();
+  }
+
+  /** Le creneau a disparu pendant la saisie : message de l'API, formulaire ferme, liste relue. */
+  creneauDisparu(message: string) {
+    this.rdvPour.set(null);
+    this.charger();
+    this.erreur.set(message);
   }
 
   changerMode(mode: 'unique' | 'serie' | 'semaine') {

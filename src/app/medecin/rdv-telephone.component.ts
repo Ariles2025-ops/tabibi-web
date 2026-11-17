@@ -12,7 +12,7 @@ import { RdvTelephone } from './semaine-type';
 
 /**
  * « RDV pris au téléphone » : nom, telephone et motif d'un patient qui a appele le cabinet, pour reserver un
- * creneau libre a sa place. Aucun message n'est envoye ; un 404 (route absente) masque le formulaire sans erreur.
+ * creneau libre a sa place. Aucun message n'est envoye ; un 404 sans corps (route absente) masque le formulaire sans erreur.
  */
 @Component({
   selector: 'app-rdv-telephone',
@@ -56,6 +56,8 @@ export class RdvTelephoneComponent {
   message403 = input('Ce cabinet ne vous est pas rattaché.');
   @Output() fait = new EventEmitter<RendezVous>();
   @Output() annule = new EventEmitter<void>();
+  /** Emis quand le creneau n'existe plus (404 avec { erreur }) : le parent affiche le message et recharge la liste. */
+  @Output() disparu = new EventEmitter<string>();
 
   nom = '';
   telephone = '';
@@ -84,7 +86,10 @@ export class RdvTelephoneComponent {
       },
       error: (e: HttpErrorResponse) => {
         this.envoi.set(false);
-        if (e.status === 404) this.api.rdvTelephone.set(false); // route absente : le bouton disparait, sans erreur
+        if (e.status === 404 && e.error?.erreur) {
+          // Creneau disparu (supprime ou deja pris) : on affiche le message et on recharge, le bouton reste.
+          this.disparu.emit(String(e.error.erreur));
+        } else if (e.status === 404) this.api.rdvTelephone.set(false); // route absente (404 sans corps) : le bouton disparait, sans erreur
         else if (e.status === 401) this.auth.seConnecter();
         else if (e.status === 403) this.erreur.set(this.message403());
         else if (e.status === 409) this.erreur.set(e.error?.erreur ?? this.l.t('Ce créneau vient d’être pris.', 'تم حجز هذا الموعد للتو.'));

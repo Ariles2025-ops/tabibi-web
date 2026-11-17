@@ -2,7 +2,10 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DOCUMENT } from '@angular/common';
+import { Meta, Title } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { referencerPage } from '../seo/page-seo';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
@@ -198,7 +201,18 @@ export class PraticienComponent {
   rechercheEnCours = signal(false);
   private recherches = new Subject<string>();
 
+  private document = inject(DOCUMENT);
+  private title = inject(Title);
+  private meta = inject(Meta);
+
   constructor() {
+    referencerPage(this.document, this.title, this.meta, {
+      titre: 'Espace praticien : rejoignez Tabibi Doctor',
+      description: 'Médecin, clinique ou pharmacie en Algérie : revendiquez votre fiche et rejoignez Tabibi Doctor (tabibi.doctor, Tabibi DZ).',
+      chemin: '/praticien',
+      ar: false,
+      bilingue: false,
+    });
     // Recherche de fiche differee (300 ms) ; au moins 3 lettres. Les resultats viennent de l'annuaire public.
     this.recherches.pipe(
       debounceTime(300),

@@ -33,6 +33,15 @@ nbar="$(curl -fsS "$SITE/ar/specialites/medecin-generaliste/alger?$cb" | grep -o
 accueil_ar="$(curl -fsS "$SITE/ar?$cb")"   # pas de « curl | grep -q » : avec pipefail, grep -q coupe curl (SIGPIPE) = faux echec
 case "$accueil_ar" in *'lang="ar"'*) ok "accueil arabe (/ar)" ;; *) ko "accueil arabe absent" ;; esac
 
+# 3b3. Referencement de la marque : les accueils FR et AR portent canonical, hreflang et JSON-LD Organization.
+accueil_fr="$(curl -fsS "$SITE/?$cb")"
+for page in fr ar; do
+  if [ "$page" = fr ]; then html="$accueil_fr"; else html="$accueil_ar"; fi
+  case "$html" in *'rel="canonical"'*) ok "accueil $page : balise canonical" ;; *) ko "accueil $page sans balise canonical" ;; esac
+  case "$html" in *'"@type":"Organization"'*) ok "accueil $page : JSON-LD Organization" ;; *) ko "accueil $page sans JSON-LD Organization" ;; esac
+done
+case "$accueil_fr" in *'Tabibi Doctor (Tabibi DZ)'*) ok "accueil FR : titre de marque" ;; *) ko "accueil FR sans « Tabibi Doctor (Tabibi DZ) »" ;; esac
+
 # 3c. Anti-copie : la liste complete des fiches n'est pas publique.
 code="$(curl -s -o /dev/null -w '%{http_code}' "https://api.tabibi.doctor/api/medecins/plan?$cb")"
 [ "$code" = "404" ] && ok "liste complete des fiches fermee au public (404)" || ko "liste complete des fiches accessible depuis Internet (HTTP $code)"
@@ -52,6 +61,26 @@ done
 for chemin in /supprimer-mon-compte /legal/confidentialite /legal/mentions-legales /legal/cgu /wilayas /aide /ar/aide /specialites/pharmacie/alger; do
   code="$(curl -sL -o /dev/null -w '%{http_code}' "$SITE$chemin?$cb")"
   [ "$code" = "200" ] && ok "$chemin (200)" || ko "$chemin repond HTTP $code (200 attendu)"
+done
+
+# 6b. Anciennes adresses de l'ancien site (Search Console) : 301 puis 200 (curl -L), jamais 404.
+for chemin in /seo/tipaza-neurologue /seo/mostaganem-endocrinologue /seo/boumerdes-gastro-enterologue /seo/tipaza-gastro-enterologue \
+  "/index.html?specialty=cardiologue&wilaya=alger" /index.html /about /blog /blog/ /ar/seo/tipaza-neurologue; do
+  code="$(curl -sL -o /dev/null -w '%{http_code}' "$SITE$chemin")"
+  [ "$code" = "200" ] && ok "$chemin (200)" || ko "$chemin repond HTTP $code (200 attendu)"
+done
+
+# 6c. Pages commune (specialite x wilaya x commune) : une commune connue rend >= 3 praticiens (200), une inconnue repond 404.
+#     COMMUNE_TEST = specialite/wilaya/commune d'une page connue (au moins 3 praticiens).
+COMMUNE_TEST="${COMMUNE_TEST:-cardiologue/alger/bab-ezzouar}"
+for pre in "" "/ar"; do
+  html="$(curl -sL "$SITE$pre/specialites/$COMMUNE_TEST?$cb")"
+  nbc="$(printf '%s' "$html" | grep -o 'class="seo-med"' | wc -l | tr -d ' ')"
+  [ "${nbc:-0}" -ge 3 ] && ok "${pre:-/fr} commune $COMMUNE_TEST : $nbc praticiens rendus" || ko "${pre:-/fr} commune $COMMUNE_TEST : ${nbc:-0} praticien(s) (3 attendus)"
+  code="$(curl -s -o /dev/null -w '%{http_code}' "$SITE$pre/specialites/$COMMUNE_TEST?$cb")"
+  [ "$code" = "200" ] && ok "$pre/specialites/$COMMUNE_TEST (200)" || ko "$pre/specialites/$COMMUNE_TEST repond HTTP $code (200 attendu)"
+  code="$(curl -s -o /dev/null -w '%{http_code}' "$SITE$pre/specialites/cardiologue/alger/commune-inexistante-$cb")"
+  [ "$code" = "404" ] && ok "404 sur commune inexistante ($pre)" || ko "commune inexistante ($pre) repond HTTP $code (404 attendu)"
 done
 
 # 7. robots.txt ferme les pages privees (pas de « curl | grep -q », voir 3b2).
