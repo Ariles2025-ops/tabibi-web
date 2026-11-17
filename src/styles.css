@@ -161,3 +161,7 @@ button:disabled { opacity:.6; cursor:default; }
 
 /* Etiquette « Bientôt » (fonction visible mais pas encore ouverte, ex. teleconsultation). */
 .pastille-bientot { display:inline-block; margin-inline-start:6px; padding:1px 8px; border-radius:999px; background:#D4A437; color:var(--tbi-ink); font-size:11px; font-weight:800; letter-spacing:.04em; vertical-align:middle; }
+
+/* Logo Ndawik (croix + carreau or) */
+.side__brand, .siteft__logo { display:inline-flex; align-items:center; gap:8px; }
+.side__brand .marque, .siteft__logo .marque { width:1.15em; height:1.15em; flex:none; }

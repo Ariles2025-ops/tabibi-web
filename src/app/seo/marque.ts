@@ -33,7 +33,7 @@ export function organisationJsonLd(): object {
     name: 'Ndawik',
     alternateName: ['Tabibi', 'Tabibi Doctor', 'Tabibi DZ', 'نداويك'],
     url: `${SITE}/`,
-    logo: `${SITE}/assets/img/logo-tabibi.svg`,
+    logo: `${SITE}/icon-512.png`,
     areaServed: { '@type': 'Country', name: 'Algérie' },
     ...(sameAs.length ? { sameAs } : {}),
   };

@@ -20,7 +20,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
     </div>
     <div class="shell">
       <aside class="side">
-        <a class="side__brand" [routerLink]="ar() ? '/ar' : '/'">ndawik<i>.</i></a>
+        <a class="side__brand" [routerLink]="ar() ? '/ar' : '/'"><img class="marque" src="assets/img/marque-blanche.svg" alt="" width="26" height="26">ndawik</a>
         <!-- Telephone : bouton « 3 barres » qui ouvre tout le menu -->
         <button type="button" class="side__burger" (click)="menuOuvert.set(!menuOuvert())"
                 [attr.aria-expanded]="menuOuvert()" aria-controls="menu-principal" [attr.aria-label]="menuOuvert() ? 'Fermer le menu' : 'Ouvrir le menu'">
@@ -122,7 +122,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
             </div>
 
             <div class="siteft__bottom">
-              <span class="siteft__logo">ndawik<i>.</i></span>
+              <span class="siteft__logo"><img class="marque" src="assets/img/logo-ndawik.svg" alt="" width="26" height="26">ndawik</span>
               <span class="siteft__copy">{{ ar() ? '© 2026 نداويك — جميع الحقوق محفوظة.' : '© 2026 Ndawik — Tous droits réservés.' }}</span>
               <small class="siteft__ancien">{{ ar() ? 'نداويك (Tabibi سابقًا)' : 'Ndawik (anciennement Tabibi)' }}</small>
             </div>
