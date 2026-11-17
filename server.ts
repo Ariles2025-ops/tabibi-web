@@ -73,9 +73,13 @@ export function app(): express.Express {
   const pageCsr = cheminCsr ? readFileSync(cheminCsr, 'utf-8') : '';
   // Noms de domaine autorises pour le rendu serveur (protection SSRF, CVE-2026-27739 corrigee dans Angular 19.2.21) :
   // le domaine du site, www, et les adresses locales (sondes de sante du conteneur). Liste etendue par TABIBI_SSR_HOTES.
-  const domaine = process.env['DOMAINE']?.trim() || 'ndawik.com';
+  // SITE_DOMAINE = adresse publique du site (canonical, sitemaps...). DOMAINE reste celui de l'API (api.DOMAINE) et de
+  // Keycloak (auth.DOMAINE) : il vaut tabibi.doctor en production et n'est pas utilise pour l'adresse du site.
+  const siteDomaine = process.env['SITE_DOMAINE']?.trim() || 'ndawik.com';
+  const domaine = process.env['DOMAINE']?.trim();
   // Anciennes adresses (tabibi.doctor) gardees : le serveur de bord y fait une redirection 301 vers ndawik.com.
-  const hotesAutorises = [...new Set([domaine, `www.${domaine}`, 'ndawik.com', 'www.ndawik.com', 'tabibi.doctor', 'www.tabibi.doctor']), 'localhost', '127.0.0.1',
+  const hotesAutorises = [...new Set([siteDomaine, `www.${siteDomaine}`, ...(domaine ? [domaine, `www.${domaine}`] : []),
+    'ndawik.com', 'www.ndawik.com', 'tabibi.doctor', 'www.tabibi.doctor']), 'localhost', '127.0.0.1',
     ...(process.env['TABIBI_SSR_HOTES'] || '').split(',').map((h) => h.trim()).filter(Boolean)];
   const commonEngine = new CommonEngine({ allowedHosts: hotesAutorises });
   const entetes = entetesSecurite(configurationDepuisEnvironnement(process.env));
@@ -90,7 +94,7 @@ export function app(): express.Express {
 
   // Plans du site pour les moteurs de recherche : un index, les pages fixes (fichier du build) et une page publique
   // par praticien, tiree de l'API (GET /api/medecins/plan, 5 000 fiches par fichier) et gardee 12 h en memoire.
-  const site = 'https://' + (process.env['DOMAINE']?.trim() || 'ndawik.com');
+  const site = 'https://' + siteDomaine;
   const api = (configurationServeur(process.env).apiUrl || CONFIGURATION_PAR_DEFAUT.apiUrl).replace(/\/$/, '');
   const cachePlans = new Map<string, { xml: string; le: number }>();
   const DUREE_CACHE_MS = 12 * 3600 * 1000;

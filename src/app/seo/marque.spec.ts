@@ -1,3 +1,4 @@
+import { configurationServeur } from '../config/config.service';
 import { ACCUEIL_AR, ACCUEIL_FR, organisationJsonLd, referencerAccueil, siteWebJsonLd } from './marque';
 
 /** Garde SEO de marque : titre, canonical, hreflang et JSON-LD Organization / WebSite de l'accueil. */
@@ -23,6 +24,14 @@ describe('marque (SEO accueil)', () => {
     expect(w['@type']).toBe('WebSite');
     expect(w.potentialAction['@type']).toBe('SearchAction');
     expect(w.potentialAction.target.urlTemplate).toBe('https://ndawik.com/?q={search_term_string}');
+  });
+
+  it("le canonical de l'accueil reste https://ndawik.com/ même quand DOMAINE=tabibi.doctor (API/Keycloak)", () => {
+    const env = { DOMAINE: 'tabibi.doctor' };
+    expect(configurationServeur(env).apiUrl).toBe('https://api.tabibi.doctor');
+    referencerAccueil(document, false);
+    expect(document.head.querySelector('link[rel="canonical"]')!.getAttribute('href')).toBe('https://ndawik.com/');
+    document.head.querySelectorAll('link[rel="canonical"], link[rel="alternate"], script[type="application/ld+json"]').forEach((e) => e.remove());
   });
 
   it('referencerAccueil pose canonical, hreflang et JSON-LD (FR puis AR, sans doublon)', () => {
