@@ -111,6 +111,14 @@ describe('MesConversationsComponent', () => {
     expect(annuaire.medecin).toHaveBeenCalledTimes(2);
   });
 
+  it('accorde « non lu » au singulier pour un seul message non lu', async () => {
+    service.mesConversations.and.returnValue(of([{ ...RECENTE, nonLus: 1 }]));
+    await afficher();
+
+    expect(texte()).toContain('1 non lu');
+    expect(texte()).not.toContain('1 non lus');
+  });
+
   it('designe l interlocuteur par « Patient » et un identifiant abrege quand je suis le medecin', async () => {
     profil = { sujet: MEDECIN_ID, nom: 'medecin.demo', roles: ['MEDECIN'] };
     estMedecin.set(true);
