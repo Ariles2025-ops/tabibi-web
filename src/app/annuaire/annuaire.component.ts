@@ -37,7 +37,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
               <i class="fa fa-magnifying-glass dl-ic" aria-hidden="true"></i>
               <input class="dl-input" type="search" [(ngModel)]="q" (input)="surSaisie()" (focus)="surFocus()" (blur)="masquerBientot()"
                      (keyup.enter)="lancerRecherche()"
-                     placeholder="Nom, spécialité, établissement…" autocomplete="off" aria-label="Nom, spécialité ou établissement"
+                     placeholder="Nom du médecin" autocomplete="off" aria-label="Nom du médecin"
                      role="combobox" aria-autocomplete="list" aria-controls="ac-suggestions" [attr.aria-expanded]="suggestionsVisibles() && suggestions().length > 0">
               <ul id="ac-suggestions" class="ac-liste" role="listbox" *ngIf="connecte() && suggestionsVisibles() && suggestions().length">
                 <li *ngFor="let s of suggestions()" role="option">
