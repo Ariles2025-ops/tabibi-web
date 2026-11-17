@@ -89,7 +89,7 @@ describe('AvisMedecinComponent', () => {
     expect(boutonsSignaler().length).toBe(1);
   });
 
-  it('affiche le motif { erreur } d un 409 (deja signale) et marque l avis « Signalé »', async () => {
+  it('affiche un texte français fixe sur un 409 (sans le statut du backend) et marque l avis « Signalé »', async () => {
     service.signaler.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Seul un avis publie peut etre signale.' } })),
     );
@@ -98,7 +98,18 @@ describe('AvisMedecinComponent', () => {
     boutonsSignaler()[0].click();
     await afficher();
 
-    expect(texte()).toContain('Seul un avis publie peut etre signale.');
+    expect(texte()).toContain('Cet avis a déjà été signalé.');
+    expect(texte()).not.toContain('Seul un avis publie');
+    expect(boutonsSignaler().length).toBe(1);
+  });
+
+  it('après rechargement, un avis déjà signalé (signale: true) reste « Signalé » et sans bouton', async () => {
+    service.synthese.and.returnValue(of({ ...SYNTHESE, avis: SYNTHESE.avis.map((a) => (a.id === 'a1' ? { ...a, signale: true } : a)) }));
+    await afficher();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items[0].textContent).toContain('Signalé');
+    expect(items[0].querySelector('button')).toBeNull();
     expect(boutonsSignaler().length).toBe(1);
   });
 
