@@ -8,6 +8,7 @@ import { CONTENU_SPECIALITES } from './contenu-specialites';
 import { StatutHttpService } from './statut-http';
 import { ecrireJsonLd, fil, pageAnnuaire } from './donnees-structurees';
 import { Commune, communesDe, slugCommune } from './communes';
+import { poserLangueDocument } from './page-seo';
 import {
   SLUG_PHARMACIE, SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo,
   avecArticle, liensLangues, lienPraticien,
@@ -346,7 +347,7 @@ export class AnnuaireSeoComponent implements OnInit {
     this.meta.updateTag({ name: 'robots', content: this.introuvable ? 'noindex' : 'index, follow' });
     this.lienCanonique(`https://tabibi.doctor${this.p}${chemin}`);
     liensLangues(this.document, chemin);
-    this.document.documentElement.setAttribute('lang', this.ar ? 'ar' : 'fr');
+    poserLangueDocument(this.document, this.ar);
     this.cheminLd = chemin;
     this.description = description;
     this.donneesStructurees(chemin);
