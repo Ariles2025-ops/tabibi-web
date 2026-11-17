@@ -118,7 +118,7 @@ export class AvisMedecinComponent implements OnInit {
           this.erreur.set('Cet avis ne vous concerne pas.');
         } else if (e.status === 409) {
           this.marquerSignale(a.id);
-          this.erreur.set('Cet avis a déjà été signalé.');
+          this.erreur.set(e.error?.erreur ?? 'Cet avis a déjà été signalé.');
         } else if (e.status === 404) {
           this.charger(e.error?.erreur ?? "Cet avis n'existe plus.");
         } else {
