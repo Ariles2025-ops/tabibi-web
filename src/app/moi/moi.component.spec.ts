@@ -68,6 +68,21 @@ describe('MoiComponent', () => {
     expect(lien('/invitations')).not.toBeNull();
   });
 
+  it('sans nom dans le profil, n affiche ni « en tant que » vide ni null', async () => {
+    moi.set({ ...PROFIL, nom: '  ' });
+    await afficher();
+
+    expect(texte()).not.toContain('en tant que');
+    expect(texte()).not.toContain('null');
+    expect(texte()).toContain('Vous êtes connecté(e).');
+  });
+
+  it('avec un nom, l affiche', async () => {
+    await afficher();
+
+    expect(texte()).toContain('Connecté en tant que patient.demo');
+  });
+
   it('adapte les acces rapides au role : agenda pour le medecin, agenda du cabinet pour la secretaire', async () => {
     moi.set({ ...PROFIL, roles: ['PATIENT', 'MEDECIN'] });
     await afficher();
