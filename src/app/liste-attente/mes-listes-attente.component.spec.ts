@@ -127,6 +127,9 @@ describe('MesListesAttenteComponent', () => {
     service.mes.and.returnValue(of([]));
     await afficher();
     expect(texte()).toContain("Vous n'êtes inscrit sur aucune liste d'attente.");
+    // Comme l'appli : on explique comment s'inscrire et ce qui se passe ensuite.
+    expect(texte()).toContain("Inscrivez-vous depuis la fiche d'un médecin");
+    expect(texte()).toContain("vous serez notifié dès qu'un créneau se libère");
 
     auth.estConnecte = () => false;
     fixture = TestBed.createComponent(MesListesAttenteComponent);

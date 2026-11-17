@@ -40,7 +40,8 @@ import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.compon
           <button type="button" class="bouton sans-impression" (click)="imprimer()">Imprimer</button>
         </header>
 
-        <table style="width:100%;border-collapse:collapse;margin:24px 0">
+        <p *ngIf="!o.lignes?.length" class="ordonnance-sans-medicament" style="margin:24px 0;color:var(--text3)">Aucun médicament sur cette ordonnance.</p>
+        <table *ngIf="o.lignes?.length" style="width:100%;border-collapse:collapse;margin:24px 0">
           <thead>
             <tr style="text-align:left;color:var(--text3)">
               <th style="padding:8px;border-bottom:2px solid var(--border)">Médicament</th>
