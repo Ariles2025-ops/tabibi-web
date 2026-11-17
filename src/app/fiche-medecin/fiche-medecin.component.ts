@@ -410,7 +410,8 @@ export class FicheMedecinComponent implements OnInit {
         this.enCours.set(null);
         if (e.status === 409) {
           this.selection.set(null);
-          this.erreur.set("Ce créneau vient d'être pris.");
+          // L'API renvoie 409 pour plusieurs causes (créneau pris, passé, déjà un rendez-vous avec ce médecin…).
+          this.erreur.set(e.error?.erreur ?? "Ce créneau vient d'être pris.");
           this.chargerCreneaux();
         } else if (e.status === 401) {
           this.auth.seConnecter();
