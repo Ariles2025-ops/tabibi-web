@@ -54,7 +54,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
           </div>
           <div class="pp-action">
             <a class="bouton pp-btn" [routerLink]="['/medecins', m.id]">{{ reservable() ? (ar ? 'احجز موعدًا' : 'Prendre rendez-vous') : (ar ? 'عرض الصفحة' : 'Voir la fiche') }}</a>
-            <small *ngIf="reservable()">{{ ar ? 'المواعيد المتاحة والحجز بحساب طبيبي مجاني. الدفع في العيادة.' : 'Disponibilités et réservation avec un compte Tabibi gratuit. Paiement au cabinet.' }}</small>
+            <small *ngIf="reservable()">{{ ar ? 'المواعيد المتاحة والحجز بحساب نداويك مجاني. الدفع في العيادة.' : 'Disponibilités et réservation avec un compte Ndawik gratuit. Paiement au cabinet.' }}</small>
           </div>
         </section>
 
@@ -110,11 +110,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     .pp-fil a { color:var(--vert); text-decoration:none; font-weight:600; }
     .pp-carte { display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow:var(--s2); padding:24px; margin-bottom:28px; }
     .pp-id { display:flex; gap:16px; align-items:center; min-width:0; flex:1 1 320px; }
-    .pp-ava { flex:none; width:72px; height:72px; border-radius:20px; background:#E7F1EC; color:var(--vert); font-weight:800; font-size:24px; display:grid; place-items:center; }
+    .pp-ava { flex:none; width:72px; height:72px; border-radius:20px; background:var(--tbi-mint); color:var(--vert); font-weight:800; font-size:24px; display:grid; place-items:center; }
     .pp-id__txt { min-width:0; }
     .pp-id h1 { margin:0 0 4px; font-size:clamp(1.4rem,3vw,1.9rem); font-weight:800; letter-spacing:-.02em; overflow-wrap:anywhere; }
     .pp-id p { margin:0; color:var(--text3); }
-    .pp-resa { display:inline-block; margin-top:8px; font-size:12px; font-weight:700; color:var(--vert); background:#E7F1EC; padding:3px 10px; border-radius:999px; }
+    .pp-resa { display:inline-block; margin-top:8px; font-size:12px; font-weight:700; color:var(--vert); background:var(--tbi-mint); padding:3px 10px; border-radius:999px; }
     .pp-action { display:flex; flex-direction:column; gap:8px; align-items:flex-start; max-width:300px; }
     .pp-btn { text-decoration:none; }
     .pp-action small { color:var(--text3); font-size:12px; line-height:1.4; }
@@ -173,6 +173,11 @@ export class PraticienPublicComponent implements OnInit {
     return this.ar ? ['/ar' + l[0], ...l.slice(1)] : l;
   }
 
+  /** Titre de l'onglet d'une fiche absente, dans la langue de la page (comme la page 404). */
+  private titreIntrouvable(): string {
+    return this.ar ? 'الطبيب غير موجود | نداويك' : 'Praticien introuvable | Ndawik';
+  }
+
   private charger(id: string) {
     this.medecin.set(null);
     this.confreres.set([]);
@@ -181,7 +186,7 @@ export class PraticienPublicComponent implements OnInit {
       // Identifiant mal forme : inutile d'interroger l'API (qui repondrait 400), vraie 404 au rendu serveur.
       this.charge.set(false);
       this.statut.introuvable();
-      this.title.setTitle('Praticien introuvable | Tabibi');
+      this.title.setTitle(this.titreIntrouvable());
       this.meta.updateTag({ name: 'robots', content: 'noindex' });
       return;
     }
@@ -217,7 +222,7 @@ export class PraticienPublicComponent implements OnInit {
         this.charge.set(false);
         // Fiche inexistante : vraie 404 au rendu serveur (une API indisponible ne doit pas desindexer la page).
         if (e?.status === 404) this.statut.introuvable();
-        this.title.setTitle('Praticien introuvable | Tabibi');
+        this.title.setTitle(this.titreIntrouvable());
         this.meta.updateTag({ name: 'robots', content: 'noindex' });
       },
     });
@@ -227,15 +232,15 @@ export class PraticienPublicComponent implements OnInit {
     const ou = this.lieu ? (this.ar ? ` في ${this.lieu}` : ` à ${this.lieu}`) : '';
     const titre = `${m.nomComplet} — ${this.specialite}${ou}`;
     const description = this.ar
-      ? `${m.nomComplet}، ${this.specialite}${ou}. اطّلع على صفحة الطبيب${this.reservable() ? ' واحجز موعدك عبر الإنترنت مع طبيبي. الدفع في العيادة.' : ' على طبيبي.'}`
-      : `${m.nomComplet}, ${this.specialite}${ou}. Consultez la fiche sur Tabibi.${this.reservable() ? ' Prenez rendez-vous en ligne. Paiement au cabinet.' : ''}`;
+      ? `${m.nomComplet}، ${this.specialite}${ou}. اطّلع على صفحة الطبيب${this.reservable() ? ' واحجز موعدك عبر الإنترنت مع نداويك. الدفع في العيادة.' : ' على نداويك.'}`
+      : `${m.nomComplet}, ${this.specialite}${ou}. Consultez la fiche sur Ndawik.${this.reservable() ? ' Prenez rendez-vous en ligne. Paiement au cabinet.' : ''}`;
     const chemin = `/praticiens/${m.id}/${slugifier(m.nomComplet)}`;
-    const url = `https://tabibi.doctor${this.p}${chemin}`;
+    const url = `https://ndawik.com${this.p}${chemin}`;
     this.lienAutreLangue = (this.ar ? '' : '/ar') + chemin;
     liensLangues(this.document, chemin);
     poserLangueDocument(this.document, this.ar);
     this.meta.updateTag({ property: 'og:locale', content: this.ar ? 'ar_DZ' : 'fr_DZ' });
-    this.title.setTitle(`${titre} | Tabibi`);
+    this.title.setTitle(`${titre} | Ndawik`);
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ name: 'robots', content: 'index, follow' });
     this.meta.updateTag({ property: 'og:title', content: titre });
@@ -251,7 +256,7 @@ export class PraticienPublicComponent implements OnInit {
     canonique.setAttribute('href', url);
 
     // Donnees structurees schema.org : fiche (Physician / Dentist / Pharmacy) et fil d'Ariane.
-    const racine = 'https://tabibi.doctor';
+    const racine = 'https://ndawik.com';
     const donnees = {
       '@context': 'https://schema.org',
       '@type': typeSchemaOrg(m.specialiteSlug),

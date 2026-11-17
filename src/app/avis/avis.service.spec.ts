@@ -162,3 +162,9 @@ describe('AvisService', () => {
     });
   });
 });
+
+describe('libelleStatutAvis (casse et espaces)', () => {
+  it('ignore la casse et les espaces', () => {
+    expect(libelleStatutAvis(' signale ')).toBe('Signalé');
+  });
+});

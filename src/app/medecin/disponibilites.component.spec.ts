@@ -178,6 +178,8 @@ describe('DisponibilitesComponent', () => {
 
       expect(service.supprimerCreneau).toHaveBeenCalledWith('c1');
       expect(service.creneaux).toHaveBeenCalledTimes(2);
+      // Comme « Créneau supprimé » dans l'appli : le médecin voit que la suppression a bien eu lieu.
+      expect(texte()).toContain('Créneau supprimé.');
     });
 
     it('affiche le { erreur } d un 409 (creneau reserve entre-temps)', async () => {

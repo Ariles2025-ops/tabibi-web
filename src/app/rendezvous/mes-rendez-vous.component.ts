@@ -24,6 +24,7 @@ import { estAnnule, libelleStatutRendezVous } from './statut-rendez-vous';
       <ng-container *ngIf="connecte()">
         <p *ngIf="charge() && !rendezVous().length" class="mr-muted">Chargement de vos rendez-vous…</p>
         <p *ngIf="erreur()" class="mr-err" role="alert">{{ erreur() }}</p>
+        <p *ngIf="succes()" class="mr-muted" role="status">{{ succes() }}</p>
 
         <!-- Aucun rendez-vous du tout -->
         <div *ngIf="!charge() && !erreur() && rendezVous().length === 0" class="mr-vide">
@@ -183,6 +184,8 @@ export class MesRendezVousComponent implements OnInit {
   /** Identifiant du rendez-vous dont l'annulation est en cours. */
   enCours = signal<string | null>(null);
   erreur = signal('');
+  /** Confirmation apres l'annulation (comme « Rendez-vous annulé » dans l'appli). */
+  succes = signal('');
 
   async ngOnInit() {
     await this.auth.pret();
@@ -221,11 +224,13 @@ export class MesRendezVousComponent implements OnInit {
   annuler(rdv: RendezVous) {
     this.enCours.set(rdv.id);
     this.erreur.set('');
+    this.succes.set('');
     this.service.annuler(rdv.id).subscribe({
       next: () => {
         this.enCours.set(null);
         this.aConfirmer.set(null);
         this.charger();
+        this.succes.set('Rendez-vous annulé.');
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);

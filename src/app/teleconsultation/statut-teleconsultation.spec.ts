@@ -14,3 +14,10 @@ describe('libelleStatutTeleconsultation', () => {
     expect(libelleStatutTeleconsultation(undefined)).toBe('');
   });
 });
+
+describe('libelleStatutTeleconsultation (casse et espaces)', () => {
+  it('ignore la casse et les espaces, comme l\'appli mobile', () => {
+    expect(libelleStatutTeleconsultation(' en_cours ')).toBe('En cours');
+    expect(libelleStatutTeleconsultation('terminee')).toBe('Terminée');
+  });
+});

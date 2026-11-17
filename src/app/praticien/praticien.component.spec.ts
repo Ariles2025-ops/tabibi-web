@@ -6,7 +6,7 @@ import { AuthService } from '../auth/auth.service';
 
 /**
  * Garde « aucune fausse promesse » : la page praticien ne doit pas annoncer ce qui n'existe pas encore
- * (rappels par SMS, WhatsApp, paiement en ligne). Les rappels sont des notifications dans l'espace Tabibi.
+ * (rappels par SMS, WhatsApp, paiement en ligne). Les rappels sont des notifications dans l'espace Ndawik.
  */
 describe('PraticienComponent (promesses)', () => {
   it('n annonce ni SMS, ni WhatsApp, ni paiement en ligne', () => {

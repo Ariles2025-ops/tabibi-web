@@ -27,7 +27,7 @@ const STATUTS_FILTRE = [
         <h1 style="color:var(--vert);margin:0">Candidatures</h1>
         <label style="display:flex;align-items:center;gap:8px;color:var(--text3);font-size:.9rem">
           Statut
-          <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:#10241F;font-size:1rem">
+          <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:var(--tbi-ink);font-size:1rem">
             <option *ngFor="let s of statuts" [value]="s.valeur">{{ s.libelle }}</option>
           </select>
         </label>
@@ -67,7 +67,7 @@ const STATUTS_FILTRE = [
           <form *ngIf="c.statut === 'EN_ATTENTE'" (ngSubmit)="refuser(c)"
                 style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 0">
             <input class="champ" [(ngModel)]="motifs[c.id]" [name]="'motif-' + c.id" placeholder="Motif du refus (obligatoire)"
-                   required style="flex:1;min-width:220px;color:#10241F;font-size:1rem">
+                   required style="flex:1;min-width:220px;color:var(--tbi-ink);font-size:1rem">
             <button type="submit" [disabled]="enCours() !== null || !motifRenseigne(c) || aConfirmer()?.id === c.id"
                     style="padding:11px 18px;background:#fff;color:#b3261e;border:1.5px solid #f0c9c6;border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
               Refuser
@@ -79,7 +79,7 @@ const STATUTS_FILTRE = [
                  [style.background]="conf.action === 'valider' ? 'var(--green-l)' : 'var(--red-l)'"
                  style="margin:12px 0 0;border-radius:var(--r12);padding:12px 14px;display:grid;gap:8px">
               <strong [style.color]="conf.action === 'valider' ? 'var(--green)' : 'var(--red)'">
-                {{ conf.action === 'valider' ? 'Valider cette candidature ? Le praticien sera publié sur Tabibi.' : 'Refuser cette candidature ? Le praticien recevra le motif.' }}
+                {{ conf.action === 'valider' ? 'Valider cette candidature ? Le praticien sera publié sur Ndawik.' : 'Refuser cette candidature ? Le praticien recevra le motif.' }}
               </strong>
               <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;color:var(--ink);font-size:.95rem">
                 <dt style="color:var(--text3)">Nom</dt><dd style="margin:0">{{ c.nomComplet }}</dd>
@@ -181,7 +181,7 @@ export class CandidaturesAdminComponent implements OnInit {
     const conf = this.aConfirmer();
     if (!conf || conf.id !== c.id) return;
     if (conf.action === 'valider') {
-      this.traiter(c, this.service.valider(c.id), `Candidature de ${c.nomComplet} validée : le praticien figure désormais sur Tabibi.`);
+      this.traiter(c, this.service.valider(c.id), `Candidature de ${c.nomComplet} validée : le praticien figure désormais sur Ndawik.`);
     } else {
       const motif = (this.motifs[c.id] ?? '').trim();
       this.traiter(c, this.service.refuser(c.id, motif), `Candidature de ${c.nomComplet} refusée ; le praticien est prévenu du motif.`);

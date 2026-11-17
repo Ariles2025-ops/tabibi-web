@@ -146,6 +146,15 @@ describe('ConversationComponent', () => {
     fixture.destroy();
   }));
 
+  it('invite à écrire le premier message quand le fil est vide (comme l appli mobile)', fakeAsync(() => {
+    service.messages.and.returnValue(of([]));
+    afficher();
+
+    expect(texte()).toContain('Aucun message pour le moment. Écrivez le premier.');
+
+    fixture.destroy();
+  }));
+
   it('place les messages du medecin a droite et nomme le patient par un identifiant abrege quand je suis le medecin', fakeAsync(() => {
     profil = { sujet: MEDECIN_ID, nom: 'medecin.demo', roles: ['MEDECIN'] };
     estMedecin.set(true);

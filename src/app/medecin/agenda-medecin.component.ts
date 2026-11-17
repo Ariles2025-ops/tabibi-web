@@ -4,7 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
-import { libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
+import { estAnnule, libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
 import { TeleconsultationService } from '../teleconsultation/teleconsultation.service';
 import { VISIO_ACTIVE } from '../lancement';
 import { ActionEnCours, estConfirme, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
@@ -92,7 +92,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
                       style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
                 Annuler
               </button>
-              <a *ngIf="r.statut !== 'ANNULE' && r.statut !== 'ABSENT' && r.source !== 'TELEPHONE'" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
+              <a *ngIf="peutRedigerOrdonnance(r)" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
                  [queryParams]="{ patientId: r.patientId, rendezVousId: r.id }">Rédiger une ordonnance</a>
             </div>
           </li>
@@ -301,6 +301,11 @@ export class AgendaMedecinComponent implements OnInit {
         }
       },
     });
+  }
+
+  /** Ordonnance possible sauf rendez-vous annule (ANNULE ou ANNULEE), patient absent ou rendez-vous pris par telephone (sans compte patient). */
+  peutRedigerOrdonnance(r: { statut: string; source?: string | null }): boolean {
+    return !estAnnule(r.statut) && r.statut !== 'ABSENT' && r.source !== 'TELEPHONE';
   }
 
   libelleStatut(statut: string): string {

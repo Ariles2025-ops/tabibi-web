@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
-import { AnnuaireSeoComponent } from './annuaire-seo.component';
+import { AnnuaireSeoComponent, dePlace } from './annuaire-seo.component';
 import { REPONSE_HTTP } from './statut-http';
 
 /** Pages de l'annuaire : vraie 404 au rendu serveur, rubrique Pharmacies a part, accords « un / une ». */
@@ -89,7 +89,7 @@ describe('AnnuaireSeoComponent', () => {
       expect(faq.mainEntity.length).toBeGreaterThanOrEqual(3);
       expect(faq.mainEntity[faq.mainEntity.length - 3].name).toBe('Comment prendre rendez-vous avec un cardiologue à Oran ?');
       expect((f.nativeElement as HTMLElement).querySelectorAll('.seo-faq details').length).toBe(faq.mainEntity.length);
-      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://tabibi.doctor/specialites/cardiologue/oran');
+      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://ndawik.com/specialites/cardiologue/oran');
       expect(document.head.querySelector('link[rel="alternate"][hreflang="ar"]')).toBeTruthy();
     });
 
@@ -115,7 +115,7 @@ describe('AnnuaireSeoComponent', () => {
       expect(noeud('FAQPage').inLanguage).toBe('ar');
       expect(noeud('FAQPage').mainEntity[0].name).toMatch(/[\u0600-\u06FF]/);
       expect(noeud('BreadcrumbList').itemListElement[0].name).toBe('الرئيسية');
-      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://tabibi.doctor/ar/specialites/cardiologue/oran');
+      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://ndawik.com/ar/specialites/cardiologue/oran');
       TestBed.resetTestingModule();
       creer({ specialite: 'nimportequoi' });
       expect(ld('ld-page')).toBeNull();
@@ -149,7 +149,7 @@ describe('AnnuaireSeoComponent', () => {
       const item = noeud('ItemList').itemListElement[0].item;
       expect(item['@type']).toBe('Physician');
       expect(item.name).toBe('Dr Samir Benali');
-      expect(item.url).toBe('https://tabibi.doctor/praticiens/a1/dr-samir-benali');
+      expect(item.url).toBe('https://ndawik.com/praticiens/a1/dr-samir-benali');
       expect(item.address).toEqual({ '@type': 'PostalAddress', addressCountry: 'DZ', addressLocality: 'Sétif', addressRegion: 'Sétif' });
       const brut = document.head.querySelector('script#ld-page')!.textContent!;
       expect(brut).not.toContain('0555000000');
@@ -180,5 +180,33 @@ describe('AnnuaireSeoComponent', () => {
       expect(noeud('MedicalWebPage').about).toBeUndefined();
       expect(noeud('FAQPage')).toBeUndefined();
     });
+  });
+  it('page arabe : aucun libelle de specialite francais (« Médecin… ») quand le slug du praticien est inconnu', () => {
+    reponse = { status: jasmine.createSpy('status') };
+    annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
+    annuaire.communes.and.returnValue(of([]));
+    annuaire.rechercher.and.returnValue(of<Medecin[]>([
+      { id: 'h1', nomComplet: 'Dr Karim Amrani', specialiteSlug: '', specialiteFr: 'Médecin hématologue', wilayaCode: '27', wilayaFr: 'Mostaganem', ville: 'Mostaganem' },
+    ] as Medecin[]));
+    TestBed.configureTestingModule({
+      imports: [AnnuaireSeoComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { langue: 'ar' } }, paramMap: of(convertToParamMap({ specialite: 'hematologue', wilaya: 'mostaganem' })) } },
+        { provide: AnnuaireService, useValue: annuaire },
+        { provide: REPONSE_HTTP, useValue: reponse },
+      ],
+    });
+    const f = TestBed.createComponent(AnnuaireSeoComponent);
+    f.detectChanges();
+    const ligne = f.nativeElement.querySelector('.seo-med__txt small').textContent as string;
+    expect(ligne).toContain('طبيب أمراض الدم');
+    expect(ligne).not.toContain('Médecin');
+  });
+
+  it('elide « de » devant une wilaya commencant par une voyelle (d\'Alger, d\'Oran, de Blida)', () => {
+    expect(dePlace('Alger')).toBe("d'Alger");
+    expect(dePlace('Oran')).toBe("d'Oran");
+    expect(dePlace('Blida')).toBe('de Blida');
   });
 });

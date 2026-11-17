@@ -1,7 +1,7 @@
 /**
  * Pre-lancement : tant que PRELANCEMENT vaut true, le site est visible (annuaire, pages de referencement) mais
  * « Se connecter » et « Creer un compte » menent a la page /bientot au lieu de Keycloak. L'equipe garde l'acces
- * en ouvrant une fois https://tabibi.doctor/?equipe=1 (memorise dans ce navigateur ; ?equipe=0 pour l'oublier).
+ * en ouvrant une fois https://ndawik.com/?equipe=1 (memorise dans ce navigateur ; ?equipe=0 pour l'oublier).
  */
 export const PRELANCEMENT = true;
 

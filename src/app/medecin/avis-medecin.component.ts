@@ -7,7 +7,7 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
 
 /**
  * Avis publics recus par le medecin connecte (GET /api/medecins/{moi}/avis, ou « moi » est le sujet du jeton lu
- * sur /api/moi) et signalement d'un avis a l'equipe Tabibi (POST /api/avis/{id}/signaler) : l'avis signale
+ * sur /api/moi) et signalement d'un avis a l'equipe Ndawik (POST /api/avis/{id}/signaler) : l'avis signale
  * reste visible jusqu'a la decision de l'equipe ; il est marque « Signalé » dans la page.
  */
 @Component({
@@ -17,7 +17,7 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--blue);margin:0 0 8px">Avis des patients</h1>
       <p style="color:var(--text3);margin:0 0 16px">
-        Avis publiés sur votre fiche, anonymes. Un avis signalé reste visible jusqu'à la décision de l'équipe Tabibi.
+        Avis publiés sur votre fiche, anonymes. Un avis signalé reste visible jusqu'à la décision de l'équipe Ndawik.
       </p>
 
       <p *ngIf="charge()" style="color:var(--text3)">Chargement…</p>
@@ -108,7 +108,7 @@ export class AvisMedecinComponent implements OnInit {
       next: () => {
         this.enCours.set(null);
         this.marquerSignale(a.id);
-        this.succes.set("Avis signalé : il reste visible jusqu'à la décision de l'équipe Tabibi.");
+        this.succes.set("Avis signalé : il reste visible jusqu'à la décision de l'équipe Ndawik.");
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);

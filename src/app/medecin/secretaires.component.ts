@@ -12,7 +12,7 @@ import { MedecinService } from './medecin.service';
 
 /**
  * Secretaires du cabinet (role MEDECIN) : rattachements en cours (GET /api/medecin/secretaires), ajout par
- * l'adresse e-mail du compte Tabibi de la secretaire (POST /api/medecin/secretaires { email }) et retrait
+ * l'adresse e-mail du compte Ndawik de la secretaire (POST /api/medecin/secretaires { email }) et retrait
  * confirme dans la page (POST /api/medecin/secretaires/{id}/retirer). Une secretaire rattachee agit sur l'agenda depuis l'espace secretaire.
  */
 @Component({
@@ -28,12 +28,12 @@ import { MedecinService } from './medecin.service';
 
       <form (ngSubmit)="rattacher()" style="display:grid;gap:12px;margin:0 0 28px;background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:20px">
         <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-          Adresse e-mail du compte Tabibi de votre secrétaire
+          Adresse e-mail du compte Ndawik de votre secrétaire
           <input class="champ" type="email" [(ngModel)]="email" name="email" required autocomplete="off"
                  placeholder="Ex. secretaire@exemple.dz" style="color:var(--ink);font-size:1rem">
         </label>
         <p style="margin:0;color:var(--text3);font-size:.9rem">
-          La secrétaire doit avoir créé son compte Tabibi. Elle reçoit une invitation à accepter depuis ses notifications.
+          La secrétaire doit avoir créé son compte Ndawik. Elle reçoit une invitation à accepter depuis ses notifications.
         </p>
         <p *ngIf="succes()" style="color:var(--blue);margin:0">{{ succes() }}</p>
         <p *ngIf="erreurFormulaire()" role="alert" style="color:var(--red);margin:0">{{ erreurFormulaire() }}</p>
@@ -121,7 +121,7 @@ export class SecretairesComponent implements OnInit {
     const email = this.email.trim().toLowerCase();
     this.succes.set('');
     if (!EMAIL.test(email)) {
-      this.erreurFormulaire.set("Indiquez l'adresse e-mail du compte Tabibi de votre secrétaire.");
+      this.erreurFormulaire.set("Indiquez l'adresse e-mail du compte Ndawik de votre secrétaire.");
       return;
     }
     this.erreurFormulaire.set('');
@@ -139,7 +139,7 @@ export class SecretairesComponent implements OnInit {
           this.erreurFormulaire.set(e.error?.erreur ?? 'Cette secrétaire est déjà rattachée à votre cabinet.');
           this.charger();
         } else if (e.status === 400) {
-          this.erreurFormulaire.set(e.error?.erreur ?? "Aucun compte Tabibi n'utilise cette adresse e-mail.");
+          this.erreurFormulaire.set(e.error?.erreur ?? "Aucun compte Ndawik n'utilise cette adresse e-mail.");
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {

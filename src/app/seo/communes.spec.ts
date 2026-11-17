@@ -57,7 +57,7 @@ describe('Page commune', () => {
     const f = creer('bab-ezzouar', [1, 2, 3].map((i) => med(i, 'Bab Ezzouar')));
     expect(reponse.status).not.toHaveBeenCalled();
     expect(f.componentInstance.titre).toBe('Pédiatre à Bab Ezzouar (Alger)');
-    expect(document.title).toContain('Pédiatre à Bab Ezzouar (Alger) — prendre rendez-vous | Tabibi');
+    expect(document.title).toContain('Pédiatre à Bab Ezzouar (Alger) — prendre rendez-vous | Ndawik');
     expect(f.nativeElement.querySelectorAll('.seo-med').length).toBe(3);
     const graphe = JSON.parse(document.head.querySelector('script#ld-page')!.textContent!)['@graph'] as { '@type': string }[];
     const ld = graphe.find((n) => n['@type'] === 'ItemList') as unknown as { itemListElement: { item: { address: { addressLocality: string } } }[] };

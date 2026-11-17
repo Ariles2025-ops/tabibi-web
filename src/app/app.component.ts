@@ -20,7 +20,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
     </div>
     <div class="shell">
       <aside class="side">
-        <a class="side__brand" [routerLink]="ar() ? '/ar' : '/'">tabibi<i>.</i></a>
+        <a class="side__brand" [routerLink]="ar() ? '/ar' : '/'"><img class="marque" src="assets/img/marque-blanche.svg" alt="" width="26" height="26">ndawik</a>
         <!-- Telephone : bouton « 3 barres » qui ouvre tout le menu -->
         <button type="button" class="side__burger" (click)="menuOuvert.set(!menuOuvert())"
                 [attr.aria-expanded]="menuOuvert()" aria-controls="menu-principal" [attr.aria-label]="menuOuvert() ? 'Fermer le menu' : 'Ouvrir le menu'">
@@ -89,6 +89,22 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
         <router-outlet />
         <footer class="siteft" id="aide" [attr.dir]="ar() ? 'rtl' : null" [attr.lang]="ar() ? 'ar' : null">
           <div class="siteft__in">
+            <div class="siteft__appli">
+              <div class="siteft__appli-txt">
+                <b>{{ ar() ? 'حمّل تطبيق نداويك' : "Téléchargez l'appli Ndawik" }}</b>
+                <span>{{ ar() ? 'مواعيدك ورسائلك ووصفاتك في جيبك.' : 'Vos rendez-vous, messages et ordonnances dans votre poche.' }}</span>
+              </div>
+              <div class="siteft__stores">
+                <a class="store" href="https://play.google.com/store/apps/details?id=dz.tabibi.app" target="_blank" rel="noopener">
+                  <i class="fa-brands fa-google-play" aria-hidden="true"></i>
+                  <span><small>{{ ar() ? 'متوفر على' : 'Disponible sur' }}</small>Google Play</span>
+                </a>
+                <span class="store store--bientot" aria-disabled="true">
+                  <i class="fa-brands fa-apple" aria-hidden="true"></i>
+                  <span><small>{{ ar() ? 'قريبًا على' : 'Bientôt sur' }}</small>App Store</span>
+                </span>
+              </div>
+            </div>
             <div class="siteft__top">
               <div class="siteft__q">
                 <b>{{ ar() ? 'لديك سؤال؟' : 'Des questions ?' }}</b>
@@ -99,13 +115,14 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
             <div class="siteft__cols">
               <div class="siteft__col">
-                <h2>{{ ar() ? 'طبيبي' : 'Tabibi' }}</h2>
+                <h2>{{ ar() ? 'نداويك' : 'Ndawik' }}</h2>
                 <a [routerLink]="pre() + '/aide'">{{ ar() ? 'مركز المساعدة' : "Centre d'aide" }}</a>
+                <a [routerLink]="pre() + '/a-propos'">{{ ar() ? 'عن نداويك' : 'À propos' }}</a>
                 <a routerLink="/verifier">{{ ar() ? 'التحقق من وصفة طبية' : 'Vérifier une ordonnance' }}</a>
                 <a href="/legal/mentions-legales.html">{{ ar() ? 'الإشعارات القانونية' : 'Mentions légales' }}</a>
                 <a href="/legal/cgu.html">{{ ar() ? 'شروط الاستخدام' : "Conditions d'utilisation" }}</a>
                 <a href="/legal/confidentialite.html">{{ ar() ? 'الخصوصية' : 'Confidentialité' }}</a>
-                <a routerLink="/supprimer-mon-compte">{{ ar() ? 'حذف الحساب' : 'Supprimer mon compte' }}</a>
+                <a [routerLink]="pre() + '/supprimer-mon-compte'">{{ ar() ? 'حذف الحساب' : 'Supprimer mon compte' }}</a>
                 <a href="mailto:contact@tabibi.doctor">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
                 <a routerLink="/praticien">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
               </div>
@@ -122,8 +139,9 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
             </div>
 
             <div class="siteft__bottom">
-              <span class="siteft__logo">tabibi<i>.</i></span>
-              <span class="siteft__copy">{{ ar() ? '© 2026 طبيبي — جميع الحقوق محفوظة.' : '© 2026 Tabibi — Tous droits réservés.' }}</span>
+              <span class="siteft__logo"><img class="marque" src="assets/img/logo-ndawik.svg" alt="" width="26" height="26">ndawik</span>
+              <span class="siteft__copy">{{ ar() ? '© 2026 نداويك — جميع الحقوق محفوظة.' : '© 2026 Ndawik — Tous droits réservés.' }}</span>
+              <small class="siteft__ancien">{{ ar() ? 'نداويك (Tabibi سابقًا)' : 'Ndawik (anciennement Tabibi)' }}</small>
             </div>
           </div>
         </footer>

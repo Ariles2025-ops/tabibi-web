@@ -26,7 +26,7 @@ function formulaireVide(): DemandeCandidature {
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--vert);margin:0 0 8px">{{ ficheReclamee ? 'Réclamer ma fiche' : 'Ma candidature' }}</h1>
       <p *ngIf="!ficheReclamee" style="color:var(--text3);margin:0 0 20px">
-        Pour figurer sur Tabibi, déposez votre candidature : elle est examinée par un administrateur.
+        Pour figurer sur Ndawik, déposez votre candidature : elle est examinée par un administrateur.
       </p>
       <p *ngIf="ficheReclamee" style="color:var(--text3);margin:0 0 20px">
         Vérifiez les informations de votre fiche et ajoutez votre numéro d'inscription à l'ordre :
@@ -50,7 +50,7 @@ function formulaireVide(): DemandeCandidature {
         <p *ngIf="c.statut === 'EN_ATTENTE'" style="margin:10px 0 0">Votre candidature est en cours d'examen.</p>
         <div *ngIf="c.statut === 'VALIDEE'" style="margin:10px 0 0">
           <p style="margin:0 0 10px;color:var(--vert)">
-            Votre candidature a été validée : vous figurez sur Tabibi.
+            Votre candidature a été validée : vous figurez sur Ndawik.
             <a [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">Voir ma fiche</a>
           </p>
           <a class="bouton" routerLink="/medecin/agenda">Ouvrir mon agenda</a>
@@ -66,33 +66,33 @@ function formulaireVide(): DemandeCandidature {
         <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Nom complet *
-            <input class="champ" [(ngModel)]="demande.nomComplet" name="nomComplet" required placeholder="Ex. Dr Amina Belkacem" style="color:#10241F;font-size:1rem">
+            <input class="champ" [(ngModel)]="demande.nomComplet" name="nomComplet" required placeholder="Ex. Dr Amina Belkacem" style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Numéro d'inscription à l'ordre *
-            <input class="champ" [(ngModel)]="demande.numeroOrdre" name="numeroOrdre" required style="color:#10241F;font-size:1rem">
+            <input class="champ" [(ngModel)]="demande.numeroOrdre" name="numeroOrdre" required style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Spécialité *
-            <select class="champ" [(ngModel)]="demande.specialiteSlug" name="specialiteSlug" required style="color:#10241F;font-size:1rem">
+            <select class="champ" [(ngModel)]="demande.specialiteSlug" name="specialiteSlug" required style="color:var(--tbi-ink);font-size:1rem">
               <option value="">Choisissez votre spécialité</option>
               <option *ngFor="let sp of specialites" [value]="sp.slug">{{ sp.nom }}</option>
             </select>
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Wilaya *
-            <select class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required style="color:#10241F;font-size:1rem">
+            <select class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required style="color:var(--tbi-ink);font-size:1rem">
               <option value="">Choisissez votre wilaya</option>
               <option *ngFor="let w of wilayas" [value]="w.code">{{ w.code }} · {{ w.nom }}</option>
             </select>
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Ville
-            <input class="champ" [(ngModel)]="demande.ville" name="ville" style="color:#10241F;font-size:1rem">
+            <input class="champ" [(ngModel)]="demande.ville" name="ville" style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Téléphone
-            <input class="champ" [(ngModel)]="demande.telephone" name="telephone" type="tel" placeholder="Ex. 0550 00 00 00" style="color:#10241F;font-size:1rem">
+            <input class="champ" [(ngModel)]="demande.telephone" name="telephone" type="tel" placeholder="Ex. 0550 00 00 00" style="color:var(--tbi-ink);font-size:1rem">
           </label>
         </div>
         <p style="color:var(--text3);font-size:.9rem;margin:0">* Champs obligatoires.</p>

@@ -14,9 +14,9 @@ import { SPECIALITES_PRINCIPALES, SPECIALITES_SEO, WILAYAS_PRINCIPALES, WILAYAS_
       <section class="bt-hero">
         <span class="bt-pastille">{{ ar ? 'قريبًا' : 'Bientôt disponible' }}</span>
         <h1>{{ ar ? 'الإطلاق قريبًا' : 'Lancement prochainement' }}</h1>
-        <p *ngIf="!ar">Tabibi ouvre très bientôt la prise de rendez-vous en ligne avec les médecins de toute l'Algérie.
+        <p *ngIf="!ar">Ndawik ouvre très bientôt la prise de rendez-vous en ligne avec les médecins de toute l'Algérie.
            La création de compte et la connexion seront disponibles dès le lancement.</p>
-        <p *ngIf="ar">تفتح طبيبي قريبًا جدًا حجز المواعيد عبر الإنترنت مع الأطباء في كامل الجزائر.
+        <p *ngIf="ar">تفتح نداويك قريبًا جدًا حجز المواعيد عبر الإنترنت مع الأطباء في كامل الجزائر.
            سيكون إنشاء الحساب وتسجيل الدخول متاحين فور الإطلاق.</p>
         <a class="bouton" [routerLink]="ar ? '/ar/specialites' : '/specialites'">{{ ar ? 'ابحث عن طبيب' : 'Trouver un médecin' }}</a>
       </section>
@@ -35,7 +35,7 @@ import { SPECIALITES_PRINCIPALES, SPECIALITES_SEO, WILAYAS_PRINCIPALES, WILAYAS_
     styles: [`
     .bt { max-width:960px; margin:0 auto; padding:32px var(--gutter, 16px) 56px; color:var(--ink); }
     .bt-hero { text-align:center; background:linear-gradient(155deg, var(--vert) 0%, #0a4d3e 100%); color:#fff; border-radius:24px; padding:48px 24px; box-shadow:var(--s2); }
-    .bt-pastille { display:inline-block; background:#D4A437; color:#10241F; font-weight:800; font-size:12px; letter-spacing:.08em; text-transform:uppercase; padding:6px 14px; border-radius:999px; }
+    .bt-pastille { display:inline-block; background:#D4A437; color:var(--tbi-ink); font-weight:800; font-size:12px; letter-spacing:.08em; text-transform:uppercase; padding:6px 14px; border-radius:999px; }
     .bt-hero h1 { color:#fff !important; margin:16px 0 12px; font-size:clamp(2rem,6vw,3.4rem); font-weight:800; letter-spacing:-.03em; line-height:1.05; text-wrap:balance; }
     .bt-hero p { margin:0 auto 24px; max-width:56ch; color:rgba(255,255,255,.9); line-height:1.6; }
     .bt-hero .bouton { background:#fff; color:var(--vert); text-decoration:none; }
@@ -60,7 +60,7 @@ export class BientotComponent implements OnInit {
   ngOnInit() {
     referencerPage(this.document, this.title, this.meta, {
       titre: this.ar ? 'الإطلاق قريبًا' : 'Lancement prochainement',
-      description: this.ar ? 'تفتح طبيبي قريبًا حجز المواعيد عبر الإنترنت مع الأطباء في الجزائر.' : "Tabibi ouvre bientôt la prise de rendez-vous en ligne avec les médecins d'Algérie.",
+      description: this.ar ? 'تفتح نداويك قريبًا حجز المواعيد عبر الإنترنت مع الأطباء في الجزائر.' : "Ndawik ouvre bientôt la prise de rendez-vous en ligne avec les médecins d'Algérie.",
       chemin: '/bientot', ar: this.ar, indexable: false, bilingue: false,
     });
     if (!this.ar) remettreDocumentFrancais(this.document);

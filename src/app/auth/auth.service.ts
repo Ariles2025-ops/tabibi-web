@@ -35,7 +35,9 @@ export class AuthService {
    */
   initialiser(): Promise<void> {
     if (!this.initialisation) {
-      this.initialisation = !this.navigateur
+      // Pre-lancement, visiteur sans acces equipe : personne ne peut se connecter, donc on ne contacte pas Keycloak
+      // (evite une requete discovery inutile, bloquee par CORS quand le site est ouvert depuis un autre domaine).
+      this.initialisation = !this.navigateur || connexionFermee()
         ? Promise.resolve()
         : this.config
             .charger()

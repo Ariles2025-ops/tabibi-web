@@ -42,7 +42,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
         </select>
       </label>
       <p *ngIf="!charge() && !erreur() && rattachements().length === 0">
-        Aucun médecin ne vous a encore rattachée à son cabinet. Communiquez-lui l'adresse e-mail de votre compte Tabibi.
+        Aucun médecin ne vous a encore rattachée à son cabinet. Communiquez-lui l'adresse e-mail de votre compte Ndawik.
       </p>
 
       <ng-container *ngIf="medecinId()">

@@ -80,7 +80,7 @@ describe('AvisMedecinComponent', () => {
     await afficher();
 
     expect(service.signaler).toHaveBeenCalledWith('a1');
-    expect(texte()).toContain("Avis signalé : il reste visible jusqu'à la décision de l'équipe Tabibi.");
+    expect(texte()).toContain("Avis signalé : il reste visible jusqu'à la décision de l'équipe Ndawik.");
     expect(texte()).not.toContain('retiré');
     const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
     expect(items.length).toBe(2);

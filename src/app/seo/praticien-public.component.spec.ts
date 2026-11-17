@@ -64,6 +64,23 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     expect(annuaire.medecin).not.toHaveBeenCalled();
   });
 
+  it('fiche absente : titre de l onglet dans la langue de la page (FR et AR)', () => {
+    for (const [langue, attendu] of [['fr', 'Praticien introuvable | Ndawik'], ['ar', 'الطبيب غير موجود | نداويك']] as const) {
+      TestBed.resetTestingModule();
+      const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'rechercher']);
+      TestBed.configureTestingModule({
+        imports: [PraticienPublicComponent],
+        providers: [
+          provideRouter([]),
+          { provide: ActivatedRoute, useValue: { snapshot: { data: { langue } }, paramMap: of(convertToParamMap({ id: 'n-importe-quoi' })) } },
+          { provide: AnnuaireService, useValue: annuaire },
+        ],
+      });
+      TestBed.createComponent(PraticienPublicComponent).detectChanges();
+      expect(document.title).toBe(attendu);
+    }
+  });
+
   const ld = (id: string) => {
     const el = document.head.querySelector(`script#${id}`);
     return el ? JSON.parse(el.textContent || '{}') : null;
@@ -80,7 +97,7 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     expect(f.name).toBe('Dr Amine Benali');
     expect(f.medicalSpecialty).toBe('Dentiste');
     expect(f.inLanguage).toBe('fr');
-    expect(f.url).toBe('https://tabibi.doctor/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/dr-amine-benali');
+    expect(f.url).toBe('https://ndawik.com/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/dr-amine-benali');
     expect(f.address.addressRegion).toBe('Oran');
     const fil = ld('ld-fil');
     expect(fil['@type']).toBe('BreadcrumbList');
@@ -95,7 +112,7 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     const f = ld('ld-praticien');
     expect(f['@type']).toBe('Physician');
     expect(f.inLanguage).toBe('ar');
-    expect(f.url).toContain('https://tabibi.doctor/ar/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/');
+    expect(f.url).toContain('https://ndawik.com/ar/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/');
     expect(f.address.addressRegion).toBe('وهران');
     expect(ld('ld-fil').itemListElement[0].name).toBe('الرئيسية');
     expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(f.url);
