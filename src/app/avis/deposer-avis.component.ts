@@ -59,6 +59,8 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
             <span [style.color]="commentaireTropLong() ? '#b3261e' : 'var(--text3)'">{{ commentaire.length }} / {{ maxCommentaire }}</span>
           </label>
 
+          <p class="avis-anonyme" style="margin:0;color:var(--text3);font-size:.9rem">Votre avis est publié anonymement sur la fiche du praticien.</p>
+
           <div>
             <button type="submit" class="bouton" [disabled]="enCours() || commentaireTropLong()">
               {{ enCours() ? 'Envoi…' : 'Envoyer mon avis' }}

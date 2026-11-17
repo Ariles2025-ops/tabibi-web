@@ -114,6 +114,12 @@ describe('DeposerAvisComponent', () => {
     expect(texte()).toContain('0 / 500');
   });
 
+  it('annonce que l avis est publié anonymement (comme l appli mobile)', async () => {
+    await afficher();
+
+    expect(texte()).toContain('Votre avis est publié anonymement sur la fiche du praticien.');
+  });
+
   it('refuse un envoi sans note', async () => {
     await afficher();
 

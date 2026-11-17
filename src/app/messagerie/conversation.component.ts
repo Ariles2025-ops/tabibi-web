@@ -40,7 +40,7 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
             </span>
           </li>
         </ol>
-        <p *ngIf="accessible() && messages().length === 0">Aucun message pour le moment.</p>
+        <p *ngIf="accessible() && messages().length === 0">Aucun message pour le moment. Écrivez le premier.</p>
 
         <form *ngIf="accessible()" (ngSubmit)="envoyer()" style="display:grid;gap:8px">
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">

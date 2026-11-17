@@ -201,6 +201,12 @@ describe('AgendaMedecinComponent', () => {
     expect(texte()).not.toContain('prévenu');
   });
 
+  it('RDV annulé (ANNULE ou ANNULEE) : pas de « Rédiger une ordonnance »', () => {
+    medecinService.agenda.and.returnValue(of([{ ...CONFIRME, statut: 'ANNULE' }, { ...CONFIRME, id: 'r9', statut: 'ANNULEE' }]));
+    fixture.detectChanges();
+    expect(texte()).not.toContain('Rédiger une ordonnance');
+  });
+
   it('un RDV en ligne garde « Rédiger une ordonnance »', () => {
     fixture.detectChanges();
     expect(texte()).toContain('Rédiger une ordonnance');
