@@ -158,3 +158,10 @@ describe('DawiniService', () => {
     });
   });
 });
+
+describe('libelleStatutBesoin (casse et espaces)', () => {
+  it('garde « Ouverte » / « Clôturée » quelle que soit la casse, comme l\'appli', () => {
+    expect(libelleStatutBesoin(' ouvert ')).toBe('Ouverte');
+    expect(libelleStatutBesoin('cloture')).toBe('Clôturée');
+  });
+});

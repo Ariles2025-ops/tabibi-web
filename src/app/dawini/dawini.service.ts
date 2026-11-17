@@ -62,7 +62,7 @@ const LIBELLES_STATUT_BESOIN: Partial<Record<string, string>> = {
 
 export function libelleStatutBesoin(statut: string | null | undefined): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_BESOIN[statut] ?? libelleStatutGenerique(statut);
+  return LIBELLES_STATUT_BESOIN[statut.trim().toUpperCase()] ?? libelleStatutGenerique(statut);
 }
 
 /** « 850 DA », « 1 250 DA » (milliers separes par une espace) ; chaine vide si le prix n'est pas renseigne. */

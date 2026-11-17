@@ -10,5 +10,5 @@ const LIBELLES_STATUT_TELECONSULTATION: Partial<Record<string, string>> = {
 
 export function libelleStatutTeleconsultation(statut: string | null | undefined): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_TELECONSULTATION[statut] ?? libelleStatutGenerique(statut);
+  return LIBELLES_STATUT_TELECONSULTATION[statut.trim().toUpperCase()] ?? libelleStatutGenerique(statut);
 }

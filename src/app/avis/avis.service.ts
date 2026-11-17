@@ -54,7 +54,7 @@ const LIBELLES_STATUT_AVIS: Partial<Record<string, string>> = {
 
 export function libelleStatutAvis(statut: string | null | undefined): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_AVIS[statut] ?? libelleStatutGenerique(statut);
+  return LIBELLES_STATUT_AVIS[statut.trim().toUpperCase()] ?? libelleStatutGenerique(statut);
 }
 
 /** « 4,5 / 5 (12 avis) » au format francais (virgule decimale), ou « Aucun avis pour le moment ». */
