@@ -82,13 +82,15 @@ export class MoiComponent implements OnInit {
     const r = this.roles();
     const profil = { lien: '/moi/profil', libelle: 'Mon profil' };
     const notifications = { lien: '/notifications', libelle: 'Notifications' };
+    // Comme « Mon espace » de l'appli : l'invitation d'un médecin arrive à un compte patient, qui doit pouvoir l'ouvrir.
+    const invitations = { lien: '/invitations', libelle: 'Invitations de cabinet' };
     if (r.includes('MEDECIN')) {
       return [{ lien: '/medecin/agenda', libelle: 'Mon agenda' }, { lien: '/medecin/disponibilites', libelle: 'Disponibilités' }, profil, notifications];
     }
-    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: 'Agenda du cabinet' }, profil, notifications];
+    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: 'Agenda du cabinet' }, invitations, profil, notifications];
     if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: 'Demandes de médicaments' }, profil, notifications];
     if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: 'Administration' }, profil, notifications];
-    return [profil, { lien: '/mes-rendez-vous', libelle: 'Mes rendez-vous' }, notifications];
+    return [profil, { lien: '/mes-rendez-vous', libelle: 'Mes rendez-vous' }, invitations, notifications];
   });
 
   /** Seconde etape de la suppression du compte affichee (pas de confirm() du navigateur). */
