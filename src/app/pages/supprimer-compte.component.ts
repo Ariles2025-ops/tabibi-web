@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { referencerPage } from '../seo/page-seo';
 
 /**
@@ -13,8 +13,12 @@ import { referencerPage } from '../seo/page-seo';
     selector: 'app-supprimer-compte',
     imports: [CommonModule, RouterLink],
     template: `
-    <main class="pg">
-      <a routerLink="/" class="pg-retour">Accueil</a>
+    <main class="pg" [attr.dir]="ar ? 'rtl' : null" [attr.lang]="ar ? 'ar' : 'fr'">
+      <div class="pg-haut">
+        <a [routerLink]="ar ? '/ar' : '/'" class="pg-retour">{{ ar ? 'الرئيسية' : 'Accueil' }}</a>
+        <a class="pg-langue" [routerLink]="ar ? '/supprimer-mon-compte' : '/ar/supprimer-mon-compte'" [attr.lang]="ar ? 'fr' : 'ar'">{{ ar ? 'Français' : 'العربية' }}</a>
+      </div>
+      <ng-container *ngIf="!ar">
       <h1>Supprimer mon compte Ndawik</h1>
       <p class="pg-intro">Vous pouvez supprimer votre compte Ndawik à tout moment, gratuitement, depuis l'application mobile, depuis le site ou par e-mail.</p>
 
@@ -51,11 +55,53 @@ import { referencerPage } from '../seo/page-seo';
         <p>Pour en savoir plus, consultez notre <a href="/legal/confidentialite.html">politique de confidentialité</a>
           et les <a href="/legal/cgu.html">conditions d'utilisation</a>.</p>
       </section>
+      </ng-container>
+
+      <ng-container *ngIf="ar">
+      <h1>حذف حسابي في نداويك</h1>
+      <p class="pg-intro">يمكنك حذف حسابك في نداويك في أي وقت ومجانًا، من التطبيق أو من الموقع أو عبر البريد الإلكتروني.</p>
+
+      <section class="pg-carte">
+        <h2>1. من التطبيق أو من الموقع</h2>
+        <ol>
+          <li>سجّل الدخول إلى حسابك في نداويك.</li>
+          <li>في التطبيق افتح <strong>ملفي الشخصي</strong>، وفي الموقع افتح <strong>حسابي</strong>.</li>
+          <li>اختر <strong>حذف حسابي</strong> ثم أكّد.</li>
+        </ol>
+        <p>يتم الحذف فورًا ويُسجَّل خروجك.</p>
+        <a class="bouton" routerLink="/moi">فتح حسابي</a>
+      </section>
+
+      <section class="pg-carte">
+        <h2>2. عبر البريد الإلكتروني</h2>
+        <p>راسلنا على <a href="mailto:contact@tabibi.doctor?subject=%D8%AD%D8%B0%D9%81%20%D8%AD%D8%B3%D8%A7%D8%A8%D9%8A">contact&#64;tabibi.doctor</a>
+          من البريد الإلكتروني المرتبط بحسابك، أو مع ذكر رقم هاتف الحساب، وعنوان الرسالة «حذف حسابي».
+          نعالج الطلب في أجل أقصاه شهر ونؤكد لك الحذف.</p>
+      </section>
+
+      <section class="pg-carte">
+        <h2>ما يتم حذفه</h2>
+        <ul>
+          <li>حساب الدخول الخاص بك (الهاتف والبريد الإلكتروني وكلمة المرور) وملفك الشخصي.</li>
+          <li>مواعيدك ورسائلك وقوائم الانتظار وطلبات دَويني والإشعارات.</li>
+        </ul>
+        <h2>ما قد يتم الاحتفاظ به</h2>
+        <ul>
+          <li>الوصفات الطبية، للتحقق منها من طرف الصيدليات ولأسباب قانونية: 10 سنوات على الأكثر.</li>
+          <li>سجل الأمان (الدخول إلى الخدمة): 12 شهرًا.</li>
+          <li>النسخ الاحتياطية، وتُمحى تلقائيًا في أجل أقصاه 60 يومًا.</li>
+        </ul>
+        <p>لمعرفة المزيد، اطّلع على <a href="/legal/confidentialite.html">سياسة الخصوصية</a>
+          و<a href="/legal/cgu.html">شروط الاستخدام</a>.</p>
+      </section>
+      </ng-container>
     </main>
   `,
     styles: [`
     .pg { max-width:760px; margin:0 auto; padding:24px var(--gutter, 16px) 48px; color:var(--ink); }
-    .pg-retour { color:var(--vert); font-weight:600; font-size:13px; text-decoration:none; display:inline-block; margin-bottom:18px; }
+    .pg-haut { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px; }
+    .pg-langue { padding:6px 14px; border:1px solid var(--border); border-radius:999px; background:#fff; color:var(--vert); font-weight:700; font-size:13px; text-decoration:none; }
+    .pg-retour { color:var(--vert); font-weight:600; font-size:13px; text-decoration:none; }
     h1 { margin:0 0 8px; font-size:clamp(1.6rem,3vw,2.2rem); font-weight:800; letter-spacing:-.02em; line-height:1.15; text-wrap:balance; }
     .pg-intro { margin:0 0 20px; color:var(--text3); line-height:1.6; }
     .pg-carte { background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow:var(--s1); padding:18px 20px; margin-bottom:14px; }
@@ -66,17 +112,21 @@ import { referencerPage } from '../seo/page-seo';
   `]
 })
 export class SupprimerCompteComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  ar = false;
   private document = inject(DOCUMENT);
   private title = inject(Title);
   private meta = inject(Meta);
 
   ngOnInit() {
+    this.ar = this.route.snapshot?.data?.['langue'] === 'ar';
     referencerPage(this.document, this.title, this.meta, {
-      titre: 'Supprimer mon compte',
-      description: "Comment supprimer votre compte Ndawik : depuis l'application (Mon profil) ou le site (Mon compte) puis « Supprimer mon compte », ou par e-mail à contact@tabibi.doctor.",
+      titre: this.ar ? 'حذف حسابي' : 'Supprimer mon compte',
+      description: this.ar
+        ? 'كيف تحذف حسابك في نداويك: من التطبيق («ملفي الشخصي») أو من الموقع («حسابي») ثم «حذف حسابي»، أو عبر البريد الإلكتروني contact@tabibi.doctor.'
+        : "Comment supprimer votre compte Ndawik : depuis l'application (Mon profil) ou le site (Mon compte) puis « Supprimer mon compte », ou par e-mail à contact@tabibi.doctor.",
       chemin: '/supprimer-mon-compte',
-      ar: false,
-      bilingue: false,
+      ar: this.ar,
     });
   }
 }

@@ -105,7 +105,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
                 <a href="/legal/mentions-legales.html">{{ ar() ? 'الإشعارات القانونية' : 'Mentions légales' }}</a>
                 <a href="/legal/cgu.html">{{ ar() ? 'شروط الاستخدام' : "Conditions d'utilisation" }}</a>
                 <a href="/legal/confidentialite.html">{{ ar() ? 'الخصوصية' : 'Confidentialité' }}</a>
-                <a routerLink="/supprimer-mon-compte">{{ ar() ? 'حذف الحساب' : 'Supprimer mon compte' }}</a>
+                <a [routerLink]="pre() + '/supprimer-mon-compte'">{{ ar() ? 'حذف الحساب' : 'Supprimer mon compte' }}</a>
                 <a href="mailto:contact@tabibi.doctor">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
                 <a routerLink="/praticien">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
               </div>

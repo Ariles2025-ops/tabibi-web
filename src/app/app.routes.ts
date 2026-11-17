@@ -142,6 +142,7 @@ export const routes: Routes = [
   { path: 'ar/wilayas', component: WilayasIndexComponent, data: { langue: 'ar' } },
   { path: 'ar/wilayas/:wilaya', component: AnnuaireSeoComponent, data: { langue: 'ar' } },
   { path: 'ar/aide', component: AideComponent, data: { langue: 'ar' } },
+  { path: 'ar/supprimer-mon-compte', component: SupprimerCompteComponent, data: { langue: 'ar' } },
   { path: 'ar/praticiens/:id', component: PraticienPublicComponent, data: { langue: 'ar' } },
   { path: 'ar/praticiens/:id/:slug', component: PraticienPublicComponent, data: { langue: 'ar' } },
   { path: 'moi', component: MoiComponent },

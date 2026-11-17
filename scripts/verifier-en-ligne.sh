@@ -68,7 +68,7 @@ done
 
 # 6. Pages publiques : suppression de compte et pages legales (URL de la Play Console), index des wilayas, aide, pharmacies.
 #    curl -L suit la redirection 301 des pages legales sans .html.
-for chemin in /supprimer-mon-compte /legal/confidentialite /legal/mentions-legales /legal/cgu /wilayas /aide /ar/aide /specialites/pharmacie/alger; do
+for chemin in /supprimer-mon-compte /legal/confidentialite /legal/mentions-legales /legal/cgu /wilayas /aide /ar/aide /ar/supprimer-mon-compte /specialites/pharmacie/alger; do
   code="$(curl -sL -o /dev/null -w '%{http_code}' "$SITE$chemin?$cb")"
   [ "$code" = "200" ] && ok "$chemin (200)" || ko "$chemin repond HTTP $code (200 attendu)"
 done
