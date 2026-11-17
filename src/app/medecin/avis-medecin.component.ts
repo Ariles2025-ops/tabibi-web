@@ -54,7 +54,7 @@ export class AvisMedecinComponent implements OnInit {
   charge = signal(false);
   /** Identifiant de l'avis en cours de signalement. */
   enCours = signal<string | null>(null);
-  /** Avis signales depuis cette page (marques « Signalé », sans bouton). */
+  /** Avis signales depuis cette page, en complement du champ `signale` renvoye par l'API. */
   signales = signal<ReadonlySet<string>>(new Set());
   succes = signal('');
   erreur = signal('');
@@ -129,7 +129,7 @@ export class AvisMedecinComponent implements OnInit {
   }
 
   estSignale(a: AvisPublic): boolean {
-    return this.signales().has(a.id);
+    return a.signale === true || this.signales().has(a.id);
   }
 
   private marquerSignale(id: string) {

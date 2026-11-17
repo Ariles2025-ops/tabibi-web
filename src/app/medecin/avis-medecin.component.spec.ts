@@ -102,6 +102,16 @@ describe('AvisMedecinComponent', () => {
     expect(boutonsSignaler().length).toBe(1);
   });
 
+  it('après rechargement, un avis déjà signalé (signale: true) reste « Signalé » et sans bouton', async () => {
+    service.synthese.and.returnValue(of({ ...SYNTHESE, avis: SYNTHESE.avis.map((a) => (a.id === 'a1' ? { ...a, signale: true } : a)) }));
+    await afficher();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items[0].textContent).toContain('Signalé');
+    expect(items[0].querySelector('button')).toBeNull();
+    expect(boutonsSignaler().length).toBe(1);
+  });
+
   it('indique qu il n y a aucun avis et signale un profil illisible', async () => {
     service.synthese.and.returnValue(of({ moyenne: null, nombre: 0, avis: [] }));
     await afficher();
