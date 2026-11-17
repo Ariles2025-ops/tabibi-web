@@ -226,4 +226,84 @@ export const CONTENU_SPECIALITES: Record<string, { fr: ContenuSpecialite; ar: Co
       ],
     },
   },
+  psychiatre: {
+    fr: {
+      apropos: 'Le psychiatre est un médecin spécialisé dans l\'étude et le traitement des troubles mentaux et des comportements perturbés. On peut consulter un psychiatre lorsque l\'on ressent des troubles émotionnels persistants, lorsque l\'on a des difficultés de sommeil ou de concentration, ou lorsque l\'on subit des changements de comportement inquiétants.',
+      faq: [
+        { q: 'Peut-on consulter un psychiatre sans ordonnance?', r: 'En Algérie, il n\'est pas obligatoire d\'avoir une ordonnance pour consulter un psychiatre, mais un avis médical général est souvent requis pour une première consultation.' },
+        { q: 'Quels sont les symptômes qui devraient inciter à consulter un psychiatre?', r: 'Il est recommandé de consulter un psychiatre si l\'on éprouve des pensées ou des sentiments dépressifs, anxieux ou de désespoir persistants, ou si l\'on observe des modifications radicales dans son comportement ou ses habitudes quotidiennes.' },
+      ],
+    },
+    ar: {
+      apropos: 'الطبيب النفسي متخصص في التشخيص والعلاج النفسي للأمراض العقلية والسلوكية. ينصح بالاستعانة به عند الشعور بالتوتر والقلق المستمر، أو عند الحاجة إلى مساعدة في التعامل مع المشكلات النفسية والemotions.',
+      faq: [
+        { q: 'ما هي المهام الرئيسية للطبيب النفسي؟', r: 'الطبيب النفسي يجري الفحوصات النفسية ويقدم العلاجات المناسبة. يقوم بوصف العقاقير النفسية إذا لزم الأمر ويوجه المرضى للعلاجات الأخرى.' },
+        { q: 'متى يجب استشارة الطبيب النفسي؟', r: 'يجب استشارة الطبيب النفسي عند الشعور بالتوتر والقلق المستمر، أو عند وجود مشكلات في العلاقات الاجتماعية أو العائلية، أو عند الحاجة للمساعدة في التعامل مع الإجهاد والتوتر.' },
+      ],
+    },
+  },
+  radiologue: {
+    fr: {
+      apropos: 'Le radiologue est un médecin spécialisé dans l\'interprétation des images médicalisées telles que les radiographies, les IRM, les scans et les mammographies. On le consulte généralement après une prise de rendez-vous avec un médecin traitant pour interpréter les résultats d\'imagerie médicale.',
+      faq: [
+        { q: 'Quel est le rôle d\'un radiologue dans un hôpital?', r: 'Le radiologue analyse les images médicales et rédige un rapport qui est utilisé par les médecins traitants pour diagnostiquer et évaluer la santé d\'un patient.' },
+        { q: 'Pourquoi consulter un radiologue?', r: 'Un radiologue est consulté pour interpréter les résultats d\'imagerie médicale, aidant ainsi les médecins à prendre des décisions thérapeutiques éclairées et à surveiller l\'état de santé du patient.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الأشعة هو متخصص في استخدام التقنيات التشخيصية لفحص الجسم وإعداد التقارير الطبية. يُستشير هذا الطبيب عند الحاجة إلى صور دentrالجسم لتشخيص الحالة المرضية أو التحقق من صحتها.',
+      faq: [
+        { q: 'هل يمكن لطبيب الأشعة تقديم التشخيص؟', r: 'لا، وظيفة طبيب الأشعة تقتصر على إجراء الفحوصات والتقنيات التشخيصية وتقديم التقارير الطبية. التشخيص يتم من قبل الطبيب المختص بناءً على النتائج.' },
+        { q: 'متى يكون الحاجة لزيارة طبيب الأشعة؟', r: 'يكون الحاجة لزيارة طبيب الأشعة عند الحاجة إلى إجراء فحوصات مثل الأشعة السينية أو الأشعة المقطعية أو السونار أو مri للحصول على صور دentر الجسم.' },
+      ],
+    },
+  },
+  anesthesiste: {
+    fr: {
+      apropos: 'Un anesthésiste-réanimateur est un médecin spécialisé dans la gestion de la prise en charge anesthésique et réanimatoire des patients. Il est également chargé de la surveillance et de la stabilisation des patients en situation critique. On doit consulter ce spécialiste lorsqu\'une intervention chirurgicale est prévue ou en cas d\'urgence médicale nécessitant une assistance respiratoire ou cardiaque.',
+      faq: [
+        { q: 'Quelle est la différence entre un anesthésiste et un anesthésiste-réanimateur ?', r: 'Un anesthésiste se spécialise dans l\'anesthésie et la gestion des complications liées à la chirurgie, tandis qu\'un anesthésiste-réanimateur a également des compétences en réanimation et en soins intensifs.' },
+        { q: 'Pourquoi est-il important d\'être accompagné d\'un anesthésiste-réanimateur en cas d\'urgence médicale ?', r: 'L\'accompagnement d\'un anesthésiste-réanimateur en cas d\'urgence garantit une intervention rapide et efficace pour stabiliser le patient et le maintenir en vie jusqu\'à ce qu\'il soit transféré dans un service spécialisé si nécessaire.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب التخدير والإنعاش هو اختصاصي يقوم بضمان سلامة المرضى خلال العمليات الجراحية وأي حالات طبية تتطلب استخدام التخدير. يمكن للفئات التي تتعرض للعمليات الجراحية أو التي تتلقى علاجات طارئة في غرفة الإسعاف استشارة هذا النوع من الأطباء.',
+      faq: [
+        { q: 'ما العمل الذي يقوم به طبيب التخدير والإنعاش؟', r: 'يضمن هذا الطبيب سلامة المريض خلال الجراحة ويعمل على الحفاظ على حياة المريض أثناء حالات الطوارئ.' },
+        { q: 'متى يجب استشارة طبيب التخدير والإنعاش؟', r: 'يجب استشارة هذا الطبيب قبل الجراحة وفي حالات الطوارئ حيث يتطلب الأمر التخدير أو الإسعافات الأولية المتقدمة.' },
+      ],
+    },
+  },
+  'centre-sante': {
+    fr: {
+      apropos: 'Le Centre de santé joue un rôle essentiel en assurant la prévention et le suivi de la santé de la population. Il est recommandé de le consulter pour des consultations générales et des dépistages réguliers.',
+      faq: [
+        { q: 'Peut-on se faire vacciner au centre de santé ?', r: 'Oui, le centre de santé propose diverses vaccinations selon les campagnes et les besoins de la population. R2: Il est important de vérifier les horaires et les dates des vaccinations avant de se rendre au centre.' },
+        { q: 'Quel type de services de santé offre généralement un centre de santé ? R1: Un centre de santé offre des consultations médicales, des tests de dépistage et des vaccinations.', r: 'Il est important de vérifier les horaires et les dates des vaccinations avant de se rendre au centre. Q2: Quel type de services de santé offre généralement un centre de santé ? R1: Un centre de santé offre des consultations médicales, des tests de dépistage et des vaccinations. R2: Il peut également proposer des conseils sur la santé et des recommandations pour une meilleure hygiène de vie.' },
+      ],
+    },
+    ar: {
+      apropos: 'مركز صحي هو مؤسسة طبية تقدم خدمات الرعاية الصحية الأولية للجمهور. يجب استشارة هذا المركز عند الحاجة إلى خدمات صحية عامة أو الوقاية من الأمراض.',
+      faq: [
+        { q: 'متى يمكنني زيارة مركز صحة في الجزائر؟', r: 'يمكن زيارتك في أي وقت، وفقًا لساعات العمل المعلنة. يُفضل الاتصال مسبقًا للتأكد من توافر الخدمة المطلوبة.' },
+        { q: 'ما الخدمات التي يقدمها مركز صحة في الجزائر؟', r: 'يقدم المركز خدمات الرعاية الصحية الأولية مثل الفحص الطبي العام والتطعيمات والنصائح الصحية.' },
+      ],
+    },
+  },
+  chirurgien: {
+    fr: {
+      apropos: 'Le chirurgien général est un médecin spécialisé dans la pratique chirurgicale qui peut traiter une variété de maladies et de blessures. On le consulte généralement lorsque la chirurgie est nécessaire pour une intervention médicale.',
+      faq: [
+        { q: 'Est-il nécessaire de consulter un chirurgien général pour une blessure superficielle?', r: 'Non, une blessure superficielle est généralement traitée par un médecin généraliste ou un pharmacien. Un chirurgien général intervient lorsque la blessure nécessite une intervention chirurgicale.' },
+        { q: 'Quelles sont les maladies qui peuvent nécessiter l\'intervention d\'un chirurgien général?', r: 'Un chirurgien général peut intervenir pour une variété de problèmes, notamment les cancers, les infections, les problèmes de la prostate, les problèmes de la gorge, des oreilles et du nez, ainsi que certaines maladies du système digestif.' },
+      ],
+    },
+    ar: {
+      apropos: 'الجراح العام هو طبيب متخصص في علاج الحالات الجراحية البسيطة والمعقدة التي قد تحدث في الجسم البشري. يُنصح بالاستعانة به في حالات الطوارئ الطبية أو عند الحاجة إلى إجراء جراحة بسيطة.',
+      faq: [
+        { q: 'هل يجب استشارة الجراح العام في حالة الإصابة بجروح عميقة؟', r: 'نعم، يجب استشارة الجراح العام في حالة الإصابة بجروح عميقة، حيث يمكنه التقييم والعلاج المناسب. R2: قد يحتاج المريض في هذه الحالة إلى عملية جراحية لإزالة الأوساخ والمواد الملوثة والضمادات.' },
+        { q: 'ما هي الحالات التي يمكن أن يتم علاجها بواسطة الجراح العام؟ R1: الجراح العام يمكنه علاج العديد من الحالات مثل الجروح العميقة والالتهابات الجلدية والتهابات الغدد اللمفاوية وحصوات المرارة.', r: 'قد يحتاج المريض في هذه الحالة إلى عملية جراحية لإزالة الأوساخ والمواد الملوثة والضمادات. Q2: ما هي الحالات التي يمكن أن يتم علاجها بواسطة الجراح العام؟ R1: الجراح العام يمكنه علاج العديد من الحالات مثل الجروح العميقة والالتهابات الجلدية والتهابات الغدد اللمفاوية وحصوات المرارة. R2: في بعض الأحيان، قد يحتاج المريض إلى إجراء جراحة بسيطة مثل إزالة طفية أو تنظيف غضروف.' },
+      ],
+    },
+  },
 };
