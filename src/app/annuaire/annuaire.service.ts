@@ -21,6 +21,9 @@ export interface Medecin {
   langues?: string[] | null;
 }
 
+/** Commune renvoyee par GET /api/medecins/communes. */
+export interface CommuneApi { slug: string; nom: string; nombre: number; }
+
 /** Creneau de consultation propose par un medecin. */
 export interface Creneau {
   id: string;
@@ -41,12 +44,22 @@ export class AnnuaireService {
     return this.config.apiUrl;
   }
 
-  rechercher(specialite?: string, wilaya?: string, q?: string): Observable<Medecin[]> {
+  /** `commune` : slug de commune ; le filtre est applique cote API (la liste n'est plus limitee aux 50 premieres fiches). */
+  rechercher(specialite?: string, wilaya?: string, q?: string, commune?: string): Observable<Medecin[]> {
     let params = new HttpParams();
     if (specialite) params = params.set('specialite', specialite);
     if (wilaya) params = params.set('wilaya', wilaya);
     if (q) params = params.set('q', q);
+    if (commune) params = params.set('commune', commune);
     return this.http.get<Medecin[]>(`${this.base}/api/medecins`, { params });
+  }
+
+  /** Communes (>= 3 praticiens) d'une specialite dans une wilaya : GET /api/medecins/communes. */
+  communes(specialite?: string, wilayaCode?: string): Observable<CommuneApi[]> {
+    let params = new HttpParams();
+    if (specialite) params = params.set('specialite', specialite);
+    if (wilayaCode) params = params.set('wilaya', wilayaCode);
+    return this.http.get<CommuneApi[]>(`${this.base}/api/medecins/communes`, { params });
   }
 
   medecin(id: string): Observable<Medecin> {
