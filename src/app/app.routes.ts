@@ -118,6 +118,7 @@ export const routes: Routes = [
     ],
   },
   { path: 'bientot', component: BientotComponent },
+  { path: 'ar/bientot', component: BientotComponent, data: { langue: 'ar' } },
   { path: 'invitations', component: InvitationsComponent },
   // Pages de referencement de l'annuaire (publiques), liees depuis le pied de page.
   { path: 'specialites', component: AnnuaireSeoComponent },

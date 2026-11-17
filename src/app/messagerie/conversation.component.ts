@@ -7,6 +7,7 @@ import { EMPTY, Subscription, catchError, switchMap, timer } from 'rxjs';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
+import { PatientsService } from '../medecin/patients.service';
 import { Conversation, LONGUEUR_MAX_MESSAGE, Message, MessagerieService, abregerIdentifiant } from './messagerie.service';
 
 /** Intervalle de relecture du fil tant que la page est ouverte. */
@@ -61,6 +62,9 @@ export class ConversationComponent implements OnInit, OnDestroy {
   private roleService = inject(RoleService);
   private service = inject(MessagerieService);
   private annuaire = inject(AnnuaireService);
+  private patientsService = inject(PatientsService);
+  /** Vrai des que le composant est detruit : ngOnInit (asynchrone) ne doit plus rien abonner. */
+  private detruit = false;
   private abonnementRoute: Subscription | null = null;
   private rafraichissement: Subscription | null = null;
 
@@ -73,6 +77,8 @@ export class ConversationComponent implements OnInit, OnDestroy {
   conversation = signal<Conversation | null>(null);
   /** Nom du medecin (annuaire) quand je suis le patient. */
   nomMedecin = signal<string | null>(null);
+  /** Nom du patient (liste des patients du medecin) quand je suis le medecin. */
+  nomPatient = signal<string | null>(null);
   messages = signal<Message[]>([]);
   /** Vrai une fois le fil lu avec succes : le champ de saisie n'est propose qu'a un participant. */
   accessible = signal(false);
@@ -88,11 +94,12 @@ export class ConversationComponent implements OnInit, OnDestroy {
     const c = this.conversation();
     if (!c) return null;
     if (this.moi() === c.patientId) return this.nomMedecin() ?? 'Médecin';
-    return `Patient ${abregerIdentifiant(c.patientId)}`;
+    return this.nomPatient() ?? `Patient ${abregerIdentifiant(c.patientId)}`;
   });
 
   async ngOnInit() {
     await this.auth.pret();
+    if (this.detruit) return;
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
     if (!connecte) {
@@ -100,11 +107,13 @@ export class ConversationComponent implements OnInit, OnDestroy {
       return;
     }
     const profil = await this.roleService.charger();
+    if (this.detruit) return;
     this.moi.set(profil?.sujet ?? null);
     this.abonnementRoute = this.route.paramMap.subscribe((params) => this.ouvrir(params.get('id') ?? ''));
   }
 
   ngOnDestroy() {
+    this.detruit = true;
     this.abonnementRoute?.unsubscribe();
     this.arreterRafraichissement();
   }
@@ -202,6 +211,12 @@ export class ConversationComponent implements OnInit, OnDestroy {
         if (this.moi() === null) {
           // Profil inconnu : je suis le medecin si j'en ai le role, sinon le patient.
           this.moi.set(this.roleService.estMedecin() ? c.medecinId : c.patientId);
+        }
+        if (this.moi() !== c.patientId && this.roleService.estMedecin()) {
+          this.patientsService.patientsDuMedecin().subscribe({
+            next: (r) => this.nomPatient.set(r.get(c.patientId)?.nomComplet?.trim() || null),
+            error: () => undefined,
+          });
         }
         if (this.moi() === c.patientId) {
           this.annuaire.medecin(c.medecinId).subscribe({

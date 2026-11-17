@@ -8,7 +8,7 @@ import { REPONSE_HTTP } from './statut-http';
 /** Fiche praticien publique : JSON-LD (Physician/Dentist/Pharmacy + BreadcrumbList), canonical et hreflang. */
 describe('PraticienPublicComponent (JSON-LD)', () => {
   const dentiste: Medecin = {
-    id: '42', nomComplet: 'Dr Amine Benali', specialiteSlug: 'dentiste', specialiteFr: 'Dentiste',
+    id: '3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48', nomComplet: 'Dr Amine Benali', specialiteSlug: 'dentiste', specialiteFr: 'Dentiste',
     wilayaCode: '31', wilayaFr: 'Oran', ville: 'Oran',
   };
 
@@ -28,6 +28,23 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     TestBed.createComponent(PraticienPublicComponent).detectChanges();
   }
 
+  it('identifiant non UUID : vraie 404 au rendu serveur, sans appel a l API', () => {
+    const status = jasmine.createSpy('status');
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'rechercher']);
+    TestBed.configureTestingModule({
+      imports: [PraticienPublicComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { langue: 'fr' } }, paramMap: of(convertToParamMap({ id: 'n-importe-quoi' })) } },
+        { provide: AnnuaireService, useValue: annuaire },
+        { provide: REPONSE_HTTP, useValue: { status } },
+      ],
+    });
+    TestBed.createComponent(PraticienPublicComponent).detectChanges();
+    expect(status).toHaveBeenCalledWith(404);
+    expect(annuaire.medecin).not.toHaveBeenCalled();
+  });
+
   const ld = (id: string) => {
     const el = document.head.querySelector(`script#${id}`);
     return el ? JSON.parse(el.textContent || '{}') : null;
@@ -44,7 +61,7 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     expect(f.name).toBe('Dr Amine Benali');
     expect(f.medicalSpecialty).toBe('Dentiste');
     expect(f.inLanguage).toBe('fr');
-    expect(f.url).toBe('https://tabibi.doctor/praticiens/42/dr-amine-benali');
+    expect(f.url).toBe('https://tabibi.doctor/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/dr-amine-benali');
     expect(f.address.addressRegion).toBe('Oran');
     const fil = ld('ld-fil');
     expect(fil['@type']).toBe('BreadcrumbList');
@@ -59,7 +76,7 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     const f = ld('ld-praticien');
     expect(f['@type']).toBe('Physician');
     expect(f.inLanguage).toBe('ar');
-    expect(f.url).toContain('https://tabibi.doctor/ar/praticiens/42/');
+    expect(f.url).toContain('https://tabibi.doctor/ar/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/');
     expect(f.address.addressRegion).toBe('وهران');
     expect(ld('ld-fil').itemListElement[0].name).toBe('الرئيسية');
     expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(f.url);

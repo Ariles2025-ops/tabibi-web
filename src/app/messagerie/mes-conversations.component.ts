@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
+import { PatientsService, RepertoirePatients } from '../medecin/patients.service';
 import { Conversation, MessagerieService, abregerIdentifiant } from './messagerie.service';
 
 /**
@@ -53,6 +54,9 @@ export class MesConversationsComponent implements OnInit {
   private roleService = inject(RoleService);
   private service = inject(MessagerieService);
   private annuaire = inject(AnnuaireService);
+  private patientsService = inject(PatientsService);
+  /** Patients du medecin connecte (noms), charges une fois si je suis medecin ; vide sinon ou en cas d'echec. */
+  private patients = signal<RepertoirePatients>(new Map());
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -106,7 +110,8 @@ export class MesConversationsComponent implements OnInit {
     if (this.jeSuisLePatient(c)) {
       return this.noms()[c.medecinId] ?? 'Médecin';
     }
-    return `Patient ${abregerIdentifiant(c.patientId)}`;
+    const nom = this.patients().get(c.patientId)?.nomComplet?.trim();
+    return nom || `Patient ${abregerIdentifiant(c.patientId)}`;
   }
 
   /** Vrai si je suis le patient de la conversation ; a defaut d'identifiant connu, on se fie au role. */
@@ -117,6 +122,12 @@ export class MesConversationsComponent implements OnInit {
 
   /** Recupere (une seule fois par praticien) le nom des medecins des conversations ou je suis le patient. */
   private chargerNoms(liste: Conversation[]) {
+    if (this.estMedecin() && this.patients().size === 0 && liste.some((c) => !this.jeSuisLePatient(c))) {
+      this.patientsService.patientsDuMedecin().subscribe({
+        next: (r) => this.patients.set(r),
+        error: () => undefined,
+      });
+    }
     const ids = new Set(liste.filter((c) => this.jeSuisLePatient(c)).map((c) => c.medecinId));
     for (const id of ids) {
       if (this.noms()[id] !== undefined) continue;

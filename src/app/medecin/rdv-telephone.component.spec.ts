@@ -68,4 +68,16 @@ describe('RdvTelephoneComponent', () => {
     expect(c.erreur()).toBe('');
     expect(fixture.nativeElement.querySelector('form')).toBeNull();
   });
+
+  it('un 404 avec { erreur } (creneau disparu) emet le message sans masquer le bouton', () => {
+    appel.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404, error: { erreur: 'Ce créneau n’existe plus' } })));
+    const c = fixture.componentInstance;
+    const disparu = jasmine.createSpy('disparu');
+    c.disparu.subscribe(disparu);
+    c.nom = 'Amine';
+    c.telephone = '0550123456';
+    c.envoyer();
+    expect(disparu).toHaveBeenCalledWith('Ce créneau n’existe plus');
+    expect(TestBed.inject(ApiDisponibleService).rdvTelephone()).toBeTrue();
+  });
 });

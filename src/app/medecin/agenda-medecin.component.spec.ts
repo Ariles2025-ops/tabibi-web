@@ -184,6 +184,28 @@ describe('AgendaMedecinComponent', () => {
     expect(medecinService.agenda).toHaveBeenCalledTimes(2);
   });
 
+  it('RDV pris au telephone : pas de « Rédiger une ordonnance » et le patient n est pas dit prévenu', () => {
+    const TEL: RendezVous = { ...CONFIRME, source: 'TELEPHONE', nomPatient: 'Amine B.' };
+    medecinService.agenda.and.returnValue(of([TEL]));
+    medecinService.annulerRendezVous.and.returnValue(of({ ...TEL, statut: 'ANNULE' }));
+    fixture.detectChanges();
+    expect(texte()).not.toContain('Rédiger une ordonnance');
+
+    boutonsAnnuler()[0].click();
+    fixture.detectChanges();
+    expect(texte()).toContain('Annuler ce rendez-vous ?');
+    expect(texte()).not.toContain('Le patient sera prévenu');
+    bouton('Oui')!.click();
+    fixture.detectChanges();
+    expect(texte()).toContain('annulé : le créneau est de nouveau proposé.');
+    expect(texte()).not.toContain('prévenu');
+  });
+
+  it('un RDV en ligne garde « Rédiger une ordonnance »', () => {
+    fixture.detectChanges();
+    expect(texte()).toContain('Rédiger une ordonnance');
+  });
+
   it('affiche le motif { erreur } d un 409 a l annulation (plus confirme) et recharge l agenda', () => {
     medecinService.annulerRendezVous.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Seul un rendez-vous confirme peut etre annule.' } })),
