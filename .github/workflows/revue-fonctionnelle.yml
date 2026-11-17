@@ -1,0 +1,90 @@
+# Brigade de revue : à chaque passage (lancé par le homelab, toutes les 2 h), un agent revoit UNE zone fonctionnelle de
+# la plateforme (site + API + appli) du point de vue des utilisateurs et liste les incohérences, anomalies, textes mal faits
+# et parcours illogiques qu'il a VÉRIFIÉS dans le code. Il ne modifie rien : il écrit revue.json (artefact).
+# Le homelab lit l'artefact et ouvre un ticket « @claude » par problème dans le bon dépôt : les agents développeurs corrigent.
+# Les zones (.github/revue-zones.txt) tournent : toute la plateforme est revue en environ 2 jours.
+name: Revue fonctionnelle
+on:
+  workflow_dispatch:
+    inputs:
+      zone:
+        description: "Numéro de zone (1 = première ligne de .github/revue-zones.txt) ; vide = rotation"
+        required: false
+concurrency:
+  group: revue-fonctionnelle
+  cancel-in-progress: false
+permissions:
+  contents: read
+  issues: read
+  id-token: write
+  actions: read
+jobs:
+  revue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - name: Les deux autres moitiés (lecture seule)
+        run: |
+          git clone --depth 1 https://github.com/Ariles2025-ops/tabibi-backend.git ../tabibi-backend
+          git clone --depth 1 https://github.com/Ariles2025-ops/tabibi-mobile.git ../tabibi-mobile
+      - name: Zone du jour
+        id: zone
+        env:
+          ZONE: ${{ github.event.inputs.zone }}
+        run: |
+          n=$(grep -c . .github/revue-zones.txt)
+          if [ -z "$ZONE" ]; then ZONE=$(( ( $(date -u +%j) * 12 + $(date -u +%H) / 2 ) % n + 1 )); fi
+          echo "numero=$ZONE" >> "$GITHUB_OUTPUT"
+          echo "texte=$(sed -n "${ZONE}p" .github/revue-zones.txt)" >> "$GITHUB_OUTPUT"
+          echo "Zone $ZONE / $n : $(sed -n "${ZONE}p" .github/revue-zones.txt)"
+      - name: Tickets déjà ouverts (pour ne pas les redemander)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for r in web backend mobile; do
+            gh issue list -R Ariles2025-ops/tabibi-$r --state open --limit 200 --json number,title -q '.[]|"tabibi-'$r'#\(.number) \(.title)"'
+          done > ../tickets-ouverts.txt || true
+          wc -l ../tickets-ouverts.txt
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Tu es testeur fonctionnel senior de Tabibi, plateforme médicale algérienne : le site Angular (ce dépôt, tabibi-web),
+            l'API Spring Boot (../tabibi-backend) et l'appli Flutter Android (../tabibi-mobile). Tout est en lecture seule.
+            ZONE À REVOIR AUJOURD'HUI : « ${{ steps.zone.outputs.texte }} ».
+
+            Mets-toi à la place de chaque utilisateur concerné (patient, médecin, secrétaire, pharmacien, admin) et parcours la zone
+            dans le code, du bouton jusqu'à la base de données. Cherche :
+            - incohérences entre site, appli et API (règles, statuts, libellés, champs, messages) ;
+            - parcours illogiques, boutons sans effet, étapes impossibles, promesses des textes non tenues ;
+            - textes mal faits : fautes, phrases maladroites, termes techniques montrés à l'utilisateur, anglais, « null »,
+              français dans une page arabe ou l'inverse, ton inadapté pour un patient ;
+            - cas oubliés : liste vide, erreur réseau, double clic, date passée, fuseau Africa/Algiers ;
+            - fonctionnalité incomplète ou mal reliée.
+            VÉRIFIE chaque problème en relisant le code (et les tests qui le contrediraient) ; écarte tout ce qui n'est pas prouvé.
+            Ne signale pas ce qui est déjà dans ../tickets-ouverts.txt.
+            Choix VOULUS, jamais signalés : pré-lancement (connexion → /bientot, bandeau), le chiffre « 75 000 », la visio « Bientôt »,
+            opticiens et pharmacies tels qu'ils sont, gratuit pour tous (aucun paiement), aucun message envoyé aux médecins par les agents.
+            Tabibi est une « plateforme médicale », jamais un « annuaire » dans les textes visibles.
+
+            Écris le résultat dans le fichier revue.json (à la racine de ce dépôt), et RIEN d'autre : un tableau JSON de 0 à 4 objets,
+            les plus utiles d'abord :
+            {"depot": "web" | "backend" | "mobile", "gravite": "bloquant" | "important" | "mineur",
+             "titre": "titre court en français", "constat": "ce qui ne va pas, scénario concret",
+             "fichiers": ["chemin:ligne", ...], "attendu": "comportement ou texte attendu", "correction": "correction proposée"}
+            S'il n'y a rien de prouvé et d'utile, écris [] : c'est une bonne réponse.
+          claude_args: --max-turns 60 --allowedTools "Read,Glob,Grep,Write,Bash(git log:*),Bash(git show:*),Bash(cat ../tickets-ouverts.txt)"
+      - name: Contrôle du résultat
+        run: |
+          [ -f revue.json ] || echo '[]' > revue.json
+          python3 -c 'import json;d=json.load(open("revue.json"));assert isinstance(d,list);print(len(d),"problème(s)")' || echo '[]' > revue.json
+          echo '{"zone": "${{ steps.zone.outputs.numero }}"}' > revue-zone.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: revue
+          path: |
+            revue.json
+            revue-zone.json
+          retention-days: 7
