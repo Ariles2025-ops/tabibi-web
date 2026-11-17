@@ -177,6 +177,8 @@ export function app(): express.Express {
   // Anciennes adresses de l'ancien site, encore affichees par Google : 301 vers les pages actuelles (jamais de 404).
   server.get(/^(\/ar)?\/seo\/[^/]+\/?$/, (req, res) => res.redirect(301, redirectionSeo(req.path) || '/'));
   server.get('/index.html', (req, res) => res.redirect(301, redirectionIndex(req.query['specialty'], req.query['wilaya'])));
+  // Lien court à donner aux patients et médecins : ndawik.com/appli -> fiche Google Play.
+  server.get(/^\/(appli|app|android|telecharger)\/?$/, (_req, res) => res.redirect(302, 'https://play.google.com/store/apps/details?id=dz.tabibi.app'));
   server.get(/^\/(about|blog)\/?$/, (_req, res) => res.redirect(301, '/'));
 
   // Fichiers du build (chemins avec extension) : bundles a empreinte en cache long, index et config jamais.
