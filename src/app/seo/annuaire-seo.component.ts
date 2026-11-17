@@ -235,7 +235,10 @@ export class AnnuaireSeoComponent implements OnInit {
   /** Specialite d'un praticien dans la langue de la page (slug connu), sinon le libelle de la base. */
   specialiteDe(m: Medecin): string {
     const s = SPECIALITES_SEO.find((x) => x.slug === m.specialiteSlug);
-    return s ? this.nomS(s) : m.specialiteFr;
+    if (s) return this.nomS(s);
+    // Page arabe : jamais le libelle francais de la base (« Médecin… ») ; on reprend la specialite de la page, sinon « طبيب ».
+    if (this.ar) return this.specialite && this.specialite.slug !== SLUG_PHARMACIE ? this.nomS(this.specialite) : 'طبيب';
+    return m.specialiteFr;
   }
 
   lieuDe(m: Medecin): string {

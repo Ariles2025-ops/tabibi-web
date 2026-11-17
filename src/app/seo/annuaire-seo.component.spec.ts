@@ -181,4 +181,26 @@ describe('AnnuaireSeoComponent', () => {
       expect(noeud('FAQPage')).toBeUndefined();
     });
   });
+  it('page arabe : aucun libelle de specialite francais (« Médecin… ») quand le slug du praticien est inconnu', () => {
+    reponse = { status: jasmine.createSpy('status') };
+    annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
+    annuaire.communes.and.returnValue(of([]));
+    annuaire.rechercher.and.returnValue(of<Medecin[]>([
+      { id: 'h1', nomComplet: 'Dr Karim Amrani', specialiteSlug: '', specialiteFr: 'Médecin hématologue', wilayaCode: '27', wilayaFr: 'Mostaganem', ville: 'Mostaganem' },
+    ] as Medecin[]));
+    TestBed.configureTestingModule({
+      imports: [AnnuaireSeoComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { langue: 'ar' } }, paramMap: of(convertToParamMap({ specialite: 'hematologue', wilaya: 'mostaganem' })) } },
+        { provide: AnnuaireService, useValue: annuaire },
+        { provide: REPONSE_HTTP, useValue: reponse },
+      ],
+    });
+    const f = TestBed.createComponent(AnnuaireSeoComponent);
+    f.detectChanges();
+    const ligne = f.nativeElement.querySelector('.seo-med__txt small').textContent as string;
+    expect(ligne).toContain('طبيب أمراض الدم');
+    expect(ligne).not.toContain('Médecin');
+  });
 });
