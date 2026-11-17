@@ -49,22 +49,22 @@ function formulaireVide(): DemandeProfil {
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Nom complet *
             <input class="champ" [(ngModel)]="formulaire.nomComplet" name="nomComplet" required [maxlength]="longueurMaxNom"
-                   placeholder="Ex. Amina Belkacem" style="color:#10241F;font-size:1rem">
+                   placeholder="Ex. Amina Belkacem" style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Téléphone
               <input class="champ" [(ngModel)]="formulaire.telephone" name="telephone" type="tel" placeholder="Ex. 0550 12 34 56"
-                     style="color:#10241F;font-size:1rem">
+                     style="color:var(--tbi-ink);font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Date de naissance
               <input class="champ" [(ngModel)]="formulaire.dateNaissance" name="dateNaissance" type="date" [max]="hier" [min]="dateMin"
-                     style="color:#10241F;font-size:1rem">
+                     style="color:var(--tbi-ink);font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Wilaya
-              <select class="champ" [(ngModel)]="formulaire.wilayaCode" name="wilayaCode" style="color:#10241F;font-size:1rem">
+              <select class="champ" [(ngModel)]="formulaire.wilayaCode" name="wilayaCode" style="color:var(--tbi-ink);font-size:1rem">
                 <option value="">Non renseignée</option>
                 <option *ngIf="wilayaHorsListe()" [value]="formulaire.wilayaCode">{{ formulaire.wilayaCode }}</option>
                 <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.code }} — {{ w.nom }}</option>
@@ -72,7 +72,7 @@ function formulaireVide(): DemandeProfil {
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Langue préférée
-              <select class="champ" [(ngModel)]="formulaire.langue" name="langue" style="color:#10241F;font-size:1rem">
+              <select class="champ" [(ngModel)]="formulaire.langue" name="langue" style="color:var(--tbi-ink);font-size:1rem">
                 <option *ngFor="let l of langues" [value]="l.code">{{ l.libelle }}</option>
               </select>
             </label>

@@ -58,7 +58,7 @@ button:disabled { opacity:.6; cursor:default; }
 /* Avis : note de 1 a 5. */
 .note { position:relative; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--vert); border-radius:12px; color:var(--vert); font-weight:600; cursor:pointer; background:#fff; }
 .note input { position:absolute; opacity:0; width:0; height:0; margin:0; }
-.note:focus-within { outline:2px solid #10241F; outline-offset:2px; }
+.note:focus-within { outline:2px solid var(--tbi-ink); outline-offset:2px; }
 .note-choisie { background:var(--vert); color:#fff; }
 
 /* Impression (ordonnance). */
@@ -153,10 +153,10 @@ button:disabled { opacity:.6; cursor:default; }
 @media (max-width:640px) { .siteft__cols { grid-template-columns:1fr 1fr; } }
 
 /* Pre-lancement : bandeau « Lancement prochainement » en haut de toutes les pages. */
-.lancement-bandeau { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 10px; padding:12px max(16px, env(safe-area-inset-left, 0px)); background:#D4A437; color:#10241F; text-align:center; font-size:15px; line-height:1.35; }
+.lancement-bandeau { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 10px; padding:12px max(16px, env(safe-area-inset-left, 0px)); background:#D4A437; color:var(--tbi-ink); text-align:center; font-size:15px; line-height:1.35; }
 .lancement-bandeau strong { font-size:17px; font-weight:800; letter-spacing:-.01em; }
-.lancement-bandeau__pastille { background:#10241F; color:#F6E7BF; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; padding:3px 10px; border-radius:999px; }
+.lancement-bandeau__pastille { background:var(--tbi-ink); color:#F6E7BF; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; padding:3px 10px; border-radius:999px; }
 @media (max-width:640px) { .lancement-bandeau__txt { display:none; } }
 
 /* Etiquette « Bientôt » (fonction visible mais pas encore ouverte, ex. teleconsultation). */
-.pastille-bientot { display:inline-block; margin-inline-start:6px; padding:1px 8px; border-radius:999px; background:#D4A437; color:#10241F; font-size:11px; font-weight:800; letter-spacing:.04em; vertical-align:middle; }
+.pastille-bientot { display:inline-block; margin-inline-start:6px; padding:1px 8px; border-radius:999px; background:#D4A437; color:var(--tbi-ink); font-size:11px; font-weight:800; letter-spacing:.04em; vertical-align:middle; }

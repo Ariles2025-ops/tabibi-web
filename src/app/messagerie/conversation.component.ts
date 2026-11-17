@@ -45,7 +45,7 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
         <form *ngIf="accessible()" (ngSubmit)="envoyer()" style="display:grid;gap:8px">
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Votre message
-            <textarea class="champ" [(ngModel)]="contenu" name="contenu" rows="3" style="color:#10241F;font-size:1rem;resize:vertical"></textarea>
+            <textarea class="champ" [(ngModel)]="contenu" name="contenu" rows="3" style="color:var(--tbi-ink);font-size:1rem;resize:vertical"></textarea>
           </label>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <span [style.color]="tropLong() ? '#b3261e' : 'var(--text3)'" style="font-size:.9rem">{{ contenu.length }} / {{ max }}</span>
