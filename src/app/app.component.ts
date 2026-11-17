@@ -89,6 +89,22 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
         <router-outlet />
         <footer class="siteft" id="aide" [attr.dir]="ar() ? 'rtl' : null" [attr.lang]="ar() ? 'ar' : null">
           <div class="siteft__in">
+            <div class="siteft__appli">
+              <div class="siteft__appli-txt">
+                <b>{{ ar() ? 'حمّل تطبيق نداويك' : "Téléchargez l'appli Ndawik" }}</b>
+                <span>{{ ar() ? 'مواعيدك ورسائلك ووصفاتك في جيبك.' : 'Vos rendez-vous, messages et ordonnances dans votre poche.' }}</span>
+              </div>
+              <div class="siteft__stores">
+                <a class="store" href="https://play.google.com/store/apps/details?id=dz.tabibi.app" target="_blank" rel="noopener">
+                  <i class="fa-brands fa-google-play" aria-hidden="true"></i>
+                  <span><small>{{ ar() ? 'متوفر على' : 'Disponible sur' }}</small>Google Play</span>
+                </a>
+                <span class="store store--bientot" aria-disabled="true">
+                  <i class="fa-brands fa-apple" aria-hidden="true"></i>
+                  <span><small>{{ ar() ? 'قريبًا على' : 'Bientôt sur' }}</small>App Store</span>
+                </span>
+              </div>
+            </div>
             <div class="siteft__top">
               <div class="siteft__q">
                 <b>{{ ar() ? 'لديك سؤال؟' : 'Des questions ?' }}</b>
