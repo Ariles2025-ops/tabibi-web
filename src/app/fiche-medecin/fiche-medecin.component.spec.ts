@@ -246,13 +246,13 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
     });
   });
 
-  it('fiche non reclamee : ni « Écrire » ni liste d attente, mais « pas encore sur Tabibi » et lien vers /praticien', async () => {
+  it('fiche non reclamee : ni « Écrire » ni liste d attente, mais « pas encore sur Ndawik » et lien vers /praticien', async () => {
     annuaireSpy.reclamable.and.returnValue(of({ reclamable: true }));
     await afficher();
 
     expect(boutonEcrire()).toBeUndefined();
     expect(boutonInscrire()).toBeUndefined();
-    expect(texte()).toContain("Ce praticien n'est pas encore sur Tabibi");
+    expect(texte()).toContain("Ce praticien n'est pas encore sur Ndawik");
     const lien: HTMLAnchorElement = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>)
       .find((a) => a.textContent?.includes("C'est votre fiche ?"))!;
     expect(lien.getAttribute('href')).toBe('/praticien');

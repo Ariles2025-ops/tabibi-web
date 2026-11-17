@@ -63,7 +63,7 @@ import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.compon
             {{ o.codeVerification }}
           </p>
           <p style="margin:8px 0 0;color:var(--text3);font-size:.9rem">
-            Authenticité vérifiable sur Tabibi, page
+            Authenticité vérifiable sur Ndawik, page
             <a routerLink="/verifier" [queryParams]="{ code: o.codeVerification }" style="color:var(--vert)">Vérifier une ordonnance</a>.
           </p>
         </section>

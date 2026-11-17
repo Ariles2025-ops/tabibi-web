@@ -341,9 +341,9 @@ export class AnnuaireSeoComponent implements OnInit {
     }
 
     this.lienAutreLangue = (this.ar ? '' : '/ar') + chemin;
-    this.title.setTitle(this.pharmacie || this.introuvable ? `${this.titre} | Tabibi` : `${this.titre} — ${t.suffixeTitre} | Tabibi`);
+    this.title.setTitle(this.pharmacie || this.introuvable ? `${this.titre} | Ndawik` : `${this.titre} — ${t.suffixeTitre} | Ndawik`);
     this.meta.updateTag({ name: 'description', content: description });
-    this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Tabibi` });
+    this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Ndawik` });
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ property: 'og:locale', content: this.ar ? 'ar_DZ' : 'fr_DZ' });
     this.meta.updateTag({ name: 'robots', content: this.introuvable ? 'noindex' : 'index, follow' });
@@ -412,9 +412,9 @@ export class AnnuaireSeoComponent implements OnInit {
     this.intro = t2.intro(ns, commune.nom, nw, gens.length);
     const description = t2.description(ns, commune.nom, nw, gens.length);
     this.description = description;
-    this.title.setTitle(`${this.titre} — ${this.t.suffixeTitre} | Tabibi`);
+    this.title.setTitle(`${this.titre} — ${this.t.suffixeTitre} | Ndawik`);
     this.meta.updateTag({ name: 'description', content: description });
-    this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Tabibi` });
+    this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Ndawik` });
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ name: 'robots', content: 'index, follow' });
     this.lienCanonique(`https://tabibi.doctor${this.p}${chemCommune}`);
@@ -524,9 +524,9 @@ const TEXTES_COMMUNE = {
     sousTitre: (s: string, c: string) => `Praticiens : ${s} à ${c}`,
     cible: (s: string, c: string, a: string) => `${a} à ${c}`,
     intro: (s: string, c: string, w: string, n: number) =>
-      `${n} praticiens (${s}) exercent à ${c}, dans la wilaya de ${w}. Consultez leur fiche, comparez et prenez rendez-vous en ligne avec Tabibi.`,
+      `${n} praticiens (${s}) exercent à ${c}, dans la wilaya de ${w}. Consultez leur fiche, comparez et prenez rendez-vous en ligne avec Ndawik.`,
     description: (s: string, c: string, w: string, n: number) =>
-      `${s} à ${c} (${w}) : ${n} praticiens référencés sur Tabibi. Consultez les fiches et prenez rendez-vous en ligne.`,
+      `${s} à ${c} (${w}) : ${n} praticiens référencés sur Ndawik. Consultez les fiches et prenez rendez-vous en ligne.`,
     communes: (s: string, w: string) => `${s} dans les communes de ${w}`,
     voisines: (s: string, w: string) => `${s} dans les communes voisines (${w})`,
     toute: (s: string, w: string) => `Voir tous les praticiens (${s}) de ${w}`,
@@ -537,9 +537,9 @@ const TEXTES_COMMUNE = {
     sousTitre: (s: string, c: string) => `الأطباء: ${s} في ${c}`,
     cible: (s: string, c: string, _a: string) => `${s} في ${c}`,
     intro: (s: string, c: string, w: string, n: number) =>
-      `${n} من الأطباء (${s}) يمارسون في ${c} بولاية ${w}. اطّلع على ملفاتهم واحجز موعدك عبر طبيبي.`,
+      `${n} من الأطباء (${s}) يمارسون في ${c} بولاية ${w}. اطّلع على ملفاتهم واحجز موعدك عبر نداويك.`,
     description: (s: string, c: string, w: string, n: number) =>
-      `${s} في ${c} (${w}): ${n} من الأطباء على طبيبي. اطّلع على الملفات واحجز موعدك عبر الإنترنت.`,
+      `${s} في ${c} (${w}): ${n} من الأطباء على نداويك. اطّلع على الملفات واحجز موعدك عبر الإنترنت.`,
     communes: (s: string, w: string) => `${s} في بلديات ${w}`,
     voisines: (s: string, w: string) => `${s} في البلديات المجاورة (${w})`,
     toute: (s: string, w: string) => `كل الأطباء (${s}) في ${w}`,

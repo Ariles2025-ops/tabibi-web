@@ -27,8 +27,8 @@ import { MedecinService } from './medecin.service';
         <app-selecteur-langue />
       </div>
       <p style="color:var(--text3);margin:0 0 20px">
-        {{ l.t("Ces informations s'affichent sur votre fiche publique. Votre nom, votre spécialité et votre wilaya sont modifiés par l'équipe Tabibi.",
-               'تظهر هذه المعلومات في صفحتك العامة. يتم تعديل الاسم والتخصص والولاية من طرف فريق طبيبي.') }}
+        {{ l.t("Ces informations s'affichent sur votre fiche publique. Votre nom, votre spécialité et votre wilaya sont modifiés par l'équipe Ndawik.",
+               'تظهر هذه المعلومات في صفحتك العامة. يتم تعديل الاسم والتخصص والولاية من طرف فريق نداويك.') }}
       </p>
       <p *ngIf="charge()" style="color:var(--text3)">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
       <form *ngIf="!charge()" (ngSubmit)="enregistrer()" style="display:grid;gap:14px;background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:20px">

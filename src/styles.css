@@ -73,7 +73,7 @@ button:disabled { opacity:.6; cursor:default; }
 .pied a { color:#5C6B63; text-decoration:none; }
 .pied a:hover { color:#0F7560; }
 
-/* ===== Navigation facon Doctolib : barre horizontale en haut (logo gauche, actions droite), version Tabibi ===== */
+/* ===== Navigation facon Doctolib : barre horizontale en haut (logo gauche, actions droite), version Ndawik ===== */
 /* Boutons d'action de la barre (toutes tailles). Le vert porte l'action -> pastille blanche sur barre verte. */
 .side__pro { color:#fff; opacity:.92; white-space:nowrap; }
 .side__pro:hover { opacity:1; }
@@ -126,7 +126,7 @@ button:disabled { opacity:.6; cursor:default; }
 .side__help:hover { opacity:1; }
 
 
-/* ===== Grand pied de page « Aide et information » facon Doctolib, version Tabibi ===== */
+/* ===== Grand pied de page « Aide et information » facon Doctolib, version Ndawik ===== */
 .siteft { background:#f1f5f9; border-top:1px solid var(--border); margin-top:44px; }
 .siteft__in { max-width:1200px; margin:0 auto; padding:32px var(--gutter) 28px; box-sizing:border-box; }
 .siteft__top { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-bottom:20px; border-bottom:1px solid var(--border); }
@@ -150,6 +150,7 @@ button:disabled { opacity:.6; cursor:default; }
 .siteft__logo { font-weight:800; color:var(--vert); font-size:1.2rem; letter-spacing:-.02em; }
 .siteft__logo i { color:var(--or); font-style:normal; }
 .siteft__copy { color:var(--text3); font-size:13px; }
+.siteft__ancien { color:var(--text3); font-size:11px; opacity:.8; }
 @media (max-width:640px) { .siteft__cols { grid-template-columns:1fr 1fr; } }
 
 /* Pre-lancement : bandeau « Lancement prochainement » en haut de toutes les pages. */

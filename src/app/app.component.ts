@@ -20,7 +20,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
     </div>
     <div class="shell">
       <aside class="side">
-        <a class="side__brand" [routerLink]="ar() ? '/ar' : '/'">tabibi<i>.</i></a>
+        <a class="side__brand" [routerLink]="ar() ? '/ar' : '/'">ndawik<i>.</i></a>
         <!-- Telephone : bouton « 3 barres » qui ouvre tout le menu -->
         <button type="button" class="side__burger" (click)="menuOuvert.set(!menuOuvert())"
                 [attr.aria-expanded]="menuOuvert()" aria-controls="menu-principal" [attr.aria-label]="menuOuvert() ? 'Fermer le menu' : 'Ouvrir le menu'">
@@ -99,7 +99,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
             <div class="siteft__cols">
               <div class="siteft__col">
-                <h2>{{ ar() ? 'طبيبي' : 'Tabibi' }}</h2>
+                <h2>{{ ar() ? 'نداويك' : 'Ndawik' }}</h2>
                 <a [routerLink]="pre() + '/aide'">{{ ar() ? 'مركز المساعدة' : "Centre d'aide" }}</a>
                 <a routerLink="/verifier">{{ ar() ? 'التحقق من وصفة طبية' : 'Vérifier une ordonnance' }}</a>
                 <a href="/legal/mentions-legales.html">{{ ar() ? 'الإشعارات القانونية' : 'Mentions légales' }}</a>
@@ -122,8 +122,9 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
             </div>
 
             <div class="siteft__bottom">
-              <span class="siteft__logo">tabibi<i>.</i></span>
-              <span class="siteft__copy">{{ ar() ? '© 2026 طبيبي — جميع الحقوق محفوظة.' : '© 2026 Tabibi — Tous droits réservés.' }}</span>
+              <span class="siteft__logo">ndawik<i>.</i></span>
+              <span class="siteft__copy">{{ ar() ? '© 2026 نداويك — جميع الحقوق محفوظة.' : '© 2026 Ndawik — Tous droits réservés.' }}</span>
+              <small class="siteft__ancien">{{ ar() ? 'نداويك (Tabibi سابقًا)' : 'Ndawik (anciennement Tabibi)' }}</small>
             </div>
           </div>
         </footer>

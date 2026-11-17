@@ -6,9 +6,9 @@ export function referencerPage(
   doc: Document, title: Title, meta: Meta,
   page: { titre: string; description: string; chemin: string; ar: boolean; indexable?: boolean; bilingue?: boolean },
 ): void {
-  title.setTitle(`${page.titre} | Tabibi`);
+  title.setTitle(`${page.titre} | Ndawik`);
   meta.updateTag({ name: 'description', content: page.description });
-  meta.updateTag({ property: 'og:title', content: `${page.titre} | Tabibi` });
+  meta.updateTag({ property: 'og:title', content: `${page.titre} | Ndawik` });
   meta.updateTag({ property: 'og:description', content: page.description });
   meta.updateTag({ property: 'og:locale', content: page.ar ? 'ar_DZ' : 'fr_DZ' });
   meta.updateTag({ name: 'robots', content: page.indexable === false ? 'noindex' : 'index, follow' });

@@ -38,7 +38,7 @@ export class PageIntrouvableComponent implements OnInit {
   ngOnInit() {
     this.ar = this.router.url === '/ar' || this.router.url.startsWith('/ar/');
     this.statut.introuvable();
-    this.title.setTitle(this.ar ? 'الصفحة غير موجودة | طبيبي' : 'Page introuvable | Tabibi');
+    this.title.setTitle(this.ar ? 'الصفحة غير موجودة | نداويك' : 'Page introuvable | Ndawik');
     this.meta.updateTag({ name: 'robots', content: 'noindex' });
     this.document.head.querySelector('link[rel="canonical"]')?.remove();
   }
