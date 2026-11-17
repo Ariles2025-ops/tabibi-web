@@ -173,6 +173,11 @@ export class PraticienPublicComponent implements OnInit {
     return this.ar ? ['/ar' + l[0], ...l.slice(1)] : l;
   }
 
+  /** Titre de l'onglet d'une fiche absente, dans la langue de la page (comme la page 404). */
+  private titreIntrouvable(): string {
+    return this.ar ? 'الطبيب غير موجود | طبيبي' : 'Praticien introuvable | Tabibi';
+  }
+
   private charger(id: string) {
     this.medecin.set(null);
     this.confreres.set([]);
@@ -181,7 +186,7 @@ export class PraticienPublicComponent implements OnInit {
       // Identifiant mal forme : inutile d'interroger l'API (qui repondrait 400), vraie 404 au rendu serveur.
       this.charge.set(false);
       this.statut.introuvable();
-      this.title.setTitle('Praticien introuvable | Tabibi');
+      this.title.setTitle(this.titreIntrouvable());
       this.meta.updateTag({ name: 'robots', content: 'noindex' });
       return;
     }
@@ -217,7 +222,7 @@ export class PraticienPublicComponent implements OnInit {
         this.charge.set(false);
         // Fiche inexistante : vraie 404 au rendu serveur (une API indisponible ne doit pas desindexer la page).
         if (e?.status === 404) this.statut.introuvable();
-        this.title.setTitle('Praticien introuvable | Tabibi');
+        this.title.setTitle(this.titreIntrouvable());
         this.meta.updateTag({ name: 'robots', content: 'noindex' });
       },
     });
