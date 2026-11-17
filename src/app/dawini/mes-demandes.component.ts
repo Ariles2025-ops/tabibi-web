@@ -38,22 +38,22 @@ interface OptionWilaya { code: string; nom: string; }
           <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Médicament *
-              <input class="champ" [(ngModel)]="demande.medicament" name="medicament" required placeholder="Ex. Amoxicilline 1 g" style="color:#10241F;font-size:1rem">
+              <input class="champ" [(ngModel)]="demande.medicament" name="medicament" required placeholder="Ex. Amoxicilline 1 g" style="color:var(--tbi-ink);font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Wilaya *
-              <select class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required style="color:#10241F;font-size:1rem">
+              <select class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required style="color:var(--tbi-ink);font-size:1rem">
                 <option value="">Choisissez votre wilaya</option>
                 <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.code }} — {{ w.nom }}</option>
               </select>
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Commune
-              <input class="champ" [(ngModel)]="demande.commune" name="commune" placeholder="Ex. Bab Ezzouar" style="color:#10241F;font-size:1rem">
+              <input class="champ" [(ngModel)]="demande.commune" name="commune" placeholder="Ex. Bab Ezzouar" style="color:var(--tbi-ink);font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               Précision (dosage, forme, urgence)
-              <input class="champ" [(ngModel)]="demande.precision" name="precision" placeholder="Ex. Boîte de 14 comprimés" style="color:#10241F;font-size:1rem">
+              <input class="champ" [(ngModel)]="demande.precision" name="precision" placeholder="Ex. Boîte de 14 comprimés" style="color:var(--tbi-ink);font-size:1rem">
             </label>
           </div>
           <p style="color:var(--text3);font-size:.9rem;margin:0">* Champs obligatoires.</p>
