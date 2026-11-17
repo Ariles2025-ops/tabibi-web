@@ -49,7 +49,7 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
           </li>
         </ul>
         <p *ngIf="!charge() && !erreur() && inscriptions().length === 0">
-          Vous n'êtes inscrit sur aucune liste d'attente.
+          Vous n'êtes inscrit sur aucune liste d'attente. Inscrivez-vous depuis la fiche d'un médecin : vous serez notifié dès qu'un créneau se libère.
           <a routerLink="/" style="color:var(--vert)">Trouver un praticien</a>
         </p>
       </ng-container>
