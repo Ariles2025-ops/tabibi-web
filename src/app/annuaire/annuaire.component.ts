@@ -403,6 +403,9 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   /** Frappes successives dans le champ, pour l'autocompletion differee (debounce). */
   private saisie = new Subject<string>();
   private abonnementAuto: Subscription | null = null;
+  /** Demandes de recherche : switchMap annule la requete precedente, seule la derniere met a jour la liste. */
+  private recherches = new Subject<void>();
+  private abonnementRecherche: Subscription | null = null;
   /** Filtres passes dans l'URL (?specialite=…&wilaya=…), par exemple depuis les liens du pied de page. */
   private abonnementParams: Subscription | null = null;
   private masquage: any;
@@ -411,6 +414,20 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   get enRecherche(): boolean { return this.q.trim().length > 0 || !!this.specialite || !!this.wilaya; }
 
   ngOnInit() {
+    this.abonnementRecherche = this.recherches
+      .pipe(
+        switchMap(() =>
+          this.service.rechercher(this.specialite, this.wilaya, this.q).pipe(
+            map((r) => ({ r, ok: true })),
+            catchError(() => of({ r: [] as Medecin[], ok: false })),
+          ),
+        ),
+      )
+      .subscribe(({ r, ok }) => {
+        if (ok) this.resultats.set(r);
+        else this.erreur.set('Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.');
+        this.charge.set(false);
+      });
     // Accueil francais <-> arabe (/ar) pour les moteurs de recherche.
     this.title.setTitle(ACCUEIL_FR.titre);
     this.meta.updateTag({ name: 'description', content: ACCUEIL_FR.description });
@@ -467,6 +484,8 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.abonnementRecherche?.unsubscribe();
+    this.abonnementRecherche = null;
     this.abonnementAuto?.unsubscribe();
     this.abonnementAuto = null;
     this.abonnementParams?.unsubscribe();
@@ -527,13 +546,7 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   rechercher() {
     this.charge.set(true);
     this.erreur.set('');
-    this.service.rechercher(this.specialite, this.wilaya, this.q).subscribe({
-      next: (r) => { this.resultats.set(r); this.charge.set(false); },
-      error: () => {
-        this.erreur.set('Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.');
-        this.charge.set(false);
-      },
-    });
+    this.recherches.next();
   }
 
   /** Hors connexion, seules 6 cartes (floutees) sont rendues sous le cadenas. */

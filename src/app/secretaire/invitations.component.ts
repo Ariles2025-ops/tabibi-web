@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { catchError, forkJoin, map, of } from 'rxjs';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
+import { RoleService } from '../auth/role.service';
 import { Invitation, SecretaireService } from './secretaire.service';
 
 interface InvitationAffichee extends Invitation {
@@ -55,6 +56,7 @@ interface InvitationAffichee extends Invitation {
 })
 export class InvitationsComponent implements OnInit {
   private auth = inject(AuthService);
+  private roleService = inject(RoleService);
   private service = inject(SecretaireService);
   private annuaire = inject(AnnuaireService);
   private router = inject(Router);
@@ -114,6 +116,7 @@ export class InvitationsComponent implements OnInit {
       next: async () => {
         // Le role SECRETAIRE vient d'etre accorde : on relit le jeton pour ouvrir l'espace secretaire tout de suite.
         await this.auth.actualiserRoles();
+        await this.roleService.recharger();
         this.enCours.set(null);
         this.router.navigateByUrl('/secretaire');
       },

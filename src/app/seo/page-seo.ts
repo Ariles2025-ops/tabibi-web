@@ -26,3 +26,15 @@ export function referencerPage(
   }
   doc.documentElement.setAttribute('lang', page.ar ? 'ar' : 'fr');
 }
+
+/** Pages uniquement en francais (sans version arabe) : /bientot, /verifier, /supprimer-mon-compte, /praticien. */
+export function estPageFrancaiseSeule(url: string): boolean {
+  const chemin = url.split(/[?#]/)[0].replace(/\/+$/, '');
+  return ['/bientot', '/verifier', '/supprimer-mon-compte', '/praticien'].includes(chemin);
+}
+
+/** Remet <html lang="fr" dir="ltr"> (apres un passage par une page /ar, qui laisse lang="ar" sur le document). */
+export function remettreDocumentFrancais(doc: Document): void {
+  doc.documentElement.setAttribute('lang', 'fr');
+  doc.documentElement.setAttribute('dir', 'ltr');
+}

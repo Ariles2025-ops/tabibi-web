@@ -16,6 +16,11 @@ export class LangueService {
     return this.ar() ? ar : fr;
   }
 
+  /** Repasse en francais pour la session sans toucher a la preference memorisee (ecrans non traduits en arabe). */
+  forcerFrancais() {
+    if (this.ar()) this.ar.set(false);
+  }
+
   basculer() {
     this.definir(!this.ar());
   }

@@ -13,6 +13,9 @@ import { ecrireJsonLd, fil, typeSchemaOrg } from './donnees-structurees';
  * Identite, specialite et lieu, bouton vers la fiche complete (disponibilites et reservation, avec compte),
  * maillage vers les confreres de la meme specialite et wilaya. Rendue cote serveur pour les moteurs de recherche.
  */
+/** Identifiant d'un praticien : UUID. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 @Component({
     selector: 'app-praticien-public',
     imports: [CommonModule, RouterLink],
@@ -168,9 +171,17 @@ export class PraticienPublicComponent implements OnInit {
   }
 
   private charger(id: string) {
-    this.charge.set(true);
     this.medecin.set(null);
     this.confreres.set([]);
+    if (!UUID.test(id)) {
+      // Identifiant mal forme : inutile d'interroger l'API (qui repondrait 400), vraie 404 au rendu serveur.
+      this.charge.set(false);
+      this.statut.introuvable();
+      this.title.setTitle('Praticien introuvable | Tabibi');
+      this.meta.updateTag({ name: 'robots', content: 'noindex' });
+      return;
+    }
+    this.charge.set(true);
     this.annuaire.medecin(id).subscribe({
       next: (m) => {
         this.medecin.set(m);

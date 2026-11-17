@@ -7,7 +7,7 @@ import { AuthService } from '../auth/auth.service';
 import { ActionEnCours, estConfirme, peutHonorer, peutMarquerAbsent, rendezVousAVenir, rendezVousPasses, styleOnglet } from '../medecin/agenda-utils';
 import { GestionCreneauxComponent, SourceCreneaux } from '../medecin/gestion-creneaux.component';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from '../medecin/patients.service';
-import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
+import { LangueService } from '../partage/langue.service';
 import { abregerIdentifiant } from '../messagerie/messagerie.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
@@ -22,10 +22,9 @@ import { Rattachement, SecretaireService } from './secretaire.service';
  */
 @Component({
     selector: 'app-espace-secretaire',
-    imports: [CommonModule, FormsModule, GestionCreneauxComponent, SelecteurLangueComponent],
+    imports: [CommonModule, FormsModule, GestionCreneauxComponent],
     template: `
     <main style="max-width:760px;margin:32px auto;padding:0 16px">
-      <div style="text-align:right"><app-selecteur-langue /></div>
       <h1 style="color:var(--blue);margin:0 0 8px">Espace secrétaire</h1>
       <p style="color:var(--text3);margin:0 0 20px">
         Choisissez le cabinet pour lequel vous intervenez : vous consultez son agenda, ouvrez des créneaux et marquez
@@ -113,6 +112,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
 })
 export class EspaceSecretaireComponent implements OnInit {
   private auth = inject(AuthService);
+  private langue = inject(LangueService);
   private service = inject(SecretaireService);
   private annuaire = inject(AnnuaireService);
   private patients = inject(PatientsService);
@@ -157,6 +157,8 @@ export class EspaceSecretaireComponent implements OnInit {
   });
 
   ngOnInit() {
+    // Page non traduite : pas de page mi-arabe mi-francaise, meme si l'arabe a ete choisi ailleurs.
+    this.langue.forcerFrancais();
     this.charge.set(true);
     this.service.mesMedecins().subscribe({
       next: (liste) => {
