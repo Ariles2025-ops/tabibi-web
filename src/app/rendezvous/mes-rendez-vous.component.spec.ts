@@ -109,6 +109,20 @@ describe('MesRendezVousComponent (avis)', () => {
     expect(statut.classList).not.toContain('mr-statut--ok');
   });
 
+  it('affiche « Confirmé » (comme l appli) pour un rendez-vous RESERVE a venir, et « Terminé » une fois passe', async () => {
+    rendezVous.mes.and.returnValue(of([
+      { ...CONFIRME, id: 'r7', statut: 'RESERVE', debut: '2099-01-06T09:00:00Z' },
+      { ...CONFIRME, id: 'r8', statut: 'RESERVE', debut: '2020-01-06T09:00:00Z' },
+    ]));
+    await afficher();
+
+    const textes = Array.from(fixture.nativeElement.querySelectorAll('li .mr-statut') as NodeListOf<HTMLElement>)
+      .map((e) => e.textContent?.trim());
+    expect(textes).toContain('Confirmé');
+    expect(textes).toContain('Terminé');
+    expect(textes).not.toContain('Réservé');
+  });
+
   it('ne lit pas mes avis quand aucun rendez-vous n est honore', async () => {
     rendezVous.mes.and.returnValue(of([CONFIRME]));
     await afficher();

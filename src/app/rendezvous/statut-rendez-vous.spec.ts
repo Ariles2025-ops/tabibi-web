@@ -12,6 +12,12 @@ describe('statuts de rendez-vous (vocabulaire commun site / appli)', () => {
     expect(libelleStatutRendezVous('RESERVE')).toBe('Confirmé');
   });
 
+  it('garde les autres libelles', () => {
+    expect(libelleStatutRendezVous('HONORE')).toBe('Honoré');
+    expect(libelleStatutRendezVous('ANNULE')).toBe('Annulé');
+    expect(libelleStatutRendezVous('ABSENT')).toBe('Absent');
+  });
+
   it('rend un statut inconnu lisible', () => {
     expect(libelleStatutRendezVous('EN_COURS')).toBe('En cours');
     expect(libelleStatutRendezVous('')).toBe('');
