@@ -23,6 +23,7 @@ import { Notification, NotificationService } from './notification.service';
       <ng-container *ngIf="connecte()">
         <p *ngIf="charge()">Chargement…</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
+        <p *ngIf="succes()" role="status" style="color:var(--vert)">{{ succes() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let n of notifications()" [class.notification-lue]="n.lue" [class.notification-non-lue]="!n.lue"
@@ -62,6 +63,8 @@ export class MesNotificationsComponent implements OnInit {
   /** Identifiant de la notification en cours de marquage, ou 'toutes' pour le marquage global. */
   enCours = signal<string | null>(null);
   erreur = signal('');
+  /** Confirmation apres « Tout marquer comme lu » (comme dans l'appli). */
+  succes = signal('');
 
   async ngOnInit() {
     await this.auth.pret();
@@ -124,10 +127,12 @@ export class MesNotificationsComponent implements OnInit {
   toutMarquerLu() {
     this.enCours.set('toutes');
     this.erreur.set('');
+    this.succes.set('');
     this.service.toutMarquerLu().subscribe({
-      next: () => {
+      next: (nombre) => {
         this.enCours.set(null);
         this.charger();
+        this.succes.set(nombre > 0 ? `${nombre} notification(s) marquée(s) lue(s)` : 'Aucune notification à marquer');
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
