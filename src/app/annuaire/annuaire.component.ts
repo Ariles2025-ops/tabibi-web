@@ -37,7 +37,7 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
               <i class="fa fa-magnifying-glass dl-ic" aria-hidden="true"></i>
               <input class="dl-input" type="search" [(ngModel)]="q" (input)="surSaisie()" (focus)="surFocus()" (blur)="masquerBientot()"
                      (keyup.enter)="lancerRecherche()"
-                     placeholder="Nom, spécialité, établissement…" autocomplete="off" aria-label="Nom, spécialité ou établissement"
+                     placeholder="Nom du médecin" autocomplete="off" aria-label="Nom du médecin"
                      role="combobox" aria-autocomplete="list" aria-controls="ac-suggestions" [attr.aria-expanded]="suggestionsVisibles() && suggestions().length > 0">
               <ul id="ac-suggestions" class="ac-liste" role="listbox" *ngIf="connecte() && suggestionsVisibles() && suggestions().length">
                 <li *ngFor="let s of suggestions()" role="option">
@@ -250,10 +250,10 @@ interface Referentiel { wilayas: OptionWilaya[]; specialites: OptionSpecialite[]
     <section class="section" id="sec-diff" style="padding-top:0" *ngIf="!enRecherche">
       <div class="v4-sechead">
         <span class="v4-eyebrow">La différence Tabibi</span>
-        <h2>Pourquoi Tabibi, et pas un simple annuaire ?</h2>
+        <h2>Pourquoi choisir Tabibi ?</h2>
       </div>
-      <div class="v4-cmp" role="group" aria-label="Comparatif Tabibi vs annuaires classiques">
-        <div class="v4-cmp-h"><span></span><strong>Tabibi</strong><span>Annuaires classiques</span></div>
+      <div class="v4-cmp" role="group" aria-label="Comparatif Tabibi et services classiques">
+        <div class="v4-cmp-h"><span></span><strong>Tabibi</strong><span>Services classiques</span></div>
         <div class="v4-cmp-r"><span>Numéro d'ordre vérifié avant activation</span><strong class="y">✓</strong><span class="n">—</span></div>
         <div class="v4-cmp-r"><span>Données de santé protégées (loi 18-07)</span><strong class="y">✓</strong><span class="n">—</span></div>
         <div class="v4-cmp-r"><span>Français et arabe, avec un arabe RTL soigné</span><strong class="y">✓</strong><span class="n">partiel</span></div>

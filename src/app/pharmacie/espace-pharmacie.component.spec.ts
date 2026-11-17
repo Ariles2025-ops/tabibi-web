@@ -334,4 +334,16 @@ describe('EspacePharmacieComponent', () => {
     expect(texte()).toContain('Annulée par le médecin');
     expect(texte()).not.toContain('Marquer comme délivrée');
   });
+
+  it('signale une ordonnance expiree sans proposer la delivrance', async () => {
+    ordonnances.verifier.and.returnValue(of({ valide: true, emiseLe: '2026-01-18T10:00:00Z', statut: 'EXPIREE' }));
+    await afficher();
+    await saisir('codeOrdonnance', 'AB12CD34');
+    fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+    await afficher();
+
+    expect(texte()).toContain('Expirée');
+    expect(texte()).not.toContain('Marquer comme délivrée');
+    expect(texte()).not.toContain('Ordonnance valide');
+  });
 });

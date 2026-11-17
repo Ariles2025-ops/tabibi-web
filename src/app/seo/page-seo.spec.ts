@@ -1,4 +1,4 @@
-import { estPageFrancaiseSeule, remettreDocumentFrancais } from './page-seo';
+import { estPageFrancaiseSeule, poserLangueDocument, remettreDocumentFrancais } from './page-seo';
 
 describe('pages sans version arabe', () => {
   it('reconnait /bientot, /verifier, /supprimer-mon-compte et /praticien (pas /praticiens/..., pas /ar/...)', () => {
@@ -14,6 +14,15 @@ describe('pages sans version arabe', () => {
     document.documentElement.setAttribute('lang', 'ar');
     document.documentElement.setAttribute('dir', 'rtl');
     remettreDocumentFrancais(document);
+    expect(document.documentElement.getAttribute('lang')).toBe('fr');
+    expect(document.documentElement.getAttribute('dir')).toBe('ltr');
+  });
+
+  it('poserLangueDocument : ar -> lang=ar dir=rtl, fr -> lang=fr dir=ltr', () => {
+    poserLangueDocument(document, true);
+    expect(document.documentElement.getAttribute('lang')).toBe('ar');
+    expect(document.documentElement.getAttribute('dir')).toBe('rtl');
+    poserLangueDocument(document, false);
     expect(document.documentElement.getAttribute('lang')).toBe('fr');
     expect(document.documentElement.getAttribute('dir')).toBe('ltr');
   });

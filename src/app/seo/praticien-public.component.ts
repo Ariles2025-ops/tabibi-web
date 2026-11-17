@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { libelleLangue } from '../fiche-medecin/fiche-infos';
 import { SPECIALITES_SEO, liensLangues, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
+import { poserLangueDocument } from './page-seo';
 import { StatutHttpService } from './statut-http';
 import { ecrireJsonLd, fil, typeSchemaOrg } from './donnees-structurees';
 
@@ -48,12 +49,12 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             <div class="pp-id__txt">
               <h1 dir="auto">{{ m.nomComplet }}</h1>
               <p>{{ specialite }}<ng-container *ngIf="lieu"> · {{ lieu }}</ng-container></p>
-              <span *ngIf="m.reservable" class="pp-resa">{{ ar ? 'الحجز متاح عبر الإنترنت' : 'Réservable en ligne' }}</span>
+              <span *ngIf="reservable()" class="pp-resa">{{ ar ? 'الحجز متاح عبر الإنترنت' : 'Réservable en ligne' }}</span>
             </div>
           </div>
           <div class="pp-action">
-            <a class="bouton pp-btn" [routerLink]="['/medecins', m.id]">{{ ar ? 'احجز موعدًا' : 'Prendre rendez-vous' }}</a>
-            <small>{{ ar ? 'المواعيد المتاحة والحجز بحساب طبيبي مجاني. الدفع في العيادة.' : 'Disponibilités et réservation avec un compte Tabibi gratuit. Paiement au cabinet.' }}</small>
+            <a class="bouton pp-btn" [routerLink]="['/medecins', m.id]">{{ reservable() ? (ar ? 'احجز موعدًا' : 'Prendre rendez-vous') : (ar ? 'عرض الصفحة' : 'Voir la fiche') }}</a>
+            <small *ngIf="reservable()">{{ ar ? 'المواعيد المتاحة والحجز بحساب طبيبي مجاني. الدفع في العيادة.' : 'Disponibilités et réservation avec un compte Tabibi gratuit. Paiement au cabinet.' }}</small>
           </div>
         </section>
 
@@ -141,7 +142,9 @@ export class PraticienPublicComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private statut = inject(StatutHttpService);
 
-  medecin = signal<(Medecin & { reservable?: boolean }) | null>(null);
+  medecin = signal<Medecin | null>(null);
+  /** Vrai si le medecin a des creneaux libres : le champ vient de la liste si la fiche ne le porte pas. */
+  reservable = signal(false);
   confreres = signal<Medecin[]>([]);
   charge = signal(true);
   specialiteConnue = false;
@@ -173,6 +176,7 @@ export class PraticienPublicComponent implements OnInit {
   private charger(id: string) {
     this.medecin.set(null);
     this.confreres.set([]);
+    this.reservable.set(false);
     if (!UUID.test(id)) {
       // Identifiant mal forme : inutile d'interroger l'API (qui repondrait 400), vraie 404 au rendu serveur.
       this.charge.set(false);
@@ -185,6 +189,7 @@ export class PraticienPublicComponent implements OnInit {
     this.annuaire.medecin(id).subscribe({
       next: (m) => {
         this.medecin.set(m);
+        this.reservable.set(m.reservable === true);
         this.charge.set(false);
         const spec = SPECIALITES_SEO.find((s) => s.slug === m.specialiteSlug);
         const wil = wilayaParCode(m.wilayaCode);
@@ -197,7 +202,14 @@ export class PraticienPublicComponent implements OnInit {
           : (m.ville && m.wilayaFr && m.ville !== m.wilayaFr ? `${m.ville} (${m.wilayaFr})` : (m.ville || m.wilayaFr || ''));
         this.referencer(m);
         this.annuaire.rechercher(m.specialiteSlug, m.wilayaCode).subscribe({
-          next: (liste) => this.confreres.set(liste.filter((c) => c.id !== m.id).slice(0, 12)),
+          next: (liste) => {
+            // La fiche (GET /api/medecins/{id}) peut ne pas porter « reservable » : la liste, elle, le fournit.
+            if (m.reservable === undefined && liste.some((c) => c.id === m.id && c.reservable)) {
+              this.reservable.set(true);
+              this.referencer(m);
+            }
+            this.confreres.set(liste.filter((c) => c.id !== m.id).slice(0, 12));
+          },
           error: () => undefined,
         });
       },
@@ -215,13 +227,13 @@ export class PraticienPublicComponent implements OnInit {
     const ou = this.lieu ? (this.ar ? ` في ${this.lieu}` : ` à ${this.lieu}`) : '';
     const titre = `${m.nomComplet} — ${this.specialite}${ou}`;
     const description = this.ar
-      ? `${m.nomComplet}، ${this.specialite}${ou}. اطّلع على صفحة الطبيب واحجز موعدك عبر الإنترنت مع طبيبي. الدفع في العيادة.`
-      : `${m.nomComplet}, ${this.specialite}${ou}. Consultez la fiche et prenez rendez-vous en ligne avec Tabibi. Paiement au cabinet.`;
+      ? `${m.nomComplet}، ${this.specialite}${ou}. اطّلع على صفحة الطبيب${this.reservable() ? ' واحجز موعدك عبر الإنترنت مع طبيبي. الدفع في العيادة.' : ' على طبيبي.'}`
+      : `${m.nomComplet}, ${this.specialite}${ou}. Consultez la fiche sur Tabibi.${this.reservable() ? ' Prenez rendez-vous en ligne. Paiement au cabinet.' : ''}`;
     const chemin = `/praticiens/${m.id}/${slugifier(m.nomComplet)}`;
     const url = `https://tabibi.doctor${this.p}${chemin}`;
     this.lienAutreLangue = (this.ar ? '' : '/ar') + chemin;
     liensLangues(this.document, chemin);
-    this.document.documentElement.setAttribute('lang', this.ar ? 'ar' : 'fr');
+    poserLangueDocument(this.document, this.ar);
     this.meta.updateTag({ property: 'og:locale', content: this.ar ? 'ar_DZ' : 'fr_DZ' });
     this.title.setTitle(`${titre} | Tabibi`);
     this.meta.updateTag({ name: 'description', content: description });

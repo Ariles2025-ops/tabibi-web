@@ -145,6 +145,7 @@ function formulaireVide(): FormulaireReponse {
               Déjà délivrée<ng-container *ngIf="v.delivreeLe"> le {{ v.delivreeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container> : ne pas délivrer une nouvelle fois.
             </p>
             <p *ngSwitchCase="'ANNULEE'" style="color:var(--red);font-weight:600;margin:0">Annulée par le médecin : ne pas délivrer.</p>
+            <p *ngSwitchCase="'EXPIREE'" style="color:var(--red);font-weight:600;margin:0">Expirée : ordonnance plus valable, ne pas délivrer.</p>
             <ng-container *ngSwitchDefault>
               <ng-container *ngIf="v.valide">
                 <p style="color:var(--green);font-weight:600;margin:0 0 10px">

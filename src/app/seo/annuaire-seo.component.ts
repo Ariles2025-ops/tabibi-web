@@ -1,13 +1,16 @@
 import { Component, DestroyRef, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
+import { AnnuaireService, CommuneApi, Medecin } from '../annuaire/annuaire.service';
 import { TEXTES_SEO, TextesSeo } from './textes-seo';
 import { CONTENU_SPECIALITES } from './contenu-specialites';
 import { StatutHttpService } from './statut-http';
 import { ecrireJsonLd, fil, pageAnnuaire } from './donnees-structurees';
-import { Commune, communesDe, slugCommune } from './communes';
+import { Commune, MIN_PRATICIENS_COMMUNE, slugCommune } from './communes';
+import { poserLangueDocument } from './page-seo';
 import {
   SLUG_PHARMACIE, SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo,
   avecArticle, liensLangues, lienPraticien,
@@ -346,7 +349,7 @@ export class AnnuaireSeoComponent implements OnInit {
     this.meta.updateTag({ name: 'robots', content: this.introuvable ? 'noindex' : 'index, follow' });
     this.lienCanonique(`https://tabibi.doctor${this.p}${chemin}`);
     liensLangues(this.document, chemin);
-    this.document.documentElement.setAttribute('lang', this.ar ? 'ar' : 'fr');
+    poserLangueDocument(this.document, this.ar);
     this.cheminLd = chemin;
     this.description = description;
     this.donneesStructurees(chemin);
@@ -355,9 +358,16 @@ export class AnnuaireSeoComponent implements OnInit {
     if (!this.index && !this.introuvable) {
       this.charge.set(true);
       this.erreur.set(false);
-      this.annuaire.rechercher(s?.slug, w?.code).subscribe({
-        next: (liste) => {
-          if (s && w && !this.pharmacie) this.appliquerCommunes(liste, s, w, chemin);
+      const commune = this.communeSlug || undefined;
+      const liste$ = this.annuaire.rechercher(s?.slug, w?.code, undefined, commune);
+      // Page specialite x wilaya (hors pharmacie) : les communes viennent de /api/medecins/communes, pas des fiches listees.
+      const avecCommunes = !!s && !!w && !this.pharmacie;
+      const communes$ = avecCommunes
+        ? this.annuaire.communes(s!.slug, w!.code).pipe(catchError(() => of(null)))
+        : of(null);
+      forkJoin([liste$, communes$]).subscribe({
+        next: ([liste, communes]) => {
+          if (avecCommunes) this.appliquerCommunes(liste, communes, s!, w!, chemin);
           else this.medecins.set(liste);
           this.charge.set(false);
           this.donneesStructurees(this.cheminLd);
@@ -368,14 +378,17 @@ export class AnnuaireSeoComponent implements OnInit {
   }
 
   /**
-   * Communes de la wilaya (>= 3 praticiens). Sur une page commune : ne garde que les praticiens de la commune ;
-   * moins de 3 => vraie 404 (pas de page vide, Google les penalise).
+   * Communes de la wilaya (>= 3 praticiens, source : API). Sur une page commune : la liste recue est deja filtree
+   * par l'API ; moins de 3 praticiens => vraie 404 (pas de page vide, Google les penalise).
    */
-  private appliquerCommunes(liste: Medecin[], s: SpecialiteSeo, w: WilayaSeo, chemin: string) {
-    this.communesListe = communesDe(liste, w.slug, [w.nom, w.nomAr, ...liste.map((m) => m.wilayaFr)]);
+  private appliquerCommunes(liste: Medecin[], communes: CommuneApi[] | null, s: SpecialiteSeo, w: WilayaSeo, chemin: string) {
+    this.communesListe = (communes || [])
+      .filter((c) => c.slug && c.slug !== w.slug && (Number(c.nombre) || 0) >= MIN_PRATICIENS_COMMUNE)
+      .map((c) => ({ slug: c.slug, nom: c.nom, medecins: Number(c.nombre) || 0 }))
+      .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
     if (!this.communeSlug) { this.medecins.set(liste); return; }
-    const commune = this.communesListe.find((c) => c.slug === this.communeSlug);
-    if (!commune) {
+    const gens = liste.filter((m) => slugCommune(m.ville) === this.communeSlug);
+    if (gens.length < MIN_PRATICIENS_COMMUNE) {
       this.introuvable = true;
       this.medecins.set([]);
       this.titre = this.t.pageIntrouvable;
@@ -385,7 +398,10 @@ export class AnnuaireSeoComponent implements OnInit {
       this.donneesStructurees(chemin);
       return;
     }
-    const gens = liste.filter((m) => slugCommune(m.ville) === commune.slug);
+    const commune = {
+      slug: this.communeSlug,
+      nom: this.communesListe.find((c) => c.slug === this.communeSlug)?.nom || gens[0].ville.trim(),
+    };
     this.nomCommune = commune.nom;
     this.medecins.set(gens);
     const ns = this.nomS(s), nw = this.nomW(w), t2 = this.t2;

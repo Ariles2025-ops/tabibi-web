@@ -65,6 +65,7 @@ describe('MoiComponent', () => {
     expect(lien('/moi/profil')).not.toBeNull();
     expect(lien('/mes-rendez-vous')).not.toBeNull();
     expect(lien('/notifications')).not.toBeNull();
+    expect(lien('/invitations')).not.toBeNull();
   });
 
   it('adapte les acces rapides au role : agenda pour le medecin, agenda du cabinet pour la secretaire', async () => {
@@ -76,6 +77,7 @@ describe('MoiComponent', () => {
     moi.set({ ...PROFIL, roles: ['PATIENT', 'SECRETAIRE'] });
     await afficher();
     expect(lien('/secretaire')).not.toBeNull();
+    expect(lien('/invitations')).not.toBeNull();
     expect(lien('/mes-rendez-vous')).toBeNull();
   });
 

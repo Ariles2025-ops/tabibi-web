@@ -12,8 +12,9 @@ describe('AnnuaireSeoComponent', () => {
 
   function creer(params: Record<string, string>) {
     reponse = { status: jasmine.createSpy('status') };
-    annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher']);
+    annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
     annuaire.rechercher.and.returnValue(of([]));
+    annuaire.communes.and.returnValue(of([]));
     TestBed.configureTestingModule({
       imports: [AnnuaireSeoComponent],
       providers: [
@@ -38,7 +39,7 @@ describe('AnnuaireSeoComponent', () => {
   it('ne touche pas au statut d une page existante', () => {
     creer({ specialite: 'cardiologue', wilaya: 'alger' });
     expect(reponse.status).not.toHaveBeenCalled();
-    expect(annuaire.rechercher).toHaveBeenCalledWith('cardiologue', '16');
+    expect(annuaire.rechercher).toHaveBeenCalledWith('cardiologue', '16', undefined, undefined);
   });
 
   it('page wilaya : lien « Pharmacies à Alger », pharmacies absentes du maillage des specialites', () => {
@@ -55,7 +56,7 @@ describe('AnnuaireSeoComponent', () => {
     expect(reponse.status).not.toHaveBeenCalled();
     expect(f.componentInstance.titre).toBe('Pharmacies à Alger');
     expect(f.componentInstance.intro).not.toContain('rendez-vous');
-    expect(annuaire.rechercher).toHaveBeenCalledWith('pharmacie', '16');
+    expect(annuaire.rechercher).toHaveBeenCalledWith('pharmacie', '16', undefined, undefined);
   });
 
   it('accorde l article : « une sage-femme », « un ORL »', () => {
@@ -73,7 +74,10 @@ describe('AnnuaireSeoComponent', () => {
     };
     /** Noeud du @graph unique par type. */
     const noeud = (type: string) => ld('ld-page')?.['@graph'].find((n: { '@type': string }) => n['@type'] === type);
-    afterEach(() => document.head.querySelectorAll('script[type="application/ld+json"]').forEach((e) => e.remove()));
+    // Ordre des tests aleatoire : d'autres specs (accueil) peuvent laisser leurs blocs JSON-LD dans le <head>.
+    const viderJsonLd = () => document.head.querySelectorAll('script[type="application/ld+json"]').forEach((e) => e.remove());
+    beforeEach(viderJsonLd);
+    afterEach(viderJsonLd);
 
     it('FR : BreadcrumbList + FAQPage (memes questions que la FAQ visible) sur /specialites/:s/:w', () => {
       const f = creer({ specialite: 'cardiologue', wilaya: 'oran' });
@@ -92,8 +96,9 @@ describe('AnnuaireSeoComponent', () => {
     it('AR : FAQPage en arabe, canonical /ar, pas de FAQ pour une page introuvable', () => {
       TestBed.configureTestingModule({});
       reponse = { status: jasmine.createSpy('status') };
-      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher']);
+      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
       annuaire.rechercher.and.returnValue(of([]));
+      annuaire.communes.and.returnValue(of([]));
       TestBed.configureTestingModule({
         imports: [AnnuaireSeoComponent],
         providers: [
@@ -115,7 +120,8 @@ describe('AnnuaireSeoComponent', () => {
 
     it('un seul bloc @graph : MedicalWebPage + ItemList de Physician (sans telephone) + BreadcrumbList + FAQPage', () => {
       reponse = { status: jasmine.createSpy('status') };
-      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher']);
+      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
+      annuaire.communes.and.returnValue(of([]));
       annuaire.rechercher.and.returnValue(of<Medecin[]>([
         { id: 'a1', nomComplet: 'Dr Samir Benali', specialiteSlug: 'pediatre', specialiteFr: 'Pédiatre', wilayaCode: '19',
           wilayaFr: 'Sétif', ville: 'Sétif', telephoneCabinet: '0555000000', adresse: '12 rue privée' },
@@ -150,7 +156,8 @@ describe('AnnuaireSeoComponent', () => {
 
     it('pharmacies : entrees Pharmacy, pas de MedicalSpecialty ni de FAQ', () => {
       reponse = { status: jasmine.createSpy('status') };
-      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher']);
+      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
+      annuaire.communes.and.returnValue(of([]));
       annuaire.rechercher.and.returnValue(of<Medecin[]>([
         { id: 'p1', nomComplet: 'Pharmacie Centrale', specialiteSlug: 'pharmacie', specialiteFr: 'Pharmacie', wilayaCode: '16', wilayaFr: 'Alger', ville: 'Alger' },
       ] as Medecin[]));

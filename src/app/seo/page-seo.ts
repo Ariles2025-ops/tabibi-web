@@ -24,7 +24,13 @@ export function referencerPage(
   } else {
     doc.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((l) => l.remove());
   }
-  doc.documentElement.setAttribute('lang', page.ar ? 'ar' : 'fr');
+  poserLangueDocument(doc, page.ar);
+}
+
+/** Pose lang et dir sur <html> (ar/rtl ou fr/ltr) : lecteurs d'ecran et moteurs de recherche lisent la racine. */
+export function poserLangueDocument(doc: Document, ar: boolean): void {
+  doc.documentElement.setAttribute('lang', ar ? 'ar' : 'fr');
+  doc.documentElement.setAttribute('dir', ar ? 'rtl' : 'ltr');
 }
 
 /** Pages uniquement en francais (sans version arabe) : /bientot, /verifier, /supprimer-mon-compte, /praticien. */
