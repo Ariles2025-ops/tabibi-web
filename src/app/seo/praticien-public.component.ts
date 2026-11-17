@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { libelleLangue } from '../fiche-medecin/fiche-infos';
 import { SPECIALITES_SEO, liensLangues, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
+import { poserLangueDocument } from './page-seo';
 import { StatutHttpService } from './statut-http';
 import { ecrireJsonLd, fil, typeSchemaOrg } from './donnees-structurees';
 
@@ -221,7 +222,7 @@ export class PraticienPublicComponent implements OnInit {
     const url = `https://tabibi.doctor${this.p}${chemin}`;
     this.lienAutreLangue = (this.ar ? '' : '/ar') + chemin;
     liensLangues(this.document, chemin);
-    this.document.documentElement.setAttribute('lang', this.ar ? 'ar' : 'fr');
+    poserLangueDocument(this.document, this.ar);
     this.meta.updateTag({ property: 'og:locale', content: this.ar ? 'ar_DZ' : 'fr_DZ' });
     this.title.setTitle(`${titre} | Tabibi`);
     this.meta.updateTag({ name: 'description', content: description });

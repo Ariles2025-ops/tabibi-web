@@ -1,5 +1,6 @@
 import { ecrireJsonLd } from './donnees-structurees';
 import { liensLangues } from './referentiel-seo';
+import { poserLangueDocument } from './page-seo';
 
 /** Adresse du site (absolue, sans « / » final). */
 export const SITE = 'https://tabibi.doctor';
@@ -67,7 +68,7 @@ export function referencerAccueil(doc: Document, ar: boolean): void {
   }
   lien.setAttribute('href', ar ? `${SITE}/ar` : `${SITE}/`);
   liensLangues(doc, '');
-  doc.documentElement.setAttribute('lang', ar ? 'ar' : 'fr');
+  poserLangueDocument(doc, ar);
   ecrireJsonLd(doc, 'ld-organisation', organisationJsonLd());
   ecrireJsonLd(doc, 'ld-site', siteWebJsonLd());
 }
