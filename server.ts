@@ -129,6 +129,11 @@ export function app(): express.Express {
     });
   });
 
+  // Pages legales : adresse sans .html (celle donnee a Google Play et dans l'appli) -> page statique .html.
+  server.get(/^\/legal\/(confidentialite|mentions-legales|cgu)\/?$/, (req, res) => {
+    res.redirect(301, `/legal/${(req.params as unknown as string[])[0]}.html`);
+  });
+
   // Fichiers du build (chemins avec extension) : bundles a empreinte en cache long, index et config jamais.
   // Un fichier introuvable est un 404, pas une page rendue (favicon, sondes de robots).
   server.get(
