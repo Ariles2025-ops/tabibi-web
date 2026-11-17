@@ -46,7 +46,7 @@ interface LigneSaisie extends LigneOrdonnance {
           </label>
         </div>
         <p *ngIf="!chargePatients() && options().length === 0" style="margin:0;color:var(--text3)">
-          Aucun patient pour le moment : un patient apparaît ici dès qu'il a pris rendez-vous chez vous.
+          Aucun patient pour le moment : un patient apparaît ici dès qu'il a un rendez-vous confirmé chez vous.
         </p>
 
         <h2 style="font-size:1.1rem;margin:8px 0 0">Prescription</h2>
@@ -110,10 +110,10 @@ export class NouvelleOrdonnanceComponent implements OnInit {
     return liste;
   });
 
-  /** Rendez-vous (non annules) du patient choisi chez ce medecin, les plus recents d'abord. */
+  /** Rendez-vous confirmes ou honores (seuls acceptes par l'API) du patient choisi chez ce medecin, les plus recents d'abord. */
   rendezVousDuPatient = computed(() =>
     this.rendezVous()
-      .filter((r) => r.patientId === this.patientId() && r.statut !== 'ANNULE')
+      .filter((r) => r.patientId === this.patientId() && (r.statut === 'CONFIRME' || r.statut === 'HONORE'))
       .sort((a, b) => Date.parse(b.debut) - Date.parse(a.debut)),
   );
   lignes: LigneSaisie[] = [this.nouvelleLigne()];
@@ -183,8 +183,10 @@ export class NouvelleOrdonnanceComponent implements OnInit {
         this.enCours.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
-        } else if (e.status === 403) {
-          this.erreur.set("Vous ne pouvez rédiger une ordonnance que pour vos patients (patient ou rendez-vous de votre agenda).");
+        } else if (e.status === 403 || e.status === 409) {
+          this.erreur.set(
+            e.error?.erreur ?? "Le patient doit avoir un rendez-vous confirmé ou honoré avec vous pour recevoir une ordonnance.",
+          );
         } else if (e.status === 404) {
           this.erreur.set('Patient ou rendez-vous introuvable.');
         } else {
