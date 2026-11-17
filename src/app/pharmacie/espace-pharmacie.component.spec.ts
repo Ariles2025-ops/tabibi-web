@@ -170,28 +170,26 @@ describe('EspacePharmacieComponent', () => {
     expect(formulaireReponse()!.querySelector('input[type="number"]')).not.toBeNull();
   });
 
-  it('refuse une reponse sans nom de pharmacie ou sans disponibilite', async () => {
+  it('sans profil, indique de renseigner le nom, desactive Repondre et n envoie rien', async () => {
     await afficher();
     await chercher('16');
 
-    repondre();
-    await afficher();
-    expect(service.repondre).not.toHaveBeenCalled();
-    expect(texte()).toContain('Indiquez le nom de votre pharmacie.');
+    expect(formulaireReponse()!.querySelector('[name="nom-b1"]')).toBeNull();
+    expect(formulaireReponse()!.textContent).toContain("Renseignez d'abord le nom de votre pharmacie ci-dessus");
+    expect(formulaireReponse()!.querySelector('button')!.disabled).toBeTrue();
 
-    await saisirDansReponse('input:not([type="radio"]):not([type="number"])', 'Pharmacie El Amel');
+    await cocherDisponible(true);
     repondre();
     await afficher();
     expect(service.repondre).not.toHaveBeenCalled();
-    expect(texte()).toContain('Indiquez si le médicament est disponible.');
   });
 
-  it('envoie la reponse, memorise le nom de la pharmacie, confirme et remplace le formulaire', async () => {
+  it('avec profil, affiche « Répondre au nom de », envoie le nom du profil et ne memorise rien', async () => {
+    profils.monProfil.and.returnValue(of(PROFIL));
     service.repondre.and.returnValue(of(REPONSE));
     await afficher();
-    await chercher('16');
 
-    await saisirDansReponse('input:not([type="radio"]):not([type="number"])', '  Pharmacie El Amel ');
+    expect(formulaireReponse()!.textContent).toContain('Répondre au nom de : Pharmacie El Amel');
     await cocherDisponible(true);
     await saisirDansReponse('input[type="number"]', '850');
     repondre();
@@ -199,38 +197,17 @@ describe('EspacePharmacieComponent', () => {
 
     expect(service.repondre).toHaveBeenCalledWith('b1', { nomPharmacie: 'Pharmacie El Amel', disponible: true, prixDa: 850, commentaire: null });
     expect(texte()).toContain('Réponse envoyée pour « Amoxicilline 1 g »');
-    expect(texte()).toContain('Vous avez répondu à cette demande.');
     expect(formulaireReponse()).toBeNull();
-    expect(service.besoinsOuverts).toHaveBeenCalledTimes(2);
-    if (lireMemorise() !== null) expect(lireMemorise()).toBe('Pharmacie El Amel');
-  });
-
-  it('preremplit le nom de la pharmacie memorise et envoie une indisponibilite sans prix', async () => {
-    memoriser('Pharmacie du Centre');
-    if (lireMemorise() === null) return; // stockage indisponible dans ce navigateur
-    service.repondre.and.returnValue(of({ ...REPONSE, disponible: false, prixDa: null }));
-    fixture = TestBed.createComponent(EspacePharmacieComponent);
-    await afficher();
-    await chercher('16');
-
-    const nom: HTMLInputElement = formulaireReponse()!.querySelector('input:not([type="radio"]):not([type="number"])')!;
-    expect(nom.value).toBe('Pharmacie du Centre');
-
-    await cocherDisponible(false);
-    repondre();
-    await afficher();
-
-    expect(service.repondre).toHaveBeenCalledWith('b1', { nomPharmacie: 'Pharmacie du Centre', disponible: false, prixDa: null, commentaire: null });
+    expect(lireMemorise()).toBeNull();
   });
 
   it('affiche le { erreur } d un 409 (demande cloturee ou deja repondue) et recharge la liste', async () => {
     service.repondre.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Cette pharmacie a deja repondu a ce besoin.' } })),
     );
+    profils.monProfil.and.returnValue(of(PROFIL));
     await afficher();
-    await chercher('16');
 
-    await saisirDansReponse('input:not([type="radio"]):not([type="number"])', 'Pharmacie El Amel');
     await cocherDisponible(true);
     repondre();
     await afficher();
@@ -269,7 +246,7 @@ describe('EspacePharmacieComponent', () => {
     expect(service.besoinsOuverts).toHaveBeenCalledWith('16');
   });
 
-  it('avec un profil, preremplit le nom, charge directement la wilaya et masque les demandes deja repondues', async () => {
+  it('avec un profil, affiche le nom du profil, charge directement la wilaya et masque les demandes deja repondues', async () => {
     profils.monProfil.and.returnValue(of(PROFIL));
     service.besoinsOuverts.and.returnValue(of([BESOIN, { ...BESOIN, id: 'b2', medicament: 'Doliprane', dejaRepondu: true }]));
     await afficher();
@@ -282,8 +259,7 @@ describe('EspacePharmacieComponent', () => {
     expect(doliprane.textContent).toContain('Déjà répondu');
     expect(doliprane.querySelector('form')).toBeNull();
     const amox = items.find((li) => li.textContent?.includes('Amoxicilline'))!;
-    const nom: HTMLInputElement = amox.querySelector('form input:not([type="radio"]):not([type="number"])')!;
-    expect(nom.value).toBe('Pharmacie El Amel');
+    expect(amox.querySelector('form')!.textContent).toContain('Répondre au nom de : Pharmacie El Amel');
   });
 
   it('verifie un code puis marque l ordonnance comme delivree', async () => {
