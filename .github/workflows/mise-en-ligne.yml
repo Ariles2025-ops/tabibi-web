@@ -27,4 +27,7 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$CLE" > ~/.ssh/cle && chmod 600 ~/.ssh/cle
           echo '129.151.227.16 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOliVdxVmjQnoT9IOqIPOtCWsM+d5Cw/uYP5U4XKs6xz' > ~/.ssh/known_hosts
-          ssh -i ~/.ssh/cle -o StrictHostKeyChecking=yes ubuntu@129.151.227.16 "web $SHA"
+          code=0; ssh -i ~/.ssh/cle -o StrictHostKeyChecking=yes ubuntu@129.151.227.16 "web $SHA" || code=$?
+          # 3 = ce commit n'est plus la tête de main : une fusion plus récente arrive et sera déployée par son propre passage. Pas une panne.
+          if [ "$code" = 3 ]; then echo "Version dépassée par une fusion plus récente : rien à faire."; exit 0; fi
+          exit "$code"
