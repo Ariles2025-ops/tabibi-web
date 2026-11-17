@@ -18,7 +18,7 @@ export function referencerPage(
     lien.setAttribute('rel', 'canonical');
     doc.head.appendChild(lien);
   }
-  lien.setAttribute('href', `https://tabibi.doctor${page.ar ? '/ar' : ''}${page.chemin === '/' && page.ar ? '' : page.chemin}`);
+  lien.setAttribute('href', `https://ndawik.com${page.ar ? '/ar' : ''}${page.chemin === '/' && page.ar ? '' : page.chemin}`);
   if (page.bilingue !== false) {
     liensLangues(doc, page.chemin);
   } else {

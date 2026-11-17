@@ -14,7 +14,7 @@ describe('marque (SEO accueil)', () => {
     expect(o['@type']).toBe('Organization');
     expect(o.name).toBe('Ndawik');
     expect(o.alternateName).toEqual(['Tabibi', 'Tabibi Doctor', 'Tabibi DZ', 'نداويك']);
-    expect(o.logo).toMatch(/^https:\/\/tabibi\.doctor\//);
+    expect(o.logo).toMatch(/^https:\/\/ndawik\.com\//);
     expect(o.areaServed.name).toBe('Algérie');
   });
 
@@ -22,16 +22,16 @@ describe('marque (SEO accueil)', () => {
     const w = siteWebJsonLd() as any;
     expect(w['@type']).toBe('WebSite');
     expect(w.potentialAction['@type']).toBe('SearchAction');
-    expect(w.potentialAction.target.urlTemplate).toBe('https://tabibi.doctor/?q={search_term_string}');
+    expect(w.potentialAction.target.urlTemplate).toBe('https://ndawik.com/?q={search_term_string}');
   });
 
   it('referencerAccueil pose canonical, hreflang et JSON-LD (FR puis AR, sans doublon)', () => {
     referencerAccueil(document, false);
-    expect(document.head.querySelector('link[rel="canonical"]')!.getAttribute('href')).toBe('https://tabibi.doctor/');
+    expect(document.head.querySelector('link[rel="canonical"]')!.getAttribute('href')).toBe('https://ndawik.com/');
     expect(document.head.querySelector('script#ld-organisation')!.textContent).toContain('"@type":"Organization"');
     referencerAccueil(document, true);
     expect(document.head.querySelectorAll('link[rel="canonical"]').length).toBe(1);
-    expect(document.head.querySelector('link[rel="canonical"]')!.getAttribute('href')).toBe('https://tabibi.doctor/ar');
+    expect(document.head.querySelector('link[rel="canonical"]')!.getAttribute('href')).toBe('https://ndawik.com/ar');
     const langues = Array.from(document.head.querySelectorAll('link[rel="alternate"][hreflang]')).map((l) => l.getAttribute('hreflang'));
     expect(langues).toEqual(['fr', 'ar', 'x-default']);
     expect(document.head.querySelectorAll('script#ld-site').length).toBe(1);

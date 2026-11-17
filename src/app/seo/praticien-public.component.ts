@@ -235,7 +235,7 @@ export class PraticienPublicComponent implements OnInit {
       ? `${m.nomComplet}، ${this.specialite}${ou}. اطّلع على صفحة الطبيب${this.reservable() ? ' واحجز موعدك عبر الإنترنت مع نداويك. الدفع في العيادة.' : ' على نداويك.'}`
       : `${m.nomComplet}, ${this.specialite}${ou}. Consultez la fiche sur Ndawik.${this.reservable() ? ' Prenez rendez-vous en ligne. Paiement au cabinet.' : ''}`;
     const chemin = `/praticiens/${m.id}/${slugifier(m.nomComplet)}`;
-    const url = `https://tabibi.doctor${this.p}${chemin}`;
+    const url = `https://ndawik.com${this.p}${chemin}`;
     this.lienAutreLangue = (this.ar ? '' : '/ar') + chemin;
     liensLangues(this.document, chemin);
     poserLangueDocument(this.document, this.ar);
@@ -256,7 +256,7 @@ export class PraticienPublicComponent implements OnInit {
     canonique.setAttribute('href', url);
 
     // Donnees structurees schema.org : fiche (Physician / Dentist / Pharmacy) et fil d'Ariane.
-    const racine = 'https://tabibi.doctor';
+    const racine = 'https://ndawik.com';
     const donnees = {
       '@context': 'https://schema.org',
       '@type': typeSchemaOrg(m.specialiteSlug),

@@ -350,7 +350,7 @@ export class AnnuaireSeoComponent implements OnInit {
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ property: 'og:locale', content: this.ar ? 'ar_DZ' : 'fr_DZ' });
     this.meta.updateTag({ name: 'robots', content: this.introuvable ? 'noindex' : 'index, follow' });
-    this.lienCanonique(`https://tabibi.doctor${this.p}${chemin}`);
+    this.lienCanonique(`https://ndawik.com${this.p}${chemin}`);
     liensLangues(this.document, chemin);
     poserLangueDocument(this.document, this.ar);
     this.cheminLd = chemin;
@@ -420,7 +420,7 @@ export class AnnuaireSeoComponent implements OnInit {
     this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Ndawik` });
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ name: 'robots', content: 'index, follow' });
-    this.lienCanonique(`https://tabibi.doctor${this.p}${chemCommune}`);
+    this.lienCanonique(`https://ndawik.com${this.p}${chemCommune}`);
     liensLangues(this.document, chemCommune);
     this.lienAutreLangue = (this.ar ? '' : '/ar') + chemCommune;
     this.donneesStructurees(chemin);
@@ -447,7 +447,7 @@ export class AnnuaireSeoComponent implements OnInit {
       if (this.index) this.ecrireFilSeul(chemin);
       return;
     }
-    const racine = `https://tabibi.doctor${this.p}`;
+    const racine = `https://ndawik.com${this.p}`;
     const etapes = this.etapesFil(chemin);
     const avecFaq = !this.pharmacie;
     ecrireJsonLd(this.document, 'ld-page', pageAnnuaire({
@@ -460,7 +460,7 @@ export class AnnuaireSeoComponent implements OnInit {
       etapes,
       praticiens: this.medecins().map((m) => ({
         nom: m.nomComplet,
-        url: `https://tabibi.doctor${this.lien(m).join('/')}`,
+        url: `https://ndawik.com${this.lien(m).join('/')}`,
         specialiteSlug: m.specialiteSlug,
         specialite: this.specialiteDe(m),
         ville: m.ville,
@@ -476,9 +476,9 @@ export class AnnuaireSeoComponent implements OnInit {
   }
 
   private etapesFil(chemin: string) {
-    const racine = `https://tabibi.doctor${this.p}`;
+    const racine = `https://ndawik.com${this.p}`;
     const etapes = [
-      { nom: this.t.accueil, url: `https://tabibi.doctor${this.p || '/'}` },
+      { nom: this.t.accueil, url: `https://ndawik.com${this.p || '/'}` },
       { nom: this.t.annuaire, url: `${racine}/specialites` },
     ];
     if (this.specialite) etapes.push({ nom: this.nomS(this.specialite), url: `${racine}/specialites/${this.specialite.slug}` });

@@ -2,7 +2,7 @@
 # PORTE apres deploiement : echoue (exit 1) si le site en ligne n'est pas le commit attendu ou s'il est casse.
 # Usage : scripts/verifier-en-ligne.sh [sha-attendu]   (par defaut : git rev-parse --short HEAD)
 set -uo pipefail
-SITE="https://tabibi.doctor"
+SITE="${SITE:-https://ndawik.com}"
 ATTENDU="${1:-$(git rev-parse --short HEAD)}"
 cb="cb=$(date +%s)"
 echec=0
@@ -45,6 +45,8 @@ for page in fr ar; do
   case "$html" in *'rel="canonical"'*) ok "accueil $page : balise canonical" ;; *) ko "accueil $page sans balise canonical" ;; esac
   case "$html" in *'"@type":"Organization"'*) ok "accueil $page : JSON-LD Organization" ;; *) ko "accueil $page sans JSON-LD Organization" ;; esac
 done
+canon_fr="$(printf '%s' "$accueil_fr" | tr '\n' ' ' | grep -o '<link[^>]*rel="canonical"[^>]*>' | head -1)"
+case "$canon_fr" in *'href="'"$SITE"'/"'*) ok "accueil FR : canonical = $SITE/" ;; *) ko "accueil FR : le canonical doit etre $SITE/ (trouve : ${canon_fr:-aucun})" ;; esac
 titre_fr="$(printf '%s' "$accueil_fr" | tr '\n' ' ' | sed -n 's/.*<title[^>]*>\([^<]*\)<\/title>.*/\1/p')"
 titre_ar="$(printf '%s' "$accueil_ar" | tr '\n' ' ' | sed -n 's/.*<title[^>]*>\([^<]*\)<\/title>.*/\1/p')"
 case "$titre_fr" in *'Ndawik'*) ok "accueil FR : titre de marque (Ndawik)" ;; *) ko "accueil FR : le <title> doit contenir « Ndawik » (trouve : « ${titre_fr:-aucun <title>} »)" ;; esac
