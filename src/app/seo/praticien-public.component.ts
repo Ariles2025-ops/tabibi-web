@@ -3,8 +3,10 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
+import { libelleLangue } from '../fiche-medecin/fiche-infos';
 import { SPECIALITES_SEO, liensLangues, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
 import { StatutHttpService } from './statut-http';
+import { ecrireJsonLd, fil, typeSchemaOrg } from './donnees-structurees';
 
 /**
  * Page publique et referencee d'un praticien : /praticiens/:id/:slug (une page par fiche de l'annuaire).
@@ -58,8 +60,17 @@ import { StatutHttpService } from './statut-http';
             <div><dt>{{ ar ? 'التخصص' : 'Spécialité' }}</dt><dd>{{ specialite }}</dd></div>
             <div *ngIf="m.ville && !ar"><dt>Ville</dt><dd>{{ m.ville }}</dd></div>
             <div *ngIf="wilaya"><dt>{{ ar ? 'الولاية' : 'Wilaya' }}</dt><dd>{{ wilaya }}</dd></div>
+            <div *ngIf="m.adresse"><dt>{{ ar ? 'العنوان' : 'Adresse' }}</dt><dd dir="auto">{{ m.adresse }}</dd></div>
+            <div *ngIf="m.telephoneCabinet"><dt>{{ ar ? 'هاتف العيادة' : 'Téléphone' }}</dt><dd dir="ltr"><a [href]="'tel:' + m.telephoneCabinet">{{ m.telephoneCabinet }}</a></dd></div>
+            <div *ngIf="m.horaires"><dt>{{ ar ? 'أوقات العمل' : 'Horaires' }}</dt><dd dir="auto">{{ m.horaires }}</dd></div>
+            <div *ngIf="m.langues?.length"><dt>{{ ar ? 'اللغات' : 'Langues' }}</dt><dd>{{ langues(m.langues) }}</dd></div>
             <div><dt>{{ ar ? 'الدفع' : 'Paiement' }}</dt><dd>{{ ar ? 'في العيادة (نقدًا أو ببطاقة الشفاء حسب الطبيب)' : 'Au cabinet (espèces ou carte Chifa selon le praticien)' }}</dd></div>
           </dl>
+        </section>
+
+        <section class="pp-bloc" *ngIf="m.presentation">
+          <h2>{{ ar ? 'تقديم' : 'Présentation' }}</h2>
+          <p dir="auto" style="white-space:pre-line">{{ m.presentation }}</p>
         </section>
 
         <section class="pp-bloc" *ngIf="confreres().length">
@@ -140,6 +151,10 @@ export class PraticienPublicComponent implements OnInit {
   wilayaSlug: string | null = null;
   lieu = '';
 
+  langues(codes: string[] | null | undefined): string {
+    return (codes ?? []).map((c) => libelleLangue(c, this.ar)).join(this.ar ? '، ' : ', ');
+  }
+
   ngOnInit() {
     this.ar = this.route.snapshot.data['langue'] === 'ar';
     this.p = this.ar ? '/ar' : '';
@@ -212,24 +227,30 @@ export class PraticienPublicComponent implements OnInit {
     }
     canonique.setAttribute('href', url);
 
-    // Donnees structurees schema.org (Physician) pour les resultats enrichis.
+    // Donnees structurees schema.org : fiche (Physician / Dentist / Pharmacy) et fil d'Ariane.
+    const racine = 'https://tabibi.doctor';
     const donnees = {
       '@context': 'https://schema.org',
-      '@type': 'Physician',
+      '@type': typeSchemaOrg(m.specialiteSlug),
       name: m.nomComplet,
       medicalSpecialty: this.specialite,
       inLanguage: this.ar ? 'ar' : 'fr',
       url,
-      address: { '@type': 'PostalAddress', addressLocality: m.ville || m.wilayaFr, addressRegion: m.wilayaFr, addressCountry: 'DZ' },
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: this.ar ? this.wilaya : (m.ville || m.wilayaFr),
+        addressRegion: this.wilaya || m.wilayaFr,
+        addressCountry: 'DZ',
+      },
     };
-    let script = this.document.head.querySelector<HTMLScriptElement>('script#ld-praticien');
-    if (!script) {
-      script = this.document.createElement('script');
-      script.id = 'ld-praticien';
-      script.type = 'application/ld+json';
-      this.document.head.appendChild(script);
+    ecrireJsonLd(this.document, 'ld-praticien', donnees);
+    const etapes = [{ nom: this.ar ? 'الرئيسية' : 'Accueil', url: `${racine}${this.p || '/'}` }];
+    if (this.specialiteConnue) etapes.push({ nom: this.specialite, url: `${racine}${this.p}/specialites/${m.specialiteSlug}` });
+    if (this.specialiteConnue && this.wilayaSlug) {
+      etapes.push({ nom: this.wilaya, url: `${racine}${this.p}/specialites/${m.specialiteSlug}/${this.wilayaSlug}` });
     }
-    script.textContent = JSON.stringify(donnees);
+    etapes.push({ nom: m.nomComplet, url });
+    ecrireJsonLd(this.document, 'ld-fil', fil(etapes));
   }
 
   initiales(m: Medecin): string {

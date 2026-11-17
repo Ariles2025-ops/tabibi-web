@@ -7,6 +7,7 @@ import { AuthService } from '../auth/auth.service';
 import { ActionEnCours, estConfirme, peutHonorer, peutMarquerAbsent, rendezVousAVenir, rendezVousPasses, styleOnglet } from '../medecin/agenda-utils';
 import { GestionCreneauxComponent, SourceCreneaux } from '../medecin/gestion-creneaux.component';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from '../medecin/patients.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { abregerIdentifiant } from '../messagerie/messagerie.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
@@ -21,9 +22,10 @@ import { Rattachement, SecretaireService } from './secretaire.service';
  */
 @Component({
     selector: 'app-espace-secretaire',
-    imports: [CommonModule, FormsModule, GestionCreneauxComponent],
+    imports: [CommonModule, FormsModule, GestionCreneauxComponent, SelecteurLangueComponent],
     template: `
     <main style="max-width:760px;margin:32px auto;padding:0 16px">
+      <div style="text-align:right"><app-selecteur-langue /></div>
       <h1 style="color:var(--blue);margin:0 0 8px">Espace secrétaire</h1>
       <p style="color:var(--text3);margin:0 0 20px">
         Choisissez le cabinet pour lequel vous intervenez : vous consultez son agenda, ouvrez des créneaux et marquez
@@ -65,8 +67,9 @@ import { Rattachement, SecretaireService } from './secretaire.service';
                 <strong style="color:var(--ink)">{{ r.debut | date:'HH:mm' }}</strong>
                 <span class="badge-statut" [style.background]="r.statut === 'ABSENT' ? 'var(--red-l)' : 'var(--blue-l)'" [style.color]="r.statut === 'ABSENT' ? 'var(--red)' : 'var(--blue-d)'"
                       style="display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span><br>
-                <span style="color:var(--text2)">{{ nom(r.patientId) }}</span>
-                <a *ngIf="telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">{{ tel }}</a>
+                <span style="color:var(--text2)">{{ r.nomPatient || nom(r.patientId) }}</span>
+                <span *ngIf="r.source === 'TELEPHONE'" style="margin-left:6px;color:var(--text3);font-size:.8rem">📞</span>
+                <a *ngIf="r.telephonePatient || telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">{{ tel }}</a>
               </div>
               <div *ngIf="estConfirme(r) && aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <span style="color:var(--text2);font-size:.9rem">Annuler ce rendez-vous ? Le patient sera prévenu.</span>
@@ -103,7 +106,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
         </p>
 
         <h2 style="font-size:1.1rem;margin:28px 0 12px;color:var(--ink)">Créneaux</h2>
-        <app-gestion-creneaux [source]="sourceCreneaux()" message403="Ce cabinet ne vous est pas rattaché." />
+        <app-gestion-creneaux [source]="sourceCreneaux()" message403="Ce cabinet ne vous est pas rattaché." (rdvPris)="chargerAgenda()" />
       </ng-container>
     </main>
   `
@@ -148,6 +151,8 @@ export class EspaceSecretaireComponent implements OnInit {
       lister: () => this.service.creneaux(medecinId),
       ouvrir: (debut, duree) => this.service.ouvrirCreneau(medecinId, debut, duree),
       supprimer: (id) => this.service.supprimerCreneau(medecinId, id),
+      semaineType: (corps) => this.service.semaineType(medecinId, corps),
+      rdvTelephone: (corps) => this.service.prendreRdvTelephone(medecinId, corps),
     };
   });
 

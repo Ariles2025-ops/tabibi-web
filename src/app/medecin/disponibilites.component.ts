@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GestionCreneauxComponent, SourceCreneaux } from './gestion-creneaux.component';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { MedecinService } from './medecin.service';
 
 /**
@@ -10,9 +11,10 @@ import { MedecinService } from './medecin.service';
  */
 @Component({
     selector: 'app-disponibilites',
-    imports: [CommonModule, GestionCreneauxComponent],
+    imports: [CommonModule, GestionCreneauxComponent, SelecteurLangueComponent],
     template: `
     <main style="max-width:720px;margin:32px auto;padding:0 16px">
+      <div style="text-align:right"><app-selecteur-langue /></div>
       <h1 style="color:var(--blue);margin:0 0 8px">Disponibilités</h1>
       <p style="color:var(--text3);margin:0 0 20px">
         Ouvrez des créneaux de consultation : les patients pourront les réserver depuis votre fiche.
@@ -29,5 +31,6 @@ export class DisponibilitesComponent {
     lister: () => this.service.creneaux(),
     ouvrir: (debut, duree) => this.service.ouvrirCreneau(debut, duree),
     supprimer: (id) => this.service.supprimerCreneau(id),
+    semaineType: (corps) => this.service.semaineType(corps),
   };
 }

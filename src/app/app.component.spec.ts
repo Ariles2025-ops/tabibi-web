@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { AppComponent } from './app.component';
 import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
+import { ApiDisponibleService } from './partage/api-disponible.service';
 import { NotificationService } from './notifications/notification.service';
 
 /** Test de fumee de la barre de navigation : liens publics, cloche des connectes, sections du medecin, de la pharmacie, de la secretaire et de l'administrateur. */
@@ -40,6 +41,7 @@ describe('AppComponent', () => {
         { provide: AuthService, useValue: auth },
         { provide: RoleService, useValue: roleService },
         { provide: NotificationService, useValue: notifications },
+        { provide: ApiDisponibleService, useValue: { ficheMedecin: signal(true), sonderFiche: () => undefined } },
       ],
     });
     fixture = TestBed.createComponent(AppComponent);
@@ -73,6 +75,14 @@ describe('AppComponent', () => {
     expect(texteNav()).not.toContain('Espace secrétaire');
     expect(texteNav()).not.toContain('Administration');
     expect(roleService.charger).toHaveBeenCalledTimes(1);
+  });
+
+  it('accessibilite : le pied de page utilise des titres h2 (pas de saut h1 -> h4)', async () => {
+    await afficher();
+
+    const pied = fixture.nativeElement.querySelector('footer') as HTMLElement;
+    expect(pied.querySelectorAll('h4').length).toBe(0);
+    expect(pied.querySelectorAll('h2').length).toBeGreaterThanOrEqual(3);
   });
 
   it('mene « Centre d aide » a /aide, « Toutes les wilayas » a /wilayas et propose la suppression de compte', async () => {

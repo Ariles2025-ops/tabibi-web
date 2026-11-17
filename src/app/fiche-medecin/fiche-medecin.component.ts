@@ -1,3 +1,4 @@
+import { aDesInfos, libelleLangue } from './fiche-infos';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -128,6 +129,17 @@ import { MessagerieService } from '../messagerie/messagerie.service';
               <p class="fm-lieu-txt">{{ m.ville || m.wilayaFr }}, wilaya de {{ m.wilayaFr }}</p>
             </section>
 
+            <section class="fm-card fm-cabinet" *ngIf="aInfos(m)">
+              <h2><i class="fa fa-stethoscope"></i> Le cabinet</h2>
+              <ul class="fm-pratique">
+                <li *ngIf="m.adresse"><i class="fa fa-map-pin"></i><div><strong>Adresse</strong><span>{{ m.adresse }}</span></div></li>
+                <li *ngIf="m.telephoneCabinet"><i class="fa fa-phone"></i><div><strong>Téléphone</strong><span><a [href]="'tel:' + m.telephoneCabinet">{{ m.telephoneCabinet }}</a></span></div></li>
+                <li *ngIf="m.horaires"><i class="fa fa-clock"></i><div><strong>Horaires</strong><span>{{ m.horaires }}</span></div></li>
+                <li *ngIf="m.langues?.length"><i class="fa fa-language"></i><div><strong>Langues</strong><span>{{ libellesLangues(m.langues) }}</span></div></li>
+              </ul>
+              <p *ngIf="m.presentation" class="fm-lieu-txt" style="white-space:pre-line">{{ m.presentation }}</p>
+            </section>
+
             <section class="fm-card">
               <h2><i class="fa fa-circle-info"></i> Informations pratiques</h2>
               <ul class="fm-pratique">
@@ -251,6 +263,12 @@ import { MessagerieService } from '../messagerie/messagerie.service';
   `]
 })
 export class FicheMedecinComponent implements OnInit {
+  aInfos = aDesInfos;
+
+  libellesLangues(codes: string[] | null | undefined): string {
+    return (codes ?? []).map((c) => libelleLangue(c, false)).join(', ');
+  }
+
   private route = inject(ActivatedRoute);
   private annuaire = inject(AnnuaireService);
   private rendezVous = inject(RendezVousService);

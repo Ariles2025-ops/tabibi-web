@@ -315,4 +315,18 @@ describe('EspaceSecretaireComponent', () => {
     expect(service.supprimerCreneau).toHaveBeenCalledWith('m1', 'c9');
     expect(service.creneaux).toHaveBeenCalledTimes(2);
   });
+
+  it('propose « RDV pris au telephone » sur un creneau libre seulement et ouvre le formulaire', async () => {
+    service.creneaux.and.returnValue(of([RESERVE, LIBRE]));
+    await afficher();
+
+    const creneaux: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li.creneau'));
+    expect(creneaux[1].textContent).not.toContain('RDV pris au téléphone');
+    const bouton = creneaux[0].querySelector('.rdv-telephone-bouton') as HTMLButtonElement;
+    expect(bouton.textContent).toContain('RDV pris au téléphone');
+    bouton.click();
+    await afficher();
+    expect(fixture.nativeElement.querySelector('app-rdv-telephone form')).not.toBeNull();
+    expect(texte()).toContain('Nom du patient');
+  });
 });

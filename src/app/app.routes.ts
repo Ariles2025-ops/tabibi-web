@@ -19,6 +19,7 @@ import { AgendaMedecinComponent } from './medecin/agenda-medecin.component';
 import { AvisMedecinComponent } from './medecin/avis-medecin.component';
 import { CandidatureMedecinComponent } from './medecin/candidature-medecin.component';
 import { DisponibilitesComponent } from './medecin/disponibilites.component';
+import { MaFicheComponent } from './medecin/ma-fiche.component';
 import { ListeAttenteMedecinComponent } from './medecin/liste-attente-medecin.component';
 import { NouvelleOrdonnanceComponent } from './medecin/nouvelle-ordonnance.component';
 import { OrdonnancesRedigeesComponent } from './medecin/ordonnances-redigees.component';
@@ -96,6 +97,7 @@ export const routes: Routes = [
     children: [
       { path: 'agenda', component: AgendaMedecinComponent },
       { path: 'disponibilites', component: DisponibilitesComponent },
+      { path: 'ma-fiche', component: MaFicheComponent },
       { path: 'ordonnances', component: OrdonnancesRedigeesComponent },
       { path: 'ordonnance/nouvelle', component: NouvelleOrdonnanceComponent },
       { path: 'teleconsultations', component: VISIO_ACTIVE ? TeleconsultationsMedecinComponent : VisioBientotComponent },

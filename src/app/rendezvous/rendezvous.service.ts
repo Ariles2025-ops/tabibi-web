@@ -13,6 +13,10 @@ export interface RendezVous {
   /** Statut renvoye par l'API (ex. CONFIRME, ANNULE). */
   statut: string;
   creneauId: string;
+  /** Rendez-vous pris au telephone par le cabinet : nom saisi, sans compte patient (visible du medecin et de ses secretaires). */
+  source?: string;
+  nomPatient?: string | null;
+  telephonePatient?: string | null;
 }
 
 /** Reponse de POST /api/creneaux/{id}/reserver. */

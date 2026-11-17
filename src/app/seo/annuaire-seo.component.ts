@@ -6,6 +6,7 @@ import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { TEXTES_SEO, TextesSeo } from './textes-seo';
 import { CONTENU_SPECIALITES } from './contenu-specialites';
 import { StatutHttpService } from './statut-http';
+import { ecrireJsonLd, faqPage, fil } from './donnees-structurees';
 import {
   SLUG_PHARMACIE, SPECIALITES_PRINCIPALES, SPECIALITES_SEO, SpecialiteSeo, WILAYAS_PRINCIPALES, WILAYAS_SEO, WilayaSeo,
   avecArticle, liensLangues, lienPraticien,
@@ -318,6 +319,7 @@ export class AnnuaireSeoComponent implements OnInit {
     this.lienCanonique(`https://tabibi.doctor${this.p}${chemin}`);
     liensLangues(this.document, chemin);
     this.document.documentElement.setAttribute('lang', this.ar ? 'ar' : 'fr');
+    this.donneesStructurees(chemin);
 
     // La liste vient de l API publique ; elle est aussi rendue cote serveur pour les moteurs de recherche.
     if (!this.index && !this.introuvable) {
@@ -328,6 +330,37 @@ export class AnnuaireSeoComponent implements OnInit {
         error: () => { this.erreur.set(true); this.charge.set(false); },
       });
     }
+  }
+
+  /** FAQ visible (memes textes que le bloc HTML) : base du JSON-LD FAQPage. */
+  faqVisible(): { q: string; r: string }[] {
+    const t = this.t;
+    return [
+      ...this.faqSpe,
+      { q: t.q1(this.cible), r: t.r1 },
+      { q: t.q2, r: t.r2 },
+      { q: t.q3, r: `${t.r3} ${t.praticien}` },
+    ];
+  }
+
+  /** JSON-LD : fil d'Ariane (toutes les pages valides) et FAQPage (memes conditions que la FAQ visible). */
+  private donneesStructurees(chemin: string) {
+    if (this.introuvable) {
+      ecrireJsonLd(this.document, 'ld-fil', null);
+      ecrireJsonLd(this.document, 'ld-faq', null);
+      return;
+    }
+    const racine = `https://tabibi.doctor${this.p}`;
+    const etapes = [
+      { nom: this.t.accueil, url: `https://tabibi.doctor${this.p || '/'}` },
+      { nom: this.t.annuaire, url: `${racine}/specialites` },
+    ];
+    if (this.specialite) etapes.push({ nom: this.nomS(this.specialite), url: `${racine}/specialites/${this.specialite.slug}` });
+    if (this.wilaya) etapes.push({ nom: this.nomW(this.wilaya), url: `${racine}${chemin}` });
+    if (this.index) etapes.pop();
+    ecrireJsonLd(this.document, 'ld-fil', fil(etapes));
+    const avecFaq = !this.index && !this.pharmacie;
+    ecrireJsonLd(this.document, 'ld-faq', avecFaq ? faqPage(this.faqVisible(), this.ar ? 'ar' : 'fr') : null);
   }
 
   private lienCanonique(url: string) {

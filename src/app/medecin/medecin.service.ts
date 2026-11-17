@@ -7,6 +7,8 @@ import { ConfigService } from '../config/config.service';
 import { Ordonnance } from '../ordonnances/ordonnance.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { Rattachement } from '../secretaire/secretaire.service';
+import { FicheInfos } from '../fiche-medecin/fiche-infos';
+import { ResultatSemaineType, SemaineType } from './semaine-type';
 
 /**
  * Espace medecin : agenda, ouverture de creneaux, rendez-vous honores ou annules, ordonnances redigees,
@@ -30,6 +32,21 @@ export class MedecinService {
   /** Ouvre un creneau de consultation (201 Created). `debut` au format ISO 8601. */
   ouvrirCreneau(debut: string, dureeMinutes: number): Observable<Creneau> {
     return this.http.post<Creneau>(`${this.base}/api/medecin/creneaux`, { debut, dureeMinutes });
+  }
+
+  /** Semaine type : cree d'un coup les creneaux de plusieurs semaines (404 tant que l'API ne l'a pas). */
+  semaineType(corps: SemaineType): Observable<ResultatSemaineType> {
+    return this.http.post<ResultatSemaineType>(`${this.base}/api/medecin/creneaux/semaine-type`, corps);
+  }
+
+  /** Fiche publique du medecin connecte (adresse, telephone du cabinet, horaires, presentation, langues). */
+  maFiche(): Observable<FicheInfos> {
+    return this.http.get<FicheInfos>(`${this.base}/api/medecin/fiche`);
+  }
+
+  /** Enregistre ces informations sur sa propre fiche (400 si invalides). */
+  enregistrerFiche(fiche: FicheInfos): Observable<FicheInfos> {
+    return this.http.put<FicheInfos>(`${this.base}/api/medecin/fiche`, fiche);
   }
 
   /** Creneaux a venir du medecin connecte, libres et reserves, du plus proche au plus lointain. */
