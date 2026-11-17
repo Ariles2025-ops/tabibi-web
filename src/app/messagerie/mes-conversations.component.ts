@@ -34,7 +34,7 @@ import { Conversation, MessagerieService, abregerIdentifiant } from './messageri
                 <strong>{{ interlocuteur(c) }}</strong><br>
                 <span style="color:var(--text3)">Dernière activité le {{ c.dernierMessageLe | date:'EEEE d MMMM à HH:mm' }}</span>
               </span>
-              <span *ngIf="c.nonLus > 0" style="color:var(--vert);font-weight:600">{{ c.nonLus }} non lus</span>
+              <span *ngIf="c.nonLus > 0" style="color:var(--vert);font-weight:600">{{ c.nonLus }} {{ c.nonLus === 1 ? 'non lu' : 'non lus' }}</span>
             </a>
           </li>
         </ul>
