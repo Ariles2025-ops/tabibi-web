@@ -112,12 +112,17 @@ describe('DeposerAvisComponent', () => {
     expect(etiquettes[2].getAttribute('aria-label')).toBe('Note 3 sur 5');
     expect(texte()).toContain('Choisissez une note de 1 à 5');
     expect(texte()).toContain('0 / 500');
+    expect(texte()).toContain('Votre note');
+    expect(texte()).toContain('1 = insatisfait, 5 = excellent');
+    const zone: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+    expect(zone.placeholder).toBe('Accueil, écoute, explications...');
   });
 
   it('annonce que l avis est publié anonymement (comme l appli mobile)', async () => {
     await afficher();
 
     expect(texte()).toContain('Votre avis est publié anonymement sur la fiche du praticien.');
+    expect(texte()).not.toContain('publié sans votre nom');
   });
 
   it('refuse un envoi sans note', async () => {
@@ -142,7 +147,7 @@ describe('DeposerAvisComponent', () => {
     await afficher();
 
     expect(service.deposer).toHaveBeenCalledWith('r1', 4, 'Très bon accueil.');
-    expect(texte()).toContain('Merci, votre avis a été enregistré.');
+    expect(texte()).toContain('Merci pour votre avis.');
     expect(fixture.nativeElement.querySelector('a[href="/mes-avis"]')).not.toBeNull();
     expect(formulaire()).toBeNull();
   });
