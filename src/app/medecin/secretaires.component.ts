@@ -59,15 +59,15 @@ import { MedecinService } from './medecin.service';
             </span>
           </div>
           <div *ngIf="aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <span style="color:var(--text2);font-size:.9rem">Retirer cette secrétaire ?</span>
+            <span style="color:var(--text2);font-size:.9rem">{{ r.accepte === false ? 'Annuler cette invitation ?' : 'Retirer cette secrétaire ?' }}</span>
             <button type="button" class="bouton" (click)="retirer(r)" [disabled]="retraitEnCours() !== null">
-              {{ retraitEnCours() === r.id ? 'Retrait…' : 'Oui' }}
+              {{ retraitEnCours() === r.id ? (r.accepte === false ? 'Annulation…' : 'Retrait…') : 'Oui' }}
             </button>
             <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(null)" [disabled]="retraitEnCours() !== null">Non</button>
           </div>
           <button *ngIf="aConfirmer() !== r.id" type="button" (click)="aConfirmer.set(r.id)" [disabled]="retraitEnCours() !== null"
                   style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
-            Retirer
+            {{ r.accepte === false ? "Annuler l'invitation" : 'Retirer' }}
           </button>
         </li>
       </ul>
