@@ -27,8 +27,8 @@ import { Notification, NotificationService } from './notification.service';
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let n of notifications()" [class.notification-lue]="n.lue" [class.notification-non-lue]="!n.lue"
-              [class.notification-cliquable]="!!n.lien" [style.cursor]="n.lien ? 'pointer' : null"
-              [attr.role]="n.lien ? 'link' : null" [attr.tabindex]="n.lien ? 0 : null"
+              [class.notification-cliquable]="aLien(n)" [style.cursor]="aLien(n) ? 'pointer' : null"
+              [attr.role]="aLien(n) ? 'link' : null" [attr.tabindex]="aLien(n) ? 0 : null"
               (click)="ouvrir(n)" (keydown.enter)="ouvrir(n)"
               style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
@@ -41,7 +41,7 @@ import { Notification, NotificationService } from './notification.service';
                       (keydown.enter)="$event.stopPropagation()" [disabled]="enCours() !== null">
                 {{ enCours() === n.id ? 'Enregistrement…' : 'Marquer comme lue' }}
               </button>
-              <span *ngIf="n.lien" class="notification-voir" style="color:var(--blue);font-weight:600">Voir →</span>
+              <span *ngIf="aLien(n)" class="notification-voir" style="color:var(--blue);font-weight:600">Voir →</span>
             </div>
           </li>
         </ul>
@@ -112,16 +112,25 @@ export class MesNotificationsComponent implements OnInit {
     });
   }
 
+  /**
+   * Vrai si la notification mene a une page du site : lien interne (« /mes-rendez-vous »). Un lien vide, absolu
+   * (« https://... ») ou protocole-relatif (« //... ») n'est pas propose, comme dans l'appli (lien sans ecran = pas de « Voir »).
+   */
+  aLien(notification: Notification): boolean {
+    const lien = notification.lien?.trim();
+    return !!lien && lien.startsWith('/') && !lien.startsWith('//');
+  }
+
   /** Clic sur une notification qui porte un lien : la marque lue (si besoin) puis ouvre la page cible. */
   ouvrir(notification: Notification) {
-    if (!notification.lien) return;
+    if (!this.aLien(notification)) return;
     if (!notification.lue) {
       this.service.marquerLue(notification.id).subscribe({
         next: (lue) => this.notifications.update((liste) => liste.map((n) => (n.id === lue.id ? lue : n))),
         error: () => undefined,
       });
     }
-    this.router.navigateByUrl(notification.lien);
+    this.router.navigateByUrl(notification.lien as string);
   }
 
   toutMarquerLu() {
