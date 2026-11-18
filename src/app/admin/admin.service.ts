@@ -47,6 +47,25 @@ export interface DemandeCandidature {
   ficheReclamee?: string | null;
 }
 
+/** Demande praticien (formulaire public /praticien), telle que renvoyee par GET /api/admin/demandes-praticien. */
+export interface DemandePraticien {
+  id: string;
+  nom: string;
+  specialite: string;
+  wilaya: string;
+  ville: string | null;
+  numeroOrdre: string;
+  telephone: string;
+  email: string | null;
+  message: string | null;
+  /** Fiche de l'annuaire choisie par le praticien ; null sinon. */
+  ficheId: string | null;
+  /** NOUVELLE, TRAITEE ou REFUSEE. */
+  statut: string;
+  creeeLe: string;
+  traiteeLe: string | null;
+}
+
 /** Tableau de bord de l'administrateur (GET /api/admin/statistiques). */
 export interface StatistiquesAdministration {
   candidaturesEnAttente: number;
@@ -106,6 +125,28 @@ export class AdminService {
   /** Refus motive : le medecin est prevenu du motif (400 sans motif, 404, 409 si deja traitee). */
   refuser(id: string, motif: string): Observable<Candidature> {
     return this.http.post<Candidature>(`${this.base}/api/admin/candidatures/${id}/refuser`, { motif });
+  }
+
+  /** Demandes praticien deposees depuis le site, filtrees par statut si demande. */
+  demandesPraticien(statut?: string): Observable<DemandePraticien[]> {
+    let params = new HttpParams();
+    if (statut) params = params.set('statut', statut);
+    return this.http.get<DemandePraticien[]>(`${this.base}/api/admin/demandes-praticien`, { params });
+  }
+
+  /** Marque la demande comme traitee (409 si deja cloturee). */
+  traiterDemande(id: string): Observable<DemandePraticien> {
+    return this.http.post<DemandePraticien>(`${this.base}/api/admin/demandes-praticien/${id}/traiter`, null);
+  }
+
+  /** Refuse la demande (409 si deja cloturee). */
+  refuserDemande(id: string): Observable<DemandePraticien> {
+    return this.http.post<DemandePraticien>(`${this.base}/api/admin/demandes-praticien/${id}/refuser`, null);
+  }
+
+  /** Cree le compte medecin (e-mail « definir votre mot de passe ») et passe la demande en TRAITEE. */
+  creerCompteDemande(id: string): Observable<DemandePraticien> {
+    return this.http.post<DemandePraticien>(`${this.base}/api/admin/demandes-praticien/${id}/creer-compte`, null);
   }
 
   statistiques(): Observable<StatistiquesAdministration> {

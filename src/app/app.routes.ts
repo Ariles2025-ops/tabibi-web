@@ -72,6 +72,7 @@ export const routes: Routes = [
     children: [
       { path: '', loadComponent: () => import('./admin/tableau-de-bord-admin.component').then((m) => m.TableauDeBordAdminComponent), pathMatch: 'full' },
       { path: 'candidatures', loadComponent: () => import('./admin/candidatures-admin.component').then((m) => m.CandidaturesAdminComponent) },
+      { path: 'demandes', loadComponent: () => import('./admin/demandes-admin.component').then((m) => m.DemandesAdminComponent) },
       { path: 'avis', loadComponent: () => import('./admin/moderation-avis.component').then((m) => m.ModerationAvisComponent) },
     ],
   },
