@@ -41,8 +41,8 @@ import { AdminService, StatistiquesAdministration, libelleRappels } from './admi
       <section style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px;margin:32px 0 0">
         <h2 style="font-size:1.1rem;margin:0 0 6px">Rappels de rendez-vous</h2>
         <p style="color:var(--text3);margin:0 0 12px">
-          Les patients reçoivent un rappel la veille de chaque rendez-vous confirmé (envoi automatique toutes les
-          heures, un seul rappel par rendez-vous). Lancez l'envoi maintenant pour vérifier ou rattraper une exécution.
+          Les patients reçoivent un rappel dans les 24 heures qui précèdent chaque rendez-vous confirmé (envoi
+          automatique toutes les heures, un seul rappel par rendez-vous). Lancez l'envoi maintenant pour vérifier ou rattraper une exécution.
         </p>
         <button type="button" class="bouton-secondaire" (click)="executerRappels()" [disabled]="rappelsEnCours()">
           {{ rappelsEnCours() ? 'Envoi…' : 'Exécuter les rappels maintenant' }}
