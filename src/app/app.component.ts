@@ -65,6 +65,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
             <div class="side__grouptitle">Administration</div>
             <a routerLink="/admin" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Tableau de bord</a>
             <a routerLink="/admin/candidatures" routerLinkActive="actif">Candidatures</a>
+            <a routerLink="/admin/demandes" routerLinkActive="actif">Demandes praticien</a>
             <a routerLink="/admin/avis" routerLinkActive="actif">Modération des avis</a>
           </div>
 

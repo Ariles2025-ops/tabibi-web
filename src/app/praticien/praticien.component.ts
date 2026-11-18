@@ -11,12 +11,14 @@ import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { inscriptionFermee } from '../lancement';
 import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
+import { HttpErrorResponse } from '@angular/common/http';
+import { DemandePraticienService } from './demande-praticien.service';
 
 /**
  * Page publique « Vous etes praticien ? » : presentation + formulaire de DEMANDE (sans compte).
  * Le praticien ne cree pas de compte lui-meme : il envoie une demande ; l'equipe verifie puis cree le compte.
- * MVP : la demande est envoyee par e-mail a contact@ndawik.com (ouvre la messagerie du praticien) ;
- * un suivi des demandes cote admin pourra etre ajoute ensuite.
+ * La demande est envoyee au serveur (POST /api/public/demandes-praticien) et suivie dans /admin/demandes ;
+ * en cas d'echec, le mailto vers contact@ndawik.com sert de secours.
  */
 @Component({
     selector: 'app-praticien',
@@ -107,20 +109,21 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
             <label class="pf"><span>{{ t('Ville / commune', 'المدينة / البلدية') }}</span><input class="champ" [(ngModel)]="ville" name="ville" [placeholder]="t('Hydra, Bab El Oued…', 'حيدرة، باب الوادي…')"></label>
             <label class="pf"><span>{{ t("N° d'inscription à l'ordre *", 'رقم التسجيل في الهيئة *') }}</span><input class="champ" [(ngModel)]="numeroOrdre" name="ord" [placeholder]="t('Votre numéro d’ordre', 'رقم تسجيلك في الهيئة')"></label>
             <label class="pf"><span>{{ t('Téléphone *', 'الهاتف *') }}</span><input class="champ" [(ngModel)]="telephone" name="tel" inputmode="tel" placeholder="05 50 12 34 56"></label>
-            <label class="pf"><span>{{ t('E-mail', 'البريد الإلكتروني') }}</span><input class="champ" [(ngModel)]="email" name="email" inputmode="email" placeholder="vous@exemple.com"></label>
+            <label class="pf"><span>{{ t('E-mail *', 'البريد الإلكتروني *') }}</span><input class="champ" [(ngModel)]="email" name="email" type="email" inputmode="email" placeholder="vous@exemple.com"></label>
+            <input class="prat-piege" [(ngModel)]="siteWeb" name="siteWeb" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
             <label class="pf pf--full"><span>{{ t('Message (facultatif)', 'رسالة (اختيارية)') }}</span><textarea class="champ" [(ngModel)]="message" name="msg" rows="3" [placeholder]="t('Horaires, cabinet, précisions…', 'المواعيد، العيادة، تفاصيل…')"></textarea></label>
             <div class="pf--full">
-              <p *ngIf="erreur()" style="color:#D21010;font-size:13px;margin:0 0 10px">{{ erreur() }}</p>
-              <button type="button" class="prat-btn-vert" (click)="envoyer()">{{ t('Envoyer ma demande', 'إرسال طلبي') }}</button>
+              <p *ngIf="erreur()" class="prat-erreur" role="alert" style="color:#D21010;font-size:13px;margin:0 0 10px">{{ erreur() }}
+                <button *ngIf="echecEnvoi()" type="button" class="prat-lien prat-mailto" (click)="envoyerParMail()">{{ t('Envoyer par e-mail', 'إرسال عبر البريد الإلكتروني') }}</button></p>
+              <button type="button" class="prat-btn-vert" [disabled]="enCours()" (click)="envoyer()">{{ enCours() ? t('Envoi…', 'جارٍ الإرسال…') : t('Envoyer ma demande', 'إرسال طلبي') }}</button>
               <p style="color:var(--text3);font-size:12px;margin:10px 0 0">{{ t('Les champs avec * sont obligatoires.', 'الحقول المعلَّمة بـ * إلزامية.') }}</p>
             </div>
           </div>
 
           <div *ngIf="envoye()" class="prat-ok">
             <span class="prat-ok__ic"><i class="fa fa-circle-check" aria-hidden="true"></i></span>
-            <h3>{{ t('Votre demande est prête !', 'طلبك جاهز!') }}</h3>
-            <p>{{ t("Votre messagerie s'est ouverte avec la demande pré-remplie — il ne reste qu'à l'envoyer. Si rien ne s'est ouvert, écrivez-nous directement à", 'فُتح بريدك الإلكتروني وفيه الطلب معبّأ مسبقًا، ولم يبقَ سوى إرساله. وإن لم يُفتح شيء فراسلنا مباشرة على') }} <b dir="ltr">contact&#64;ndawik.com</b> {{ t('avec les mêmes informations.', 'بنفس المعلومات.') }}</p>
-            <button type="button" class="prat-btn-blanc" style="color:var(--vert);border:1.5px solid var(--vert)" (click)="envoye.set(false)">{{ t('Modifier ma demande', 'تعديل طلبي') }}</button>
+            <h3>{{ t('Demande envoyée', 'تم إرسال الطلب') }}</h3>
+            <p>{{ t('Demande envoyée, nous vous recontactons sous 48 h.', 'تم إرسال الطلب، سنعاود الاتصال بك خلال 48 ساعة.') }}</p>
           </div>
         </div>
       </section>
@@ -175,6 +178,8 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
     .prat-btn-sm { padding:9px 16px; font-size:14px; }
     .prat-pas-fiche { display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; justify-content:center; margin-top:18px; padding-top:16px; border-top:1px solid var(--border); font-size:14px; color:var(--text3); }
     .prat-lien { background:none; border:0; padding:0; color:var(--vert); font:inherit; font-weight:700; text-decoration:underline; cursor:pointer; }
+    .prat-piege { position:absolute; left:-10000px; width:1px; height:1px; opacity:0; pointer-events:none; }
+    .prat-btn-vert:disabled { opacity:.6; cursor:default; }
     .prat-ok { text-align:center; padding:12px; }
     .prat-ok__ic { display:inline-flex; width:56px; height:56px; align-items:center; justify-content:center; border-radius:50%; background:#f0fdf4; color:#2E8B57; font-size:26px; margin-bottom:12px; }
     .prat-ok h3 { margin:0 0 8px; font-size:20px; font-weight:800; color:var(--ink); }
@@ -282,19 +287,48 @@ export class PraticienComponent {
   nom = ''; specialite = ''; wilaya = ''; ville = ''; numeroOrdre = ''; telephone = ''; email = ''; message = '';
   envoye = signal(false);
   erreur = signal('');
+  enCours = signal(false);
+  echecEnvoi = signal(false);
+  /** Champ piege : invisible, reste vide pour un humain. */
+  siteWeb = '';
+  private demandes = inject(DemandePraticienService);
 
   /** Fait defiler vers le formulaire de demande. */
   versDemande() {
     if (this.navigateur) document.getElementById('demande')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /** Construit la demande et ouvre la messagerie du praticien vers contact@ndawik.com. */
+  /** Envoie la demande au serveur ; en cas d'echec, propose le mailto en secours. Pas de double envoi. */
   envoyer() {
-    if (!this.nom.trim() || !this.specialite.trim() || !this.wilaya.trim() || !this.numeroOrdre.trim() || !this.telephone.trim()) {
+    if (this.enCours()) return;
+    if (!this.nom.trim() || !this.specialite.trim() || !this.wilaya.trim() || !this.numeroOrdre.trim() || !this.telephone.trim() || !this.email.trim()) {
       this.erreur.set(this.t('Merci de remplir les champs obligatoires (*).', 'يرجى ملء الحقول الإلزامية (*).'));
       return;
     }
     this.erreur.set('');
+    this.echecEnvoi.set(false);
+    this.enCours.set(true);
+    this.demandes.deposer({
+      nom: this.nom.trim(), specialite: this.specialite.trim(), wilaya: this.wilaya.trim(),
+      ville: this.ville.trim() || undefined, numeroOrdre: this.numeroOrdre.trim(), telephone: this.telephone.trim(),
+      email: this.email.trim(), message: this.message.trim() || undefined,
+      ficheId: this.ficheChoisie || undefined, siteWeb: this.siteWeb,
+    }).subscribe({
+      next: () => { this.enCours.set(false); this.envoye.set(true); },
+      error: (e: HttpErrorResponse) => {
+        this.enCours.set(false);
+        this.echecEnvoi.set(true);
+        this.erreur.set(e.status === 429
+          ? this.t('Trop de demandes envoyées. Réessayez plus tard ou écrivez-nous par e-mail.', 'تم إرسال طلبات كثيرة. أعد المحاولة لاحقًا أو راسلنا عبر البريد الإلكتروني.')
+          : e.status === 400
+            ? this.t('Vérifiez vos informations (téléphone et e-mail valides) puis réessayez.', 'تحقق من معلوماتك (هاتف وبريد إلكتروني صالحان) ثم أعد المحاولة.')
+            : this.t("Votre demande n'a pas pu être envoyée. Réessayez, ou envoyez-la par e-mail :", 'تعذّر إرسال طلبك. أعد المحاولة أو أرسله عبر البريد الإلكتروني:'));
+      },
+    });
+  }
+
+  /** Secours : ouvre la messagerie du praticien vers contact@ndawik.com avec la demande preremplie. */
+  envoyerParMail() {
     const corps = [
       'Demande pour rejoindre Ndawik (praticien)',
       '',
@@ -313,6 +347,5 @@ export class PraticienComponent {
     const url = 'mailto:contact@ndawik.com?subject=' + encodeURIComponent('Demande praticien — ' + this.nom)
       + '&body=' + encodeURIComponent(corps);
     if (this.navigateur) window.location.href = url;
-    this.envoye.set(true);
   }
 }

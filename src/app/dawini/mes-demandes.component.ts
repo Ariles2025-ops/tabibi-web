@@ -6,6 +6,9 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { ProfilService } from '../moi/profil.service';
+import { wilayaParCode } from '../seo/referentiel-seo';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { Besoin, DawiniService, DemandeBesoin, libelleReponses, libelleStatutBesoin, libelleWilaya } from './dawini.service';
 
 /** Champs du formulaire de publication, vides. */
@@ -23,13 +26,15 @@ interface OptionWilaya { code: string; nom: string; }
  */
 @Component({
     selector: 'app-mes-demandes',
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, SelecteurLangueComponent],
     template: `
-    <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">Dawini</h1>
+    <main style="max-width:720px;margin:32px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 8px">
+        <h1 style="color:var(--vert);margin:0">{{ l.t('Dawini', 'داويني') }}</h1>
+        <app-selecteur-langue />
+      </div>
       <p style="color:var(--text3);margin:0 0 20px">
-        Vous cherchez un médicament ? Publiez votre demande : les pharmacies de votre wilaya y répondent
-        (disponibilité, prix), sans connaître votre identité.
+        {{ l.t('Vous cherchez un médicament ? Publiez votre demande : les pharmacies de votre wilaya y répondent (disponibilité, prix), sans connaître votre identité.', 'تبحث عن دواء؟ انشر طلبك: تردّ صيدليات ولايتك بتوفّر الدواء وسعره، دون معرفة هويتك.') }}
       </p>
 
 
@@ -37,35 +42,35 @@ interface OptionWilaya { code: string; nom: string; }
         <form (ngSubmit)="publier()" style="display:grid;gap:12px;margin:0 0 28px">
           <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Médicament *
-              <input class="champ" [(ngModel)]="demande.medicament" name="medicament" required placeholder="Ex. Amoxicilline 1 g" style="color:var(--tbi-ink);font-size:1rem">
+              {{ l.t('Médicament recherché *', 'الدواء المطلوب *') }}
+              <input class="champ" [(ngModel)]="demande.medicament" name="medicament" required [placeholder]="l.t('Ex. Amoxicilline 1 g', 'مثال: أموكسيسيلين 1 غ')" style="color:var(--tbi-ink);font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Wilaya *
+              {{ l.t('Wilaya *', 'الولاية *') }}
               <select class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required style="color:var(--tbi-ink);font-size:1rem">
-                <option value="">Choisissez votre wilaya</option>
-                <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.code }} — {{ w.nom }}</option>
+                <option value="">{{ l.t('Choisissez votre wilaya', 'اختر ولايتك') }}</option>
+                <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.code }} — {{ nomWilaya(w) }}</option>
               </select>
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Commune
-              <input class="champ" [(ngModel)]="demande.commune" name="commune" placeholder="Ex. Bab Ezzouar" style="color:var(--tbi-ink);font-size:1rem">
+              {{ l.t('Commune', 'البلدية') }}
+              <input class="champ" [(ngModel)]="demande.commune" name="commune" [placeholder]="l.t('Ex. Bab Ezzouar', 'مثال: باب الزوار')" style="color:var(--tbi-ink);font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Précision (dosage, forme, urgence)
-              <input class="champ" [(ngModel)]="demande.precision" name="precision" placeholder="Ex. Boîte de 14 comprimés" style="color:var(--tbi-ink);font-size:1rem">
+              {{ l.t('Précision (dosage, forme, urgence)', 'تفاصيل (الجرعة، الشكل، الاستعجال)') }}
+              <input class="champ" [(ngModel)]="demande.precision" name="precision" [placeholder]="l.t('Ex. Boîte de 14 comprimés', 'مثال: علبة من 14 قرصًا')" style="color:var(--tbi-ink);font-size:1rem">
             </label>
           </div>
-          <p style="color:var(--text3);font-size:.9rem;margin:0">* Champs obligatoires.</p>
+          <p style="color:var(--text3);font-size:.9rem;margin:0">{{ l.t('* Champs obligatoires.', '* حقول إلزامية.') }}</p>
           <p *ngIf="succes()" style="color:var(--vert);margin:0">{{ succes() }}</p>
           <p *ngIf="erreurFormulaire()" style="color:#b3261e;margin:0">{{ erreurFormulaire() }}</p>
           <div>
-            <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? 'Publication…' : 'Publier ma demande' }}</button>
+            <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? l.t('Publication…', 'جارٍ النشر…') : l.t('Publier ma demande', 'نشر طلبي') }}</button>
           </div>
         </form>
 
-        <h2 style="font-size:1.1rem;margin:0 0 12px">Mes demandes</h2>
-        <p *ngIf="charge()">Chargement…</p>
+        <h2 style="font-size:1.1rem;margin:0 0 12px">{{ l.t('Mes demandes', 'طلباتي') }}</h2>
+        <p *ngIf="charge()">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
@@ -77,21 +82,27 @@ interface OptionWilaya { code: string; nom: string; }
                 <span style="color:var(--text3)"> · {{ libelleStatut(b.statut) }}</span><br>
                 <span style="color:var(--text3)">
                   {{ wilaya(b.wilayaCode) }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
-                  · publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}
+                  · <ng-container *ngIf="!l.ar()">publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}</ng-container><ng-container *ngIf="l.ar()">نُشر في <span dir="ltr">{{ b.publieLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container>
                 </span>
               </span>
               <span style="color:var(--vert);font-weight:600">{{ libelleReponses(b.nombreReponses) }}</span>
             </a>
           </li>
         </ul>
-        <p *ngIf="!charge() && !erreur() && besoins().length === 0">Aucune demande pour le moment.</p>
+        <p *ngIf="!charge() && !erreur() && besoins().length === 0">{{ l.t('Aucune demande pour le moment.', 'لا توجد طلبات حاليًا.') }}</p>
       </ng-container>
     </main>
   `
 })
 export class MesDemandesComponent implements OnInit {
-  /** Nom de la wilaya (referentiel) plutot que son code. */
-  wilaya = libelleWilaya;
+  l = inject(LangueService);
+  /** Nom de la wilaya (referentiel) plutot que son code, dans la langue de l'ecran. */
+  wilaya = (code: string | null | undefined) => libelleWilaya(code, this.l.ar());
+
+  /** Nom de la wilaya d'une option de la liste deroulante : arabe si l'ecran est en arabe et que le nom est connu. */
+  nomWilaya(w: OptionWilaya): string {
+    return this.l.ar() ? (wilayaParCode(w.code)?.nomAr ?? w.nom) : w.nom;
+  }
   private auth = inject(AuthService);
   private service = inject(DawiniService);
   private profils = inject(ProfilService);
@@ -152,9 +163,9 @@ export class MesDemandesComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux patients.');
+          this.erreur.set(this.l.t('Cette page est réservée aux patients.', 'هذه الصفحة مخصصة للمرضى.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos demandes.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Impossible de charger vos demandes.', 'تعذّر تحميل طلباتك.'));
         }
       },
     });
@@ -167,11 +178,11 @@ export class MesDemandesComponent implements OnInit {
     const precision = this.demande.precision.trim();
     this.succes.set('');
     if (!medicament) {
-      this.erreurFormulaire.set('Indiquez le médicament recherché.');
+      this.erreurFormulaire.set(this.l.t('Indiquez le médicament recherché.', 'أدخل اسم الدواء المطلوب.'));
       return;
     }
     if (!wilayaCode) {
-      this.erreurFormulaire.set('Choisissez votre wilaya.');
+      this.erreurFormulaire.set(this.l.t('Choisissez votre wilaya.', 'اختر ولايتك.'));
       return;
     }
     const demande: DemandeBesoin = { medicament, wilayaCode };
@@ -183,7 +194,7 @@ export class MesDemandesComponent implements OnInit {
       next: () => {
         this.enCours.set(false);
         this.demande = formulaireVide(this.wilayaProfil);
-        this.succes.set('Demande publiée : les pharmacies de votre wilaya peuvent y répondre.');
+        this.succes.set(this.l.t('Demande publiée : les pharmacies de votre wilaya peuvent y répondre.', 'تم نشر الطلب: يمكن لصيدليات ولايتك الرد عليه.'));
         this.charger();
       },
       error: (e: HttpErrorResponse) => {
@@ -191,21 +202,21 @@ export class MesDemandesComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreurFormulaire.set('Seul un compte patient peut publier une demande.');
+          this.erreurFormulaire.set(this.l.t('Seul un compte patient peut publier une demande.', 'يمكن لحساب المريض فقط نشر طلب.'));
         } else if (e.status === 400) {
-          this.erreurFormulaire.set(e.error?.erreur ?? 'La demande est incomplète.');
+          this.erreurFormulaire.set(e.error?.erreur ?? this.l.t('La demande est incomplète.', 'الطلب غير مكتمل.'));
         } else {
-          this.erreurFormulaire.set(e.error?.erreur ?? 'La publication a échoué, veuillez réessayer.');
+          this.erreurFormulaire.set(e.error?.erreur ?? this.l.t('La publication a échoué, veuillez réessayer.', 'فشل النشر، يرجى المحاولة مرة أخرى.'));
         }
       },
     });
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutBesoin(statut);
+    return libelleStatutBesoin(statut, this.l.ar());
   }
 
   libelleReponses(nombre: number): string {
-    return libelleReponses(nombre);
+    return libelleReponses(nombre, this.l.ar());
   }
 }

@@ -40,6 +40,22 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     expect(description()).not.toContain('rendez-vous');
   });
 
+  it('fiche pharmacie : pas de « Paiement au cabinet », libelles « Pharmacies »', () => {
+    const ph = { ...dentiste, nomComplet: 'Pharmacie Centrale', specialiteSlug: 'pharmacie', specialiteFr: 'Pharmacie' };
+    const el = creer('fr', ph, [{ ...ph, id: 'autre' }]);
+    expect(el.textContent).not.toContain('Paiement');
+    expect(el.textContent).not.toContain('Au cabinet');
+    expect(el.querySelector('.pp-fil')?.textContent).toContain('Pharmacies');
+    expect(el.querySelector('.pp-fil')?.textContent).not.toContain('Médecins');
+    expect(el.textContent).toContain('Autres pharmacies');
+    expect(el.textContent).not.toContain('Autres praticiens');
+  });
+
+  it('fiche medecin : ligne « Paiement » conservee', () => {
+    const el = creer('fr', dentiste);
+    expect(el.textContent).toContain('Au cabinet');
+  });
+
   it('reservable connu par la liste : badge, bouton et description de reservation', () => {
     const el = creer('fr', dentiste, [{ ...dentiste, reservable: true }]);
     expect(el.querySelector('.pp-resa')).toBeTruthy();

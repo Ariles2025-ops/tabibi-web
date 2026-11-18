@@ -52,6 +52,12 @@ export interface TextesSeo {
   descWil: (w: string) => string;
   /** Rubrique Pharmacies (a part des medecins) : lien depuis les pages wilaya, textes sans « rendez-vous ». */
   pharmacies: string;
+  /** Variantes pharmacie de chargement / aucun / nombre (la liste des pharmacies n'est pas une liste de praticiens). */
+  chargementPharma: string;
+  aucunPharma: string;
+  nombrePharma: (n: number) => string;
+  /** Fiche d'une pharmacie : titre du bloc des autres pharmacies. */
+  autresPharmacies: string;
   pharmaciesA: (w: string) => string;
   pharmaciesIntro: string;
   /** w : nom de la wilaya, ou null pour toute l'Algerie. */
@@ -107,6 +113,10 @@ const fr: TextesSeo = {
   introWil: (w) => `Généralistes, spécialistes et dentistes à ${w} : trouvez un praticien et prenez rendez-vous en ligne avec Ndawik.`,
   descWil: (w) => `Médecins à ${w} : praticiens référencés sur Ndawik, toutes spécialités. Prenez rendez-vous en ligne, paiement au cabinet.`,
   pharmacies: 'Pharmacies',
+  chargementPharma: 'Chargement des pharmacies…',
+  aucunPharma: 'Aucune pharmacie référencée pour le moment.',
+  nombrePharma: (n) => (n >= 50 ? '50 premiers résultats' : `${n} ${n > 1 ? 'pharmacies' : 'pharmacie'}`),
+  autresPharmacies: 'Autres pharmacies',
   pharmaciesA: (w) => `Pharmacies à ${w}`,
   pharmaciesIntro: "Les pharmacies ont leur propre rubrique, à part des médecins : adresses par wilaya, et bientôt la recherche de médicaments avec Dawini.",
   introPharma: (w) => `Pharmacies ${w ? 'à ' + w : 'en Algérie'} : retrouvez les officines référencées sur Ndawik. Bientôt, demandez la disponibilité d'un médicament avec Dawini.`,
@@ -161,6 +171,10 @@ const ar: TextesSeo = {
   introWil: (w) => `أطباء عامون وأخصائيون وأطباء أسنان في ${w}: ابحث عن طبيب واحجز موعدك عبر الإنترنت مع نداويك.`,
   descWil: (w) => `أطباء في ${w}: أطباء مسجلون في نداويك من جميع التخصصات. احجز موعدك عبر الإنترنت، والدفع في العيادة.`,
   pharmacies: 'الصيدليات',
+  chargementPharma: 'جارٍ تحميل قائمة الصيدليات…',
+  aucunPharma: 'لا توجد صيدليات مسجلة حاليًا.',
+  nombrePharma: (n) => (n >= 50 ? 'أول 50 نتيجة' : `${n} صيدلية`),
+  autresPharmacies: 'صيدليات أخرى',
   pharmaciesA: (w) => `الصيدليات في ${w}`,
   pharmaciesIntro: 'للصيدليات قسم خاص بها منفصل عن الأطباء: العناوين حسب الولاية، وقريبًا البحث عن الأدوية مع دوايني.',
   introPharma: (w) => `الصيدليات ${w ? 'في ' + w : 'في الجزائر'}: تصفّح الصيدليات المسجلة في نداويك. قريبًا، اسأل عن توفر دواء مع دوايني.`,

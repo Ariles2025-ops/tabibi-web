@@ -5,15 +5,17 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { inscriptionFermee } from '../lancement';
 import { RoleService } from '../auth/role.service';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { MoiService } from './moi.service';
 
 /** Libelles francais des roles metier ; tout autre role (technique) n'est pas affiche. */
-const LIBELLES_ROLES: Partial<Record<string, string>> = {
-  PATIENT: 'Patient',
-  MEDECIN: 'Médecin',
-  SECRETAIRE: 'Secrétaire',
-  PHARMACIE: 'Pharmacie',
-  ADMIN: 'Administrateur',
+const LIBELLES_ROLES: Partial<Record<string, [string, string]>> = {
+  PATIENT: ['Patient', 'مريض'],
+  MEDECIN: ['Médecin', 'طبيب'],
+  SECRETAIRE: ['Secrétaire', 'سكرتيرة'],
+  PHARMACIE: ['Pharmacie', 'صيدلية'],
+  ADMIN: ['Administrateur', 'مسؤول'],
 };
 
 interface Raccourci { lien: string; libelle: string; }
@@ -24,42 +26,45 @@ interface Raccourci { lien: string; libelle: string; }
  */
 @Component({
     selector: 'app-moi',
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, SelecteurLangueComponent],
     template: `
-    <main style="max-width:640px;margin:40px auto;padding:0 16px">
-      <h1 style="color:var(--vert)">Mon compte</h1>
+    <main style="max-width:640px;margin:40px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h1 style="color:var(--vert);margin:0">{{ l.t('Mon compte', 'حسابي') }}</h1>
+        <app-selecteur-langue />
+      </div>
       <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:12px;max-width:420px">
-        <p style="color:var(--text3);margin:0">Créez votre compte avec votre adresse e-mail, ou connectez-vous par téléphone (code SMS), pour prendre rendez-vous.</p>
-        <button type="button" class="bouton" (click)="seConnecter()">Se connecter</button>
-        <button *ngIf="inscriptionOuverte()" type="button" class="bouton-secondaire" (click)="sInscrireParEmail()">Créer un compte</button>
+        <p style="color:var(--text3);margin:0">{{ l.t('Créez votre compte avec votre adresse e-mail, ou connectez-vous par téléphone (code SMS), pour prendre rendez-vous.', 'أنشئ حسابك ببريدك الإلكتروني، أو سجّل الدخول برقم هاتفك (رمز SMS)، لحجز موعد.') }}</p>
+        <button type="button" class="bouton" (click)="seConnecter()">{{ l.t('Se connecter', 'تسجيل الدخول') }}</button>
+        <button *ngIf="inscriptionOuverte()" type="button" class="bouton-secondaire" (click)="sInscrireParEmail()">{{ l.t('Créer un compte', 'إنشاء حساب') }}</button>
       </div>
       <div *ngIf="connecte()">
-        <p *ngIf="moi()?.nom?.trim() as nom; else sansNom">Connecté en tant que <b>{{ nom }}</b></p>
-        <ng-template #sansNom><p>Vous êtes connecté(e).</p></ng-template>
-        <p *ngIf="rolesAffiches().length">{{ rolesAffiches().length > 1 ? 'Rôles' : 'Rôle' }} : {{ rolesAffiches().join(', ') }}</p>
-        <nav aria-label="Accès rapides" style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0">
+        <p *ngIf="moi()?.nom?.trim() as nom; else sansNom">{{ l.t('Connecté en tant que', 'متصل باسم') }} <b>{{ nom }}</b></p>
+        <ng-template #sansNom><p>{{ l.t('Vous êtes connecté(e).', 'أنت متصل.') }}</p></ng-template>
+        <p *ngIf="rolesAffiches().length">{{ rolesAffiches().length > 1 ? l.t('Rôles', 'الأدوار') : l.t('Rôle', 'الدور') }} : {{ rolesAffiches().join(l.ar() ? '، ' : ', ') }}</p>
+        <nav [attr.aria-label]="l.t('Accès rapides', 'وصول سريع')" style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0">
           <a *ngFor="let r of raccourcis(); let premier = first" [class.bouton]="premier" [class.bouton-secondaire]="!premier" [routerLink]="r.lien">{{ r.libelle }}</a>
         </nav>
         <p style="display:flex;gap:8px;flex-wrap:wrap">
-          <button type="button" class="bouton-secondaire" (click)="seDeconnecter()">Se déconnecter</button>
+          <button type="button" class="bouton-secondaire" (click)="seDeconnecter()">{{ l.t('Se déconnecter', 'تسجيل الخروج') }}</button>
         </p>
 
         <section aria-labelledby="titre-suppression" style="margin-top:32px;padding:16px;border:1px solid var(--border);border-radius:16px;background:#fff">
-          <h2 id="titre-suppression" style="font-size:1.05rem;margin:0 0 6px">Supprimer mon compte</h2>
+          <h2 id="titre-suppression" style="font-size:1.05rem;margin:0 0 6px">{{ l.t('Supprimer mon compte', 'حذف حسابي') }}</h2>
           <p style="color:var(--text3);margin:0 0 12px;font-size:.95rem">
-            Votre compte et vos données personnelles (profil, rendez-vous, messages, listes d'attente) sont effacés définitivement.
-            <a routerLink="/supprimer-mon-compte" style="color:var(--vert)">En savoir plus</a>
+            {{ l.t("Votre compte et vos données personnelles (profil, rendez-vous, messages, listes d'attente) sont effacés définitivement. Seules les ordonnances et le journal de sécurité sont conservés le temps exigé par la loi.", 'يُحذف حسابك وبياناتك الشخصية (الملف الشخصي والمواعيد والرسائل وقوائم الانتظار) نهائيًا. لا يُحتفظ إلا بالوصفات الطبية وسجل الأمان للمدة التي يفرضها القانون.') }}
+            <a routerLink="/supprimer-mon-compte" style="color:var(--vert)">{{ l.t('En savoir plus', 'اعرف المزيد') }}</a>
           </p>
           <button *ngIf="!confirmation()" type="button" class="bouton-secondaire" style="color:var(--red);border-color:var(--red)"
-                  (click)="confirmation.set(true)">Supprimer mon compte</button>
+                  (click)="confirmation.set(true)">{{ l.t('Supprimer mon compte', 'حذف حسابي') }}</button>
           <div *ngIf="confirmation()" role="alert" style="display:flex;flex-direction:column;gap:10px">
-            <p style="margin:0;color:var(--red);font-weight:600">Cette action est définitive. Confirmez-vous la suppression de votre compte ?</p>
+            <p style="margin:0;color:var(--red);font-weight:600">{{ l.t('Cette action est définitive. Confirmez-vous la suppression de votre compte ?', 'هذا الإجراء نهائي. هل تؤكد حذف حسابك؟') }}</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button type="button" class="bouton" style="background:var(--red);border-color:var(--red)"
                       (click)="supprimer()" [disabled]="suppressionEnCours()">
-                {{ suppressionEnCours() ? 'Suppression…' : 'Oui, supprimer définitivement' }}
+                {{ suppressionEnCours() ? l.t('Suppression…', 'جارٍ الحذف…') : l.t('Oui, supprimer définitivement', 'نعم، احذف نهائيًا') }}
               </button>
-              <button type="button" class="bouton-secondaire" (click)="confirmation.set(false)" [disabled]="suppressionEnCours()">Annuler</button>
+              <button type="button" class="bouton-secondaire" (click)="confirmation.set(false)" [disabled]="suppressionEnCours()">{{ l.t('Annuler', 'إلغاء') }}</button>
             </div>
           </div>
           <p *ngIf="erreurSuppression()" style="color:var(--red);margin:10px 0 0">{{ erreurSuppression() }}</p>
@@ -69,6 +74,7 @@ interface Raccourci { lien: string; libelle: string; }
   `
 })
 export class MoiComponent implements OnInit {
+  l = inject(LangueService);
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   private moiService = inject(MoiService);
@@ -77,22 +83,33 @@ export class MoiComponent implements OnInit {
   moi = this.roleService.moi;
   private roles = computed(() => (this.moi()?.roles ?? []).map((r) => r.toUpperCase()));
   /** Roles metier en francais ; les roles techniques de Keycloak (default-roles-tabibi, offline_access...) sont masques. */
-  rolesAffiches = computed(() => this.roles().map((r) => LIBELLES_ROLES[r]).filter((l): l is string => !!l));
+  rolesAffiches = computed(() =>
+    this.roles()
+      .map((r) => LIBELLES_ROLES[r])
+      .filter((x): x is [string, string] => !!x)
+      .map(([fr, ar]) => (this.l.ar() ? ar : fr)),
+  );
 
   /** Acces rapides selon le role (espace professionnel d'abord, sinon les pages patient). */
   raccourcis = computed<Raccourci[]>(() => {
     const r = this.roles();
-    const profil = { lien: '/moi/profil', libelle: 'Mon profil' };
-    const notifications = { lien: '/notifications', libelle: 'Notifications' };
+    const t = (fr: string, ar: string) => this.l.t(fr, ar);
+    const profil = { lien: '/moi/profil', libelle: t('Mon profil', 'ملفي الشخصي') };
+    const notifications = { lien: '/notifications', libelle: t('Notifications', 'الإشعارات') };
     // Comme « Mon espace » de l'appli : l'invitation d'un médecin arrive à un compte patient, qui doit pouvoir l'ouvrir.
-    const invitations = { lien: '/invitations', libelle: 'Invitations de cabinet' };
+    const invitations = { lien: '/invitations', libelle: t('Invitations de cabinet', 'دعوات العيادات') };
     if (r.includes('MEDECIN')) {
-      return [{ lien: '/medecin/agenda', libelle: 'Mon agenda' }, { lien: '/medecin/disponibilites', libelle: 'Disponibilités' }, profil, notifications];
+      return [
+        { lien: '/medecin/agenda', libelle: t('Mon agenda', 'المواعيد') },
+        { lien: '/medecin/disponibilites', libelle: t('Disponibilités', 'الأوقات المتاحة') },
+        profil,
+        notifications,
+      ];
     }
-    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: 'Agenda du cabinet' }, invitations, profil, notifications];
-    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: 'Demandes de médicaments' }, profil, notifications];
-    if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: 'Administration' }, profil, notifications];
-    return [profil, { lien: '/mes-rendez-vous', libelle: 'Mes rendez-vous' }, invitations, notifications];
+    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, profil, notifications];
+    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, profil, notifications];
+    if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: t('Administration', 'الإدارة') }, profil, notifications];
+    return [profil, { lien: '/mes-rendez-vous', libelle: t('Mes rendez-vous', 'مواعيدي') }, invitations, notifications];
   });
 
   /** Seconde etape de la suppression du compte affichee (pas de confirm() du navigateur). */
@@ -128,7 +145,11 @@ export class MoiComponent implements OnInit {
           this.auth.seConnecter('/moi');
         } else {
           this.erreurSuppression.set(
-            e.error?.erreur ?? 'La suppression a échoué. Réessayez ou écrivez à contact@ndawik.com.',
+            e.error?.erreur ??
+              this.l.t(
+                'La suppression a échoué. Réessayez ou écrivez à contact@ndawik.com.',
+                'فشل الحذف. أعد المحاولة أو راسلنا على contact@ndawik.com.',
+              ),
           );
         }
       },
