@@ -5,7 +5,9 @@ import { RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RendezVousService } from '../rendezvous/rendezvous.service';
-import { libelleStatutTeleconsultation } from './statut-teleconsultation';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
+import { libelleStatutTeleconsultation, libelleStatutTeleconsultationAr } from './statut-teleconsultation';
 import { Teleconsultation, TeleconsultationService, salleAccessible } from './teleconsultation.service';
 
 /** La salle s'ouvre 15 min avant le rendez-vous et reste accessible 2 h apres son debut. */
@@ -19,34 +21,36 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
  */
 @Component({
     selector: 'app-mes-teleconsultations',
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, SelecteurLangueComponent],
     template: `
-    <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 16px">Mes téléconsultations</h1>
-
+    <main style="max-width:720px;margin:32px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
+        <h1 style="color:var(--vert);margin:0">{{ l.t('Mes téléconsultations', 'استشاراتي عن بُعد') }}</h1>
+        <app-selecteur-langue />
+      </div>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">Chargement…</p>
+        <p *ngIf="charge()">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let t of teleconsultations()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
               <div>
-                <strong *ngIf="datesRendezVous()[t.rendezVousId] as debut">Rendez-vous du {{ debut | date:'EEEE d MMMM y à HH:mm' }}</strong>
-                <strong *ngIf="!datesRendezVous()[t.rendezVousId]">Téléconsultation proposée le {{ t.creeLe | date:'EEEE d MMMM y à HH:mm' }}</strong>
+                <strong *ngIf="datesRendezVous()[t.rendezVousId] as debut">{{ l.t('Rendez-vous du', 'موعد يوم') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ debut | date:formatDate() }}</span></strong>
+                <strong *ngIf="!datesRendezVous()[t.rendezVousId]">{{ l.t('Téléconsultation proposée le', 'استشارة عن بُعد اقتُرحت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ t.creeLe | date:formatDate() }}</span></strong>
                 <br>
-                <a [routerLink]="['/medecins', t.medecinId]" style="color:var(--vert)">{{ noms()[t.medecinId] ?? 'Voir le praticien' }}</a>
+                <a [routerLink]="['/medecins', t.medecinId]" style="color:var(--vert)">{{ noms()[t.medecinId] ?? l.t('Voir le praticien', 'عرض الممارس') }}</a>
                 <span style="color:var(--text3)"> · {{ libelleStatut(t.statut) }}</span>
-                <span *ngIf="t.consentementPatientLe" style="color:var(--text3)"> · consentement donné le {{ t.consentementPatientLe | date:'d MMMM y à HH:mm' }}</span>
+                <span *ngIf="t.consentementPatientLe" style="color:var(--text3)"> · {{ l.t('consentement donné le', 'تمت الموافقة في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ t.consentementPatientLe | date:formatDate() }}</span></span>
               </div>
               <ng-container *ngIf="salleAccessible(t)">
                 <a *ngIf="fenetre(t) === 'ouverte'" class="bouton" [href]="t.lienSalle" target="_blank" rel="noopener">
-                  Rejoindre la téléconsultation
+                  {{ l.t('Rejoindre la téléconsultation', 'الانضمام إلى الاستشارة عن بُعد') }}
                 </a>
                 <span *ngIf="fenetre(t) !== 'ouverte'" style="display:grid;gap:4px;justify-items:end">
-                  <button type="button" class="bouton" disabled>Rejoindre la téléconsultation</button>
-                  <small style="color:var(--text3)">{{ fenetre(t) === 'avant' ? 'Disponible 15 min avant le rendez-vous' : 'Le créneau de cette téléconsultation est passé' }}</small>
+                  <button type="button" class="bouton" disabled>{{ l.t('Rejoindre la téléconsultation', 'الانضمام إلى الاستشارة عن بُعد') }}</button>
+                  <small style="color:var(--text3)">{{ fenetre(t) === 'avant' ? l.t('Disponible 15 min avant le rendez-vous', 'متاحة قبل الموعد بـ 15 دقيقة') : l.t('Le créneau de cette téléconsultation est passé', 'انقضى موعد هذه الاستشارة عن بُعد') }}</small>
                 </span>
               </ng-container>
             </div>
@@ -56,23 +60,23 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
             <section *ngIf="consentementAttendu(t)"
                      style="margin:12px 0 0;padding:12px;border:1px solid var(--vert);border-radius:8px;background:#f3faf7">
               <p style="margin:0 0 10px">
-                En rejoignant cette téléconsultation, vous acceptez qu'elle se déroule en vidéo via un service tiers
-                (Jitsi Meet). Aucun enregistrement n'est réalisé par Ndawik.
+                {{ texteConsentement() }}
               </p>
               <button type="button" class="bouton" (click)="consentir(t)" [disabled]="enCours() !== null">
-                {{ enCours() === t.id ? 'Enregistrement…' : 'Je donne mon consentement' }}
+                {{ enCours() === t.id ? l.t('Enregistrement…', 'جارٍ التسجيل…') : l.t('Je donne mon consentement', 'أوافق') }}
               </button>
             </section>
           </li>
         </ul>
         <p *ngIf="!charge() && !erreur() && teleconsultations().length === 0">
-          Aucune téléconsultation pour le moment. Votre praticien peut vous en proposer une sur un rendez-vous confirmé.
+          {{ l.t('Aucune téléconsultation pour le moment. Votre praticien peut vous en proposer une sur un rendez-vous confirmé.', 'لا توجد استشارات عن بُعد حاليًا. يمكن لممارسك أن يقترح عليك واحدة على موعد مؤكَّد.') }}
         </p>
       </ng-container>
     </main>
   `
 })
 export class MesTeleconsultationsComponent implements OnInit {
+  l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(TeleconsultationService);
   private rendezVousService = inject(RendezVousService);
@@ -118,9 +122,9 @@ export class MesTeleconsultationsComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux patients.');
+          this.erreur.set(this.l.t('Cette page est réservée aux patients.', 'هذه الصفحة مخصصة للمرضى.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos téléconsultations.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Impossible de charger vos téléconsultations.', 'تعذّر تحميل استشاراتك عن بُعد.'));
         }
       },
     });
@@ -138,9 +142,9 @@ export class MesTeleconsultationsComponent implements OnInit {
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
         if (e.status === 409) {
-          this.charger(e.error?.erreur ?? "Cette téléconsultation n'accepte plus de consentement.");
+          this.charger(e.error?.erreur ?? this.l.t("Cette téléconsultation n'accepte plus de consentement.", 'لم تعد هذه الاستشارة عن بُعد تقبل الموافقة.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'enregistrement du consentement a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.l.t("L'enregistrement du consentement a échoué, veuillez réessayer.", 'فشل تسجيل الموافقة، يُرجى المحاولة مرة أخرى.'));
         }
       },
     });
@@ -161,13 +165,26 @@ export class MesTeleconsultationsComponent implements OnInit {
    */
   texteEtat(t: Teleconsultation): string {
     if (this.consentementAttendu(t) || salleAccessible(t)) return '';
-    if (t.statut === 'TERMINEE') return 'Cette téléconsultation est terminée.';
-    if (t.statut === 'ANNULEE') return 'Cette téléconsultation a été annulée.';
-    return 'Le lien de la salle sera disponible prochainement.';
+    if (t.statut === 'TERMINEE') return this.l.t('Cette téléconsultation est terminée.', 'انتهت هذه الاستشارة عن بُعد.');
+    if (t.statut === 'ANNULEE') return this.l.t('Cette téléconsultation a été annulée.', 'تم إلغاء هذه الاستشارة عن بُعد.');
+    return this.l.t('Le lien de la salle sera disponible prochainement.', 'سيكون رابط الغرفة متاحًا قريبًا.');
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutTeleconsultation(statut);
+    return this.l.ar() ? libelleStatutTeleconsultationAr(statut) : libelleStatutTeleconsultation(statut);
+  }
+
+  /** Format de date : chiffres latins jj/mm/aaaa en arabe (comme les autres ecrans), texte long en francais. */
+  formatDate(): string {
+    return this.l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM y à HH:mm';
+  }
+
+  /** Meme texte que l'appli (consentement explicite avant la remise du lien de salle). */
+  texteConsentement(): string {
+    return this.l.t(
+      "En rejoignant cette téléconsultation, vous acceptez qu'elle se déroule en vidéo via un service tiers (Jitsi Meet). Aucun enregistrement n'est réalisé par Ndawik.",
+      'بانضمامك إلى هذه الاستشارة عن بُعد، فإنك توافق على إجرائها بالفيديو عبر خدمة خارجية (Jitsi Meet). لا يقوم نداويك بأي تسجيل.',
+    );
   }
 
   /**
