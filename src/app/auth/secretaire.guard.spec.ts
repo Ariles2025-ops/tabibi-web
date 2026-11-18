@@ -8,7 +8,7 @@ describe('secretaireGuard', () => {
   let connecte: boolean;
   let secretaire: boolean;
   let auth: { pret: jasmine.Spy; estConnecte: () => boolean; seConnecter: jasmine.Spy };
-  let roles: { charger: jasmine.Spy; estSecretaire: () => boolean };
+  let roles: { charger: jasmine.Spy; recharger: jasmine.Spy; estSecretaire: () => boolean };
 
   beforeEach(() => {
     connecte = true;
@@ -18,7 +18,7 @@ describe('secretaireGuard', () => {
       estConnecte: () => connecte,
       seConnecter: jasmine.createSpy('seConnecter'),
     };
-    roles = { charger: jasmine.createSpy('charger').and.resolveTo(null), estSecretaire: () => secretaire };
+    roles = { charger: jasmine.createSpy('charger').and.resolveTo({ roles: [] }), recharger: jasmine.createSpy('recharger').and.resolveTo(null), estSecretaire: () => secretaire };
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -57,5 +57,21 @@ describe('secretaireGuard', () => {
     expect(resultat instanceof UrlTree).toBeTrue();
     expect(TestBed.inject(Router).serializeUrl(resultat as UrlTree)).toBe('/');
     expect(auth.seConnecter).not.toHaveBeenCalled();
+  });
+
+  it("ne renvoie pas a l'accueil quand /api/moi est en erreur : une relecture, puis la page « compte indisponible »", async () => {
+    roles.charger.and.resolveTo(null);
+
+    const resultat = await activer('/x/page');
+    expect(roles.recharger).toHaveBeenCalledTimes(1);
+    expect(resultat instanceof UrlTree).toBeTrue();
+    expect(TestBed.inject(Router).serializeUrl(resultat as UrlTree)).toBe('/compte-indisponible?retour=%2Fx%2Fpage');
+  });
+
+  it('laisse passer si la relecture de /api/moi reussit', async () => {
+    roles.charger.and.resolveTo(null);
+    roles.recharger.and.resolveTo({ roles: [] });
+
+    expect(await activer()).toBeTrue();
   });
 });

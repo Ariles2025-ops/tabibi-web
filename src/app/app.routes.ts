@@ -47,6 +47,7 @@ import { WilayasIndexComponent } from './pages/wilayas-index.component';
 import { AideComponent } from './pages/aide.component';
 import { AProposComponent } from './pages/a-propos.component';
 import { SupprimerCompteComponent } from './pages/supprimer-compte.component';
+import { CompteIndisponibleComponent } from './pages/compte-indisponible.component';
 import { PageIntrouvableComponent } from './pages/page-introuvable.component';
 
 export const routes: Routes = [
@@ -117,6 +118,7 @@ export const routes: Routes = [
       { path: 'avis', component: ModerationAvisComponent },
     ],
   },
+  { path: 'compte-indisponible', component: CompteIndisponibleComponent },
   { path: 'bientot', component: BientotComponent },
   { path: 'ar/bientot', component: BientotComponent, data: { langue: 'ar' } },
   { path: 'invitations', component: InvitationsComponent },
