@@ -306,4 +306,84 @@ export const CONTENU_SPECIALITES: Record<string, { fr: ContenuSpecialite; ar: Co
       ],
     },
   },
+  allergologue: {
+    fr: {
+      apropos: 'Un allergologue est un médecin spécialisé dans le diagnostic et le traitement des allergies. Il est conseillé de consulter un allergologue lorsqu\'on présente des symptômes d\'allergies persistantes ou lorsqu\'on souhaite identifier et traiter une allergie.',
+      faq: [
+        { q: 'Quels sont les principaux symptômes qui justifient de consulter un allergologue ?', r: 'Les principaux symptômes incluent l\'éternuement fréquent, les éruptions cutanées, la congestion nasale, les bronchospasmes et les démangeaisons. Ces symptômes peuvent indiquer une allergie qui nécessite une évaluation.' },
+        { q: 'Comment peut-on diagnostiquer une allergie chez soi ?', r: 'Il est difficile de diagnostiquer une allergie sans l\'aide d\'un professionnel. Le diagnostic repose généralement sur l\'analyse clinique, la prise d\'historique et des tests d\'provocation cutanée ou de prélèvements sanguins pour identifier les allergènes.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الحساسية هو متخصص في التشخيص والعلاج للأمراض المناعية والأллергенية. ينصح بزيارة الطبيب في حالة الشعور بالسعال المزمن، أو الحكة الشديدة، أو الصعوبة في التنفس.',
+      faq: [
+        { q: 'هل يمكن أن أتعرض لحساسية food بدون وجود تاريخ عائلى للمتلازمة؟', r: 'نعم، يمكن لأشخاص ليس لديهم تاريخ عائلي أن يعانون من حساسية الطعام. هذه الحساسية قد تأتي بسبب عوامل مختلفة مثل الأطعمة الجديدة أو التغيرات البيئية.' },
+        { q: 'هل يمكن علاج الحساسية للأجواء الرطبة والحرارة؟ R1: نعم، يمكن علاج الحساسية المرتبطة بالاجواء الرطبة والحرارة باستخدام الأدوية والعلاجات المناعية.', r: 'ينصح بمراقبة مؤشر الرطوبة والحرارة في المنزل واستشارة الطبيب لتحديد أفضل طرق العلاج.' },
+      ],
+    },
+  },
+  'clinique-privee': {
+    fr: {
+      apropos: 'La clinique privée joue un rôle essentiel dans le secteur de la santé en Algérie en offrant des soins médicaux de qualité supérieure. Elle est recommandée pour des consultations ou des traitements ponctuels, ainsi que pour des soins spécialisés non urgents.',
+      faq: [
+        { q: 'Peut-on consulter une clinique privée pour des problèmes d\'ordre général ?', r: 'Oui, les cliniques privées sont adaptées aux problèmes de santé généraux et permettent d\'obtenir des avis médicaux rapidement et efficacement.' },
+        { q: 'Quelles sont les avantages de consulter une clinique privée ?', r: 'Les avantages incluent un service plus personnalisé, une meilleure confidentialité, et un accès à des équipements médicaux de pointe, facilitant le diagnostic et le traitement.' },
+      ],
+    },
+    ar: {
+      apropos: 'عيادة خاصة هي مؤسسة طبية مخصصة لعلاج بعض الأمراض أو تقوية بعض الأعضاء الحيوية في الجسم. يمكن اللجوء إلى هذا النوع من العيادات عندما يرغب الشخص في استشارة طبيب متخصص بشكل مسائي لعلاج أمراض معينة أو لتحسين الصحة العامة.',
+      faq: [
+        { q: 'متى يمكنني الذهاب إلى عيادة خاصة؟', r: 'يمكن الذهاب إلى عيادة خاصة في أي وقت يراه المريض مناسباً، وخاصة عند الحاجة إلى استشارة طبيب متخصص بشكل منتظم.' },
+        { q: 'ما هي الأسباب التي تدعو لزيارة عيادة خاصة؟', r: 'قد يزور المريض عيادة خاصة عندما يرغب في متابعة علاج معين، أو عند الحاجة إلى الرعاية الطبية المتخصصة بشكل منتظم، أو لتحسين حالة صحية عامة.' },
+      ],
+    },
+  },
+  endocrinologue: {
+    fr: {
+      apropos: 'Un endocrinologue est un médecin spécialiste qui traite les troubles endocriniens, tels que les maladies thyroïdiennes, diabète, ou troubles de la croissance. Il est recommandé de consulter un endocrinologue lorsque l\'on présente des symptômes comme la fatigue excessive, des variations inhabituelles de poids, ou des problèmes de production hormonale.',
+      faq: [
+        { q: 'Quels sont les signes qui devraient me faire consulter un endocrinologue ?', r: 'Si vous éprouvez des fatigues prolongées, des changements importants de poids, des troubles de l\'hydratation, ou des perturbations de votre cycle menstruel, il est préférable de consulter un spécialiste.' },
+        { q: 'Comment peux-je savoir si je souffre d\'un trouble endocrinien ?', r: 'Si vous présentez des symptômes comme la faiblesse constante, des peurs anormales, des saignements menstruels irréguliers, ou des troubles de la vue, consultez un endocrinologue qui pourra effectuer des tests adaptés.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الغدد الصماء هو متخصص فيDiagnostique et traitement des problèmes liés aux glandes endocrines. ينصح بالاستشارة في حالة ظهور أعراض مثل السمنة المفرطة أو نقص الوزن، أو الاضطرابات في الدورة الشهرية.',
+      faq: [
+        { q: 'هل يمكن لطبيب الغدد الصماء التشخيص والعلاج من مشاكل الغدد الدرقية؟', r: 'نعم، يمكن له التشخيص والعلاج من مشاكل الغدد الدرقية مثل الهرمونات المنخفضة أو المرتفعة. يقوم بتقييم الحالة وتوصيل العلاج المناسب.' },
+        { q: 'متى يجب على الشخص استشارة طبيب الغدد الصماء؟', r: 'يجب استشارة الطبيب في حالة وجود أعراض مثل تغييرات في الوزن أو الشعور بالتعب الشديد أو تقلبات� في المزاج، بالإضافة إلى أعراض أخرى مرتبطة بالغدد الصماء.' },
+      ],
+    },
+  },
+  'gastro-enterologue': {
+    fr: {
+      apropos: 'Un gastro-entérologue est un médecin spécialiste qui se concentre sur le diagnostic et le traitement des maladies du système digestif. Il est conseillé de consulter un gastro-entérologue lorsque vous rencontrez des problèmes tels que des douleurs abdominales, des nausées, des vomissements ou des troubles de l\'absorption des nutriments.',
+      faq: [
+        { q: 'Quels sont les symptômes qui indiquent une consultation chez un gastro-entérologue ?', r: 'Des douleurs abdominales persistantes, des altérations du mode de digestion, des modifications des habitudes intestinales peuvent être des signes à consulter un gastro-entérologue.' },
+        { q: 'Est-il nécessaire de faire un diagnostic avant de consulter un gastro-entérologue ?', r: 'Non, il n\'est pas nécessaire d\'avoir un diagnostic préalable, le gastro-entérologue se chargera d\'évaluer l\'état de santé et de déterminer les tests nécessaires pour une évaluation précise.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الجهاز الهضمي هو متخصص في تشخيص وعلاج مشاكل الجهاز الهضمي. يُنصح بالاستعانة به عند ظهور أي أعراض متكررة أو شديدة في الجهاز الهضمي.',
+      faq: [
+        { q: 'هل يمكن أن يعالج طبيب الجهاز الهضمي جميع مشاكل الجهاز الهضمي؟', r: 'يمكن لطبيب الجهاز الهضمي تشخيص وعلاج العديد من مشاكل الجهاز الهضمي، لكن في بعض الحالات المركبة أو الخطيرة، قد يتعين اللجوء إلى متخصص آخر.' },
+        { q: 'متى يكون من الأفضل استشارة طبيب الجهاز الهضمي؟', r: 'يجب استشارة طبيب الجهاز الهضمي عند تواجد أعراض مثل النوبات المستمرة للغثيان، أو فقدان الوزن غير المتعمد، أو التورم المستمر في منطقة البطن.' },
+      ],
+    },
+  },
+  hematologue: {
+    fr: {
+      apropos: 'Un hématologue est un médecin spécialisé dans l\'étude, le diagnostic et le traitement des maladies liées au sang, notamment les cancers de sang, les anémies et les maladies du foie. On consulte généralement un hématologue lorsque l\'on présente des symptômes évoquant des problèmes sanguins ou lorsque des anomalies sont détectées lors d\'examen de routine.',
+      faq: [
+        { q: 'Quels symptômes indiquent une nécessité de consulter un hématologue ?', r: 'Des signes tels que la fatigue excessive, une forte perte de cheveux, des ecchymoses fréquentes ou inexpliquées, et des infections récurrentes peuvent être des signes d\'une maladie sanguine qui nécessite l\'attention d\'un hématologue.' },
+        { q: 'Quels examens peut réaliser un hématologue ?', r: 'Un hématologue peut effectuer des prélèvements sanguins, des épreuves de culture sanguine et des examens de biopsie osseuse pour évaluer l\'état des cellules sanguines et détecter potentiellement des anomalies.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب أمراض الدم هو متخصص في التشخيص والعلاج للأمراض المتعلقة بالدم وخلايا الدم. يُفضل استشارة هذا الطبيب عند الشك بوجود مشاكل في جودة الدم أو عند وجود أعراض مثل النزيف الزائد أو الدوخة المستمرة.',
+      faq: [
+        { q: 'هل يمكن لطبيب أمراض الدم فحص نقص الحديد في الدم؟', r: 'نعم، يمكن له فحص نقص الحديد في الدم، حيث يقوم بتحليل العينات الدموية للتأكد من مستوى الحديد الطبيعي.' },
+        { q: 'ما هو العلاج الشائع لارتفاع ضغط الدم عند مرضى أمراض الدم؟', r: 'العلاج قد يشمل تغييرات في نمط الحياة مثل الحمية الصحية والتقليل من الوزن الزائد، بالإضافة إلى استخدام الأدوية الدوائية وفقًا للنصائح الطبية.' },
+      ],
+    },
+  },
 };
