@@ -60,9 +60,17 @@ const LIBELLES_STATUT_BESOIN: Partial<Record<string, string>> = {
   CLOTURE: 'Clôturée',
 };
 
-export function libelleStatutBesoin(statut: string | null | undefined): string {
+/** Memes statuts en arabe, comme dans l'appli. */
+const LIBELLES_STATUT_BESOIN_AR: Partial<Record<string, string>> = {
+  OUVERT: 'مفتوح',
+  CLOTURE: 'مغلق',
+};
+
+/** Statut d'un besoin en francais, ou en arabe si `arabe` (un statut inconnu garde la mise en forme generique). */
+export function libelleStatutBesoin(statut: string | null | undefined, arabe = false): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_BESOIN[statut.trim().toUpperCase()] ?? libelleStatutGenerique(statut);
+  const cle = statut.trim().toUpperCase();
+  return (arabe ? LIBELLES_STATUT_BESOIN_AR[cle] : undefined) ?? LIBELLES_STATUT_BESOIN[cle] ?? libelleStatutGenerique(statut);
 }
 
 /** « 850 DA », « 1 250 DA » (milliers separes par une espace) ; chaine vide si le prix n'est pas renseigne. */
@@ -72,14 +80,23 @@ export function formaterPrix(prixDa: number | null | undefined): string {
 }
 
 /** « 0 réponse », « 1 réponse », « 3 réponses ». */
-export function libelleReponses(nombre: number): string {
+export function libelleReponses(nombre: number, arabe = false): string {
+  if (arabe) return `${nombre} ${nombre > 1 ? 'ردود' : 'رد'}`;
   return `${nombre} ${nombre > 1 ? 'réponses' : 'réponse'}`;
 }
 
+/** « Disponible » / « Indisponible » (« متوفر » / « غير متوفر » en arabe). */
+export function libelleDisponibilite(disponible: boolean, arabe = false): string {
+  if (arabe) return disponible ? 'متوفر' : 'غير متوفر';
+  return disponible ? 'Disponible' : 'Indisponible';
+}
+
 /** Nom de la wilaya d'un besoin (« Alger » plutot que « Wilaya 16 ») ; code brut si inconnu du referentiel. */
-export function libelleWilaya(code: string | null | undefined): string {
+export function libelleWilaya(code: string | null | undefined, arabe = false): string {
   if (!code) return '';
-  return wilayaParCode(String(code))?.nom ?? `Wilaya ${code}`;
+  const w = wilayaParCode(String(code));
+  if (arabe) return w?.nomAr ?? `ولاية ${code}`;
+  return w?.nom ?? `Wilaya ${code}`;
 }
 
 /**
