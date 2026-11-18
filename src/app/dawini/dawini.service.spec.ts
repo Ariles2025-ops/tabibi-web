@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { Besoin, DawiniService, DemandeReponse, Reponse, formaterPrix, libelleReponses, libelleStatutBesoin, libelleWilaya } from './dawini.service';
+import { Besoin, DawiniService, DemandeReponse, Reponse, formaterPrix, libelleDisponibilite, libelleReponses, libelleStatutBesoin, libelleWilaya } from './dawini.service';
 
 const BASE = 'http://localhost:8080';
 
@@ -163,5 +163,21 @@ describe('libelleStatutBesoin (casse et espaces)', () => {
   it('garde « Ouverte » / « Clôturée » quelle que soit la casse, comme l\'appli', () => {
     expect(libelleStatutBesoin(' ouvert ')).toBe('Ouverte');
     expect(libelleStatutBesoin('cloture')).toBe('Clôturée');
+  });
+});
+
+describe('libelles Dawini en arabe (comme l\'appli)', () => {
+  it('statut, nombre de réponses, disponibilité et wilaya', () => {
+    expect(libelleStatutBesoin('OUVERT', true)).toBe('مفتوح');
+    expect(libelleStatutBesoin('cloture', true)).toBe('مغلق');
+    expect(libelleStatutBesoin('ARCHIVE', true)).toBe('Archive');
+    expect(libelleReponses(0, true)).toBe('0 رد');
+    expect(libelleReponses(1, true)).toBe('1 رد');
+    expect(libelleReponses(3, true)).toBe('3 ردود');
+    expect(libelleDisponibilite(true, true)).toBe('متوفر');
+    expect(libelleDisponibilite(false, true)).toBe('غير متوفر');
+    expect(libelleDisponibilite(false)).toBe('Indisponible');
+    expect(libelleWilaya('16', true)).toBe('الجزائر');
+    expect(libelleWilaya('999', true)).toBe('ولاية 999');
   });
 });

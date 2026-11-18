@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { Profil, ProfilService } from '../moi/profil.service';
+import { LangueService } from '../partage/langue.service';
 import { Besoin, DawiniService } from './dawini.service';
 import { MesDemandesComponent } from './mes-demandes.component';
 
@@ -179,5 +180,39 @@ describe('MesDemandesComponent', () => {
     await afficher();
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.mesBesoins).toHaveBeenCalledTimes(1);
+  });
+
+  describe('en arabe (comme l\'appli)', () => {
+    beforeEach(() => TestBed.inject(LangueService).ar.set(true));
+    afterEach(() => TestBed.inject(LangueService).ar.set(false));
+
+    it('affiche le formulaire et la liste en arabe, de droite à gauche, avec la wilaya en arabe', async () => {
+      await afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      expect(fixture.nativeElement.querySelector('h1').textContent).toContain('داويني');
+      expect(texte()).toContain('الدواء المطلوب *');
+      expect(texte()).toContain('طلباتي');
+      const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+      expect(items[0].textContent).toContain('مفتوح');
+      expect(items[0].textContent).toContain('3 ردود');
+      expect(items[0].textContent).toContain('الجزائر');
+      expect(items[1].textContent).toContain('مغلق');
+      expect(items[1].textContent).toContain('1 رد');
+      expect(texte()).not.toContain('Ouverte');
+      expect(texte()).not.toContain('réponse');
+    });
+
+    it('refuse une demande vide avec les messages arabes de l\'appli', async () => {
+      await afficher();
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('أدخل اسم الدواء المطلوب.');
+
+      await saisir({ medicament: 'Insuline' });
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('اختر ولايتك.');
+    });
   });
 });

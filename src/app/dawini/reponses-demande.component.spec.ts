@@ -6,6 +6,7 @@ import localeFr from '@angular/common/locales/fr';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { LangueService } from '../partage/langue.service';
 import { Besoin, DawiniService, Reponse } from './dawini.service';
 import { ReponsesDemandeComponent } from './reponses-demande.component';
 
@@ -177,5 +178,29 @@ describe('ReponsesDemandeComponent', () => {
     await afficher();
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.reponses).toHaveBeenCalledTimes(1);
+  });
+
+  it('s affiche en arabe (comme l\'appli) : statut, disponibilité, clôture et confirmation', async () => {
+    const langue = TestBed.inject(LangueService);
+    langue.ar.set(true);
+    try {
+      await afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('مفتوح · الجزائر');
+      expect(texte()).toContain('ردود الصيدليات');
+      const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+      expect(items[0].textContent).toContain('غير متوفر');
+      expect(items[1].textContent).toContain('متوفر');
+      expect(items[1].textContent).not.toContain('Disponible ·');
+      expect(texte()).not.toContain('Indisponible');
+      const bouton = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.includes('إغلاق الطلب'));
+      expect(bouton).toBeDefined();
+      bouton!.click();
+      await afficher();
+      expect(texte()).toContain('نعم، أغلق');
+    } finally {
+      langue.ar.set(false);
+    }
   });
 });
