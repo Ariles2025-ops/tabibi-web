@@ -13,7 +13,7 @@ import { RdvTelephoneComponent } from './rdv-telephone.component';
 import { RdvTelephone, ResultatSemaineType, SemaineType } from './semaine-type';
 import { SemaineTypeComponent } from './semaine-type.component';
 import { RendezVous } from '../rendezvous/rendezvous.service';
-import { grouperParJour, valeurDateHeureLocale, styleOnglet } from './agenda-utils';
+import { grouperParJour, instantAlger, valeurDateHeureLocale, styleOnglet } from './agenda-utils';
 
 /** Acces aux creneaux d'un agenda : celui du medecin connecte ou celui d'un cabinet rattache (secretaire). */
 export interface SourceCreneaux {
@@ -253,8 +253,9 @@ export class GestionCreneauxComponent implements OnChanges {
   }
 
   ouvrir() {
-    // new Date('2026-09-21T09:30') interprete l'heure locale ; toISOString() la convertit en ISO 8601 UTC.
-    const debut = new Date(this.debut);
+    // Heure saisie interpretee en heure d'Algerie (UTC+1), quel que soit le fuseau du navigateur.
+    const [jour, heure] = this.debut.split('T');
+    const debut = new Date(instantAlger(jour, heure ?? ''));
     const dureeMinutes = Number(this.dureeMinutes);
     this.reinitialiserMessages();
     if (!this.debut || Number.isNaN(debut.getTime())) {
@@ -286,8 +287,8 @@ export class GestionCreneauxComponent implements OnChanges {
     this.reinitialiserMessages();
     const duree = Number(this.serieDuree);
     if (!this.dureeValide(duree)) return;
-    const debut = new Date(`${this.serieDate}T${this.serieDebut}`);
-    const fin = new Date(`${this.serieDate}T${this.serieFin}`);
+    const debut = new Date(instantAlger(this.serieDate, this.serieDebut));
+    const fin = new Date(instantAlger(this.serieDate, this.serieFin));
     if (!this.serieDate || Number.isNaN(debut.getTime()) || Number.isNaN(fin.getTime())) {
       this.erreur.set('Indiquez une date et des heures valides.');
       return;
