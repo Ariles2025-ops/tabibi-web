@@ -3,7 +3,7 @@ import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { ACCUEIL_AR, ACCUEIL_FR, referencerAccueil } from '../seo/marque';
 import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
-import { VISIO_ACTIVE } from '../lancement';
+import { VISIO_ACTIVE, inscriptionFermee } from '../lancement';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -569,7 +569,7 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   seConnecter() { this.auth.seConnecter(); }
   /** « Créer un compte » : formulaire d'inscription (en pre-lancement, page /bientot). */
   sInscrire() { this.auth.sInscrireParEmail(); }
-  inscriptionOuverte() { return this.auth.inscriptionOuverte(); }
+  inscriptionOuverte() { return !inscriptionFermee(); }
 
   /** Clic sur le bouton « Rechercher » : lance la recherche et fait defiler vers la liste des resultats. */
   lancerRecherche() {

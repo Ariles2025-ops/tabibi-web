@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { inscriptionFermee } from '../lancement';
 import { RoleService } from '../auth/role.service';
 import { MoiService } from './moi.service';
 
@@ -109,7 +110,7 @@ export class MoiComponent implements OnInit {
 
   seConnecter() { this.auth.seConnecter(); }
   sInscrireParEmail() { this.auth.sInscrireParEmail(); }
-  inscriptionOuverte() { return this.auth.inscriptionOuverte(); }
+  inscriptionOuverte() { return !inscriptionFermee(); }
   seDeconnecter() { this.auth.seDeconnecter(); this.connecte.set(false); }
 
   /** DELETE /api/moi (204) puis deconnexion : la session Keycloak du compte supprime n'a plus d'objet. */

@@ -9,6 +9,7 @@ import { referencerPage } from '../seo/page-seo';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
+import { inscriptionFermee } from '../lancement';
 import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
 
 /**
@@ -247,7 +248,7 @@ export class PraticienComponent {
   }
 
   /** Faux en phase de test : le praticien envoie une demande, l'equipe cree son compte. */
-  inscriptionOuverte() { return this.auth.inscriptionOuverte(); }
+  inscriptionOuverte() { return !inscriptionFermee(); }
 
   /**
    * Fiche choisie : connecte, reclamation preremplie ; sinon, en phase de test, formulaire de demande prerempli
@@ -266,7 +267,7 @@ export class PraticienComponent {
     await this.auth.pret();
     if (this.auth.estConnecte()) {
       this.router.navigateByUrl(cible);
-    } else if (!this.auth.inscriptionOuverte()) {
+    } else if (inscriptionFermee()) {
       if (fiche) {
         this.nom = fiche.nomComplet || this.nom;
         this.ville = fiche.ville || this.ville;
