@@ -126,7 +126,19 @@ describe('MesDemandesComponent', () => {
     await afficher();
 
     expect(service.publier).not.toHaveBeenCalled();
-    expect(texte()).toContain('Indiquez le médicament recherché et choisissez votre wilaya.');
+    expect(texte()).toContain('Indiquez le médicament recherché.');
+    expect(texte()).not.toContain('choisissez votre wilaya');
+  });
+
+  it('demande la wilaya seule quand le médicament est renseigné (même message que l\'appli)', async () => {
+    await afficher();
+
+    await saisir({ medicament: 'Amoxicilline 1 g', wilayaCode: '' });
+    soumettre();
+    await afficher();
+
+    expect(service.publier).not.toHaveBeenCalled();
+    expect(texte()).toContain('Choisissez votre wilaya.');
   });
 
   it('publie la demande (champs nettoyes, facultatifs omis s ils sont vides), confirme, vide le formulaire et recharge', async () => {

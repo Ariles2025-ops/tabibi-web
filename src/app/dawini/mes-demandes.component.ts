@@ -166,8 +166,12 @@ export class MesDemandesComponent implements OnInit {
     const commune = this.demande.commune.trim();
     const precision = this.demande.precision.trim();
     this.succes.set('');
-    if (!medicament || !wilayaCode) {
-      this.erreurFormulaire.set('Indiquez le médicament recherché et choisissez votre wilaya.');
+    if (!medicament) {
+      this.erreurFormulaire.set('Indiquez le médicament recherché.');
+      return;
+    }
+    if (!wilayaCode) {
+      this.erreurFormulaire.set('Choisissez votre wilaya.');
       return;
     }
     const demande: DemandeBesoin = { medicament, wilayaCode };
