@@ -49,12 +49,12 @@ describe('RdvTelephoneComponent', () => {
   });
 
   it('signale un creneau deja pris (409)', () => {
-    appel.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Créneau déjà réservé' } })));
+    appel.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
     const c = fixture.componentInstance;
     c.nom = 'Amine';
     c.telephone = '0550123456';
     c.envoyer();
-    expect(c.erreur()).toBe('Créneau déjà réservé');
+    expect(c.erreur()).toBe('Ce créneau vient d’être pris.');
   });
 
   it('se masque sans erreur sur un 404', () => {
