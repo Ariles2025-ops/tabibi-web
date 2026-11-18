@@ -178,7 +178,9 @@ export function app(): express.Express {
   server.get(/^(\/ar)?\/seo\/[^/]+\/?$/, (req, res) => res.redirect(301, redirectionSeo(req.path) || '/'));
   server.get('/index.html', (req, res) => res.redirect(301, redirectionIndex(req.query['specialty'], req.query['wilaya'])));
   // Lien court à donner aux patients et médecins : ndawik.com/appli -> fiche Google Play.
-  server.get(/^\/(appli|app|android|telecharger)\/?$/, (_req, res) => res.redirect(302, 'https://play.google.com/store/apps/details?id=dz.tabibi.app'));
+  // Liens courts a donner aux medecins (l'identifiant Play dz.tabibi.app ne peut pas changer) ; /ar/... ouvre la fiche en arabe.
+  server.get(/^(\/ar)?\/(appli|app|android|telecharger)\/?$/, (req, res) =>
+    res.redirect(302, 'https://play.google.com/store/apps/details?id=dz.tabibi.app' + (req.path.startsWith('/ar/') ? '&hl=ar' : '&hl=fr')));
   server.get(/^\/(about|blog)\/?$/, (_req, res) => res.redirect(301, '/'));
 
   // Fichiers du build (chemins avec extension) : bundles a empreinte en cache long, index et config jamais.
