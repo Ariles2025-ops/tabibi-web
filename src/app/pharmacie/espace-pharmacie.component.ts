@@ -50,6 +50,12 @@ function formulaireVide(): FormulaireReponse {
         <button type="submit" class="bouton" [disabled]="charge()">{{ charge() ? 'Recherche…' : 'Afficher les demandes' }}</button>
       </form>
 
+      <div *ngIf="profilEnErreur()" class="profil-erreur" role="alert"
+           style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 20px;padding:14px;border:1px solid var(--border);border-radius:var(--r12);color:#b3261e">
+        <span>Impossible de charger le profil de votre pharmacie : vous ne pourrez pas répondre aux demandes tant qu'il n'est pas chargé.</span>
+        <button type="button" class="bouton bouton-reessayer-profil" (click)="chargerProfil()">Réessayer</button>
+      </div>
+
       <form *ngIf="profilManquant()" class="formulaire-profil" (ngSubmit)="enregistrerProfil()"
             style="display:grid;gap:10px;margin:0 0 20px;padding:14px;border:1px solid var(--border);border-radius:var(--r12);background:var(--blue-l)">
         <strong style="color:var(--blue-d)">Renseignez le nom et la wilaya de votre pharmacie</strong>
@@ -93,7 +99,8 @@ function formulaireVide(): FormulaireReponse {
           <form *ngIf="!repondus().has(b.id) && !b.dejaRepondu && formulaires[b.id] as f" (ngSubmit)="repondre(b)"
                 style="display:grid;gap:10px;margin:12px 0 0;padding:12px;border:1px solid var(--border);border-radius:8px;background:#f8faf9">
             <p *ngIf="profil() as p" class="nom-reponse" style="margin:0;color:var(--text3);font-size:.9rem">Répondre au nom de : <strong>{{ p.nomComplet }}</strong></p>
-            <p *ngIf="!profil()" class="nom-manquant" style="margin:0;color:#b3261e;font-size:.9rem">Renseignez d'abord le nom de votre pharmacie ci-dessus</p>
+            <p *ngIf="!profil() && !profilEnErreur()" class="nom-manquant" style="margin:0;color:#b3261e;font-size:.9rem">Renseignez d'abord le nom de votre pharmacie ci-dessus</p>
+            <p *ngIf="!profil() && profilEnErreur()" class="nom-manquant" style="margin:0;color:#b3261e;font-size:.9rem">Le profil de votre pharmacie n'est pas chargé : utilisez « Réessayer » ci-dessus.</p>
             <fieldset style="border:0;padding:0;margin:0;display:flex;gap:16px;align-items:center;flex-wrap:wrap;color:var(--text3);font-size:.9rem">
               <legend style="padding:0;margin:0 0 4px">Médicament disponible *</legend>
               <label style="display:flex;gap:6px;align-items:center;color:var(--tbi-ink);font-size:1rem">
@@ -189,6 +196,8 @@ export class EspacePharmacieComponent implements OnInit {
   profil = signal<Profil | null>(null);
   /** Vrai si le profil n'a jamais ete renseigne (404) : un petit formulaire est propose. */
   profilManquant = signal(false);
+  /** Vrai si la lecture du profil a echoue autrement que par 404 / 401 : message et bouton « Réessayer ». */
+  profilEnErreur = signal(false);
   profilNom = '';
   profilTelephone = '';
   profilWilaya = '';
@@ -214,13 +223,14 @@ export class EspacePharmacieComponent implements OnInit {
   }
 
   /** Lit le profil : prerempli le nom et la wilaya, et affiche directement les demandes de cette wilaya. */
-  private chargerProfil() {
+  chargerProfil() {
+    this.profilEnErreur.set(false);
     this.profils.monProfil().subscribe({
       next: (p) => this.appliquerProfil(p),
       error: (e: HttpErrorResponse) => {
         if (e.status === 404) this.profilManquant.set(true);
         else if (e.status === 401) this.auth.seConnecter();
-        // Autre erreur : la page reste utilisable avec le choix manuel de la wilaya.
+        else this.profilEnErreur.set(true);
       },
     });
   }
@@ -228,6 +238,7 @@ export class EspacePharmacieComponent implements OnInit {
   private appliquerProfil(p: Profil) {
     this.profil.set(p);
     this.profilManquant.set(false);
+    this.profilEnErreur.set(false);
     if (p.wilayaCode) {
       this.wilayaCode = p.wilayaCode;
       this.charger(p.wilayaCode);
@@ -354,7 +365,11 @@ export class EspacePharmacieComponent implements OnInit {
     const commentaire = f.commentaire.trim();
     this.succes.set('');
     if (!this.profil()) {
-      this.erreur.set("Renseignez d'abord le nom de votre pharmacie ci-dessus.");
+      this.erreur.set(
+        this.profilEnErreur()
+          ? "Le profil de votre pharmacie n'est pas chargé : utilisez « Réessayer » ci-dessus."
+          : "Renseignez d'abord le nom de votre pharmacie ci-dessus.",
+      );
       return;
     }
     if (f.disponible === null) {
