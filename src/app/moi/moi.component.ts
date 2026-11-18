@@ -30,7 +30,7 @@ interface Raccourci { lien: string; libelle: string; }
       <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:12px;max-width:420px">
         <p style="color:var(--text3);margin:0">Créez votre compte avec votre adresse e-mail, ou connectez-vous par téléphone (code SMS), pour prendre rendez-vous.</p>
         <button type="button" class="bouton" (click)="seConnecter()">Se connecter</button>
-        <button type="button" class="bouton-secondaire" (click)="sInscrireParEmail()">Créer un compte</button>
+        <button *ngIf="inscriptionOuverte()" type="button" class="bouton-secondaire" (click)="sInscrireParEmail()">Créer un compte</button>
       </div>
       <div *ngIf="connecte()">
         <p *ngIf="moi()?.nom?.trim() as nom; else sansNom">Connecté en tant que <b>{{ nom }}</b></p>
@@ -109,6 +109,7 @@ export class MoiComponent implements OnInit {
 
   seConnecter() { this.auth.seConnecter(); }
   sInscrireParEmail() { this.auth.sInscrireParEmail(); }
+  inscriptionOuverte() { return this.auth.inscriptionOuverte(); }
   seDeconnecter() { this.auth.seDeconnecter(); this.connecte.set(false); }
 
   /** DELETE /api/moi (204) puis deconnexion : la session Keycloak du compte supprime n'a plus d'objet. */
