@@ -24,3 +24,18 @@ test('pas de couleur hors charte en dur (hors définition des tokens)', () => {
   }
   assert.deepEqual(fautes, []);
 });
+
+// Issue #213 : les couleurs de la charte (sable, ardoise, menthe) passent par leurs variables, jamais en dur
+// (seuls les fichiers de définition des tokens et les pages légales autonomes en gardent la valeur).
+test('sable / ardoise / menthe via variables --tbi-* (hors définition des tokens)', () => {
+  const EN_DUR = /#(efe7d6|43584f|d5e7df)\b/i;
+  const fautes = [];
+  for (const f of fichiers(new URL('../src', import.meta.url).pathname)) {
+    if (f.includes('/legal/')) continue;
+    readFileSync(f, 'utf8').split('\n').forEach((l, i) => {
+      if (/^\s*(\/\*|--tbi-)/.test(l)) return;
+      if (EN_DUR.test(l)) fautes.push(`${f}:${i + 1}`);
+    });
+  }
+  assert.deepEqual(fautes, []);
+});

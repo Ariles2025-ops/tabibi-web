@@ -31,8 +31,8 @@
   --green-d:var(--tbi-emerald-d);
   --bg:var(--tbi-ivory);       --bg2:var(--tbi-sand);
   --border:var(--tbi-line);
-  --text2:#43584F;             --text3:var(--tbi-slate);
-  --pastille:var(--tbi-mint);  --pastille-bd:#D5E7DF;
+  --text2:var(--tbi-slate);             --text3:var(--tbi-slate);
+  --pastille:var(--tbi-mint);  --pastille-bd:var(--tbi-mint);
 }
 
 /* ── Typographie ─────────────────────────────────────────────────── */
@@ -738,7 +738,7 @@ body.recherche-active [data-replier-recherche]{ display:none !important; }
 
 /* ═══ [V4B 2026-07-08] Sections vitrines v4 : bande confiance, praticiens (photos),
    preuve sociale, téléconsultation, comparatif, download+QR, FAQ ═══ */
-.v4strip{ background:#EFE7D6; border-top:1px solid #E7E0D2; border-bottom:1px solid #E7E0D2; padding:20px var(--gutter); display:flex; flex-wrap:wrap; gap:12px 26px; justify-content:space-around; }
+.v4strip{ background:var(--tbi-sand); border-top:1px solid var(--tbi-line); border-bottom:1px solid var(--tbi-line); padding:20px var(--gutter); display:flex; flex-wrap:wrap; gap:12px 26px; justify-content:space-around; }
 .v4strip .item{ display:flex; align-items:center; gap:10px; color:#0F7560; font-weight:600; font-size:14px; }
 .v4strip .item i{ color:#0F7560; }
 .v4-sechead{ max-width:660px; margin:0 auto 24px; text-align:center; padding:0 var(--gutter); }
@@ -885,7 +885,7 @@ body.recherche-active [data-replier-recherche]{ display:none !important; }
 .tb-bubble:hover{ transform:scale(1.08); }
 .leaflet-popup-content-wrapper{ border-radius:16px; box-shadow:0 20px 46px rgba(5,39,29,.25); }
 .leaflet-popup-content{ font-family:inherit; margin:14px 16px; }
-.tb-pop{ font-size:12.5px; color:#43584F; line-height:1.55; min-width:180px; }
+.tb-pop{ font-size:12.5px; color:var(--tbi-slate); line-height:1.55; min-width:180px; }
 .tb-pop b{ font-size:14.5px; color:#0F2A24; }
 .tb-pop .tb-rate{ color:#D4A437; font-weight:700; }
 .tb-pop .tb-pop-btn{ margin-top:9px; width:100%; justify-content:center; font-size:12.5px; padding:8px 12px; display:inline-flex; align-items:center; gap:6px; border-radius:999px; background:#0F7560; color:#fff; border:none; cursor:pointer; font-weight:700; }
