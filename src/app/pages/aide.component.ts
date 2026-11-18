@@ -12,8 +12,8 @@ const FR: Question[] = [
   { q: 'Comment annuler un rendez-vous ?', r: 'Depuis « Mes rendez-vous », annulez le rendez-vous : le créneau est libéré pour un autre patient.' },
   { q: 'Comment me connecter ?', r: 'Par téléphone (code SMS) ou par e-mail et mot de passe.' },
   { q: 'Je suis praticien, comment rejoindre Ndawik ?', r: "Retrouvez votre fiche ou déposez votre candidature avec votre numéro d'inscription à l'Ordre. Notre équipe le vérifie avant d'activer votre compte.", lien: { texte: 'Vous êtes praticien ?', vers: '/praticien' } },
-  { q: 'Comment supprimer mon compte ?', r: "Dans l'application : « Mon profil » ; sur le site : « Mon compte ». Choisissez « Supprimer mon compte », ou écrivez-nous à contact@tabibi.doctor.", lien: { texte: 'Supprimer mon compte', vers: '/supprimer-mon-compte' } },
-  { q: 'Comment vous contacter ?', r: 'Écrivez-nous à contact@tabibi.doctor : nous répondons sous 48 heures ouvrées.' },
+  { q: 'Comment supprimer mon compte ?', r: "Dans l'application : « Mon profil » ; sur le site : « Mon compte ». Choisissez « Supprimer mon compte », ou écrivez-nous à contact@ndawik.com.", lien: { texte: 'Supprimer mon compte', vers: '/supprimer-mon-compte' } },
+  { q: 'Comment vous contacter ?', r: 'Écrivez-nous à contact@ndawik.com : nous répondons sous 48 heures ouvrées.' },
 ];
 
 const AR: Question[] = [
@@ -22,8 +22,8 @@ const AR: Question[] = [
   { q: 'كيف ألغي موعدًا؟', r: 'من صفحة «مواعيدي» ألغِ الموعد ليصبح متاحًا لمريض آخر.' },
   { q: 'كيف أسجّل الدخول؟', r: 'برقم الهاتف (رمز عبر رسالة قصيرة) أو بالبريد الإلكتروني وكلمة المرور.' },
   { q: 'أنا طبيب، كيف أنضم إلى نداويك؟', r: 'ابحث عن صفحتك أو قدّم طلبك مع رقم تسجيلك في عمادة الأطباء. يتحقق فريقنا منه قبل تفعيل حسابك.', lien: { texte: 'هل أنت طبيب؟', vers: '/praticien' } },
-  { q: 'كيف أحذف حسابي؟', r: 'في التطبيق من «ملفي الشخصي»، وفي الموقع من «حسابي»، اختر «حذف حسابي»، أو راسلنا على contact@tabibi.doctor.', lien: { texte: 'حذف الحساب', vers: '/ar/supprimer-mon-compte' } },
-  { q: 'كيف أتواصل معكم؟', r: 'راسلنا على contact@tabibi.doctor، نرد خلال 48 ساعة عمل.' },
+  { q: 'كيف أحذف حسابي؟', r: 'في التطبيق من «ملفي الشخصي»، وفي الموقع من «حسابي»، اختر «حذف حسابي»، أو راسلنا على contact@ndawik.com.', lien: { texte: 'حذف الحساب', vers: '/ar/supprimer-mon-compte' } },
+  { q: 'كيف أتواصل معكم؟', r: 'راسلنا على contact@ndawik.com، نرد خلال 48 ساعة عمل.' },
 ];
 
 /** Centre d'aide public (/aide et /ar/aide) : questions frequentes courtes et contact. */
@@ -44,7 +44,7 @@ const AR: Question[] = [
           <p>{{ f.r }} <a *ngIf="f.lien" [routerLink]="f.lien.vers">{{ f.lien.texte }}</a></p>
         </details>
       </section>
-      <a class="bouton" href="mailto:contact@tabibi.doctor">{{ ar ? 'اتصل بنا' : 'Nous contacter' }}</a>
+      <a class="bouton" href="mailto:contact@ndawik.com">{{ ar ? 'اتصل بنا' : 'Nous contacter' }}</a>
     </main>
   `,
     styles: [`

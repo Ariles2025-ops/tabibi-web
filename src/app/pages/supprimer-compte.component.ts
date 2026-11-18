@@ -35,7 +35,7 @@ import { referencerPage } from '../seo/page-seo';
 
       <section class="pg-carte">
         <h2>2. Par e-mail</h2>
-        <p>Écrivez à <a href="mailto:contact@tabibi.doctor?subject=Suppression%20de%20mon%20compte">contact&#64;tabibi.doctor</a>
+        <p>Écrivez à <a href="mailto:contact@ndawik.com?subject=Suppression%20de%20mon%20compte">contact&#64;ndawik.com</a>
           depuis l'adresse e-mail de votre compte, ou en indiquant le numéro de téléphone du compte, avec l'objet
           « Suppression de mon compte ». Nous traitons la demande sous un mois au plus et vous confirmons la suppression.</p>
       </section>
@@ -74,7 +74,7 @@ import { referencerPage } from '../seo/page-seo';
 
       <section class="pg-carte">
         <h2>2. عبر البريد الإلكتروني</h2>
-        <p>راسلنا على <a href="mailto:contact@tabibi.doctor?subject=%D8%AD%D8%B0%D9%81%20%D8%AD%D8%B3%D8%A7%D8%A8%D9%8A">contact&#64;tabibi.doctor</a>
+        <p>راسلنا على <a href="mailto:contact@ndawik.com?subject=%D8%AD%D8%B0%D9%81%20%D8%AD%D8%B3%D8%A7%D8%A8%D9%8A">contact&#64;ndawik.com</a>
           من البريد الإلكتروني المرتبط بحسابك، أو مع ذكر رقم هاتف الحساب، وعنوان الرسالة «حذف حسابي».
           نعالج الطلب في أجل أقصاه شهر ونؤكد لك الحذف.</p>
       </section>
@@ -123,8 +123,8 @@ export class SupprimerCompteComponent implements OnInit {
     referencerPage(this.document, this.title, this.meta, {
       titre: this.ar ? 'حذف حسابي' : 'Supprimer mon compte',
       description: this.ar
-        ? 'كيف تحذف حسابك في نداويك: من التطبيق («ملفي الشخصي») أو من الموقع («حسابي») ثم «حذف حسابي»، أو عبر البريد الإلكتروني contact@tabibi.doctor.'
-        : "Comment supprimer votre compte Ndawik : depuis l'application (Mon profil) ou le site (Mon compte) puis « Supprimer mon compte », ou par e-mail à contact@tabibi.doctor.",
+        ? 'كيف تحذف حسابك في نداويك: من التطبيق («ملفي الشخصي») أو من الموقع («حسابي») ثم «حذف حسابي»، أو عبر البريد الإلكتروني contact@ndawik.com.'
+        : "Comment supprimer votre compte Ndawik : depuis l'application (Mon profil) ou le site (Mon compte) puis « Supprimer mon compte », ou par e-mail à contact@ndawik.com.",
       chemin: '/supprimer-mon-compte',
       ar: this.ar,
     });

@@ -110,7 +110,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
                 <b>{{ ar() ? 'لديك سؤال؟' : 'Des questions ?' }}</b>
                 <span>{{ ar() ? 'اطّلع على المساعدة أو تواصل معنا.' : 'Consultez notre aide ou contactez-nous.' }}</span>
               </div>
-              <a class="siteft__contact" href="mailto:contact@tabibi.doctor">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
+              <a class="siteft__contact" href="mailto:contact@ndawik.com">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
             </div>
 
             <div class="siteft__cols">
@@ -123,7 +123,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
                 <a href="/legal/cgu.html">{{ ar() ? 'شروط الاستخدام' : "Conditions d'utilisation" }}</a>
                 <a href="/legal/confidentialite.html">{{ ar() ? 'الخصوصية' : 'Confidentialité' }}</a>
                 <a [routerLink]="pre() + '/supprimer-mon-compte'">{{ ar() ? 'حذف الحساب' : 'Supprimer mon compte' }}</a>
-                <a href="mailto:contact@tabibi.doctor">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
+                <a href="mailto:contact@ndawik.com">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
                 <a [routerLink]="pre() + '/praticien'">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
               </div>
               <div class="siteft__col">

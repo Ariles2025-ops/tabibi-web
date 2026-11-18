@@ -126,7 +126,7 @@ export class MoiComponent implements OnInit {
           this.auth.seConnecter('/moi');
         } else {
           this.erreurSuppression.set(
-            e.error?.erreur ?? 'La suppression a échoué. Réessayez ou écrivez à contact@tabibi.doctor.',
+            e.error?.erreur ?? 'La suppression a échoué. Réessayez ou écrivez à contact@ndawik.com.',
           );
         }
       },

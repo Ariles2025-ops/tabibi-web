@@ -12,7 +12,7 @@ export const SITE = 'https://ndawik.com';
 export const LIEN_GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=dz.tabibi.app';
 export const AUTRES_PROFILS: string[] = [];
 
-/** Titres et descriptions de l'accueil : la marque (Ndawik / نداويك) et « tabibi.doctor » y figurent. */
+/** Titres et descriptions de l'accueil : la marque (Ndawik / نداويك) et l ancien nom Tabibi y figurent. */
 export const ACCUEIL_FR = {
   titre: 'Ndawik : trouvez un médecin et prenez rendez-vous en Algérie',
   description: 'Ndawik (anciennement Tabibi) : la plateforme médicale qui réunit plus de 75 000 médecins, cliniques et pharmacies en Algérie. Trouvez un praticien par spécialité et par wilaya, et prenez rendez-vous en quelques clics.',
