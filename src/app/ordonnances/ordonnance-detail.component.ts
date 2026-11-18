@@ -63,7 +63,15 @@ import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.compon
           <p style="margin:0;font-size:2.2rem;font-weight:700;letter-spacing:.15em;font-family:ui-monospace,monospace;color:var(--vert)">
             {{ o.codeVerification }}
           </p>
-          <p style="margin:8px 0 0;color:var(--text3);font-size:.9rem">
+          <p class="sans-impression" style="margin:8px 0 0">
+            <button type="button" class="bouton-copier bouton sans-impression" [disabled]="!o.codeVerification" (click)="copierCode(o.codeVerification)">Copier le code</button>
+          </p>
+          <p *ngIf="codeCopie()" class="code-copie sans-impression" role="status" style="margin:8px 0 0;color:var(--vert)">Code copié</p>
+          <p *ngIf="aPresenter(o.statut)" class="a-presenter" style="margin:8px 0 0;color:var(--text3);font-size:.9rem">
+            À présenter en pharmacie ; vérifiable sans compte via
+            <a routerLink="/verifier" [queryParams]="{ code: o.codeVerification }" style="color:var(--vert)">Vérifier une ordonnance</a>.
+          </p>
+          <p *ngIf="!aPresenter(o.statut)" style="margin:8px 0 0;color:var(--text3);font-size:.9rem">
             Authenticité vérifiable sur Ndawik, page
             <a routerLink="/verifier" [queryParams]="{ code: o.codeVerification }" style="color:var(--vert)">Vérifier une ordonnance</a>.
           </p>
@@ -91,6 +99,7 @@ export class OrdonnanceDetailComponent implements OnInit {
   nomPatient = signal<string | null>(null);
   charge = signal(false);
   erreur = signal('');
+  codeCopie = signal(false);
 
   async ngOnInit() {
     await this.auth.pret();
@@ -105,6 +114,22 @@ export class OrdonnanceDetailComponent implements OnInit {
 
   imprimer() {
     window.print();
+  }
+
+  /** Vrai tant que l'ordonnance peut encore etre presentee en pharmacie (ni annulee ni delivree), comme l'appli. */
+  aPresenter(statut: string): boolean {
+    return !['ANNULEE', 'DELIVREE'].includes((statut ?? '').trim().toUpperCase());
+  }
+
+  /** Copie le code de verification (comme « Copier le code » de l'appli) puis confirme « Code copié ». */
+  async copierCode(code: string) {
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      this.codeCopie.set(true);
+    } catch {
+      this.codeCopie.set(false);
+    }
   }
 
   libelleStatut(statut: string): string {

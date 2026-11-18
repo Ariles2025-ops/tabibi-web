@@ -82,6 +82,7 @@ export function nettoyerProfil(saisie: DemandeProfil): DemandeProfil {
  * motif en francais, ou null si tout est correct. `aujourdHui` est la date locale (injectable pour les tests).
  */
 export function validerProfil(demande: DemandeProfil, aujourdHui: Date = new Date()): string | null {
+  if (demande.nomComplet.length === 0) return 'Indiquez votre nom complet.';
   if (demande.nomComplet.length < LONGUEUR_MIN_NOM || demande.nomComplet.length > LONGUEUR_MAX_NOM) {
     return `Le nom complet doit compter de ${LONGUEUR_MIN_NOM} à ${LONGUEUR_MAX_NOM} caractères.`;
   }
