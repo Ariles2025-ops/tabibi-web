@@ -8,6 +8,7 @@ import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RendezVous, RendezVousService } from '../rendezvous/rendezvous.service';
+import { LangueService } from '../partage/langue.service';
 import { Avis, AvisService } from './avis.service';
 import { DeposerAvisComponent } from './deposer-avis.component';
 
@@ -215,5 +216,50 @@ describe('DeposerAvisComponent', () => {
 
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(formulaire()).toBeNull();
+  });
+
+  describe('en arabe', () => {
+    beforeEach(() => TestBed.inject(LangueService).definir(true));
+    afterEach(() => TestBed.inject(LangueService).definir(false));
+
+    it('affiche le formulaire en arabe, de droite à gauche, sans texte français', async () => {
+      await afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('أبدِ رأيك');
+      expect(texte()).toContain('تقييمك');
+      expect(texte()).toContain('1 = غير راضٍ، 5 = ممتاز');
+      expect(texte()).toContain('تعليق (اختياري)');
+      expect(texte()).toContain('يُنشر رأيك دون ذكر اسمك في صفحة الطبيب.');
+      expect(texte()).toContain('إرسال رأيي');
+      expect(texte()).toContain('مع Dr Amina Belkacem');
+      expect(texte()).not.toContain('Donner mon avis');
+      expect(texte()).not.toContain('Envoyer mon avis');
+      const zone: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+      expect(zone.placeholder).toBe('الاستقبال، الإصغاء، الشرح...');
+    });
+
+    it('refuse un envoi sans note et confirme le dépôt en arabe', async () => {
+      service.deposer.and.returnValue(of(AVIS));
+      await afficher();
+
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('اختر تقييمًا من 1 إلى 5.');
+
+      await choisirNote(5);
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('شكرًا على رأيك.');
+      expect(texte()).toContain('عرض آرائي');
+    });
+
+    it('explique en arabe que le rendez-vous n est pas encore honoré', async () => {
+      rendezVous.mes.and.returnValue(of([{ ...HONORE, statut: 'CONFIRME' }]));
+      await afficher();
+
+      expect(formulaire()).toBeNull();
+      expect(texte()).toContain('يمكنك إبداء رأيك بعد إجراء الاستشارة');
+    });
   });
 });
