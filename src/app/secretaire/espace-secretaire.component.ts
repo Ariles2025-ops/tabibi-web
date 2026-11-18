@@ -28,7 +28,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
       <h1 style="color:var(--blue);margin:0 0 8px">Espace secrétaire</h1>
       <p style="color:var(--text3);margin:0 0 20px">
         Choisissez le cabinet pour lequel vous intervenez : vous consultez son agenda, ouvrez des créneaux et marquez
-        les rendez-vous honorés ou annulés. Le patient est prévenu de chaque annulation.
+        les rendez-vous honorés ou annulés. Le patient ayant un compte est prévenu de chaque annulation ; pour un rendez-vous pris par téléphone (📞), prévenez-le vous-même.
       </p>
 
       <p *ngIf="charge()" style="color:var(--text3)">Chargement…</p>
@@ -71,7 +71,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
                 <a *ngIf="r.telephonePatient || telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">{{ tel }}</a>
               </div>
               <div *ngIf="estConfirme(r) && aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <span style="color:var(--text2);font-size:.9rem">Annuler ce rendez-vous ? Le patient sera prévenu.</span>
+                <span style="color:var(--text2);font-size:.9rem">Annuler ce rendez-vous ?<ng-container *ngIf="r.source !== 'TELEPHONE'; else prevenirParTelephone"> Le patient sera prévenu.</ng-container><ng-template #prevenirParTelephone> Pensez à prévenir le patient par téléphone.</ng-template></span>
                 <button type="button" class="bouton" (click)="annuler(r)" [disabled]="enCours() !== null">
                   {{ estEnCours(r, 'annuler') ? 'Annulation…' : 'Oui' }}
                 </button>
@@ -263,7 +263,7 @@ export class EspaceSecretaireComponent implements OnInit {
 
   /** Annulation apres « Oui » : le creneau est remis a disposition et le patient prevenu. */
   annuler(rdv: RendezVous) {
-    this.agir(rdv, 'annuler', this.service.annuler(rdv.id), `Rendez-vous du ${this.formaterDate(rdv.debut)} annulé : le patient est prévenu.`);
+    this.agir(rdv, 'annuler', this.service.annuler(rdv.id), `Rendez-vous du ${this.formaterDate(rdv.debut)} annulé : ${rdv.source === 'TELEPHONE' ? 'le créneau est de nouveau proposé.' : 'le patient est prévenu.'}`);
   }
 
   /** Patient absent, apres « Oui » (POST /api/secretaire/rendezvous/{id}/absent). */
