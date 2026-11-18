@@ -73,6 +73,14 @@ describe('TableauDeBordAdminComponent', () => {
     expect(auth.seConnecter).toHaveBeenCalled();
   });
 
+  it('decrit le moment du rappel : dans les 24 heures precedentes, pas « la veille »', () => {
+    fixture.detectChanges();
+
+    const t = texte().replace(/\s+/g, ' ');
+    expect(t).toContain('dans les 24 heures qui précèdent chaque rendez-vous confirmé');
+    expect(t).not.toContain('la veille');
+  });
+
   it('execute les rappels a la demande et affiche le nombre envoye, accorde', () => {
     service.executerRappels.and.returnValues(of(3), of(0));
     fixture.detectChanges();
