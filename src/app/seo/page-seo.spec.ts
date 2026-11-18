@@ -5,7 +5,7 @@ describe('pages sans version arabe', () => {
     for (const u of ['/bientot', '/verifier', '/supprimer-mon-compte', '/praticien', '/verifier?x=1', '/bientot/']) {
       expect(estPageFrancaiseSeule(u)).withContext(u).toBeTrue();
     }
-    for (const u of ['/ar/bientot', '/praticiens/abc', '/', '/ar']) {
+    for (const u of ['/ar/bientot', '/ar/praticien', '/ar/verifier', '/praticiens/abc', '/', '/ar']) {
       expect(estPageFrancaiseSeule(u)).withContext(u).toBeFalse();
     }
   });
