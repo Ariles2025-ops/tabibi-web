@@ -221,6 +221,24 @@ describe('EspaceSecretaireComponent', () => {
     expect(service.agenda).toHaveBeenCalledTimes(2);
   });
 
+  it('rendez-vous pris par telephone : ne dit pas que le patient est prevenu', async () => {
+    const TEL: RendezVous = { ...CONFIRME, source: 'TELEPHONE', nomPatient: 'Karim Ziani' };
+    service.agenda.and.returnValue(of([TEL]));
+    service.annuler.and.returnValue(of({ ...TEL, statut: 'ANNULE' }));
+    await afficher();
+
+    bouton('Annuler')!.click();
+    await afficher();
+    expect(texte()).toContain('Pensez à prévenir le patient par téléphone.');
+    expect(texte()).not.toContain('Le patient sera prévenu');
+    bouton('Oui')!.click();
+    await afficher();
+
+    expect(service.annuler).toHaveBeenCalledWith('r1');
+    expect(texte()).toContain('annulé : le créneau est de nouveau proposé.');
+    expect(texte()).not.toContain('le patient est prévenu.');
+  });
+
   it('affiche le motif { erreur } d un 409 (plus confirme) et recharge l agenda', async () => {
     service.honorer.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Seul un rendez-vous confirme peut etre honore.' } })),
