@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { InscriptionAttente, ListeAttenteService } from '../liste-attente/liste-attente.service';
+import { LangueService } from '../partage/langue.service';
 import { ListeAttenteMedecinComponent } from './liste-attente-medecin.component';
 import { PatientsService } from './patients.service';
 
@@ -19,6 +20,7 @@ describe('ListeAttenteMedecinComponent', () => {
   let auth: { seConnecter: jasmine.Spy };
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<ListeAttenteService>('ListeAttenteService', ['duMedecin']);
     auth = { seConnecter: jasmine.createSpy('seConnecter') };
@@ -75,5 +77,27 @@ describe('ListeAttenteMedecinComponent', () => {
     fixture = TestBed.createComponent(ListeAttenteMedecinComponent);
     fixture.detectChanges();
     expect(auth.seConnecter).toHaveBeenCalled();
+  });
+
+  it('s\'affiche en arabe (titre, « مريض » a defaut de nom, date) quand la langue est l\'arabe', () => {
+    TestBed.inject(LangueService).ar.set(true);
+    service.duMedecin.and.returnValue(of([RECENTE, ANCIENNE]));
+    fixture.detectChanges();
+
+    expect(texte()).toContain('قائمة الانتظار');
+    expect(texte()).toContain('مريض');
+    expect(texte()).toContain('Karim Ouali');
+    expect(texte()).toContain('سُجّل في');
+    expect(texte()).toContain('10/09/2026');
+    expect(texte()).not.toContain('Inscrit le');
+    expect(texte()).not.toContain('Patient');
+  });
+
+  it('en arabe, la liste vide et la page reservee aux medecins sont en arabe', () => {
+    TestBed.inject(LangueService).ar.set(true);
+    service.duMedecin.and.returnValue(of([]));
+    fixture.detectChanges();
+    expect(texte()).toContain('لا يوجد مرضى في قائمة الانتظار حاليًا.');
+    expect(texte()).not.toContain("Aucun patient");
   });
 });
