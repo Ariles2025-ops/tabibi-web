@@ -75,6 +75,11 @@ export function peutProposerTeleconsultation(r: RendezVous, maintenant = Date.no
   return estConfirme(r) && Date.parse(r.debut) > maintenant;
 }
 
+/** Le cabinet ne peut annuler qu'un rendez-vous confirme qui n'a pas encore commence (le serveur refuse sinon : 409). */
+export function peutAnnulerCabinet(r: RendezVous, maintenant = Date.now()): boolean {
+  return estConfirme(r) && Date.parse(r.debut) > maintenant;
+}
+
 /** Action en cours sur un element d'une liste (seul le bouton clique affiche « … »). */
 export interface ActionEnCours {
   id: string;

@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 import { DeplacerRendezVousComponent } from '../rendezvous/deplacer-rendez-vous.component';
 import { AnnuaireService, Creneau } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
-import { ActionEnCours, estConfirme, peutHonorer, peutMarquerAbsent, rendezVousAVenir, rendezVousPasses, styleOnglet } from '../medecin/agenda-utils';
+import { ActionEnCours, estConfirme, peutAnnulerCabinet, peutHonorer, peutMarquerAbsent, rendezVousAVenir, rendezVousPasses, styleOnglet } from '../medecin/agenda-utils';
 import { GestionCreneauxComponent, SourceCreneaux } from '../medecin/gestion-creneaux.component';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from '../medecin/patients.service';
 import { LangueService } from '../partage/langue.service';
@@ -95,7 +95,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
                   Patient absent
                 </button>
                 <button *ngIf="peutDeplacer(r)" type="button" class="bouton-secondaire deplacer-btn" (click)="aDeplacer.set(r.id)" [disabled]="enCours() !== null">Déplacer</button>
-                <button type="button" (click)="absentAConfirmer.set(null); aConfirmer.set(r.id)" [disabled]="enCours() !== null"
+                <button *ngIf="peutAnnulerCabinet(r)" type="button" (click)="absentAConfirmer.set(null); aConfirmer.set(r.id)" [disabled]="enCours() !== null"
                         style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
                   Annuler
                 </button>
@@ -222,6 +222,10 @@ export class EspaceSecretaireComponent implements OnInit {
 
   /** CONFIRME ou RESERVE : actions proposees (voir agenda-utils). */
   estConfirme = estConfirme;
+
+  peutAnnulerCabinet(r: RendezVous): boolean {
+    return peutAnnulerCabinet(r, Date.now());
+  }
 
   peutHonorer(r: RendezVous): boolean {
     return peutHonorer(r, Date.now());

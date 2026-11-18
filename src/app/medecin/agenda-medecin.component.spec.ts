@@ -135,6 +135,13 @@ describe('AgendaMedecinComponent', () => {
     expect(medecinService.agenda).toHaveBeenCalledTimes(2);
   });
 
+  it('pas de bouton « Annuler » sur un rendez-vous passe (le serveur le refuse)', () => {
+    medecinService.agenda.and.returnValue(of([COMMENCE]));
+    fixture.detectChanges();
+
+    expect(boutonsAnnuler().length).toBe(0);
+  });
+
   it('planifie la teleconsultation puis affiche une confirmation avec la date du rendez-vous', () => {
     teleconsultations.planifier.and.returnValue(of(PLANIFIEE));
     fixture.detectChanges();
