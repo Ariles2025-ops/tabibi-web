@@ -11,6 +11,7 @@ import { PatientsService } from '../medecin/patients.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { EspaceSecretaireComponent } from './espace-secretaire.component';
 import { Rattachement, SecretaireService } from './secretaire.service';
+import { instantAlger, valeurDateHeureLocale } from '../medecin/agenda-utils';
 
 const CABINET_1: Rattachement = { id: 'ra1', medecinId: 'm1', secretaireId: 's1', creeLe: '2026-09-01T10:00:00Z' };
 const CABINET_2: Rattachement = { id: 'ra2', medecinId: 'm2', secretaireId: 's1', creeLe: '2026-09-10T10:00:00Z' };
@@ -106,14 +107,12 @@ describe('EspaceSecretaireComponent', () => {
     await afficher();
   }
 
-  /** Date locale dans un an, au format du champ datetime-local, et son equivalent ISO 8601 UTC. */
+  /** Date (heure d'Algerie) dans un an, au format du champ datetime-local, et son equivalent ISO 8601 UTC. */
   function dansUnAn(): { local: string; iso: string } {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() + 1);
-    d.setHours(9, 30, 0, 0);
-    const deux = (n: number) => String(n).padStart(2, '0');
-    const local = `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}T09:30`;
-    return { local, iso: d.toISOString() };
+    // Jour d'Algerie (UTC+1) dans un an ; l'heure saisie est interpretee en heure d'Algerie.
+    const jour = valeurDateHeureLocale(new Date()).slice(0, 10);
+    const date = `${Number(jour.slice(0, 4)) + 1}${jour.slice(4)}`;
+    return { local: `${date}T09:30`, iso: new Date(instantAlger(date, '09:30')).toISOString() };
   }
 
   it('choisit d office l unique cabinet et affiche les rendez-vous a venir avec le nom du patient', async () => {

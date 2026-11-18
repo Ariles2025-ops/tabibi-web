@@ -306,7 +306,7 @@ export class EspaceSecretaireComponent implements OnInit {
   }
 
   private formaterDate(iso: string): string {
-    return formatDate(iso, 'EEEE d MMMM à HH:mm', this.locale);
+    return formatDate(iso, 'EEEE d MMMM à HH:mm', this.locale, '+0100');
   }
 
   /** Recupere (une seule fois par medecin) le nom des praticiens rattaches ; un echec laisse l'identifiant abrege. */
