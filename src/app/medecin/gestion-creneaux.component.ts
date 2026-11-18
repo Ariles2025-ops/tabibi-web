@@ -282,7 +282,7 @@ export class GestionCreneauxComponent implements OnChanges {
     });
   }
 
-  /** Serie : creneaux consecutifs de `serieDebut` a `serieFin` ; les appels s'arretent a la premiere erreur. */
+  /** Serie : creneaux consecutifs de `serieDebut` a `serieFin` ; un chevauchement (400) est ignore, les autres erreurs arretent la serie. */
   ouvrirSerie() {
     this.reinitialiserMessages();
     const duree = Number(this.serieDuree);
@@ -345,25 +345,46 @@ export class GestionCreneauxComponent implements OnChanges {
     });
   }
 
-  private ouvrirSuivant(debuts: Date[], index: number, duree: number) {
+  private ouvrirSuivant(debuts: Date[], index: number, duree: number, ignores = 0) {
     if (index >= debuts.length) {
-      this.ouverture.set(false);
-      this.succesSerie.set(`${debuts.length} créneau${debuts.length > 1 ? 'x' : ''} ouvert${debuts.length > 1 ? 's' : ''}.`);
-      this.charger();
+      this.terminerSerie(debuts.length - ignores, ignores);
       return;
     }
     this.source().ouvrir(debuts[index].toISOString(), duree).subscribe({
-      next: () => this.ouvrirSuivant(debuts, index + 1, duree),
+      next: () => this.ouvrirSuivant(debuts, index + 1, duree, ignores),
       error: (e: HttpErrorResponse) => {
-        this.ouverture.set(false);
-        if (index > 0) {
-          this.succesSerie.set(`${index} créneau${index > 1 ? 'x' : ''} ouvert${index > 1 ? 's' : ''} avant l'arrêt.`);
-          this.charger();
+        // 400 « chevauche » = creneau existant : on l'ignore et on passe au suivant.
+        // Tout autre 400 (ex. plus de 6 mois a l'avance) arrete la serie avec son message.
+        if (e.status === 400 && /chevauch/i.test(String(e.error?.erreur ?? ''))) {
+          this.ouvrirSuivant(debuts, index + 1, duree, ignores + 1);
+          return;
         }
+        this.ouverture.set(false);
+        const ouverts = index - ignores;
+        if (ouverts > 0) {
+          this.succesSerie.set(this.resumeSerie(ouverts, ignores, " avant l'arrêt"));
+        }
+        if (index > 0) this.charger();
         const heure = valeurDateHeureLocale(debuts[index]).slice(11);
         this.traiterErreurOuverture(e, `Arrêt au créneau de ${heure} : `);
       },
     });
+  }
+
+  private terminerSerie(ouverts: number, ignores: number) {
+    this.ouverture.set(false);
+    if (ouverts === 0) {
+      this.erreur.set(`Aucun créneau ouvert : ${ignores} ignoré${ignores > 1 ? 's' : ''} (déjà pris).`);
+    } else {
+      this.succesSerie.set(this.resumeSerie(ouverts, ignores, ''));
+    }
+    this.charger();
+  }
+
+  private resumeSerie(ouverts: number, ignores: number, suffixe: string): string {
+    const base = `${ouverts} créneau${ouverts > 1 ? 'x' : ''} ouvert${ouverts > 1 ? 's' : ''}`;
+    const ign = ignores > 0 ? `, ${ignores} ignoré${ignores > 1 ? 's' : ''} (déjà pris)` : '';
+    return `${base}${ign}${suffixe}.`;
   }
 
   private dureeValide(duree: number): boolean {
