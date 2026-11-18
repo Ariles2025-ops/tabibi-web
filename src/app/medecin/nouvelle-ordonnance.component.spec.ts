@@ -33,6 +33,7 @@ describe('NouvelleOrdonnanceComponent', () => {
 
   beforeEach(() => {
     registerLocaleData(localeFr);
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     query = {};
     ordonnances = jasmine.createSpyObj<OrdonnanceService>('OrdonnanceService', ['emettre']);
     patients = jasmine.createSpyObj<PatientsService>('PatientsService', ['patientsDuMedecin']);
@@ -138,5 +139,31 @@ describe('NouvelleOrdonnanceComponent', () => {
     await afficher();
 
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Rendez-vous absent.');
+  });
+  it('est disponible en arabe, comme dans l\'appli : libelles, placeholders, sens RTL et message d\'erreur', async () => {
+    localStorage.setItem('tabibi.langue', 'ar');
+    ordonnances.emettre.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404, error: {} })));
+    query = { patientId: 'p1' };
+    creer();
+    await afficher();
+
+    const racine: HTMLElement = fixture.nativeElement;
+    expect(racine.querySelector('main')!.getAttribute('dir')).toBe('rtl');
+    expect(racine.querySelector('h1')!.textContent).toContain('وصفة جديدة');
+    expect(libelles(select('patientId'))[0]).toBe('اختر مريضًا');
+    expect(libelles(select('rendezVousId'))[0]).toBe('لا شيء');
+    expect(racine.textContent).toContain('الموعد المرتبط (اختياري)');
+    expect(racine.textContent).toContain('إضافة سطر');
+    expect(racine.querySelector('button[type="submit"]')!.textContent).toContain('إصدار الوصفة');
+    const medicament: HTMLInputElement = racine.querySelector('input[placeholder="مثال: باراسيتامول 1 غ"]')!;
+    expect(medicament).not.toBeNull();
+    medicament.value = 'Doliprane';
+    medicament.dispatchEvent(new Event('input'));
+    await afficher();
+    racine.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await afficher();
+
+    expect(racine.querySelector('[role="alert"]')!.textContent).toContain('المريض أو الموعد غير موجود.');
+    localStorage.removeItem('tabibi.langue');
   });
 });
