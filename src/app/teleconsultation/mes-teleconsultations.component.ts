@@ -51,6 +51,8 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
               </ng-container>
             </div>
 
+            <p *ngIf="texteEtat(t) as etat" class="texte-etat" style="margin:12px 0 0;color:var(--text2)">{{ etat }}</p>
+
             <section *ngIf="consentementAttendu(t)"
                      style="margin:12px 0 0;padding:12px;border:1px solid var(--vert);border-radius:8px;background:#f3faf7">
               <p style="margin:0 0 10px">
@@ -151,6 +153,17 @@ export class MesTeleconsultationsComponent implements OnInit {
 
   salleAccessible(t: Teleconsultation): boolean {
     return salleAccessible(t);
+  }
+
+  /**
+   * Texte d'etat quand aucune action n'est possible, comme l'appli : session terminee, annulee, ou lien de salle
+   * pas encore remis. Vide si l'on attend le consentement ou si la salle est accessible.
+   */
+  texteEtat(t: Teleconsultation): string {
+    if (this.consentementAttendu(t) || salleAccessible(t)) return '';
+    if (t.statut === 'TERMINEE') return 'Cette téléconsultation est terminée.';
+    if (t.statut === 'ANNULEE') return 'Cette téléconsultation a été annulée.';
+    return 'Le lien de la salle sera disponible prochainement.';
   }
 
   libelleStatut(statut: string): string {
