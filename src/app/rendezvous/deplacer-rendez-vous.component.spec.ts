@@ -43,4 +43,17 @@ describe('DeplacerRendezVousComponent', () => {
     expect(f.componentInstance.erreur()).toBe(MESSAGE_CRENEAU_PRIS);
     expect(f.componentInstance.libres()).toEqual([]);
   });
+
+  it('affiche le panneau et le message « creneau pris » en arabe quand l ecran est en arabe', () => {
+    const f = creer(() => throwError(() => new HttpErrorResponse({ status: 409 })));
+    f.componentRef.setInput('arabe', true);
+    f.componentInstance.confirmer(creneau('c2'));
+    f.detectChanges();
+    const texte = (f.nativeElement as HTMLElement).textContent ?? '';
+    expect(texte).toContain('اختر موعدًا جديدًا');
+    expect(texte).toContain('إغلاق');
+    expect(texte).toContain('هذا الموعد حُجز للتوّ');
+    expect(texte).not.toContain('Fermer');
+    expect(texte).not.toContain('Choisissez');
+  });
 });
