@@ -10,6 +10,7 @@ import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { PatientsService } from '../medecin/patients.service';
 import { Moi } from '../moi/moi.service';
+import { LangueService } from '../partage/langue.service';
 import { MesConversationsComponent } from './mes-conversations.component';
 import { Conversation, MessagerieService } from './messagerie.service';
 
@@ -165,5 +166,35 @@ describe('MesConversationsComponent', () => {
     await afficher();
 
     expect(texte()).toContain('Cette page est réservée aux patients et aux médecins.');
+  });
+
+  it('affiche la page en arabe (de droite a gauche) avec les memes mots que l appli', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      await afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('الرسائل');
+      expect(texte()).toContain('2 غير مقروءة');
+      expect(texte()).toContain('آخر رسالة في');
+      expect(texte()).toContain('18/09/2026');
+      expect(texte()).not.toContain('non lus');
+
+      service.mesConversations.and.returnValue(of([]));
+      fixture = TestBed.createComponent(MesConversationsComponent);
+      await afficher();
+      expect(texte()).toContain('لا توجد محادثات حاليًا.');
+      expect(texte()).toContain('ابحث عن طبيب');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
+  });
+
+  it('dit « Aucun message » quand la date du dernier message manque, au lieu d une phrase vide', async () => {
+    service.mesConversations.and.returnValue(of([{ ...RECENTE, dernierMessageLe: '' }]));
+    await afficher();
+
+    expect(texte()).toContain('Aucun message');
+    expect(texte()).not.toContain('Dernier message le');
   });
 });

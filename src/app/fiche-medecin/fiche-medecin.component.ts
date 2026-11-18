@@ -10,6 +10,7 @@ import { RoleService } from '../auth/role.service';
 import { SyntheseAvisComponent } from '../avis/synthese-avis.component';
 import { ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { MessagerieService } from '../messagerie/messagerie.service';
+import { cleJour } from '../medecin/agenda-utils';
 
 @Component({
     selector: 'app-fiche-medecin',
@@ -292,8 +293,7 @@ export class FicheMedecinComponent implements OnInit {
   joursCreneaux = computed<{ date: string; creneaux: Creneau[] }[]>(() => {
     const groupes = new Map<string, { date: string; creneaux: Creneau[] }>();
     for (const c of this.creneaux()) {
-      const d = new Date(c.debut);
-      const cle = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      const cle = cleJour(c.debut);
       let groupe = groupes.get(cle);
       if (!groupe) { groupe = { date: c.debut, creneaux: [] }; groupes.set(cle, groupe); }
       groupe.creneaux.push(c);

@@ -10,6 +10,7 @@ import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { PatientsService } from '../medecin/patients.service';
 import { Moi } from '../moi/moi.service';
+import { LangueService } from '../partage/langue.service';
 import { ConversationComponent } from './conversation.component';
 import { Conversation, Message, MessagerieService } from './messagerie.service';
 
@@ -284,5 +285,28 @@ describe('ConversationComponent', () => {
     expect(service.messages).not.toHaveBeenCalled();
 
     fixture.destroy();
+  }));
+
+  it('affiche le fil en arabe (de droite a gauche) avec les memes mots que l appli', fakeAsync(() => {
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('العودة إلى الرسائل');
+      expect(texte()).toContain('رسالتك');
+      expect(texte()).toContain('إرسال');
+      expect(texte()).not.toContain('Envoyer');
+      expect(texte()).not.toContain('Retour à la messagerie');
+
+      service.messages.and.returnValue(of([]));
+      fixture.destroy();
+      fixture = TestBed.createComponent(ConversationComponent);
+      afficher();
+      expect(texte()).toContain('لا توجد رسائل حاليًا. اكتب أول رسالة.');
+      fixture.destroy();
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
   }));
 });

@@ -1,94 +1,104 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { AnnuaireService } from '../annuaire/annuaire.service';
+import { Observable } from 'rxjs';
+import { AnnuaireService, Creneau } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { AvisService } from '../avis/avis.service';
 import { RendezVous, RendezVousService } from './rendezvous.service';
-import { estAnnule, libelleStatutRendezVous } from './statut-rendez-vous';
+import { DeplacerRendezVousComponent } from './deplacer-rendez-vous.component';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
+import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from './statut-rendez-vous';
 
 @Component({
     selector: 'app-mes-rendez-vous',
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, DeplacerRendezVousComponent, SelecteurLangueComponent],
     template: `
-    <main class="mr">
+    <main class="mr" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
       <header class="mr-tete">
         <div>
-          <h1>Mes rendez-vous</h1>
-          <p>Retrouvez vos consultations à venir et votre historique.</p>
+          <h1>{{ l.t('Mes rendez-vous', 'مواعيدي') }}</h1>
+          <p>{{ l.t('Retrouvez vos consultations à venir et votre historique.', 'اطّلع على استشاراتك القادمة وسجلّ مواعيدك.') }}</p>
         </div>
-        <a routerLink="/" class="mr-btn mr-btn--pri"><i class="fa fa-magnifying-glass fa-xs"></i> Prendre un rendez-vous</a>
+        <app-selecteur-langue />
+        <a routerLink="/" class="mr-btn mr-btn--pri"><i class="fa fa-magnifying-glass fa-xs"></i> {{ l.t('Prendre un rendez-vous', 'احجز موعدًا') }}</a>
       </header>
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge() && !rendezVous().length" class="mr-muted">Chargement de vos rendez-vous…</p>
+        <p *ngIf="charge() && !rendezVous().length" class="mr-muted">{{ l.t('Chargement de vos rendez-vous…', 'جارٍ تحميل مواعيدك…') }}</p>
         <p *ngIf="erreur()" class="mr-err" role="alert">{{ erreur() }}</p>
         <p *ngIf="succes()" class="mr-muted" role="status">{{ succes() }}</p>
 
         <!-- Aucun rendez-vous du tout -->
         <div *ngIf="!charge() && !erreur() && rendezVous().length === 0" class="mr-vide">
           <div class="mr-vide-ic"><i class="fa fa-calendar-plus"></i></div>
-          <h2>Aucun rendez-vous pour le moment</h2>
-          <p>Trouvez un praticien près de chez vous et réservez en quelques secondes.</p>
-          <a routerLink="/" class="mr-btn mr-btn--pri">Trouver un praticien</a>
+          <h2>{{ l.t('Aucun rendez-vous pour le moment', 'لا توجد مواعيد حاليًا') }}</h2>
+          <p>{{ l.t('Trouvez un praticien près de chez vous et réservez en quelques secondes.', 'اعثر على ممارس قريب منك واحجز في ثوانٍ.') }}</p>
+          <a routerLink="/" class="mr-btn mr-btn--pri">{{ l.t('Trouver un praticien', 'ابحث عن ممارس') }}</a>
         </div>
 
         <ng-container *ngIf="rendezVous().length">
           <!-- A venir -->
           <section class="mr-sec">
-            <h2 class="mr-sec-titre">À venir <span class="mr-compte">{{ aVenir().length }}</span></h2>
+            <h2 class="mr-sec-titre">{{ l.t('À venir', 'القادمة') }} <span class="mr-compte">{{ aVenir().length }}</span></h2>
             <p *ngIf="aVenir().length === 0" class="mr-sec-vide">
-              Aucun rendez-vous à venir. <a routerLink="/">Trouver un praticien</a>
+              {{ l.t('Aucun rendez-vous à venir.', 'لا توجد مواعيد قادمة.') }} <a routerLink="/">{{ l.t('Trouver un praticien', 'ابحث عن ممارس') }}</a>
             </p>
             <ul class="mr-liste">
               <li *ngFor="let r of aVenir()" class="mr-carte">
                 <div class="mr-date" aria-hidden="true">
-                  <span class="mr-date-j">{{ r.debut | date:'EEE' }}</span>
+                  <span class="mr-date-j">{{ l.ar() ? '' : (r.debut | date:'EEE') }}</span>
                   <span class="mr-date-n">{{ r.debut | date:'d' }}</span>
-                  <span class="mr-date-m">{{ r.debut | date:'MMM' }}</span>
+                  <span class="mr-date-m">{{ l.ar() ? (r.debut | date:'MM/yy') : (r.debut | date:'MMM') }}</span>
                 </div>
                 <div class="mr-corps">
-                  <span class="mr-quand"><span class="mr-cap">{{ r.debut | date:'EEEE d MMMM' }}</span> à {{ r.debut | date:'HH:mm' }}</span>
-                  <a [routerLink]="['/medecins', r.medecinId]" class="mr-doc">{{ noms()[r.medecinId] ?? 'Voir le praticien' }}</a>
+                  <span class="mr-quand" *ngIf="!l.ar()"><span class="mr-cap">{{ r.debut | date:'EEEE d MMMM' }}</span> à {{ r.debut | date:'HH:mm' }}</span>
+                  <span class="mr-quand" *ngIf="l.ar()" dir="ltr">{{ r.debut | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <a [routerLink]="['/medecins', r.medecinId]" class="mr-doc">{{ noms()[r.medecinId] ?? l.t('Voir le praticien', 'عرض الممارس') }}</a>
                   <span class="mr-statut" [class.mr-statut--ok]="r.statut === 'CONFIRME' || r.statut === 'RESERVE'">{{ libelleStatut(r.statut) }}</span>
                 </div>
                 <div class="mr-actions">
                   <ng-container *ngIf="aConfirmer() !== r.id">
-                    <a [routerLink]="['/medecins', r.medecinId]" class="mr-btn mr-btn--sec">Voir la fiche</a>
-                    <button *ngIf="peutAnnuler(r)" type="button" class="mr-btn mr-btn--danger" (click)="aConfirmer.set(r.id)" [disabled]="enCours() !== null">Annuler</button>
+                    <a [routerLink]="['/medecins', r.medecinId]" class="mr-btn mr-btn--sec">{{ l.t('Voir la fiche', 'عرض الملف') }}</a>
+                    <button *ngIf="peutDeplacer(r)" type="button" class="mr-btn mr-btn--sec deplacer-btn" (click)="aDeplacer.set(r.id)" [disabled]="enCours() !== null">{{ l.t('Déplacer', 'نقل') }}</button>
+                    <button *ngIf="peutAnnuler(r)" type="button" class="mr-btn mr-btn--danger" (click)="aConfirmer.set(r.id)" [disabled]="enCours() !== null">{{ l.t('Annuler', 'إلغاء') }}</button>
                   </ng-container>
-                  <div *ngIf="aConfirmer() === r.id" class="mr-confirm" role="group" aria-label="Confirmer l'annulation">
-                    <span>Annuler ce rendez-vous ?</span>
+                  <div *ngIf="aConfirmer() === r.id" class="mr-confirm" role="group" [attr.aria-label]="l.t('Confirmer l’annulation', 'تأكيد الإلغاء')">
+                    <span>{{ l.t('Annuler ce rendez-vous ?', 'إلغاء هذا الموعد؟') }}</span>
                     <button type="button" class="mr-btn mr-btn--danger-plein" (click)="annuler(r)" [disabled]="enCours() !== null">
-                      {{ enCours() === r.id ? 'Annulation…' : "Oui, annuler" }}
+                      {{ enCours() === r.id ? l.t('Annulation…', 'جارٍ الإلغاء…') : l.t('Oui, annuler', 'نعم، إلغاء') }}
                     </button>
-                    <button type="button" class="mr-btn mr-btn--sec" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">Non, garder</button>
+                    <button type="button" class="mr-btn mr-btn--sec" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">{{ l.t('Non, garder', 'لا، أبقِه') }}</button>
                   </div>
                 </div>
+                <app-deplacer-rendez-vous *ngIf="aDeplacer() === r.id" style="grid-column:1 / -1" [rendezVous]="r"
+                  [lister]="listerCreneaux" [deplacer]="deplacerFn" (deplace)="apresDeplacement($event)" (annule)="aDeplacer.set(null)" [arabe]="l.ar()" />
               </li>
             </ul>
           </section>
 
           <!-- Historique -->
           <section *ngIf="passes().length" class="mr-sec">
-            <h2 class="mr-sec-titre">Passés <span class="mr-compte">{{ passes().length }}</span></h2>
+            <h2 class="mr-sec-titre">{{ l.t('Passés', 'السابقة') }} <span class="mr-compte">{{ passes().length }}</span></h2>
             <ul class="mr-liste">
               <li *ngFor="let r of passes()" class="mr-carte mr-carte--passe">
                 <div class="mr-date" aria-hidden="true">
-                  <span class="mr-date-j">{{ r.debut | date:'EEE' }}</span>
+                  <span class="mr-date-j">{{ l.ar() ? '' : (r.debut | date:'EEE') }}</span>
                   <span class="mr-date-n">{{ r.debut | date:'d' }}</span>
-                  <span class="mr-date-m">{{ r.debut | date:'MMM' }}</span>
+                  <span class="mr-date-m">{{ l.ar() ? (r.debut | date:'MM/yy') : (r.debut | date:'MMM') }}</span>
                 </div>
                 <div class="mr-corps">
-                  <span class="mr-quand"><span class="mr-cap">{{ r.debut | date:'EEEE d MMMM y' }}</span> à {{ r.debut | date:'HH:mm' }}</span>
-                  <a [routerLink]="['/medecins', r.medecinId]" class="mr-doc">{{ noms()[r.medecinId] ?? 'Voir le praticien' }}</a>
+                  <span class="mr-quand" *ngIf="!l.ar()"><span class="mr-cap">{{ r.debut | date:'EEEE d MMMM y' }}</span> à {{ r.debut | date:'HH:mm' }}</span>
+                  <span class="mr-quand" *ngIf="l.ar()" dir="ltr">{{ r.debut | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <a [routerLink]="['/medecins', r.medecinId]" class="mr-doc">{{ noms()[r.medecinId] ?? l.t('Voir le praticien', 'عرض الممارس') }}</a>
                   <span class="mr-statut" [class.mr-statut--annule]="estAnnule(r.statut) || r.statut === 'ABSENT'">{{ libelleStatutPasse(r) }}</span>
                 </div>
                 <div class="mr-actions">
-                  <a *ngIf="r.statut === 'HONORE' && !avisDonne(r)" class="mr-btn mr-btn--sec" [routerLink]="['/avis/nouveau', r.id]"><i class="fa fa-star fa-xs"></i> Donner mon avis</a>
-                  <span *ngIf="r.statut === 'HONORE' && avisDonne(r)" class="mr-avis-ok"><i class="fa fa-circle-check fa-xs"></i> Avis donné</span>
-                  <a [routerLink]="['/medecins', r.medecinId]" class="mr-btn mr-btn--sec">Reprendre rendez-vous</a>
+                  <a *ngIf="r.statut === 'HONORE' && !avisDonne(r)" class="mr-btn mr-btn--sec" [routerLink]="['/avis/nouveau', r.id]"><i class="fa fa-star fa-xs"></i> {{ l.t('Donner mon avis', 'أبدِ رأيك') }}</a>
+                  <span *ngIf="r.statut === 'HONORE' && avisDonne(r)" class="mr-avis-ok"><i class="fa fa-circle-check fa-xs"></i> {{ l.t('Avis donné', 'تم تقديم الرأي') }}</span>
+                  <a [routerLink]="['/medecins', r.medecinId]" class="mr-btn mr-btn--sec">{{ l.t('Reprendre rendez-vous', 'احجز موعدًا جديدًا') }}</a>
                 </div>
               </li>
             </ul>
@@ -162,10 +172,12 @@ import { estAnnule, libelleStatutRendezVous } from './statut-rendez-vous';
   `]
 })
 export class MesRendezVousComponent implements OnInit {
+  l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(RendezVousService);
   private annuaire = inject(AnnuaireService);
   private avis = inject(AvisService);
+  private locale = inject(LOCALE_ID);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -180,6 +192,8 @@ export class MesRendezVousComponent implements OnInit {
   passes = computed(() => this.rendezVous().filter((r) => !this.estAVenir(r)).reverse());
   /** Rendez-vous dont l'annulation attend la confirmation du patient (confirmation dans la page). */
   aConfirmer = signal<string | null>(null);
+  /** Rendez-vous dont le panneau « Déplacer » est ouvert. */
+  aDeplacer = signal<string | null>(null);
   charge = signal(false);
   /** Identifiant du rendez-vous dont l'annulation est en cours. */
   enCours = signal<string | null>(null);
@@ -213,9 +227,9 @@ export class MesRendezVousComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux patients.');
+          this.erreur.set(this.l.t('Cette page est réservée aux patients.', 'هذه الصفحة مخصّصة للمرضى.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos rendez-vous.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Impossible de charger vos rendez-vous.', 'تعذّر تحميل مواعيدك.'));
         }
       },
     });
@@ -230,13 +244,36 @@ export class MesRendezVousComponent implements OnInit {
         this.enCours.set(null);
         this.aConfirmer.set(null);
         this.charger();
-        this.succes.set('Rendez-vous annulé.');
+        this.succes.set(this.l.t('Rendez-vous annulé.', 'تم إلغاء الموعد.'));
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
-        this.erreur.set(e.error?.erreur ?? "L'annulation a échoué, veuillez réessayer.");
+        this.erreur.set(e.error?.erreur ?? this.l.t("L'annulation a échoué, veuillez réessayer.", 'فشل الإلغاء، يرجى المحاولة مرة أخرى.'));
       },
     });
+  }
+
+  peutDeplacer(rdv: RendezVous): boolean {
+    return this.estAVenir(rdv) && rdv.source !== 'TELEPHONE';
+  }
+
+  /** Creneaux du medecin du rendez-vous dont le panneau est ouvert. */
+  listerCreneaux = (): Observable<Creneau[]> => {
+    const rdv = this.rendezVous().find((r) => r.id === this.aDeplacer());
+    return this.annuaire.creneaux(rdv?.medecinId ?? '');
+  };
+
+  deplacerFn = (rdv: RendezVous, creneauId: string) => this.service.deplacer(rdv.id, creneauId);
+
+  apresDeplacement(creneau: Creneau) {
+    this.aDeplacer.set(null);
+    this.erreur.set('');
+    this.succes.set(
+      this.l.ar()
+        ? `تم نقل الموعد إلى ${formatDate(creneau.debut, 'dd/MM/yyyy HH:mm', this.locale)}.`
+        : `Rendez-vous déplacé au ${formatDate(creneau.debut, 'EEEE d MMMM à HH:mm', this.locale)}.`,
+    );
+    this.charger();
   }
 
   private estAVenir(rdv: RendezVous): boolean {
@@ -252,7 +289,7 @@ export class MesRendezVousComponent implements OnInit {
   readonly estAnnule = estAnnule;
 
   libelleStatut(statut: string): string {
-    return libelleStatutRendezVous(statut);
+    return this.l.ar() ? libelleStatutRendezVousAr(statut) : libelleStatutRendezVous(statut);
   }
 
   /**
@@ -260,9 +297,9 @@ export class MesRendezVousComponent implements OnInit {
    * « Non honoré » pour ABSENT (libelle neutre). Les agendas medecin / secretaire gardent « Honoré » / « Absent ».
    */
   libelleStatutPasse(rdv: RendezVous): string {
-    if (rdv.statut === 'CONFIRME' || rdv.statut === 'RESERVE' || rdv.statut === 'HONORE') return 'Terminé';
-    if (rdv.statut === 'ABSENT') return 'Non honoré';
-    return libelleStatutRendezVous(rdv.statut);
+    if (rdv.statut === 'CONFIRME' || rdv.statut === 'RESERVE' || rdv.statut === 'HONORE') return this.l.t('Terminé', 'منتهٍ');
+    if (rdv.statut === 'ABSENT') return this.l.t('Non honoré', 'لم يتم الحضور');
+    return this.libelleStatut(rdv.statut);
   }
 
   /** Vrai si un avis a deja ete depose sur ce rendez-vous (« Avis donné » a la place du bouton). */

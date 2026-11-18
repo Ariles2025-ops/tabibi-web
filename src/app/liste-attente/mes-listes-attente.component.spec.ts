@@ -8,6 +8,7 @@ import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { InscriptionAttente, ListeAttenteService } from './liste-attente.service';
+import { LangueService } from '../partage/langue.service';
 import { MesListesAttenteComponent } from './mes-listes-attente.component';
 
 const RECENTE: InscriptionAttente = { id: 'i1', patientId: 'p1', medecinId: 'm1', inscritLe: '2026-09-18T10:00:00Z' };
@@ -69,6 +70,7 @@ describe('MesListesAttenteComponent', () => {
     boutonDe(lignes()[0], 'Me retirer')!.click();
     await afficher();
     expect(texte()).toContain("Vous retirer de cette liste d'attente ?");
+    expect(texte()).toContain('Vous ne serez plus notifié des créneaux libérés.');
     boutonDe(lignes()[0], 'Oui, me retirer')!.click();
     await afficher();
   }
@@ -144,5 +146,23 @@ describe('MesListesAttenteComponent', () => {
 
     expect(texte()).toContain('Cette page est réservée aux patients.');
     expect(lignes().length).toBe(0);
+  });
+
+  it('affiche la page en arabe (de droite a gauche) avec les memes mots que l appli', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    service.retirer.and.returnValue(of(void 0));
+    await afficher();
+
+    expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+    expect(texte()).toContain('قوائم الانتظار');
+    expect(texte()).not.toContain('Me retirer');
+    boutonDe(lignes()[0], 'انسحاب')!.click();
+    await afficher();
+    expect(texte()).toContain('الانسحاب من قائمة الانتظار هذه؟');
+    expect(texte()).toContain('لن يتم إشعارك بعد الآن بالمواعيد الشاغرة.');
+    boutonDe(lignes()[0], 'نعم، انسحب')!.click();
+    await afficher();
+    expect(texte()).toContain('تم الانسحاب من قائمة الانتظار.');
+    TestBed.inject(LangueService).ar.set(false);
   });
 });

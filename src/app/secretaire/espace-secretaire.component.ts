@@ -2,9 +2,11 @@ import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular
 import { CommonModule, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { AnnuaireService } from '../annuaire/annuaire.service';
+import { Observable } from 'rxjs';
+import { DeplacerRendezVousComponent } from '../rendezvous/deplacer-rendez-vous.component';
+import { AnnuaireService, Creneau } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
-import { ActionEnCours, estConfirme, peutHonorer, peutMarquerAbsent, rendezVousAVenir, rendezVousPasses, styleOnglet } from '../medecin/agenda-utils';
+import { ActionEnCours, estConfirme, peutAnnulerCabinet, peutHonorer, peutMarquerAbsent, rendezVousAVenir, rendezVousPasses, styleOnglet } from '../medecin/agenda-utils';
 import { GestionCreneauxComponent, SourceCreneaux } from '../medecin/gestion-creneaux.component';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from '../medecin/patients.service';
 import { LangueService } from '../partage/langue.service';
@@ -22,7 +24,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
  */
 @Component({
     selector: 'app-espace-secretaire',
-    imports: [CommonModule, FormsModule, GestionCreneauxComponent],
+    imports: [CommonModule, FormsModule, GestionCreneauxComponent, DeplacerRendezVousComponent],
     template: `
     <main style="max-width:760px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--blue);margin:0 0 8px">Espace secrétaire</h1>
@@ -92,11 +94,14 @@ import { Rattachement, SecretaireService } from './secretaire.service';
                         [disabled]="enCours() !== null">
                   Patient absent
                 </button>
-                <button type="button" (click)="absentAConfirmer.set(null); aConfirmer.set(r.id)" [disabled]="enCours() !== null"
+                <button *ngIf="peutDeplacer(r)" type="button" class="bouton-secondaire deplacer-btn" (click)="aDeplacer.set(r.id)" [disabled]="enCours() !== null">Déplacer</button>
+                <button *ngIf="peutAnnulerCabinet(r)" type="button" (click)="absentAConfirmer.set(null); aConfirmer.set(r.id)" [disabled]="enCours() !== null"
                         style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
                   Annuler
                 </button>
               </div>
+              <app-deplacer-rendez-vous *ngIf="aDeplacer() === r.id" [rendezVous]="r" [lister]="listerCreneaux" [deplacer]="deplacerFn"
+                (deplace)="apresDeplacement($event)" (annule)="aDeplacer.set(null)" />
             </li>
           </ul>
         </section>
@@ -142,6 +147,8 @@ export class EspaceSecretaireComponent implements OnInit {
   absentAConfirmer = signal<string | null>(null);
   succes = signal('');
   erreur = signal('');
+  /** Rendez-vous dont le panneau « Déplacer » est ouvert. */
+  aDeplacer = signal<string | null>(null);
   erreurAgenda = signal('');
 
   /** Creneaux du medecin choisi, via les routes secretaire. */
@@ -189,6 +196,7 @@ export class EspaceSecretaireComponent implements OnInit {
     this.succes.set('');
     this.erreurAgenda.set('');
     this.aConfirmer.set(null);
+    this.aDeplacer.set(null);
     this.absentAConfirmer.set(null);
     if (!medecinId) return;
     this.chargerAgenda();
@@ -214,6 +222,10 @@ export class EspaceSecretaireComponent implements OnInit {
 
   /** CONFIRME ou RESERVE : actions proposees (voir agenda-utils). */
   estConfirme = estConfirme;
+
+  peutAnnulerCabinet(r: RendezVous): boolean {
+    return peutAnnulerCabinet(r, Date.now());
+  }
 
   peutHonorer(r: RendezVous): boolean {
     return peutHonorer(r, Date.now());
@@ -271,6 +283,21 @@ export class EspaceSecretaireComponent implements OnInit {
     this.agir(rdv, 'absent', this.service.marquerAbsent(rdv.id), `Patient signalé absent au rendez-vous du ${this.formaterDate(rdv.debut)}.`);
   }
 
+  peutDeplacer(r: RendezVous): boolean {
+    return estConfirme(r) && Date.parse(r.debut) > Date.now();
+  }
+
+  listerCreneaux = (): Observable<Creneau[]> => this.service.creneaux(this.medecinId());
+
+  deplacerFn = (rdv: RendezVous, creneauId: string) => this.service.deplacer(rdv.id, creneauId);
+
+  apresDeplacement(creneau: Creneau) {
+    this.aDeplacer.set(null);
+    this.erreurAgenda.set('');
+    this.succes.set(`Rendez-vous déplacé au ${this.formaterDate(creneau.debut)}.`);
+    this.chargerAgenda();
+  }
+
   libelleStatut(statut: string): string {
     return libelleStatutRendezVous(statut);
   }
@@ -306,7 +333,7 @@ export class EspaceSecretaireComponent implements OnInit {
   }
 
   private formaterDate(iso: string): string {
-    return formatDate(iso, 'EEEE d MMMM à HH:mm', this.locale);
+    return formatDate(iso, 'EEEE d MMMM à HH:mm', this.locale, '+0100');
   }
 
   /** Recupere (une seule fois par medecin) le nom des praticiens rattaches ; un echec laisse l'identifiant abrege. */

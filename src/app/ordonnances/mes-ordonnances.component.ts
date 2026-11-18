@@ -3,28 +3,34 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { ListeOrdonnancesComponent } from './liste-ordonnances.component';
 import { Ordonnance, OrdonnanceService } from './ordonnance.service';
 
 @Component({
     selector: 'app-mes-ordonnances',
-    imports: [CommonModule, ListeOrdonnancesComponent],
+    imports: [CommonModule, ListeOrdonnancesComponent, SelecteurLangueComponent],
     template: `
-    <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 16px">Mes ordonnances</h1>
+    <main style="max-width:720px;margin:32px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
+        <h1 style="color:var(--vert);margin:0">{{ l.t('Mes ordonnances', 'وصفاتي الطبية') }}</h1>
+        <app-selecteur-langue />
+      </div>
 
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">Chargement…</p>
+        <p *ngIf="charge()">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
-        <app-liste-ordonnances [ordonnances]="ordonnances()" [nomsMedecins]="noms()" />
-        <p *ngIf="!charge() && !erreur() && ordonnances().length === 0">Aucune ordonnance pour le moment.</p>
+        <app-liste-ordonnances [ordonnances]="ordonnances()" [nomsMedecins]="noms()" [arabe]="l.ar()" />
+        <p *ngIf="!charge() && !erreur() && ordonnances().length === 0">{{ l.t('Aucune ordonnance pour le moment.', 'لا توجد وصفات طبية حاليًا.') }}</p>
       </ng-container>
     </main>
   `
 })
 export class MesOrdonnancesComponent implements OnInit {
+  l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(OrdonnanceService);
   private annuaire = inject(AnnuaireService);
@@ -63,9 +69,9 @@ export class MesOrdonnancesComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux patients.');
+          this.erreur.set(this.l.t('Cette page est réservée aux patients.', 'هذه الصفحة مخصّصة للمرضى.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos ordonnances.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Impossible de charger vos ordonnances.', 'تعذّر تحميل وصفاتك الطبية.'));
         }
       },
     });

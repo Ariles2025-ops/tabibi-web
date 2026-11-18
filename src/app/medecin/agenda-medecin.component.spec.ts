@@ -135,6 +135,13 @@ describe('AgendaMedecinComponent', () => {
     expect(medecinService.agenda).toHaveBeenCalledTimes(2);
   });
 
+  it('pas de bouton « Annuler » sur un rendez-vous passe (le serveur le refuse)', () => {
+    medecinService.agenda.and.returnValue(of([COMMENCE]));
+    fixture.detectChanges();
+
+    expect(boutonsAnnuler().length).toBe(0);
+  });
+
   it('planifie la teleconsultation puis affiche une confirmation avec la date du rendez-vous', () => {
     teleconsultations.planifier.and.returnValue(of(PLANIFIEE));
     fixture.detectChanges();
@@ -264,5 +271,28 @@ describe('AgendaMedecinComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Proposer une téléconsultation');
+  });
+  describe('message apres deplacement', () => {
+    const CRENEAU = { id: 'c9', medecinId: 'm1', debut: '2027-01-05T10:00:00Z', dureeMinutes: 30, disponible: false };
+
+    async function deplacer(rdv: RendezVous): Promise<string> {
+      medecinService.agenda.and.returnValue(of([rdv]));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const c = fixture.componentInstance;
+      c.aDeplacer.set(rdv.id);
+      c.apresDeplacement(CRENEAU);
+      return c.deplace();
+    }
+
+    it('rendez-vous pris sur la plateforme : le patient est prévenu', async () => {
+      expect(await deplacer(CONFIRME)).toContain('le patient est prévenu');
+    });
+
+    it('rendez-vous pris par téléphone : ne dit pas que le patient est prévenu', async () => {
+      const message = await deplacer({ ...CONFIRME, source: 'TELEPHONE', nomPatient: 'Amine B.' });
+      expect(message).toContain('Rendez-vous déplacé au');
+      expect(message).not.toContain('prévenu');
+    });
   });
 });

@@ -138,15 +138,32 @@ describe('MoiComponent', () => {
     expect(texte()).toContain('La suppression a échoué');
   });
 
+  it('phase de test (inscription fermee) : « Se connecter » seulement, pas de « Créer un compte »', async () => {
+    localStorage.removeItem('tabibi.equipe');
+    connecte = false;
+    moi.set(null);
+    await afficher();
+
+    expect(bouton('Créer un compte')).toBeUndefined();
+    bouton('Se connecter')!.click();
+    expect(auth.seConnecter).toHaveBeenCalled();
+  });
+
   it('non connecte : « Se connecter » et « Créer un compte » (inscription), sans suppression', async () => {
+    // Inscription ouverte (acces equipe) : le bouton « Créer un compte » est present.
+    localStorage.setItem('tabibi.equipe', '1');
     connecte = false;
     moi.set(null);
     await afficher();
 
     expect(bouton('Supprimer mon compte')).toBeUndefined();
+    // Le texte annonce l'inscription par e-mail (c'est ce que fait « Créer un compte »), pas un choix à l'étape suivante.
+    expect(texte()).toContain('Créez votre compte avec votre adresse e-mail, ou connectez-vous par téléphone (code SMS)');
+    expect(texte()).not.toContain('à l\'étape suivante');
     bouton('Créer un compte')!.click();
     expect(auth.sInscrireParEmail).toHaveBeenCalled();
     bouton('Se connecter')!.click();
     expect(auth.seConnecter).toHaveBeenCalled();
+    localStorage.removeItem('tabibi.equipe');
   });
 });

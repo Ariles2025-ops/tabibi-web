@@ -114,6 +114,10 @@ export class SecretaireService {
   annuler(rendezVousId: string): Observable<RendezVous> {
     return this.http.post<RendezVous>(`${this.base}/api/secretaire/rendezvous/${rendezVousId}/annuler`, null);
   }
+  /** Deplacement pour le cabinet vers un autre creneau libre du medecin (409 si le creneau est pris). */
+  deplacer(rendezVousId: string, nouveauCreneauId: string): Observable<RendezVous> {
+    return this.http.post<RendezVous>(`${this.base}/api/secretaire/rendezvous/${rendezVousId}/deplacer`, { nouveauCreneauId });
+  }
   /** Signale un patient absent a un rendez-vous confirme deja commence ; renvoie le rendez-vous mis a jour. */
   marquerAbsent(rendezVousId: string): Observable<RendezVous> {
     return this.http.post<RendezVous>(`${this.base}/api/secretaire/rendezvous/${rendezVousId}/absent`, null);

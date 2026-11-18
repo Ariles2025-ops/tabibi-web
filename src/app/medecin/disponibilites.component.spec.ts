@@ -8,6 +8,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { DisponibilitesComponent } from './disponibilites.component';
 import { MedecinService } from './medecin.service';
+import { instantAlger, valeurDateHeureLocale } from './agenda-utils';
 
 describe('DisponibilitesComponent', () => {
   let fixture: ComponentFixture<DisponibilitesComponent>;
@@ -64,14 +65,12 @@ describe('DisponibilitesComponent', () => {
     return afficher();
   }
 
-  /** Date locale dans un an, au format du champ datetime-local, et son equivalent ISO 8601 UTC. */
+  /** Date (heure d'Algerie) dans un an, au format du champ datetime-local, et son equivalent ISO 8601 UTC. */
   function dansUnAn(): { local: string; iso: string } {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() + 1);
-    d.setHours(9, 30, 0, 0);
-    const deux = (n: number) => String(n).padStart(2, '0');
-    const local = `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}T09:30`;
-    return { local, iso: d.toISOString() };
+    // Jour d'Algerie (UTC+1) dans un an ; l'heure saisie est interpretee en heure d'Algerie.
+    const jour = valeurDateHeureLocale(new Date()).slice(0, 10);
+    const date = `${Number(jour.slice(0, 4)) + 1}${jour.slice(4)}`;
+    return { local: `${date}T09:30`, iso: new Date(instantAlger(date, '09:30')).toISOString() };
   }
 
   it('borne la duree du champ a 5..120 minutes, comme l API, et l explique dans le libelle', async () => {
@@ -129,14 +128,15 @@ describe('DisponibilitesComponent', () => {
     await afficher();
     const min = champ('debut').getAttribute('min')!;
     expect(min).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
-    expect(new Date(min).getTime()).toBeLessThanOrEqual(Date.now());
-    expect(new Date(min).getTime()).toBeGreaterThan(Date.now() - 5 * 60_000);
+    const [jour, heure] = min.split('T');
+    expect(instantAlger(jour, heure)).toBeLessThanOrEqual(Date.now());
+    expect(instantAlger(jour, heure)).toBeGreaterThan(Date.now() - 5 * 60_000);
   });
 
   describe('liste des creneaux a venir', () => {
-    const demain = new Date();
-    demain.setDate(demain.getDate() + 1);
-    demain.setHours(9, 0, 0, 0);
+    // Demain 09:00 en heure d'Algerie (UTC+1), quel que soit le fuseau du navigateur.
+    const jourDemain = valeurDateHeureLocale(new Date(Date.now() + 24 * 3600_000)).slice(0, 10);
+    const demain = new Date(instantAlger(jourDemain, '09:00'));
     const LIBRE = { id: 'c1', medecinId: 'm1', debut: demain.toISOString(), dureeMinutes: 30, disponible: true };
     const RESERVE = { ...LIBRE, id: 'c2', debut: new Date(demain.getTime() + 30 * 60_000).toISOString(), disponible: false };
 
@@ -200,10 +200,7 @@ describe('DisponibilitesComponent', () => {
 
   describe('serie de creneaux', () => {
     function dateDansUnAn(): string {
-      const d = new Date();
-      d.setFullYear(d.getFullYear() + 1);
-      const deux = (n: number) => String(n).padStart(2, '0');
-      return `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}`;
+      return dansUnAn().local.slice(0, 10);
     }
 
     async function remplirSerie(date: string, de: string, a: string, duree: string) {
@@ -225,8 +222,8 @@ describe('DisponibilitesComponent', () => {
       await remplirSerie(date, '09:00', '10:30', '30');
 
       expect(service.ouvrirCreneau).toHaveBeenCalledTimes(3);
-      expect(service.ouvrirCreneau.calls.argsFor(0)).toEqual([new Date(`${date}T09:00`).toISOString(), 30]);
-      expect(service.ouvrirCreneau.calls.argsFor(2)).toEqual([new Date(`${date}T10:00`).toISOString(), 30]);
+      expect(service.ouvrirCreneau.calls.argsFor(0)).toEqual([new Date(instantAlger(date, '09:00')).toISOString(), 30]);
+      expect(service.ouvrirCreneau.calls.argsFor(2)).toEqual([new Date(instantAlger(date, '10:00')).toISOString(), 30]);
       expect(texte()).toContain('3 créneaux ouverts.');
     });
 

@@ -45,3 +45,33 @@ for (const r of ROLES) {
     if (erreurs.length) console.log(`[${r.role}] erreurs console:`, erreurs.slice(0, 5));
   });
 }
+
+/**
+ * Deplacer un rendez-vous : le patient reserve, deplace, puis le nouvel horaire s'affiche des deux cotes.
+ * Necessite deux creneaux libres du medecin de test et les deux mots de passe.
+ */
+test('deplacer un rendez-vous (patient puis medecin)', async ({ page, browser }) => {
+  const pwPatient = process.env.TABIBI_E2E_PATIENT_PW;
+  const pwMedecin = process.env.TABIBI_E2E_MEDECIN_PW;
+  test.skip(!pwPatient || !pwMedecin, 'mots de passe patient et medecin absents');
+
+  await connecter(page, 'patient@tabibi.doctor', pwPatient!);
+  await page.goto('/mes-rendez-vous');
+  const avant = await page.locator('.mr-carte .mr-quand').first().textContent();
+  await page.getByRole('button', { name: 'Déplacer' }).first().click();
+  const creneau = page.locator('.creneau-libre').first();
+  const nouvelHoraire = (await creneau.textContent())!.trim();
+  await creneau.click();
+  await page.locator('.confirmer-deplacement').click();
+  await page.getByText(/Rendez-vous déplacé au/).waitFor();
+  const heure = nouvelHoraire.match(/\d{2}:\d{2}/)![0];
+  await page.locator('.mr-carte .mr-quand', { hasText: heure }).first().waitFor();
+  test.info().annotations.push({ type: 'ancien horaire', description: avant ?? '' });
+
+  const ctxMedecin = await browser.newContext();
+  const pageMedecin = await ctxMedecin.newPage();
+  await connecter(pageMedecin, 'medecin@tabibi.doctor', pwMedecin!);
+  await pageMedecin.goto('/medecin/agenda');
+  await pageMedecin.getByText(heure).first().waitFor();
+  await ctxMedecin.close();
+});

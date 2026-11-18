@@ -29,7 +29,6 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
       <ng-container *ngIf="connecte()">
         <p *ngIf="rendezVous() as r" style="color:var(--text3);margin:0 0 20px">
           Rendez-vous du {{ r.debut | date:'EEEE d MMMM y à HH:mm' }}<ng-container *ngIf="nomMedecin()"> avec {{ nomMedecin() }}</ng-container>.
-          Votre avis est publié sans votre nom.
         </p>
 
         <p *ngIf="succes()" style="color:var(--vert)">
@@ -44,7 +43,8 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
 
         <form *ngIf="!succes() && !nonHonore()" (ngSubmit)="deposer()" style="display:grid;gap:16px">
           <fieldset style="border:0;padding:0;margin:0">
-            <legend style="color:var(--text3);font-size:.9rem;margin:0 0 6px">Note *</legend>
+            <legend style="color:var(--text3);font-size:.9rem;margin:0 0 2px">Votre note *</legend>
+            <p class="aide-note" style="margin:0 0 6px;color:var(--text3);font-size:.85rem">1 = insatisfait, 5 = excellent</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
               <label *ngFor="let n of notes" class="note" [class.note-choisie]="note === n" [attr.aria-label]="'Note ' + n + ' sur 5'">
                 <input type="radio" name="note" [value]="n" [(ngModel)]="note">{{ n }}
@@ -55,7 +55,7 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
 
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             Commentaire (facultatif)
-            <textarea class="champ" [(ngModel)]="commentaire" name="commentaire" rows="4" style="color:var(--tbi-ink);font-size:1rem;resize:vertical"></textarea>
+            <textarea class="champ" [(ngModel)]="commentaire" name="commentaire" rows="4" placeholder="Accueil, écoute, explications..." style="color:var(--tbi-ink);font-size:1rem;resize:vertical"></textarea>
             <span [style.color]="commentaireTropLong() ? '#b3261e' : 'var(--text3)'">{{ commentaire.length }} / {{ maxCommentaire }}</span>
           </label>
 
@@ -121,7 +121,7 @@ export class DeposerAvisComponent implements OnInit {
     this.service.deposer(this.rendezVousId, this.note, commentaire || null).subscribe({
       next: () => {
         this.enCours.set(false);
-        this.succes.set('Merci, votre avis a été enregistré.');
+        this.succes.set('Merci pour votre avis.');
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);

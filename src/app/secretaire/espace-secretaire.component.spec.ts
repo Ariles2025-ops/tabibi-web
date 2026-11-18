@@ -11,6 +11,7 @@ import { PatientsService } from '../medecin/patients.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { EspaceSecretaireComponent } from './espace-secretaire.component';
 import { Rattachement, SecretaireService } from './secretaire.service';
+import { instantAlger, valeurDateHeureLocale } from '../medecin/agenda-utils';
 
 const CABINET_1: Rattachement = { id: 'ra1', medecinId: 'm1', secretaireId: 's1', creeLe: '2026-09-01T10:00:00Z' };
 const CABINET_2: Rattachement = { id: 'ra2', medecinId: 'm2', secretaireId: 's1', creeLe: '2026-09-10T10:00:00Z' };
@@ -106,14 +107,12 @@ describe('EspaceSecretaireComponent', () => {
     await afficher();
   }
 
-  /** Date locale dans un an, au format du champ datetime-local, et son equivalent ISO 8601 UTC. */
+  /** Date (heure d'Algerie) dans un an, au format du champ datetime-local, et son equivalent ISO 8601 UTC. */
   function dansUnAn(): { local: string; iso: string } {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() + 1);
-    d.setHours(9, 30, 0, 0);
-    const deux = (n: number) => String(n).padStart(2, '0');
-    const local = `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}T09:30`;
-    return { local, iso: d.toISOString() };
+    // Jour d'Algerie (UTC+1) dans un an ; l'heure saisie est interpretee en heure d'Algerie.
+    const jour = valeurDateHeureLocale(new Date()).slice(0, 10);
+    const date = `${Number(jour.slice(0, 4)) + 1}${jour.slice(4)}`;
+    return { local: `${date}T09:30`, iso: new Date(instantAlger(date, '09:30')).toISOString() };
   }
 
   it('choisit d office l unique cabinet et affiche les rendez-vous a venir avec le nom du patient', async () => {
@@ -129,7 +128,7 @@ describe('EspaceSecretaireComponent', () => {
     expect(items[0].textContent).toContain('0770112233');
     expect(items[0].textContent).not.toContain('11111111');
     expect(bouton('Marquer honoré')).toBeDefined();
-    expect(bouton('Annuler')).toBeDefined();
+    expect(bouton('Annuler')).toBeUndefined();
 
     bouton('Passés')!.click();
     await afficher();
@@ -200,8 +199,16 @@ describe('EspaceSecretaireComponent', () => {
     expect(service.agenda).toHaveBeenCalledTimes(2);
   });
 
+  it('pas de bouton « Annuler » sur un rendez-vous deja commence (le serveur le refuse)', async () => {
+    await afficher();
+
+    expect(lignes().length).toBe(1);
+    expect(bouton('Annuler')).toBeUndefined();
+  });
+
   it('annule un rendez-vous apres confirmation dans la page ; le patient est prevenu', async () => {
-    service.annuler.and.returnValue(of({ ...CONFIRME, statut: 'ANNULE' }));
+    service.agenda.and.returnValue(of([FUTUR]));
+    service.annuler.and.returnValue(of({ ...FUTUR, statut: 'ANNULE' }));
     await afficher();
 
     bouton('Annuler')!.click();
@@ -216,13 +223,13 @@ describe('EspaceSecretaireComponent', () => {
     bouton('Oui')!.click();
     await afficher();
 
-    expect(service.annuler).toHaveBeenCalledWith('r1');
+    expect(service.annuler).toHaveBeenCalledWith('r3');
     expect(texte()).toContain('annulé : le patient est prévenu.');
     expect(service.agenda).toHaveBeenCalledTimes(2);
   });
 
   it('rendez-vous pris par telephone : ne dit pas que le patient est prevenu', async () => {
-    const TEL: RendezVous = { ...CONFIRME, source: 'TELEPHONE', nomPatient: 'Karim Ziani' };
+    const TEL: RendezVous = { ...FUTUR, source: 'TELEPHONE', nomPatient: 'Karim Ziani' };
     service.agenda.and.returnValue(of([TEL]));
     service.annuler.and.returnValue(of({ ...TEL, statut: 'ANNULE' }));
     await afficher();
@@ -234,7 +241,7 @@ describe('EspaceSecretaireComponent', () => {
     bouton('Oui')!.click();
     await afficher();
 
-    expect(service.annuler).toHaveBeenCalledWith('r1');
+    expect(service.annuler).toHaveBeenCalledWith('r3');
     expect(texte()).toContain('annulé : le créneau est de nouveau proposé.');
     expect(texte()).not.toContain('le patient est prévenu.');
   });

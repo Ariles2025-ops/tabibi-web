@@ -13,7 +13,7 @@ import { RdvTelephoneComponent } from './rdv-telephone.component';
 import { RdvTelephone, ResultatSemaineType, SemaineType } from './semaine-type';
 import { SemaineTypeComponent } from './semaine-type.component';
 import { RendezVous } from '../rendezvous/rendezvous.service';
-import { grouperParJour, valeurDateHeureLocale, styleOnglet } from './agenda-utils';
+import { grouperParJour, instantAlger, valeurDateHeureLocale, styleOnglet } from './agenda-utils';
 
 /** Acces aux creneaux d'un agenda : celui du medecin connecte ou celui d'un cabinet rattache (secretaire). */
 export interface SourceCreneaux {
@@ -109,7 +109,7 @@ const SERIE_MAX = 48;
                         (cree)="charger()" />
 
       <p *ngIf="succes() as c" style="color:var(--blue);margin:12px 0 0">
-        Créneau ouvert le {{ c.debut | date:'EEEE d MMMM à HH:mm' }} ({{ c.dureeMinutes }} min).
+        Créneau ouvert le {{ c.debut | date:'EEEE d MMMM à HH:mm':'+0100' }} ({{ c.dureeMinutes }} min).
         <a *ngIf="lienAgenda() as lien" [routerLink]="lien" style="color:var(--blue)">Voir l'agenda</a>
       </p>
       <p *ngIf="succesSerie()" style="color:var(--blue);margin:12px 0 0">{{ succesSerie() }}</p>
@@ -122,12 +122,12 @@ const SERIE_MAX = 48;
     <p *ngIf="!charge() && !erreurListe() && creneaux().length === 0" style="color:var(--text3)">Aucun créneau à venir.</p>
 
     <div *ngFor="let j of jours()" style="margin:0 0 16px">
-      <h3 style="font-size:.95rem;margin:0 0 8px;color:var(--text2);text-transform:capitalize">{{ j.debut | date:'EEEE d MMMM' }}</h3>
+      <h3 style="font-size:.95rem;margin:0 0 8px;color:var(--text2);text-transform:capitalize">{{ j.debut | date:'EEEE d MMMM':'+0100' }}</h3>
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:8px">
         <li *ngFor="let c of j.elements" class="creneau"
             style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <span>
-            <strong style="color:var(--ink)">{{ c.debut | date:'HH:mm' }}</strong>
+            <strong style="color:var(--ink)">{{ c.debut | date:'HH:mm':'+0100' }}</strong>
             <span style="color:var(--text3)"> · {{ c.dureeMinutes }} min</span>
             <span *ngIf="c.disponible" style="display:inline-block;margin-left:8px;background:var(--blue-l);color:var(--blue-d);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600">Libre</span>
             <span *ngIf="!c.disponible" style="display:inline-block;margin-left:8px;background:var(--red-l);color:var(--red);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600">Réservé</span>
@@ -253,8 +253,9 @@ export class GestionCreneauxComponent implements OnChanges {
   }
 
   ouvrir() {
-    // new Date('2026-09-21T09:30') interprete l'heure locale ; toISOString() la convertit en ISO 8601 UTC.
-    const debut = new Date(this.debut);
+    // Heure saisie interpretee en heure d'Algerie (UTC+1), quel que soit le fuseau du navigateur.
+    const [jour, heure] = this.debut.split('T');
+    const debut = new Date(instantAlger(jour, heure ?? ''));
     const dureeMinutes = Number(this.dureeMinutes);
     this.reinitialiserMessages();
     if (!this.debut || Number.isNaN(debut.getTime())) {
@@ -286,8 +287,8 @@ export class GestionCreneauxComponent implements OnChanges {
     this.reinitialiserMessages();
     const duree = Number(this.serieDuree);
     if (!this.dureeValide(duree)) return;
-    const debut = new Date(`${this.serieDate}T${this.serieDebut}`);
-    const fin = new Date(`${this.serieDate}T${this.serieFin}`);
+    const debut = new Date(instantAlger(this.serieDate, this.serieDebut));
+    const fin = new Date(instantAlger(this.serieDate, this.serieFin));
     if (!this.serieDate || Number.isNaN(debut.getTime()) || Number.isNaN(fin.getTime())) {
       this.erreur.set('Indiquez une date et des heures valides.');
       return;
@@ -359,7 +360,7 @@ export class GestionCreneauxComponent implements OnChanges {
           this.succesSerie.set(`${index} créneau${index > 1 ? 'x' : ''} ouvert${index > 1 ? 's' : ''} avant l'arrêt.`);
           this.charger();
         }
-        const heure = debuts[index].toTimeString().slice(0, 5);
+        const heure = valeurDateHeureLocale(debuts[index]).slice(11);
         this.traiterErreurOuverture(e, `Arrêt au créneau de ${heure} : `);
       },
     });

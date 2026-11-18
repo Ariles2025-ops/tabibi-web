@@ -4,6 +4,7 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { of } from 'rxjs';
 import { Router, provideRouter } from '@angular/router';
+import { LangueService } from '../partage/langue.service';
 import { AuthService } from '../auth/auth.service';
 import { MesNotificationsComponent } from './mes-notifications.component';
 import { Notification, NotificationService } from './notification.service';
@@ -182,5 +183,57 @@ describe('MesNotificationsComponent', () => {
     lignes()[1].click();
     expect(navigation).not.toHaveBeenCalled();
     expect(service.marquerLue).not.toHaveBeenCalled();
+  });
+
+  it('« /ordonnances » ouvre Mes ordonnances ; un lien sans page du site n\'a pas de « Voir »', async () => {
+    const liste: Notification = { ...NON_LUE, lien: '/ordonnances' };
+    const inconnu: Notification = { ...LUE, id: 'n3', lien: '/page-inexistante' };
+    service.mesNotifications.and.returnValue(of([liste, inconnu]));
+    service.marquerLue.and.returnValue(of({ ...liste, lue: true }));
+    const navigation = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    await afficher();
+
+    expect(lignes()[0].textContent).toContain('Voir');
+    expect(lignes()[1].textContent).not.toContain('Voir');
+    lignes()[0].click();
+    lignes()[1].click();
+    expect(navigation).toHaveBeenCalledOnceWith('/mes-ordonnances');
+  });
+
+  describe('en arabe (comme l\'appli)', () => {
+    afterEach(() => TestBed.inject(LangueService).definir(false));
+
+    it('traduit titre, boutons, date et lien « Voir », en RTL, sans texte français', async () => {
+      TestBed.inject(LangueService).definir(true);
+      service.mesNotifications.and.returnValue(of([{ ...NON_LUE, lien: '/mes-rendez-vous' }]));
+      await afficher();
+
+      const texte: string = fixture.nativeElement.textContent;
+      expect(texte).toContain('إشعاراتي');
+      expect(texte).toContain('تعليم الكل كمقروء');
+      expect(texte).toContain('تعليم كمقروء');
+      expect(texte).toContain('عرض');
+      expect(texte).toContain('18/09/2026');
+      expect(texte).not.toContain('Mes notifications');
+      expect(texte).not.toContain('Marquer comme lue');
+      expect(texte).not.toContain('Voir');
+      expect(texte).not.toContain('septembre');
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+    });
+
+    it('traduit l\'état vide et la confirmation « Tout marquer comme lu »', async () => {
+      TestBed.inject(LangueService).definir(true);
+      service.mesNotifications.and.returnValue(of([]));
+      await afficher();
+      expect(fixture.nativeElement.textContent).toContain('لا توجد إشعارات حاليًا.');
+
+      service.mesNotifications.and.returnValue(of([NON_LUE]));
+      service.toutMarquerLu.and.returnValue(of(2));
+      fixture.componentInstance.charger();
+      fixture.detectChanges();
+      bouton('تعليم الكل كمقروء')!.click();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('تم تعليم 2 إشعار(ات) كمقروءة');
+    });
   });
 });

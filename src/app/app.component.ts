@@ -5,7 +5,7 @@ import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { ClocheNotificationsComponent } from './notifications/cloche-notifications.component';
 import { ApiDisponibleService } from './partage/api-disponible.service';
-import { PRELANCEMENT, VISIO_ACTIVE } from './lancement';
+import { PRELANCEMENT, VISIO_ACTIVE, inscriptionFermee } from './lancement';
 import { estPageFrancaiseSeule, remettreDocumentFrancais } from './seo/page-seo';
 import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
@@ -70,11 +70,11 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
           <div class="side__account">
             <ng-container *ngIf="!connecte()">
-              <a class="side__pro" routerLink="/praticien">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
+              <a class="side__pro" [routerLink]="pre() + '/praticien'">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
               <a class="side__help" [routerLink]="pre() + '/aide'">{{ ar() ? 'المساعدة' : "Centre d'aide" }}</a>
               <a class="side__help" [routerLink]="ar() ? '/' : '/ar'" [attr.lang]="ar() ? 'fr' : 'ar'">{{ ar() ? 'Français' : 'العربية' }}</a>
               <a class="side__login" (click)="seConnecter()" tabindex="0" role="button">{{ ar() ? 'تسجيل الدخول' : 'Se connecter' }}</a>
-              <a class="side__signup" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ ar() ? 'إنشاء حساب' : 'Créer un compte' }}</a>
+              <a *ngIf="inscriptionOuverte()" class="side__signup" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ ar() ? 'إنشاء حساب' : 'Créer un compte' }}</a>
             </ng-container>
             <ng-container *ngIf="connecte()">
               <a class="side__help" routerLink="/aide">Centre d'aide</a>
@@ -110,7 +110,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
                 <b>{{ ar() ? 'لديك سؤال؟' : 'Des questions ?' }}</b>
                 <span>{{ ar() ? 'اطّلع على المساعدة أو تواصل معنا.' : 'Consultez notre aide ou contactez-nous.' }}</span>
               </div>
-              <a class="siteft__contact" href="mailto:contact@tabibi.doctor">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
+              <a class="siteft__contact" href="mailto:contact@ndawik.com">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
             </div>
 
             <div class="siteft__cols">
@@ -118,13 +118,13 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
                 <h2>{{ ar() ? 'نداويك' : 'Ndawik' }}</h2>
                 <a [routerLink]="pre() + '/aide'">{{ ar() ? 'مركز المساعدة' : "Centre d'aide" }}</a>
                 <a [routerLink]="pre() + '/a-propos'">{{ ar() ? 'عن نداويك' : 'À propos' }}</a>
-                <a routerLink="/verifier">{{ ar() ? 'التحقق من وصفة طبية' : 'Vérifier une ordonnance' }}</a>
+                <a [routerLink]="pre() + '/verifier'">{{ ar() ? 'التحقق من وصفة طبية' : 'Vérifier une ordonnance' }}</a>
                 <a href="/legal/mentions-legales.html">{{ ar() ? 'الإشعارات القانونية' : 'Mentions légales' }}</a>
                 <a href="/legal/cgu.html">{{ ar() ? 'شروط الاستخدام' : "Conditions d'utilisation" }}</a>
                 <a href="/legal/confidentialite.html">{{ ar() ? 'الخصوصية' : 'Confidentialité' }}</a>
                 <a [routerLink]="pre() + '/supprimer-mon-compte'">{{ ar() ? 'حذف الحساب' : 'Supprimer mon compte' }}</a>
-                <a href="mailto:contact@tabibi.doctor">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
-                <a routerLink="/praticien">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
+                <a href="mailto:contact@ndawik.com">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
+                <a [routerLink]="pre() + '/praticien'">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
               </div>
               <div class="siteft__col">
                 <h2>{{ ar() ? 'التخصصات' : 'Spécialités' }}</h2>
@@ -197,6 +197,7 @@ export class AppComponent implements OnInit {
 
   /** « Créer un compte » ouvre directement le formulaire d'inscription Keycloak. */
   sInscrire() { this.menuOuvert.set(false); this.auth.sInscrireParEmail(); }
+  inscriptionOuverte() { return !inscriptionFermee(); }
 
   /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()), puis roles. */
   async ngOnInit() {

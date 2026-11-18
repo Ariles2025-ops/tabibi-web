@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const INTERDITES = /#(10241f|f4eee2|556070|e7f1ec|0b5c4b|4f635e)\b/i;
+const INTERDITES = /#(10241f|f4eee2|556070|e7f1ec|0b5c4b|4f635e|5c6b63)\b/i;
 
 function fichiers(dir) {
   return readdirSync(dir).flatMap((n) => {
