@@ -10,7 +10,7 @@ Règles communes de tout le projet : https://github.com/Ariles2025-ops/tabibi-in
 - **Éditeur** : HADEV Studio (inchangé).
 - **Nature** : une **plateforme médicale** algérienne (rendez-vous, médecins, secrétaires, ordonnances, messagerie, visio, médicaments). Jamais « annuaire » dans un texte visible.
 - **Adresse publique du site** : **https://ndawik.com** (https://tabibi.doctor y redirige).
-- **Restent sur tabibi.doctor pour l'instant** (ne pas changer sans ticket dédié) : l'API `https://api.tabibi.doctor`, la connexion Keycloak `https://auth.tabibi.doctor` (realm `tabibi`), les adresses e-mail `@tabibi.doctor`.
+- **Restent sur tabibi.doctor pour l'instant** (ne pas changer sans ticket dédié) : l'API `https://api.tabibi.doctor`, la connexion Keycloak `https://auth.tabibi.doctor` (realm `tabibi`), les adresses e-mail techniques `@tabibi.doctor` (ex. no-reply@ des e-mails Keycloak). L'e-mail de contact public est `contact@ndawik.com` (ticket #196).
 - **Ne jamais renommer les identifiants techniques** : dépôts `tabibi-*`, packages Java `dz.tabibi…`, applicationId Android `dz.tabibi.app`, redirection `dz.tabibi.app:/oauthredirect`, noms de tables, de classes, de variables d'environnement (`DOMAINE` = domaine API/auth ; `SITE_DOMAINE` = domaine public du site).
 - **Tout nouveau texte visible** (FR, AR, EN si présent), titre, e-mail, SMS, notification, page légale, donnée structurée : utiliser **Ndawik / نداويك**.
 - Charte graphique inchangée (vert #0F7560, or #D4A437, Plus Jakarta Sans ; IBM Plex Sans Arabic en arabe).
