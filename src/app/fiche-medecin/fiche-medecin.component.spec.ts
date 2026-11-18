@@ -246,6 +246,23 @@ describe('FicheMedecinComponent (messagerie, avis et liste d attente)', () => {
     });
   });
 
+  it('réservation en 404 (créneau supprimé) : sélection vidée, créneaux rechargés, message affiché', async () => {
+    const CRENEAU = { id: 'cr1', debut: '2026-12-01T09:00:00Z', fin: '2026-12-01T09:30:00Z' } as never;
+    TestBed.inject(RendezVousService).reserver = jasmine
+      .createSpy('reserver')
+      .and.returnValue(throwError(() => new HttpErrorResponse({ status: 404, error: { erreur: 'créneau introuvable' } })));
+    await afficher();
+    fixture.componentInstance.selection.set(CRENEAU);
+    const appelsAvant = annuaireSpy.creneaux.calls.count();
+
+    await fixture.componentInstance.reserver(CRENEAU);
+    await afficher();
+
+    expect(fixture.componentInstance.selection()).toBeNull();
+    expect(annuaireSpy.creneaux.calls.count()).toBe(appelsAvant + 1);
+    expect(texte()).toContain("Ce créneau n'est plus disponible.");
+  });
+
   it('fiche non reclamee : ni « Écrire » ni liste d attente, mais « pas encore sur Ndawik » et lien vers /praticien', async () => {
     annuaireSpy.reclamable.and.returnValue(of({ reclamable: true }));
     await afficher();
