@@ -38,7 +38,7 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
             <p *ngIf="r.valide" style="color:var(--vert);font-weight:600">
               Ordonnance authentique, émise le {{ r.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}<ng-container *ngIf="r.statut"> ({{ libelleStatut(r.statut) }})</ng-container>.
             </p>
-            <p *ngIf="!r.valide" style="color:#b3261e;font-weight:600">Code inconnu.</p>
+            <p *ngIf="!r.valide" class="verif-inconnu" style="color:#b3261e;font-weight:600">Code inconnu : aucune ordonnance ne correspond à ce code.</p>
           </ng-container>
         </ng-container>
       </ng-container>

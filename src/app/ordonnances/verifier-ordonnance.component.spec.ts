@@ -5,9 +5,9 @@ import { OrdonnanceService } from './ordonnance.service';
 import { VerifierOrdonnanceComponent } from './verifier-ordonnance.component';
 
 describe('VerifierOrdonnanceComponent', () => {
-  async function verifier(statut: string) {
+  async function verifier(statut: string, valide = true) {
     const service = jasmine.createSpyObj<OrdonnanceService>('OrdonnanceService', ['verifier']);
-    service.verifier.and.returnValue(of({ valide: true, emiseLe: '2026-01-18T10:00:00Z', statut }));
+    service.verifier.and.returnValue(of({ valide, emiseLe: '2026-01-18T10:00:00Z', statut }));
     TestBed.configureTestingModule({
       imports: [VerifierOrdonnanceComponent],
       providers: [provideRouter([]), { provide: OrdonnanceService, useValue: service }],
@@ -30,5 +30,11 @@ describe('VerifierOrdonnanceComponent', () => {
 
   it('une ordonnance émise reste authentique', async () => {
     expect(await verifier('EMISE')).toContain('Ordonnance authentique');
+  });
+
+  it('un code inconnu dit qu\'aucune ordonnance ne correspond, comme l\'appli', async () => {
+    const texte = await verifier('', false);
+    expect(texte).toContain('Code inconnu : aucune ordonnance ne correspond à ce code.');
+    expect(texte).not.toContain('Ordonnance authentique');
   });
 });
