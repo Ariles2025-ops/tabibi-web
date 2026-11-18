@@ -2,6 +2,7 @@ import { Component, OnInit, computed, effect, inject, signal } from '@angular/co
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './auth/auth.service';
+import { LangueService } from './partage/langue.service';
 import { RoleService } from './auth/role.service';
 import { ClocheNotificationsComponent } from './notifications/cloche-notifications.component';
 import { ApiDisponibleService } from './partage/api-disponible.service';
@@ -28,14 +29,14 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
         </button>
         <nav class="side__nav" id="menu-principal" [class.ouvert]="menuOuvert()">
           <a class="side__home" [routerLink]="ar() ? '/ar' : '/'" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">{{ ar() ? 'الرئيسية' : 'Accueil' }}</a>
-          <a *ngIf="estPatient()" routerLink="/mes-rendez-vous" routerLinkActive="actif">Mes rendez-vous</a>
-          <a *ngIf="estPatient()" routerLink="/mes-ordonnances" routerLinkActive="actif">Mes ordonnances</a>
-          <a *ngIf="estPatient()" routerLink="/teleconsultations" routerLinkActive="actif">Mes téléconsultations<span *ngIf="!visio" class="pastille-bientot">Bientôt</span></a>
-          <a *ngIf="estPatient()" routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
-          <a *ngIf="estPatient()" routerLink="/mes-avis" routerLinkActive="actif">Mes avis</a>
+          <a *ngIf="estPatient()" routerLink="/mes-rendez-vous" routerLinkActive="actif">{{ l.t('Mes rendez-vous', 'مواعيدي') }}</a>
+          <a *ngIf="estPatient()" routerLink="/mes-ordonnances" routerLinkActive="actif">{{ l.t('Mes ordonnances', 'وصفاتي الطبية') }}</a>
+          <a *ngIf="estPatient()" routerLink="/teleconsultations" routerLinkActive="actif">{{ l.t('Mes téléconsultations', 'استشاراتي عن بُعد') }}<span *ngIf="!visio" class="pastille-bientot">{{ l.t('Bientôt', 'قريبًا') }}</span></a>
+          <a *ngIf="estPatient()" routerLink="/messagerie" routerLinkActive="actif">{{ l.t('Messagerie', 'الرسائل') }}</a>
+          <a *ngIf="estPatient()" routerLink="/mes-avis" routerLinkActive="actif">{{ l.t('Mes avis', 'آرائي') }}</a>
           <a *ngIf="estPatient()" routerLink="/dawini" routerLinkActive="actif">Dawini</a>
-          <a *ngIf="estPatient()" routerLink="/liste-attente" routerLinkActive="actif">Mes listes d'attente</a>
-          <a *ngIf="estPatient()" routerLink="/invitations" routerLinkActive="actif">Invitations de cabinet</a>
+          <a *ngIf="estPatient()" routerLink="/liste-attente" routerLinkActive="actif">{{ l.t("Mes listes d'attente", 'قوائم الانتظار') }}</a>
+          <a *ngIf="estPatient()" routerLink="/invitations" routerLinkActive="actif">{{ l.t('Invitations de cabinet', 'دعوات العيادات') }}</a>
 
           <div *ngIf="estMedecin()" class="side__group">
             <div class="side__grouptitle">Espace médecin</div>
@@ -78,9 +79,9 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
               <a *ngIf="inscriptionOuverte()" class="side__signup" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ ar() ? 'إنشاء حساب' : 'Créer un compte' }}</a>
             </ng-container>
             <ng-container *ngIf="connecte()">
-              <a class="side__help" routerLink="/aide">Centre d'aide</a>
+              <a class="side__help" routerLink="/aide">{{ l.t("Centre d'aide", 'مركز المساعدة') }}</a>
               <app-cloche-notifications />
-              <a routerLink="/moi" routerLinkActive="actif">Mon compte</a>
+              <a routerLink="/moi" routerLinkActive="actif">{{ l.t('Mon compte', 'حسابي') }}</a>
             </ng-container>
           </div>
         </nav>
@@ -164,6 +165,8 @@ export class AppComponent implements OnInit {
   private router = inject(Router);
   private document = inject(DOCUMENT);
   apiDisponible = inject(ApiDisponibleService);
+  /** Langue des ecrans prives : le menu des connectes la suit (arabe choisi sur les ecrans patient). */
+  l = inject(LangueService);
 
   constructor() {
     // « Ma fiche » n'apparait que si la route de l'API existe deja en production.

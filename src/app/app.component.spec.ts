@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { ApiDisponibleService } from './partage/api-disponible.service';
+import { LangueService } from './partage/langue.service';
 import { NotificationService } from './notifications/notification.service';
 
 /** Test de fumee de la barre de navigation : liens publics, cloche des connectes, sections du medecin, de la pharmacie, de la secretaire et de l'administrateur. */
@@ -112,6 +113,26 @@ describe('AppComponent', () => {
     expect(texteNav()).not.toContain('Espace médecin');
     expect(texteNav()).not.toContain('Espace pharmacie');
     expect(texteNav()).not.toContain('Administration');
+  });
+
+  it('menu patient en arabe quand la langue des ecrans prives est l arabe (comme les ecrans eux-memes)', async () => {
+    connecte = true;
+    TestBed.inject(LangueService).ar.set(true);
+    await afficher();
+
+    const texte = texteNav();
+    expect(texte).toContain('مواعيدي');
+    expect(texte).toContain('وصفاتي الطبية');
+    expect(texte).toContain('الرسائل');
+    expect(texte).toContain('آرائي');
+    expect(texte).toContain('قوائم الانتظار');
+    expect(texte).toContain('دعوات العيادات');
+    expect(texte).toContain('مركز المساعدة');
+    expect(texte).toContain('حسابي');
+    expect(texte).toContain('الإشعارات');
+    expect(texte).not.toContain('Mes rendez-vous');
+    expect(texte).not.toContain('Notifications');
+    expect(texte).not.toContain('Mon compte');
   });
 
   it('affiche la section « Espace médecin » pour le role MEDECIN', async () => {
