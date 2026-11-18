@@ -243,6 +243,21 @@ describe('DisponibilitesComponent', () => {
       expect(texte()).toContain('Arrêt au créneau de 09:30 : Erreur serveur.');
     });
 
+    it('s arrete a un 400 qui n est pas un chevauchement et affiche son message', async () => {
+      let appels = 0;
+      service.ouvrirCreneau.and.callFake((debut: string, duree: number) =>
+        ++appels === 2
+          ? throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: "Le créneau ne peut pas être ouvert plus de 6 mois à l'avance." } }))
+          : of({ id: debut, medecinId: 'm1', debut, dureeMinutes: duree, disponible: true }),
+      );
+      await afficher();
+
+      await remplirSerie(dateDansUnAn(), '09:00', '11:00', '30');
+
+      expect(service.ouvrirCreneau).toHaveBeenCalledTimes(2);
+      expect(texte()).toContain("Arrêt au créneau de 09:30 : Le créneau ne peut pas être ouvert plus de 6 mois à l'avance.");
+    });
+
     it('ignore un chevauchement (400), ouvre les suivants et resume', async () => {
       let appels = 0;
       service.ouvrirCreneau.and.callFake((debut: string, duree: number) =>

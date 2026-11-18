@@ -353,8 +353,9 @@ export class GestionCreneauxComponent implements OnChanges {
     this.source().ouvrir(debuts[index].toISOString(), duree).subscribe({
       next: () => this.ouvrirSuivant(debuts, index + 1, duree, ignores),
       error: (e: HttpErrorResponse) => {
-        // 400 = chevauchement d'un creneau existant : on l'ignore et on passe au suivant.
-        if (e.status === 400) {
+        // 400 « chevauche » = creneau existant : on l'ignore et on passe au suivant.
+        // Tout autre 400 (ex. plus de 6 mois a l'avance) arrete la serie avec son message.
+        if (e.status === 400 && /chevauch/i.test(String(e.error?.erreur ?? ''))) {
           this.ouvrirSuivant(debuts, index + 1, duree, ignores + 1);
           return;
         }
