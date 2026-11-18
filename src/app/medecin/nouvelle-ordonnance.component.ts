@@ -99,10 +99,16 @@ export class NouvelleOrdonnanceComponent implements OnInit {
   patients = signal<PatientResume[]>([]);
   chargePatients = signal(false);
   private rendezVous = signal<RendezVous[]>([]);
+  /** Faux tant que l'agenda n'est pas charge (ou s'il est en erreur) : on ne filtre alors pas la liste. */
+  private agendaCharge = signal(false);
 
-  /** Patients proposes, par nom ; un patient prerempli inconnu de la liste reste selectionnable. */
+  /** Patients proposes, par nom : seuls ceux avec un RDV confirme ou honore (sinon l'API refuse en 403) ; un patient prerempli inconnu de la liste reste selectionnable. */
   options = computed<PatientResume[]>(() => {
-    const liste = [...this.patients()].sort((a, b) => a.nomComplet.localeCompare(b.nomComplet, 'fr'));
+    const eligibles = new Set(
+      this.rendezVous().filter((r) => r.statut === 'CONFIRME' || r.statut === 'HONORE').map((r) => r.patientId),
+    );
+    const filtre = this.agendaCharge();
+    const liste = this.patients().filter((p) => !filtre || eligibles.has(p.patientId)).sort((a, b) => a.nomComplet.localeCompare(b.nomComplet, 'fr'));
     const id = this.patientId();
     if (id && !liste.some((p) => p.patientId === id)) {
       liste.unshift({ patientId: id, nomComplet: 'Patient', telephone: null, email: null });
@@ -137,7 +143,11 @@ export class NouvelleOrdonnanceComponent implements OnInit {
         else this.erreur.set(e.error?.erreur ?? 'Impossible de charger la liste de vos patients.');
       },
     });
-    this.medecin.agenda().subscribe({ next: (liste) => this.rendezVous.set(liste), error: () => undefined });
+    this.medecin.agenda().subscribe({ next: (liste) => {
+        this.rendezVous.set(liste);
+        this.agendaCharge.set(true);
+      },
+      error: () => undefined });
   }
 
   choisirPatient(patientId: string) {

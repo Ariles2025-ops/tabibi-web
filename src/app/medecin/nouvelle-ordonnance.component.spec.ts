@@ -22,6 +22,8 @@ const ABSENT_P1: RendezVous = { ...RDV_P1, id: 'r4', statut: 'ABSENT' };
 describe('NouvelleOrdonnanceComponent', () => {
   let fixture: ComponentFixture<NouvelleOrdonnanceComponent>;
   let ordonnances: jasmine.SpyObj<OrdonnanceService>;
+  let patients: jasmine.SpyObj<PatientsService>;
+  let medecin: jasmine.SpyObj<MedecinService>;
   let query: Record<string, string>;
 
   function creer() {
@@ -33,9 +35,9 @@ describe('NouvelleOrdonnanceComponent', () => {
     registerLocaleData(localeFr);
     query = {};
     ordonnances = jasmine.createSpyObj<OrdonnanceService>('OrdonnanceService', ['emettre']);
-    const patients = jasmine.createSpyObj<PatientsService>('PatientsService', ['patientsDuMedecin']);
+    patients = jasmine.createSpyObj<PatientsService>('PatientsService', ['patientsDuMedecin']);
     patients.patientsDuMedecin.and.returnValue(of(new Map([[YASMINE.patientId, YASMINE], [KARIM.patientId, KARIM]])));
-    const medecin = jasmine.createSpyObj<MedecinService>('MedecinService', ['agenda']);
+    medecin = jasmine.createSpyObj<MedecinService>('MedecinService', ['agenda']);
     medecin.agenda.and.returnValue(of([RDV_P1, RDV_P2, ANNULE_P1, ABSENT_P1]));
 
     TestBed.configureTestingModule({
@@ -81,6 +83,19 @@ describe('NouvelleOrdonnanceComponent', () => {
     expect(rdv.options.length).toBe(2);
     expect(libelles(rdv)[0]).toBe('Aucun');
     expect(libelles(rdv)[1]).toContain('18 septembre 2026');
+  });
+
+  it("ne propose pas un patient seulement en liste d'attente ou dont les RDV sont annules/absents", async () => {
+    const attente: PatientResume = { patientId: 'p3', nomComplet: 'Amel Attente', telephone: null, email: null };
+    const annule: PatientResume = { patientId: 'p4', nomComplet: 'Nadir Annule', telephone: null, email: null };
+    patients.patientsDuMedecin.and.returnValue(
+      of(new Map([YASMINE, KARIM, attente, annule].map((p) => [p.patientId, p] as [string, PatientResume]))),
+    );
+    medecin.agenda.and.returnValue(of([RDV_P1, { ...RDV_P1, id: 'r9', patientId: 'p4', statut: 'ANNULE' }]));
+    creer();
+    await afficher();
+
+    expect(libelles(select('patientId'))).toEqual(['Choisir un patient', 'Yasmine Benali · 0550123456']);
   });
 
   it('prerempli depuis l agenda (?patientId=&rendezVousId=) et emet avec un medicament seul', async () => {
