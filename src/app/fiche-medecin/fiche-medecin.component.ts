@@ -422,6 +422,11 @@ export class FicheMedecinComponent implements OnInit {
           // L'API renvoie 409 pour plusieurs causes (créneau pris, passé, déjà un rendez-vous avec ce médecin…).
           this.erreur.set(e.error?.erreur ?? "Ce créneau vient d'être pris.");
           this.chargerCreneaux();
+        } else if (e.status === 404) {
+          // Créneau supprimé par le cabinet entre-temps : on le désélectionne et on recharge la liste.
+          this.selection.set(null);
+          this.erreur.set("Ce créneau n'est plus disponible.");
+          this.chargerCreneaux();
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
