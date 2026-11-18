@@ -6,6 +6,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { Moi, MoiService } from './moi.service';
+import { LangueService } from '../partage/langue.service';
 import { MoiComponent } from './moi.component';
 
 const PROFIL: Moi = { sujet: '55555555-5555-5555-5555-555555555555', nom: 'patient.demo', roles: ['PATIENT'] };
@@ -22,6 +23,7 @@ describe('MoiComponent', () => {
   let service: jasmine.SpyObj<MoiService>;
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue');
     connecte = true;
     moi = signal<Moi | null>(PROFIL);
     auth = {
@@ -165,5 +167,53 @@ describe('MoiComponent', () => {
     bouton('Se connecter')!.click();
     expect(auth.seConnecter).toHaveBeenCalled();
     localStorage.removeItem('tabibi.equipe');
+  });
+
+  it('annonce la conservation légale des ordonnances, comme la page de suppression et l\'appli', async () => {
+    await afficher();
+
+    expect(texte()).toContain('Seules les ordonnances et le journal de sécurité sont conservés le temps exigé par la loi');
+  });
+
+  describe('en arabe (comme l\'appli)', () => {
+    beforeEach(() => TestBed.inject(LangueService).definir(true));
+    afterEach(() => localStorage.removeItem('tabibi.langue'));
+
+    it('affiche titre, rôle, accès rapides et suppression en arabe, de droite à gauche', async () => {
+      moi.set({ ...PROFIL, roles: ['PATIENT'] });
+      await afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('حسابي');
+      expect(texte()).toContain('متصل باسم');
+      expect(texte()).toContain('الدور : مريض');
+      expect(texte()).toContain('ملفي الشخصي');
+      expect(texte()).toContain('مواعيدي');
+      expect(texte()).toContain('تسجيل الخروج');
+      expect(texte()).toContain('حذف حسابي');
+      expect(texte()).not.toContain('Mon compte');
+      expect(texte()).not.toContain('Se déconnecter');
+    });
+
+    it('la suppression se confirme en arabe puis supprime', async () => {
+      service.supprimer.and.returnValue(of(undefined));
+      await afficher();
+
+      bouton('حذف حسابي')!.click();
+      await afficher();
+      expect(texte()).toContain('هذا الإجراء نهائي');
+      bouton('نعم، احذف نهائيًا')!.click();
+      await afficher();
+      expect(service.supprimer).toHaveBeenCalledTimes(1);
+    });
+
+    it('non connecté : invitation à se connecter en arabe', async () => {
+      connecte = false;
+      moi.set(null);
+      await afficher();
+
+      expect(bouton('تسجيل الدخول')).toBeDefined();
+      expect(texte()).toContain('لحجز موعد');
+    });
   });
 });
