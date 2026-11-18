@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { PraticienComponent } from './praticien.component';
 import { AuthService } from '../auth/auth.service';
@@ -18,5 +18,21 @@ describe('PraticienComponent (promesses)', () => {
     expect(texte).not.toMatch(/SMS/);
     expect(texte).not.toMatch(/WhatsApp/i);
     expect(texte).not.toMatch(/paiement en ligne|payer en ligne/i);
+  });
+
+  it('version arabe (data.langue = ar) : textes arabes, dir=rtl, sans français visible', () => {
+    TestBed.configureTestingModule({ imports: [PraticienComponent], providers: [provideRouter([]), provideHttpClient(),
+      { provide: ActivatedRoute, useValue: { snapshot: { data: { langue: 'ar' } } } },
+      { provide: AuthService, useValue: { pret: () => Promise.resolve(), estConnecte: () => false, sInscrireParEmail: () => undefined } }] });
+    const fixture = TestBed.createComponent(PraticienComponent);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('main')?.getAttribute('dir')).toBe('rtl');
+    expect(document.documentElement.getAttribute('lang')).toBe('ar');
+    const texte = el.textContent || '';
+    expect(texte).toContain('فضاء الممارس');
+    expect(texte).toContain('إرسال طلبي');
+    expect(texte).not.toContain('Envoyer ma demande');
+    expect(texte).not.toContain('Tabibi');
   });
 });
