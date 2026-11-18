@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnChanges, Output, computed, inject, input, signal } from '@angular/core';
+import { Component, EventEmitter, OnChanges, Output, computed, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -170,6 +170,10 @@ export class GestionCreneauxComponent implements OnChanges {
   lienAgenda = input<string | null>(null);
 
   mode = signal<'unique' | 'serie' | 'semaine'>('unique');
+  /** L'onglet « Semaine type » disparait (404) : on revient a « Un creneau » au lieu d'un panneau vide. */
+  private readonly retourSiSemaineAbsente = effect(() => {
+    if (this.mode() === 'semaine' && (!this.source().semaineType || !this.api.semaineType())) this.mode.set('unique');
+  }, { allowSignalWrites: true });
   /** Creneau libre dont le formulaire « RDV pris au telephone » est ouvert. */
   rdvPour = signal<string | null>(null);
   creneaux = signal<Creneau[]>([]);
@@ -238,7 +242,7 @@ export class GestionCreneauxComponent implements OnChanges {
         const maintenant = Date.now();
         this.creneaux.set(
           liste
-            .filter((c) => Date.parse(c.debut) + c.dureeMinutes * 60_000 > maintenant)
+            .filter((c) => Date.parse(c.debut) > maintenant)
             .sort((a, b) => Date.parse(a.debut) - Date.parse(b.debut)),
         );
         this.charge.set(false);
