@@ -4,12 +4,12 @@ import { PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DOCUMENT } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { referencerPage } from '../seo/page-seo';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
-import { WILAYAS_SEO } from '../seo/referentiel-seo';
+import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
 
 /**
  * Page publique « Vous etes praticien ? » : presentation + formulaire de DEMANDE (sans compte).
@@ -21,105 +21,105 @@ import { WILAYAS_SEO } from '../seo/referentiel-seo';
     selector: 'app-praticien',
     imports: [CommonModule, FormsModule],
     template: `
-    <main class="prat">
+    <main class="prat" [attr.dir]="ar ? 'rtl' : null" [attr.lang]="ar ? 'ar' : null">
       <section class="prat-hero">
         <div class="prat-hero__in">
           <div class="prat-hero__txt">
-            <span class="prat-eyebrow">Espace praticien</span>
-            <h1>Développez votre cabinet avec <span class="acc">Ndawik</span></h1>
-            <p>Recevez vos rendez-vous en ligne, réduisez les absences grâce aux rappels automatiques et gagnez en visibilité auprès des patients de votre wilaya — <b>gratuitement</b>.</p>
+            <span class="prat-eyebrow">{{ t('Espace praticien', 'فضاء الممارس') }}</span>
+            <h1>{{ t('Développez votre cabinet avec', 'طوّر عيادتك مع') }} <span class="acc">{{ t('Ndawik', 'نداويك') }}</span></h1>
+            <p>{{ t('Recevez vos rendez-vous en ligne, réduisez les absences grâce aux rappels automatiques et gagnez en visibilité auprès des patients de votre wilaya —', 'استقبل مواعيدك عبر الإنترنت، وقلّل الغيابات بفضل التذكيرات التلقائية، وزد ظهورك لدى مرضى ولايتك —') }} <b>{{ t('gratuitement', 'مجانًا') }}</b>.</p>
             <div class="prat-cta">
-              <button type="button" class="prat-btn-blanc" (click)="versFiche()">Trouver ma fiche et créer mon compte</button>
+              <button type="button" class="prat-btn-blanc" (click)="versFiche()">{{ t('Trouver ma fiche et créer mon compte', 'ابحث عن صفحتي وأنشئ حسابي') }}</button>
             </div>
-            <p class="prat-note">Votre compte praticien est activé après vérification de votre inscription à l'ordre par notre équipe.</p>
+            <p class="prat-note">{{ t("Votre compte praticien est activé après vérification de votre inscription à l'ordre par notre équipe.", 'يُفعَّل حسابك كممارس بعد أن يتحقق فريقنا من تسجيلك في الهيئة.') }}</p>
           </div>
           <ul class="prat-benef">
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Recevez vos RDV en ligne, 24h/24</li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Rappel automatique avant chaque rendez-vous</li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Agenda et disponibilités faciles à gérer</li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Plus de visibilité auprès des patients</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> {{ t('Recevez vos RDV en ligne, 24h/24', 'استقبل مواعيدك عبر الإنترنت، على مدار الساعة') }}</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> {{ t('Rappel automatique avant chaque rendez-vous', 'تذكير تلقائي قبل كل موعد') }}</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> {{ t('Agenda et disponibilités faciles à gérer', 'جدول مواعيد وأوقات توفّر سهلة الإدارة') }}</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> {{ t('Plus de visibilité auprès des patients', 'ظهور أكبر لدى المرضى') }}</li>
           </ul>
         </div>
       </section>
 
       <section class="prat-sec" id="fiche">
         <div class="prat-form-wrap">
-          <h2 class="prat-h2" style="margin-bottom:6px">Retrouvez votre fiche</h2>
+          <h2 class="prat-h2" style="margin-bottom:6px">{{ t('Retrouvez votre fiche', 'اعثر على صفحتك') }}</h2>
           <p style="text-align:center;color:var(--text3);margin:0 0 20px;font-size:14px">
-            Plus de 75 000 praticiens sont déjà référencés. Cherchez votre nom, puis créez votre compte pour gérer votre fiche.
+            {{ t('Plus de 75 000 praticiens sont déjà référencés. Cherchez votre nom, puis créez votre compte pour gérer votre fiche.', 'أكثر من 75 000 ممارس مسجَّلون بالفعل. ابحث عن اسمك ثم أنشئ حسابك لإدارة صفحتك.') }}
           </p>
           <div class="prat-cherche">
-            <label class="pf"><span>Votre nom</span>
-              <input class="champ" [(ngModel)]="nomFiche" (ngModelChange)="chercher()" name="nomFiche" placeholder="Ex. Belkacem" autocomplete="off"></label>
-            <label class="pf"><span>Wilaya</span>
+            <label class="pf"><span>{{ t('Votre nom', 'اسمك') }}</span>
+              <input class="champ" [(ngModel)]="nomFiche" (ngModelChange)="chercher()" name="nomFiche" [placeholder]="t('Ex. Belkacem', 'مثال: بلقاسم')" autocomplete="off"></label>
+            <label class="pf"><span>{{ t('Wilaya', 'الولاية') }}</span>
               <select class="champ" [(ngModel)]="wilayaFiche" (ngModelChange)="chercher()" name="wilayaFiche">
-                <option value="">Toutes les wilayas</option>
-                <option *ngFor="let w of wilayas" [value]="w.code">{{ w.nom }}</option>
+                <option value="">{{ t('Toutes les wilayas', 'كل الولايات') }}</option>
+                <option *ngFor="let w of wilayas" [value]="w.code">{{ ar ? w.nomAr : w.nom }}</option>
               </select></label>
           </div>
-          <p *ngIf="rechercheEnCours()" class="prat-muet">Recherche…</p>
-          <p *ngIf="!rechercheEnCours() && nomFiche.trim().length > 0 && nomFiche.trim().length < 3" class="prat-muet">Tapez au moins 3 lettres.</p>
+          <p *ngIf="rechercheEnCours()" class="prat-muet">{{ t('Recherche…', 'جارٍ البحث…') }}</p>
+          <p *ngIf="!rechercheEnCours() && nomFiche.trim().length > 0 && nomFiche.trim().length < 3" class="prat-muet">{{ t('Tapez au moins 3 lettres.', 'اكتب 3 أحرف على الأقل.') }}</p>
           <ul class="prat-fiches" *ngIf="fiches().length">
             <li *ngFor="let m of fiches()">
               <span class="prat-fiche__txt"><strong dir="auto">{{ m.nomComplet }}</strong>
-                <small>{{ m.specialiteFr }} · {{ m.ville || m.wilayaFr }}</small></span>
-              <button type="button" class="prat-btn-vert prat-btn-sm" (click)="cestMaFiche(m)">C'est ma fiche</button>
+                <small>{{ specialiteDe(m) }} · {{ m.ville || wilayaDe(m) }}</small></span>
+              <button type="button" class="prat-btn-vert prat-btn-sm" (click)="cestMaFiche(m)">{{ t("C'est ma fiche", 'هذه صفحتي') }}</button>
             </li>
           </ul>
-          <p *ngIf="!rechercheEnCours() && nomFiche.trim().length >= 3 && fiches().length === 0" class="prat-muet">Aucune fiche trouvée avec ce nom.</p>
+          <p *ngIf="!rechercheEnCours() && nomFiche.trim().length >= 3 && fiches().length === 0" class="prat-muet">{{ t('Aucune fiche trouvée avec ce nom.', 'لم يتم العثور على أي صفحة بهذا الاسم.') }}</p>
           <div class="prat-pas-fiche">
-            <span>Votre fiche n'apparaît pas ?</span>
-            <button type="button" class="prat-lien" (click)="sansFiche()">Créer mon compte et déposer ma candidature</button>
+            <span>{{ t("Votre fiche n'apparaît pas ?", 'صفحتك غير ظاهرة؟') }}</span>
+            <button type="button" class="prat-lien" (click)="sansFiche()">{{ t('Créer mon compte et déposer ma candidature', 'أنشئ حسابي وقدّم ترشحي') }}</button>
           </div>
         </div>
       </section>
 
       <section class="prat-sec">
-        <h2 class="prat-h2">Comment rejoindre Ndawik ?</h2>
+        <h2 class="prat-h2">{{ t('Comment rejoindre Ndawik ?', 'كيف تنضم إلى نداويك؟') }}</h2>
         <div class="prat-steps">
-          <div class="prat-step"><span class="prat-num">1</span><h3>Trouvez votre fiche</h3><p>Cherchez votre nom, puis créez votre compte en un clic (ou déposez une candidature si votre fiche n'existe pas).</p></div>
-          <div class="prat-step"><span class="prat-num">2</span><h3>Vérification</h3><p>Ajoutez votre numéro d'inscription à l'ordre : notre équipe confirme que c'est bien vous.</p></div>
-          <div class="prat-step"><span class="prat-num">3</span><h3>Recevez vos RDV</h3><p>Gérez vos disponibilités et recevez vos rendez-vous en ligne, avec rappels automatiques.</p></div>
+          <div class="prat-step"><span class="prat-num">1</span><h3>{{ t('Trouvez votre fiche', 'اعثر على صفحتك') }}</h3><p>{{ t("Cherchez votre nom, puis créez votre compte en un clic (ou déposez une candidature si votre fiche n'existe pas).", 'ابحث عن اسمك ثم أنشئ حسابك بنقرة واحدة (أو قدّم ترشحًا إذا لم تكن صفحتك موجودة).') }}</p></div>
+          <div class="prat-step"><span class="prat-num">2</span><h3>{{ t('Vérification', 'التحقق') }}</h3><p>{{ t("Ajoutez votre numéro d'inscription à l'ordre : notre équipe confirme que c'est bien vous.", 'أضف رقم تسجيلك في الهيئة: يتأكد فريقنا أنك أنت.') }}</p></div>
+          <div class="prat-step"><span class="prat-num">3</span><h3>{{ t('Recevez vos RDV', 'استقبل مواعيدك') }}</h3><p>{{ t('Gérez vos disponibilités et recevez vos rendez-vous en ligne, avec rappels automatiques.', 'أدِر أوقات توفّرك واستقبل مواعيدك عبر الإنترنت مع تذكيرات تلقائية.') }}</p></div>
         </div>
       </section>
 
       <section class="prat-sec prat-sec--soft">
-        <h2 class="prat-h2">Pourquoi les praticiens choisissent Ndawik</h2>
+        <h2 class="prat-h2">{{ t('Pourquoi les praticiens choisissent Ndawik', 'لماذا يختار الممارسون نداويك') }}</h2>
         <div class="prat-feats">
-          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-calendar-check" aria-hidden="true"></i></span><h3>Agenda en ligne</h3><p>Vos créneaux se remplissent tout seuls, sans appels téléphoniques à gérer.</p></div>
-          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-bell" aria-hidden="true"></i></span><h3>Moins d'absences</h3><p>Un rappel automatique est envoyé au patient dans son espace Ndawik avant chaque rendez-vous.</p></div>
-          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-magnifying-glass" aria-hidden="true"></i></span><h3>Plus de visibilité</h3><p>Les patients de votre wilaya vous trouvent facilement par spécialité.</p></div>
-          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-shield-halved" aria-hidden="true"></i></span><h3>Données protégées</h3><p>Vos données et celles de vos patients sont chiffrées et protégées (loi 18-07).</p></div>
+          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-calendar-check" aria-hidden="true"></i></span><h3>{{ t('Agenda en ligne', 'جدول مواعيد إلكتروني') }}</h3><p>{{ t('Vos créneaux se remplissent tout seuls, sans appels téléphoniques à gérer.', 'تمتلئ أوقاتك تلقائيًا دون الحاجة إلى إدارة المكالمات الهاتفية.') }}</p></div>
+          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-bell" aria-hidden="true"></i></span><h3>{{ t("Moins d'absences", 'غيابات أقل') }}</h3><p>{{ t('Un rappel automatique est envoyé au patient dans son espace Ndawik avant chaque rendez-vous.', 'يصل المريض تذكير تلقائي في فضائه على نداويك قبل كل موعد.') }}</p></div>
+          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-magnifying-glass" aria-hidden="true"></i></span><h3>{{ t('Plus de visibilité', 'ظهور أكبر') }}</h3><p>{{ t('Les patients de votre wilaya vous trouvent facilement par spécialité.', 'يجدك مرضى ولايتك بسهولة حسب التخصص.') }}</p></div>
+          <div class="prat-feat"><span class="prat-feat__ic"><i class="fa fa-shield-halved" aria-hidden="true"></i></span><h3>{{ t('Données protégées', 'بيانات محمية') }}</h3><p>{{ t('Vos données et celles de vos patients sont chiffrées et protégées (loi 18-07).', 'بياناتك وبيانات مرضاك مشفّرة ومحمية (القانون 18-07).') }}</p></div>
         </div>
       </section>
 
       <!-- Formulaire de demande -->
       <section class="prat-sec" id="demande">
         <div class="prat-form-wrap">
-          <h2 class="prat-h2" style="margin-bottom:6px">Besoin d'aide ? Écrivez-nous</h2>
-          <p style="text-align:center;color:var(--text3);margin:0 0 22px;font-size:14px">Vous préférez être accompagné ? Envoyez-nous vos informations, notre équipe vous recontacte.</p>
+          <h2 class="prat-h2" style="margin-bottom:6px">{{ t("Besoin d'aide ? Écrivez-nous", 'تحتاج مساعدة؟ راسلنا') }}</h2>
+          <p style="text-align:center;color:var(--text3);margin:0 0 22px;font-size:14px">{{ t('Vous préférez être accompagné ? Envoyez-nous vos informations, notre équipe vous recontacte.', 'تفضّل المرافقة؟ أرسل لنا معلوماتك وسيتصل بك فريقنا.') }}</p>
 
           <div *ngIf="!envoye()" class="prat-form">
-            <label class="pf"><span>Nom complet *</span><input class="champ" [(ngModel)]="nom" name="nom" placeholder="Dr Amina Belkacem"></label>
-            <label class="pf"><span>Spécialité *</span><input class="champ" [(ngModel)]="specialite" name="spec" placeholder="Cardiologue, généraliste…"></label>
-            <label class="pf"><span>Wilaya *</span><input class="champ" [(ngModel)]="wilaya" name="wil" placeholder="Alger, Oran…"></label>
-            <label class="pf"><span>Ville / commune</span><input class="champ" [(ngModel)]="ville" name="ville" placeholder="Hydra, Bab El Oued…"></label>
-            <label class="pf"><span>N° d'inscription à l'ordre *</span><input class="champ" [(ngModel)]="numeroOrdre" name="ord" placeholder="Votre numéro d'ordre"></label>
-            <label class="pf"><span>Téléphone *</span><input class="champ" [(ngModel)]="telephone" name="tel" inputmode="tel" placeholder="05 50 12 34 56"></label>
-            <label class="pf"><span>E-mail</span><input class="champ" [(ngModel)]="email" name="email" inputmode="email" placeholder="vous@exemple.com"></label>
-            <label class="pf pf--full"><span>Message (facultatif)</span><textarea class="champ" [(ngModel)]="message" name="msg" rows="3" placeholder="Horaires, cabinet, précisions…"></textarea></label>
+            <label class="pf"><span>{{ t('Nom complet *', 'الاسم الكامل *') }}</span><input class="champ" [(ngModel)]="nom" name="nom" [placeholder]="t('Dr Amina Belkacem', 'د. أمينة بلقاسم')"></label>
+            <label class="pf"><span>{{ t('Spécialité *', 'التخصص *') }}</span><input class="champ" [(ngModel)]="specialite" name="spec" [placeholder]="t('Cardiologue, généraliste…', 'طبيب قلب، طبيب عام…')"></label>
+            <label class="pf"><span>{{ t('Wilaya *', 'الولاية *') }}</span><input class="champ" [(ngModel)]="wilaya" name="wil" [placeholder]="t('Alger, Oran…', 'الجزائر، وهران…')"></label>
+            <label class="pf"><span>{{ t('Ville / commune', 'المدينة / البلدية') }}</span><input class="champ" [(ngModel)]="ville" name="ville" [placeholder]="t('Hydra, Bab El Oued…', 'حيدرة، باب الوادي…')"></label>
+            <label class="pf"><span>{{ t("N° d'inscription à l'ordre *", 'رقم التسجيل في الهيئة *') }}</span><input class="champ" [(ngModel)]="numeroOrdre" name="ord" [placeholder]="t('Votre numéro d’ordre', 'رقم تسجيلك في الهيئة')"></label>
+            <label class="pf"><span>{{ t('Téléphone *', 'الهاتف *') }}</span><input class="champ" [(ngModel)]="telephone" name="tel" inputmode="tel" placeholder="05 50 12 34 56"></label>
+            <label class="pf"><span>{{ t('E-mail', 'البريد الإلكتروني') }}</span><input class="champ" [(ngModel)]="email" name="email" inputmode="email" placeholder="vous@exemple.com"></label>
+            <label class="pf pf--full"><span>{{ t('Message (facultatif)', 'رسالة (اختيارية)') }}</span><textarea class="champ" [(ngModel)]="message" name="msg" rows="3" [placeholder]="t('Horaires, cabinet, précisions…', 'المواعيد، العيادة، تفاصيل…')"></textarea></label>
             <div class="pf--full">
               <p *ngIf="erreur()" style="color:#D21010;font-size:13px;margin:0 0 10px">{{ erreur() }}</p>
-              <button type="button" class="prat-btn-vert" (click)="envoyer()">Envoyer ma demande</button>
-              <p style="color:var(--text3);font-size:12px;margin:10px 0 0">Les champs avec * sont obligatoires.</p>
+              <button type="button" class="prat-btn-vert" (click)="envoyer()">{{ t('Envoyer ma demande', 'إرسال طلبي') }}</button>
+              <p style="color:var(--text3);font-size:12px;margin:10px 0 0">{{ t('Les champs avec * sont obligatoires.', 'الحقول المعلَّمة بـ * إلزامية.') }}</p>
             </div>
           </div>
 
           <div *ngIf="envoye()" class="prat-ok">
             <span class="prat-ok__ic"><i class="fa fa-circle-check" aria-hidden="true"></i></span>
-            <h3>Votre demande est prête !</h3>
-            <p>Votre messagerie s'est ouverte avec la demande pré-remplie — il ne reste qu'à l'envoyer. Si rien ne s'est ouvert, écrivez-nous directement à <b>contact&#64;tabibi.doctor</b> avec les mêmes informations.</p>
-            <button type="button" class="prat-btn-blanc" style="color:var(--vert);border:1.5px solid var(--vert)" (click)="envoye.set(false)">Modifier ma demande</button>
+            <h3>{{ t('Votre demande est prête !', 'طلبك جاهز!') }}</h3>
+            <p>{{ t("Votre messagerie s'est ouverte avec la demande pré-remplie — il ne reste qu'à l'envoyer. Si rien ne s'est ouvert, écrivez-nous directement à", 'فُتح بريدك الإلكتروني وفيه الطلب معبّأ مسبقًا، ولم يبقَ سوى إرساله. وإن لم يُفتح شيء فراسلنا مباشرة على') }} <b dir="ltr">contact&#64;tabibi.doctor</b> {{ t('avec les mêmes informations.', 'بنفس المعلومات.') }}</p>
+            <button type="button" class="prat-btn-blanc" style="color:var(--vert);border:1.5px solid var(--vert)" (click)="envoye.set(false)">{{ t('Modifier ma demande', 'تعديل طلبي') }}</button>
           </div>
         </div>
       </section>
@@ -194,7 +194,17 @@ export class PraticienComponent {
   private annuaire = inject(AnnuaireService);
   private auth = inject(AuthService);
   private router = inject(Router);
-  readonly wilayas = [...WILAYAS_SEO].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  /** Version arabe (/ar/praticien) : langue donnee par la route. */
+  readonly ar = inject(ActivatedRoute).snapshot.data['langue'] === 'ar';
+  readonly pre = this.ar ? '/ar' : '';
+  t(fr: string, ar: string): string { return this.ar ? ar : fr; }
+  specialiteDe(m: Medecin): string {
+    return this.ar ? (SPECIALITES_SEO.find((x) => x.slug === m.specialiteSlug)?.nomAr ?? m.specialiteFr) : m.specialiteFr;
+  }
+  wilayaDe(m: Medecin): string {
+    return this.ar ? (WILAYAS_SEO.find((x) => x.code === m.wilayaCode)?.nomAr ?? m.wilayaFr) : m.wilayaFr;
+  }
+  readonly wilayas = [...WILAYAS_SEO].sort((a, b) => this.ar ? a.nomAr.localeCompare(b.nomAr, 'ar') : a.nom.localeCompare(b.nom, 'fr'));
   nomFiche = '';
   wilayaFiche = '';
   fiches = signal<Medecin[]>([]);
@@ -207,11 +217,13 @@ export class PraticienComponent {
 
   constructor() {
     referencerPage(this.document, this.title, this.meta, {
-      titre: 'Espace praticien : rejoignez Ndawik Doctor',
-      description: 'Médecin, clinique ou pharmacie en Algérie : revendiquez votre fiche et rejoignez Ndawik Doctor (tabibi.doctor, Ndawik DZ).',
+      titre: this.ar ? 'فضاء الممارس: انضم إلى نداويك' : 'Espace praticien : rejoignez Ndawik Doctor',
+      description: this.ar
+        ? 'طبيب أو عيادة أو صيدلية في الجزائر: استعد صفحتك وانضم إلى نداويك.'
+        : 'Médecin, clinique ou pharmacie en Algérie : revendiquez votre fiche et rejoignez Ndawik Doctor (tabibi.doctor, Ndawik DZ).',
       chemin: '/praticien',
-      ar: false,
-      bilingue: false,
+      ar: this.ar,
+      bilingue: true,
     });
     // Recherche de fiche differee (300 ms) ; au moins 3 lettres. Les resultats viennent de l'annuaire public.
     this.recherches.pipe(
@@ -264,7 +276,7 @@ export class PraticienComponent {
   /** Construit la demande et ouvre la messagerie du praticien vers contact@tabibi.doctor. */
   envoyer() {
     if (!this.nom.trim() || !this.specialite.trim() || !this.wilaya.trim() || !this.numeroOrdre.trim() || !this.telephone.trim()) {
-      this.erreur.set('Merci de remplir les champs obligatoires (*).');
+      this.erreur.set(this.t('Merci de remplir les champs obligatoires (*).', 'يرجى ملء الحقول الإلزامية (*).'));
       return;
     }
     this.erreur.set('');
