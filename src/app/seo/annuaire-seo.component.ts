@@ -80,12 +80,12 @@ import {
         <div class="seo-entete">
           <h2>{{ sousTitre }}</h2>
           <span *ngIf="!charge() && medecins().length" class="seo-nb">
-            {{ t.nombre(medecins().length) }}
+            {{ pharmacie ? t.nombrePharma(medecins().length) : t.nombre(medecins().length) }}
           </span>
         </div>
-        <p *ngIf="charge()" class="seo-muet">{{ t.chargement }}</p>
+        <p *ngIf="charge()" class="seo-muet">{{ pharmacie ? t.chargementPharma : t.chargement }}</p>
         <p *ngIf="!charge() && erreur()" class="seo-muet">{{ t.erreur }}</p>
-        <p *ngIf="!charge() && !erreur() && medecins().length === 0" class="seo-muet">{{ t.aucun }}</p>
+        <p *ngIf="!charge() && !erreur() && medecins().length === 0" class="seo-muet">{{ pharmacie ? t.aucunPharma : t.aucun }}</p>
         <ul class="seo-medecins">
           <li *ngFor="let m of medecins()">
             <a [routerLink]="lien(m)" class="seo-med">
