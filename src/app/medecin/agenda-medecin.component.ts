@@ -1,7 +1,10 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
+import { Creneau } from '../annuaire/annuaire.service';
+import { DeplacerRendezVousComponent } from '../rendezvous/deplacer-rendez-vous.component';
 import { AuthService } from '../auth/auth.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { estAnnule, libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
@@ -18,7 +21,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
  */
 @Component({
     selector: 'app-agenda-medecin',
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, DeplacerRendezVousComponent],
     template: `
     <main style="max-width:760px;margin:32px auto;padding:0 16px">
       <h1 style="color:var(--blue);margin:0 0 16px">Agenda</h1>
@@ -39,6 +42,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
       <p *ngIf="annule() as r" style="color:var(--blue)">
         Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }} annulé : le créneau est de nouveau proposé<ng-container *ngIf="r.source !== 'TELEPHONE'"> et le patient est prévenu</ng-container>.
       </p>
+      <p *ngIf="deplace()" style="color:var(--blue)">{{ deplace() }}</p>
       <p *ngIf="honore() as r" style="color:var(--blue)">
         Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }} marqué honoré.
       </p>
@@ -88,6 +92,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
                       [disabled]="enCours() !== null">
                 {{ estEnCours(r, 'teleconsultation') ? 'Envoi…' : 'Proposer une téléconsultation' }}
               </button>
+              <button *ngIf="peutDeplacer(r)" type="button" class="bouton-secondaire deplacer-btn" (click)="aDeplacer.set(r.id)" [disabled]="enCours() !== null">Déplacer</button>
               <button *ngIf="estConfirme(r)" type="button" (click)="demanderAnnulation(r)" [disabled]="enCours() !== null"
                       style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
                 Annuler
@@ -95,6 +100,8 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
               <a *ngIf="peutRedigerOrdonnance(r)" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
                  [queryParams]="{ patientId: r.patientId, rendezVousId: r.id }">Rédiger une ordonnance</a>
             </div>
+            <app-deplacer-rendez-vous *ngIf="aDeplacer() === r.id" [rendezVous]="r" [lister]="listerCreneaux" [deplacer]="deplacerFn"
+              (deplace)="apresDeplacement($event)" (annule)="aDeplacer.set(null)" />
           </li>
         </ul>
       </section>
@@ -116,6 +123,7 @@ export class AgendaMedecinComponent implements OnInit {
   private service = inject(MedecinService);
   private patients = inject(PatientsService);
   private teleconsultations = inject(TeleconsultationService);
+  private locale = inject(LOCALE_ID);
 
   rendezVous = signal<RendezVous[]>([]);
   repertoire = signal<RepertoirePatients>(new Map());
@@ -139,6 +147,23 @@ export class AgendaMedecinComponent implements OnInit {
   absentAConfirmer = signal<string | null>(null);
   absent = signal<RendezVous | null>(null);
   erreur = signal('');
+  /** Rendez-vous dont le panneau « Déplacer » est ouvert, et message apres deplacement. */
+  aDeplacer = signal<string | null>(null);
+  deplace = signal('');
+
+  peutDeplacer(r: RendezVous): boolean {
+    return estConfirme(r) && Date.parse(r.debut) > Date.now();
+  }
+
+  listerCreneaux = (): Observable<Creneau[]> => this.service.creneaux();
+
+  deplacerFn = (rdv: RendezVous, creneauId: string) => this.service.deplacerRendezVous(rdv.id, creneauId);
+
+  apresDeplacement(creneau: Creneau) {
+    this.aDeplacer.set(null);
+    this.deplace.set(`Rendez-vous déplacé au ${formatDate(creneau.debut, 'EEEE d MMMM à HH:mm', this.locale)} : le patient est prévenu.`);
+    this.charger();
+  }
 
   ngOnInit() {
     this.charger();
@@ -319,5 +344,6 @@ export class AgendaMedecinComponent implements OnInit {
     this.annule.set(null);
     this.honore.set(null);
     this.absent.set(null);
+    this.deplace.set('');
   }
 }
