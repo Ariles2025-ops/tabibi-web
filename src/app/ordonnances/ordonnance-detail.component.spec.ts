@@ -11,10 +11,10 @@ import { OrdonnanceDetailComponent } from './ordonnance-detail.component';
 
 /** Detail d'ordonnance : meme message que l'appli quand l'ordonnance n'a aucun medicament. */
 describe('OrdonnanceDetailComponent', () => {
-  async function afficher(lignes: Ordonnance['lignes']) {
+  async function afficher(lignes: Ordonnance['lignes'], statut = 'EMISE') {
     const ordonnance = {
       id: 'o1', patientId: 'p1', medecinId: 'm1', emiseLe: '2026-12-04T09:00:00Z',
-      statut: 'EMISE', codeVerification: 'AB12CD34', lignes,
+      statut, codeVerification: 'AB12CD34', lignes,
     } as Ordonnance;
     const service = jasmine.createSpyObj<OrdonnanceService>('OrdonnanceService', ['parId']);
     service.parId.and.returnValue(of(ordonnance));
@@ -50,5 +50,26 @@ describe('OrdonnanceDetailComponent', () => {
     const el = await afficher([{ medicament: 'Doliprane', posologie: '1 par jour', duree: '5 jours' }]);
     expect(el.textContent).not.toContain('Aucun médicament');
     expect(el.querySelectorAll('tbody tr').length).toBe(1);
+  });
+
+  it('propose « Copier le code », copie le code et confirme « Code copié »', async () => {
+    const ecrire = jasmine.createSpy('writeText').and.resolveTo();
+    spyOnProperty(navigator, 'clipboard', 'get').and.returnValue({ writeText: ecrire } as unknown as Clipboard);
+    const el = await afficher([]);
+    const bouton = el.querySelector('.bouton-copier') as HTMLButtonElement;
+    expect(bouton.textContent).toContain('Copier le code');
+    expect(el.textContent).not.toContain('Code copié');
+    bouton.click();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(ecrire).toHaveBeenCalledWith('AB12CD34');
+  });
+
+  it('dit « À présenter en pharmacie » seulement tant que l\'ordonnance est utilisable', async () => {
+    expect((await afficher([], 'EMISE')).querySelector('.a-presenter')).not.toBeNull();
+    TestBed.resetTestingModule();
+    expect((await afficher([], 'ANNULEE')).querySelector('.a-presenter')).toBeNull();
+    TestBed.resetTestingModule();
+    expect((await afficher([], 'DELIVREE')).querySelector('.a-presenter')).toBeNull();
   });
 });

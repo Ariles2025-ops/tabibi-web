@@ -107,6 +107,7 @@ describe('ProfilService', () => {
     });
 
     it('exige un nom de 2 a 120 caracteres', () => {
+      expect(validerProfil({ ...DEMANDE, nomComplet: '' }, AUJOURD_HUI)).toBe('Indiquez votre nom complet.');
       expect(validerProfil({ ...DEMANDE, nomComplet: 'A' }, AUJOURD_HUI)).toBe('Le nom complet doit compter de 2 à 120 caractères.');
       expect(validerProfil({ ...DEMANDE, nomComplet: 'A'.repeat(121) }, AUJOURD_HUI)).toContain('120 caractères');
       expect(validerProfil({ ...DEMANDE, nomComplet: 'A'.repeat(120) }, AUJOURD_HUI)).toBeNull();
