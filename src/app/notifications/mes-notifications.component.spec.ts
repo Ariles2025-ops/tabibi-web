@@ -183,4 +183,19 @@ describe('MesNotificationsComponent', () => {
     expect(navigation).not.toHaveBeenCalled();
     expect(service.marquerLue).not.toHaveBeenCalled();
   });
+
+  it('« /ordonnances » ouvre Mes ordonnances ; un lien sans page du site n\'a pas de « Voir »', async () => {
+    const liste: Notification = { ...NON_LUE, lien: '/ordonnances' };
+    const inconnu: Notification = { ...LUE, id: 'n3', lien: '/page-inexistante' };
+    service.mesNotifications.and.returnValue(of([liste, inconnu]));
+    service.marquerLue.and.returnValue(of({ ...liste, lue: true }));
+    const navigation = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    await afficher();
+
+    expect(lignes()[0].textContent).toContain('Voir');
+    expect(lignes()[1].textContent).not.toContain('Voir');
+    lignes()[0].click();
+    lignes()[1].click();
+    expect(navigation).toHaveBeenCalledOnceWith('/mes-ordonnances');
+  });
 });

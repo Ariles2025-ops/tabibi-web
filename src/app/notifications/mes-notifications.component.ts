@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { cibleDuLien } from './cible-notification';
 import { Notification, NotificationService } from './notification.service';
 
 /** Boite de reception de l'utilisateur connecte (GET /api/notifications/mes), avec marquage lu. */
@@ -113,12 +114,11 @@ export class MesNotificationsComponent implements OnInit {
   }
 
   /**
-   * Vrai si la notification mene a une page du site : lien interne (« /mes-rendez-vous »). Un lien vide, absolu
-   * (« https://... ») ou protocole-relatif (« //... ») n'est pas propose, comme dans l'appli (lien sans ecran = pas de « Voir »).
+   * Vrai si la notification mene a une page du site (« /mes-rendez-vous », « /ordonnances/{id} »...). Un lien vide, externe
+   * ou sans page correspondante n'est pas propose, comme dans l'appli (lien sans ecran = pas de « Voir »).
    */
   aLien(notification: Notification): boolean {
-    const lien = notification.lien?.trim();
-    return !!lien && lien.startsWith('/') && !lien.startsWith('//');
+    return cibleDuLien(notification.lien) !== null;
   }
 
   /** Clic sur une notification qui porte un lien : la marque lue (si besoin) puis ouvre la page cible. */
@@ -130,7 +130,7 @@ export class MesNotificationsComponent implements OnInit {
         error: () => undefined,
       });
     }
-    this.router.navigateByUrl(notification.lien as string);
+    this.router.navigateByUrl(cibleDuLien(notification.lien) as string);
   }
 
   toutMarquerLu() {
