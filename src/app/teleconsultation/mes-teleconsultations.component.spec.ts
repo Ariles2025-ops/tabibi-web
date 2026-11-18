@@ -8,6 +8,7 @@ import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RendezVous, RendezVousService } from '../rendezvous/rendezvous.service';
+import { LangueService } from '../partage/langue.service';
 import { MesTeleconsultationsComponent } from './mes-teleconsultations.component';
 import { Teleconsultation, TeleconsultationService } from './teleconsultation.service';
 
@@ -223,5 +224,47 @@ describe('MesTeleconsultationsComponent', () => {
     await afficher();
 
     expect(texte()).toContain('Cette page est réservée aux patients.');
+  });
+
+  describe('en arabe (comme l\'appli)', () => {
+    beforeEach(() => TestBed.inject(LangueService).ar.set(true));
+    afterEach(() => TestBed.inject(LangueService).ar.set(false));
+
+    it('affiche titre, statut, consentement et bouton en arabe, de droite a gauche', async () => {
+      await afficher();
+
+      const main: HTMLElement = fixture.nativeElement.querySelector('main');
+      expect(main.getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('استشاراتي عن بُعد');
+      expect(texte()).toContain('مبرمجة');
+      expect(texte()).toContain('لا يقوم نداويك بأي تسجيل.');
+      expect(texte()).toContain('07/12/2026');
+      expect(bouton('أوافق')).toBeDefined();
+      expect(texte()).not.toContain('Je donne mon consentement');
+      expect(texte()).not.toContain('Planifiée');
+    });
+
+    it('explique en arabe qu\'une teleconsultation terminee ou annulee n\'a plus d\'action', async () => {
+      service.mes.and.returnValue(of([{ ...CONSENTIE, statut: 'TERMINEE' }]));
+      await afficher();
+      expect(texte()).toContain('انتهت هذه الاستشارة عن بُعد.');
+      expect(texte()).toContain('منتهية');
+
+      service.mes.and.returnValue(of([{ ...CONSENTIE, statut: 'ANNULEE' }]));
+      fixture.componentInstance.charger();
+      fixture.detectChanges();
+      expect(texte()).toContain('تم إلغاء هذه الاستشارة عن بُعد.');
+    });
+
+    it('affiche la liste vide et les erreurs en arabe', async () => {
+      service.mes.and.returnValue(of([]));
+      await afficher();
+      expect(texte()).toContain('لا توجد استشارات عن بُعد حاليًا.');
+
+      service.mes.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      fixture.componentInstance.charger();
+      fixture.detectChanges();
+      expect(texte()).toContain('تعذّر تحميل استشاراتك عن بُعد.');
+    });
   });
 });
