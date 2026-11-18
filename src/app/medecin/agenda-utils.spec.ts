@@ -1,5 +1,5 @@
 import { RendezVous } from '../rendezvous/rendezvous.service';
-import { cleJour, instantAlger, valeurDateHeureLocale, estConfirme, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation } from './agenda-utils';
+import { cleJour, instantAlger, valeurDateHeureLocale, estConfirme, peutAnnulerCabinet, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation } from './agenda-utils';
 
 /** Statut RESERVE (reservation du patient) traite comme CONFIRME : les boutons restent visibles. */
 describe('agenda-utils : RESERVE traite comme CONFIRME', () => {
@@ -20,6 +20,18 @@ describe('agenda-utils : RESERVE traite comme CONFIRME', () => {
     expect(peutMarquerAbsent(passe, maintenant)).toBeTrue();
     expect(peutProposerTeleconsultation(futur, maintenant)).toBeTrue();
     expect(peutHonorer(rdv('ANNULE', '2026-11-16T09:00:00Z'), maintenant)).toBeFalse();
+  });
+});
+
+describe('agenda-utils : peutAnnulerCabinet', () => {
+  const maintenant = Date.parse('2026-11-16T10:00:00Z');
+  const rdv = (statut: string, debut: string): RendezVous =>
+    ({ id: 'r', patientId: 'p', medecinId: 'm', creneauId: 'c', statut, debut });
+
+  it('futur confirme → vrai, passe → faux, non confirme → faux', () => {
+    expect(peutAnnulerCabinet(rdv('CONFIRME', '2026-11-17T09:00:00Z'), maintenant)).toBeTrue();
+    expect(peutAnnulerCabinet(rdv('CONFIRME', '2026-11-16T09:00:00Z'), maintenant)).toBeFalse();
+    expect(peutAnnulerCabinet(rdv('ANNULE', '2026-11-17T09:00:00Z'), maintenant)).toBeFalse();
   });
 });
 

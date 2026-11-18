@@ -10,7 +10,7 @@ import { RendezVous } from '../rendezvous/rendezvous.service';
 import { estAnnule, libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
 import { TeleconsultationService } from '../teleconsultation/teleconsultation.service';
 import { VISIO_ACTIVE } from '../lancement';
-import { ActionEnCours, estConfirme, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
+import { ActionEnCours, estConfirme, peutAnnulerCabinet, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
 import { MedecinService } from './medecin.service';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from './patients.service';
 
@@ -93,7 +93,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
                 {{ estEnCours(r, 'teleconsultation') ? 'Envoi…' : 'Proposer une téléconsultation' }}
               </button>
               <button *ngIf="peutDeplacer(r)" type="button" class="bouton-secondaire deplacer-btn" (click)="aDeplacer.set(r.id)" [disabled]="enCours() !== null">Déplacer</button>
-              <button *ngIf="estConfirme(r)" type="button" (click)="demanderAnnulation(r)" [disabled]="enCours() !== null"
+              <button *ngIf="peutAnnulerCabinet(r)" type="button" (click)="demanderAnnulation(r)" [disabled]="enCours() !== null"
                       style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
                 Annuler
               </button>
@@ -206,6 +206,10 @@ export class AgendaMedecinComponent implements OnInit {
 
   /** CONFIRME ou RESERVE : actions proposees (voir agenda-utils). */
   estConfirme = estConfirme;
+
+  peutAnnulerCabinet(r: RendezVous): boolean {
+    return peutAnnulerCabinet(r, Date.now());
+  }
 
   peutHonorer(r: RendezVous): boolean {
     return peutHonorer(r, Date.now());
