@@ -151,6 +151,29 @@ describe('MesTeleconsultationsComponent', () => {
     expect(texte()).toContain('Terminée');
   });
 
+  it('explique l etat comme l appli : terminee, annulee, ou lien de salle pas encore disponible', async () => {
+    service.mes.and.returnValue(
+      of([
+        { ...CONSENTIE, id: 't2', statut: 'TERMINEE' },
+        { ...CONSENTIE, id: 't3', statut: 'ANNULEE' },
+        { ...CONSENTIE, id: 't4', lienSalle: null },
+      ]),
+    );
+    await afficher();
+
+    expect(texte()).toContain('Cette téléconsultation est terminée.');
+    expect(texte()).toContain('Cette téléconsultation a été annulée.');
+    expect(texte()).toContain('Le lien de la salle sera disponible prochainement.');
+  });
+
+  it('n ajoute pas de texte d etat quand le consentement est attendu ou la salle accessible', async () => {
+    service.mes.and.returnValue(of([SANS_CONSENTEMENT, CONSENTIE]));
+    rendezVous.mes.and.returnValue(of([rendezVousImminent()]));
+    await afficher();
+
+    expect(fixture.nativeElement.querySelector('.texte-etat')).toBeNull();
+  });
+
   it('desactive « Rejoindre » hors de la fenetre (15 min avant a 2 h apres) avec une indication', async () => {
     service.mes.and.returnValue(of([CONSENTIE]));
     await afficher();
