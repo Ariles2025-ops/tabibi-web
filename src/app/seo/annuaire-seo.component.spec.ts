@@ -59,6 +59,15 @@ describe('AnnuaireSeoComponent', () => {
     expect(annuaire.rechercher).toHaveBeenCalledWith('pharmacie', '16', undefined, undefined);
   });
 
+  it('page pharmacie : textes de chargement, nombre et « aucun » propres aux pharmacies', () => {
+    const f = creer({ specialite: 'pharmacie', wilaya: 'alger' });
+    const t = f.componentInstance.t;
+    expect(t.chargementPharma).toBe('Chargement des pharmacies…');
+    expect(t.nombrePharma(3)).toBe('3 pharmacies');
+    expect(f.nativeElement.textContent).toContain('Aucune pharmacie référencée');
+    expect(f.nativeElement.textContent).not.toContain('praticien référencé');
+  });
+
   it('accorde l article : « une sage-femme », « un ORL »', () => {
     let f = creer({ specialite: 'sage-femme' });
     expect(f.componentInstance.intro).toContain('Trouvez une sage-femme');
