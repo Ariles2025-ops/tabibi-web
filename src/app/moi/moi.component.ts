@@ -28,7 +28,7 @@ interface Raccourci { lien: string; libelle: string; }
     <main style="max-width:640px;margin:40px auto;padding:0 16px">
       <h1 style="color:var(--vert)">Mon compte</h1>
       <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:12px;max-width:420px">
-        <p style="color:var(--text3);margin:0">Connectez-vous ou créez votre compte pour prendre rendez-vous. Vous choisirez le téléphone (code SMS) ou l'e-mail à l'étape suivante.</p>
+        <p style="color:var(--text3);margin:0">Créez votre compte avec votre adresse e-mail, ou connectez-vous par téléphone (code SMS), pour prendre rendez-vous.</p>
         <button type="button" class="bouton" (click)="seConnecter()">Se connecter</button>
         <button type="button" class="bouton-secondaire" (click)="sInscrireParEmail()">Créer un compte</button>
       </div>
