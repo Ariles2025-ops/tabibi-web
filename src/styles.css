@@ -80,7 +80,7 @@ button:disabled { opacity:.6; cursor:default; }
 .side__login { color:#fff; opacity:.95; cursor:pointer; font-weight:600; white-space:nowrap; }
 /* Sur petit ecran, on garde l'essentiel : Se connecter + Creer un compte (le lien medecin passe en pied / espace medecin). */
 
-.side .side__signup, .side__account .side__signup { background:#fff; color:var(--vert); font-weight:700; padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap; }
+.side .side__signup, .side__account .side__signup { background:#fff; color:var(--vert); opacity:1; font-weight:700; padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap; }
 .side .side__signup:hover { background:#f0f7f4; color:var(--vert); }
 
 /* Desktop : on annule la colonne de gauche, la nav devient une barre du haut pleine largeur. */
