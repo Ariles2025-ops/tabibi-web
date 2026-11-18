@@ -10,19 +10,19 @@ import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.compon
     selector: 'app-liste-ordonnances',
     imports: [CommonModule, RouterLink, BadgeStatutOrdonnanceComponent],
     template: `
-    <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
+    <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px" [attr.dir]="arabe() ? 'rtl' : null">
       <li *ngFor="let o of ordonnances()" style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1)">
         <a [routerLink]="['/ordonnances', o.id]"
            style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;color:inherit;text-decoration:none">
           <span>
-            <strong style="color:var(--ink)"><i class="fa fa-file-prescription fa-xs" style="color:var(--blue)"></i> {{ o.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}</strong><br>
+            <strong style="color:var(--ink)"><i class="fa fa-file-prescription fa-xs" style="color:var(--blue)"></i> <span [attr.dir]="arabe() ? 'ltr' : null">{{ o.emiseLe | date:(arabe() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span></strong><br>
             <span style="color:var(--text3)">
-              <ng-container *ngIf="afficherPatient()">Patient : {{ o.patientId }} · </ng-container><ng-container *ngIf="nomsMedecins() as noms"><ng-container *ngIf="noms[o.medecinId] as nom">{{ nom }}</ng-container></ng-container>
+              <ng-container *ngIf="afficherPatient()">{{ arabe() ? 'المريض' : 'Patient' }} : {{ o.patientId }} · </ng-container><ng-container *ngIf="nomsMedecins() as noms"><ng-container *ngIf="noms[o.medecinId] as nom">{{ nom }}</ng-container></ng-container>
             </span>
             <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
-              <app-badge-statut-ordonnance [statut]="o.statut" />
-              <span *ngIf="o.statut === 'ANNULEE'" class="info-statut" style="color:var(--red);font-size:13px">Annulée par le médecin<ng-container *ngIf="o.motifAnnulation"> : {{ o.motifAnnulation }}</ng-container></span>
-              <span *ngIf="o.statut === 'DELIVREE'" class="info-statut" style="color:var(--text2);font-size:13px">Délivrée en pharmacie<ng-container *ngIf="o.delivreeLe"> le {{ o.delivreeLe | date:'d MMMM yyyy' }}</ng-container></span>
+              <app-badge-statut-ordonnance [statut]="o.statut" [arabe]="arabe()" />
+              <span *ngIf="o.statut === 'ANNULEE'" class="info-statut" style="color:var(--red);font-size:13px">{{ arabe() ? 'ألغاها الطبيب' : 'Annulée par le médecin' }}<ng-container *ngIf="o.motifAnnulation"> : {{ o.motifAnnulation }}</ng-container></span>
+              <span *ngIf="o.statut === 'DELIVREE'" class="info-statut" style="color:var(--text2);font-size:13px">{{ arabe() ? 'صُرفت في الصيدلية' : 'Délivrée en pharmacie' }}<ng-container *ngIf="o.delivreeLe">{{ arabe() ? ' في ' : ' le ' }}<span [attr.dir]="arabe() ? 'ltr' : null">{{ o.delivreeLe | date:(arabe() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></ng-container></span>
             </span>
           </span>
           <code style="font-size:1rem;letter-spacing:.1em;color:var(--blue-d);background:var(--blue-l);border-radius:999px;padding:4px 12px">{{ o.codeVerification }}</code>
@@ -35,6 +35,8 @@ export class ListeOrdonnancesComponent {
   ordonnances = input.required<Ordonnance[]>();
   /** Affiche l'identifiant du patient sur chaque ligne (liste du medecin). */
   afficherPatient = input(false);
+  /** Vrai : textes en arabe (ecran patient en arabe) ; faux : francais. */
+  arabe = input(false);
   /** Nom des praticiens par identifiant (liste du patient) ; null : non affiche. */
   nomsMedecins = input<Partial<Record<string, string>> | null>(null);
 
