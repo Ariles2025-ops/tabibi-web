@@ -109,7 +109,7 @@ const SERIE_MAX = 48;
                         (cree)="charger()" />
 
       <p *ngIf="succes() as c" style="color:var(--blue);margin:12px 0 0">
-        Créneau ouvert le {{ c.debut | date:'EEEE d MMMM à HH:mm' }} ({{ c.dureeMinutes }} min).
+        Créneau ouvert le {{ c.debut | date:'EEEE d MMMM à HH:mm':'+0100' }} ({{ c.dureeMinutes }} min).
         <a *ngIf="lienAgenda() as lien" [routerLink]="lien" style="color:var(--blue)">Voir l'agenda</a>
       </p>
       <p *ngIf="succesSerie()" style="color:var(--blue);margin:12px 0 0">{{ succesSerie() }}</p>
@@ -122,12 +122,12 @@ const SERIE_MAX = 48;
     <p *ngIf="!charge() && !erreurListe() && creneaux().length === 0" style="color:var(--text3)">Aucun créneau à venir.</p>
 
     <div *ngFor="let j of jours()" style="margin:0 0 16px">
-      <h3 style="font-size:.95rem;margin:0 0 8px;color:var(--text2);text-transform:capitalize">{{ j.debut | date:'EEEE d MMMM' }}</h3>
+      <h3 style="font-size:.95rem;margin:0 0 8px;color:var(--text2);text-transform:capitalize">{{ j.debut | date:'EEEE d MMMM':'+0100' }}</h3>
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:8px">
         <li *ngFor="let c of j.elements" class="creneau"
             style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <span>
-            <strong style="color:var(--ink)">{{ c.debut | date:'HH:mm' }}</strong>
+            <strong style="color:var(--ink)">{{ c.debut | date:'HH:mm':'+0100' }}</strong>
             <span style="color:var(--text3)"> · {{ c.dureeMinutes }} min</span>
             <span *ngIf="c.disponible" style="display:inline-block;margin-left:8px;background:var(--blue-l);color:var(--blue-d);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600">Libre</span>
             <span *ngIf="!c.disponible" style="display:inline-block;margin-left:8px;background:var(--red-l);color:var(--red);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600">Réservé</span>
@@ -360,7 +360,7 @@ export class GestionCreneauxComponent implements OnChanges {
           this.succesSerie.set(`${index} créneau${index > 1 ? 'x' : ''} ouvert${index > 1 ? 's' : ''} avant l'arrêt.`);
           this.charger();
         }
-        const heure = debuts[index].toTimeString().slice(0, 5);
+        const heure = valeurDateHeureLocale(debuts[index]).slice(11);
         this.traiterErreurOuverture(e, `Arrêt au créneau de ${heure} : `);
       },
     });
