@@ -14,7 +14,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
 /**
  * Page publique « Vous etes praticien ? » : presentation + formulaire de DEMANDE (sans compte).
  * Le praticien ne cree pas de compte lui-meme : il envoie une demande ; l'equipe verifie puis cree le compte.
- * MVP : la demande est envoyee par e-mail a contact@tabibi.doctor (ouvre la messagerie du praticien) ;
+ * MVP : la demande est envoyee par e-mail a contact@ndawik.com (ouvre la messagerie du praticien) ;
  * un suivi des demandes cote admin pourra etre ajoute ensuite.
  */
 @Component({
@@ -118,7 +118,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
           <div *ngIf="envoye()" class="prat-ok">
             <span class="prat-ok__ic"><i class="fa fa-circle-check" aria-hidden="true"></i></span>
             <h3>{{ t('Votre demande est prête !', 'طلبك جاهز!') }}</h3>
-            <p>{{ t("Votre messagerie s'est ouverte avec la demande pré-remplie — il ne reste qu'à l'envoyer. Si rien ne s'est ouvert, écrivez-nous directement à", 'فُتح بريدك الإلكتروني وفيه الطلب معبّأ مسبقًا، ولم يبقَ سوى إرساله. وإن لم يُفتح شيء فراسلنا مباشرة على') }} <b dir="ltr">contact&#64;tabibi.doctor</b> {{ t('avec les mêmes informations.', 'بنفس المعلومات.') }}</p>
+            <p>{{ t("Votre messagerie s'est ouverte avec la demande pré-remplie — il ne reste qu'à l'envoyer. Si rien ne s'est ouvert, écrivez-nous directement à", 'فُتح بريدك الإلكتروني وفيه الطلب معبّأ مسبقًا، ولم يبقَ سوى إرساله. وإن لم يُفتح شيء فراسلنا مباشرة على') }} <b dir="ltr">contact&#64;ndawik.com</b> {{ t('avec les mêmes informations.', 'بنفس المعلومات.') }}</p>
             <button type="button" class="prat-btn-blanc" style="color:var(--vert);border:1.5px solid var(--vert)" (click)="envoye.set(false)">{{ t('Modifier ma demande', 'تعديل طلبي') }}</button>
           </div>
         </div>
@@ -220,7 +220,7 @@ export class PraticienComponent {
       titre: this.ar ? 'فضاء الممارس: انضم إلى نداويك' : 'Espace praticien : rejoignez Ndawik Doctor',
       description: this.ar
         ? 'طبيب أو عيادة أو صيدلية في الجزائر: استعد صفحتك وانضم إلى نداويك.'
-        : 'Médecin, clinique ou pharmacie en Algérie : revendiquez votre fiche et rejoignez Ndawik Doctor (tabibi.doctor, Ndawik DZ).',
+        : 'Médecin, clinique ou pharmacie en Algérie : revendiquez votre fiche et rejoignez Ndawik Doctor.',
       chemin: '/praticien',
       ar: this.ar,
       bilingue: true,
@@ -273,7 +273,7 @@ export class PraticienComponent {
     if (this.navigateur) document.getElementById('demande')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /** Construit la demande et ouvre la messagerie du praticien vers contact@tabibi.doctor. */
+  /** Construit la demande et ouvre la messagerie du praticien vers contact@ndawik.com. */
   envoyer() {
     if (!this.nom.trim() || !this.specialite.trim() || !this.wilaya.trim() || !this.numeroOrdre.trim() || !this.telephone.trim()) {
       this.erreur.set(this.t('Merci de remplir les champs obligatoires (*).', 'يرجى ملء الحقول الإلزامية (*).'));
@@ -293,7 +293,7 @@ export class PraticienComponent {
       '',
       'Message : ' + (this.message || '—'),
     ].join('\n');
-    const url = 'mailto:contact@tabibi.doctor?subject=' + encodeURIComponent('Demande praticien — ' + this.nom)
+    const url = 'mailto:contact@ndawik.com?subject=' + encodeURIComponent('Demande praticien — ' + this.nom)
       + '&body=' + encodeURIComponent(corps);
     if (this.navigateur) window.location.href = url;
     this.envoye.set(true);
