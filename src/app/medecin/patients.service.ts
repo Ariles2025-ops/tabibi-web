@@ -15,8 +15,8 @@ export interface PatientResume {
 export type RepertoirePatients = Map<string, PatientResume>;
 
 /** Libelle affiche pour un patient : son nom, a defaut « Patient ». */
-export function nomPatient(repertoire: RepertoirePatients, patientId: string): string {
-  return repertoire.get(patientId)?.nomComplet?.trim() || 'Patient';
+export function nomPatient(repertoire: RepertoirePatients, patientId: string, arabe = false): string {
+  return repertoire.get(patientId)?.nomComplet?.trim() || (arabe ? 'مريض' : 'Patient');
 }
 
 /** Telephone du patient s'il est connu (chaine vide sinon). */

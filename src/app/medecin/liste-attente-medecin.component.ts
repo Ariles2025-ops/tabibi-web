@@ -2,6 +2,8 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { AuthService } from '../auth/auth.service';
 import { InscriptionAttente, ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from './patients.service';
@@ -13,16 +15,18 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
  */
 @Component({
     selector: 'app-liste-attente-medecin',
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, SelecteurLangueComponent],
     template: `
-    <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--blue);margin:0 0 8px">Liste d'attente</h1>
+    <main style="max-width:720px;margin:32px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h1 style="color:var(--blue);margin:0 0 8px">{{ l.t("Liste d'attente", 'قائمة الانتظار') }}</h1>
+        <app-selecteur-langue />
+      </div>
       <p style="color:var(--text3);margin:0 0 20px">
-        Patients qui attendent un créneau chez vous, du plus ancien au plus récent. Ils sont prévenus dès que vous
-        ouvrez un créneau ou qu'un rendez-vous est annulé.
+        {{ l.t("Patients qui attendent un créneau chez vous, du plus ancien au plus récent. Ils sont prévenus dès que vous ouvrez un créneau ou qu'un rendez-vous est annulé.", 'المرضى الذين ينتظرون موعدًا عندك، من الأقدم إلى الأحدث. يتم إعلامهم فور فتحك موعدًا أو إلغاء موعد.') }}
       </p>
 
-      <p *ngIf="charge()" style="color:var(--text3)">Chargement…</p>
+      <p *ngIf="charge()" style="color:var(--text3)">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
       <p *ngIf="erreur()" role="alert" style="color:var(--red)">{{ erreur() }}</p>
 
       <ol style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
@@ -31,21 +35,22 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
           <span style="flex:none;width:28px;height:28px;border-radius:999px;background:var(--blue-l);color:var(--blue-d);display:grid;place-items:center;font-weight:700;font-size:.85rem">{{ n + 1 }}</span>
           <span>
             <strong style="color:var(--ink)">{{ nom(i.patientId) }}</strong>
-            <a *ngIf="telephone(i.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">
+            <a *ngIf="telephone(i.patientId) as tel" [href]="'tel:' + tel" dir="ltr" style="color:var(--text3);margin-inline-start:8px;text-decoration:none">
               <i class="fa fa-phone fa-xs"></i> {{ tel }}
             </a><br>
-            <span style="color:var(--text3);font-size:.9rem">Inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
+            <span style="color:var(--text3);font-size:.9rem">{{ l.t('Inscrit le', 'سُجّل في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ i.inscritLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : "d MMMM yyyy à HH:mm") }}</span></span>
           </span>
         </li>
       </ol>
       <p *ngIf="!charge() && !erreur() && inscriptions().length === 0">
-        Aucun patient en liste d'attente pour le moment.
-        <a routerLink="/medecin/disponibilites" style="color:var(--blue)">Ouvrir des créneaux</a>
+        {{ l.t("Aucun patient en liste d'attente pour le moment.", 'لا يوجد مرضى في قائمة الانتظار حاليًا.') }}
+        <a routerLink="/medecin/disponibilites" style="color:var(--blue)">{{ l.t('Ouvrir des créneaux', 'فتح مواعيد') }}</a>
       </p>
     </main>
   `
 })
 export class ListeAttenteMedecinComponent implements OnInit {
+  l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(ListeAttenteService);
   private patients = inject(PatientsService);
@@ -68,16 +73,16 @@ export class ListeAttenteMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux médecins.');
+          this.erreur.set(this.l.t('Cette page est réservée aux médecins.', 'هذه الصفحة مخصّصة للأطباء.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "Impossible de charger la liste d'attente.");
+          this.erreur.set(e.error?.erreur ?? this.l.t("Impossible de charger la liste d'attente.", 'تعذّر تحميل قائمة الانتظار.'));
         }
       },
     });
   }
 
   nom(patientId: string): string {
-    return nomPatient(this.repertoire(), patientId);
+    return nomPatient(this.repertoire(), patientId, this.l.ar());
   }
 
   telephone(patientId: string): string {

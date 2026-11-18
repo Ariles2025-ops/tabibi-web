@@ -8,6 +8,7 @@ import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { AvisService, SyntheseAvis } from '../avis/avis.service';
 import { Moi } from '../moi/moi.service';
+import { LangueService } from '../partage/langue.service';
 import { AvisMedecinComponent } from './avis-medecin.component';
 
 const MEDECIN_ID = '33333333-3333-3333-3333-333333333333';
@@ -27,6 +28,7 @@ describe('AvisMedecinComponent', () => {
   let profil: Moi | null;
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
     profil = { sujet: MEDECIN_ID, nom: 'medecin.demo', roles: ['MEDECIN'] };
     service = jasmine.createSpyObj<AvisService>('AvisService', ['synthese', 'signaler']);
@@ -56,7 +58,7 @@ describe('AvisMedecinComponent', () => {
   }
 
   function boutonsSignaler(): HTMLButtonElement[] {
-    return Array.from(fixture.nativeElement.querySelectorAll('button'));
+    return Array.from(fixture.nativeElement.querySelectorAll('li button'));
   }
 
   it('lit mes avis publics avec mon identifiant et propose « Signaler » sur chacun', async () => {
@@ -123,5 +125,17 @@ describe('AvisMedecinComponent', () => {
     await afficher();
     expect(texte()).toContain('Impossible de lire votre profil');
     expect(service.synthese).toHaveBeenCalledTimes(1);
+  });
+
+  it('s\'affiche en arabe (titre, moyenne, « Signaler ») quand la langue est l\'arabe, sans texte francais', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    await afficher();
+
+    expect(texte()).toContain('آراء المرضى');
+    expect(texte()).toContain('4,5 / 5 (2 رأي)');
+    expect(boutonsSignaler().some((b) => b.textContent?.trim() === 'إبلاغ')).toBeTrue();
+    expect(texte()).not.toContain('Signaler');
+    expect(texte()).not.toContain('Avis des patients');
+    expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
   });
 });
