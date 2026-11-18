@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angu
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { EMPTY, Subject, Subscription, catchError, merge, switchMap, timer } from 'rxjs';
+import { LangueService } from '../partage/langue.service';
 import { NotificationService } from './notification.service';
 
 /** Intervalle de rafraichissement du compteur de notifications non lues. */
@@ -18,12 +19,13 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 60_000;
     imports: [CommonModule, RouterLink, RouterLinkActive],
     template: `
     <a routerLink="/notifications" routerLinkActive="actif" (click)="rafraichir()"
-       [attr.aria-label]="nonLues() > 0 ? 'Notifications, ' + nonLues() + ' non lues' : 'Notifications'">
-      Notifications<ng-container *ngIf="nonLues() > 0"> ({{ nonLues() }})</ng-container>
+       [attr.aria-label]="nonLues() > 0 ? l.t('Notifications, ' + nonLues() + ' non lues', 'الإشعارات، ' + nonLues() + ' غير مقروءة') : l.t('Notifications', 'الإشعارات')">
+      {{ l.t('Notifications', 'الإشعارات') }}<ng-container *ngIf="nonLues() > 0"> ({{ nonLues() }})</ng-container>
     </a>
   `
 })
 export class ClocheNotificationsComponent implements OnInit, OnDestroy {
+  l = inject(LangueService);
   private service = inject(NotificationService);
   private navigateur = isPlatformBrowser(inject(PLATFORM_ID));
   /** Demandes de rafraichissement immediat (clic), en plus du tic periodique. */
