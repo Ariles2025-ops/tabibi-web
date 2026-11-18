@@ -72,7 +72,8 @@ describe('MesRendezVousComponent (avis)', () => {
     const items = lignes();
     expect(items.length).toBe(3);
     expect(items[0].textContent).not.toContain('Donner mon avis');
-    expect(items[0].querySelector('button')?.textContent).toContain('Annuler');
+    expect(items[0].querySelector('button.mr-btn--danger')?.textContent).toContain('Annuler');
+    expect(items[0].querySelector('button.deplacer-btn')?.textContent).toContain('Déplacer');
     expect(items[1].querySelector('a[href="/avis/nouveau/r2"]')?.textContent).toContain('Donner mon avis');
     expect(items[1].textContent).not.toContain('Avis donné');
     expect(items[2].textContent).toContain('Avis donné');

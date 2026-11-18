@@ -1,16 +1,18 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { AnnuaireService } from '../annuaire/annuaire.service';
+import { Observable } from 'rxjs';
+import { AnnuaireService, Creneau } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { AvisService } from '../avis/avis.service';
 import { RendezVous, RendezVousService } from './rendezvous.service';
+import { DeplacerRendezVousComponent } from './deplacer-rendez-vous.component';
 import { estAnnule, libelleStatutRendezVous } from './statut-rendez-vous';
 
 @Component({
     selector: 'app-mes-rendez-vous',
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, DeplacerRendezVousComponent],
     template: `
     <main class="mr">
       <header class="mr-tete">
@@ -56,6 +58,7 @@ import { estAnnule, libelleStatutRendezVous } from './statut-rendez-vous';
                 <div class="mr-actions">
                   <ng-container *ngIf="aConfirmer() !== r.id">
                     <a [routerLink]="['/medecins', r.medecinId]" class="mr-btn mr-btn--sec">Voir la fiche</a>
+                    <button *ngIf="peutDeplacer(r)" type="button" class="mr-btn mr-btn--sec deplacer-btn" (click)="aDeplacer.set(r.id)" [disabled]="enCours() !== null">Déplacer</button>
                     <button *ngIf="peutAnnuler(r)" type="button" class="mr-btn mr-btn--danger" (click)="aConfirmer.set(r.id)" [disabled]="enCours() !== null">Annuler</button>
                   </ng-container>
                   <div *ngIf="aConfirmer() === r.id" class="mr-confirm" role="group" aria-label="Confirmer l'annulation">
@@ -66,6 +69,8 @@ import { estAnnule, libelleStatutRendezVous } from './statut-rendez-vous';
                     <button type="button" class="mr-btn mr-btn--sec" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">Non, garder</button>
                   </div>
                 </div>
+                <app-deplacer-rendez-vous *ngIf="aDeplacer() === r.id" style="grid-column:1 / -1" [rendezVous]="r"
+                  [lister]="listerCreneaux" [deplacer]="deplacerFn" (deplace)="apresDeplacement($event)" (annule)="aDeplacer.set(null)" />
               </li>
             </ul>
           </section>
@@ -166,6 +171,7 @@ export class MesRendezVousComponent implements OnInit {
   private service = inject(RendezVousService);
   private annuaire = inject(AnnuaireService);
   private avis = inject(AvisService);
+  private locale = inject(LOCALE_ID);
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -180,6 +186,8 @@ export class MesRendezVousComponent implements OnInit {
   passes = computed(() => this.rendezVous().filter((r) => !this.estAVenir(r)).reverse());
   /** Rendez-vous dont l'annulation attend la confirmation du patient (confirmation dans la page). */
   aConfirmer = signal<string | null>(null);
+  /** Rendez-vous dont le panneau « Déplacer » est ouvert. */
+  aDeplacer = signal<string | null>(null);
   charge = signal(false);
   /** Identifiant du rendez-vous dont l'annulation est en cours. */
   enCours = signal<string | null>(null);
@@ -237,6 +245,25 @@ export class MesRendezVousComponent implements OnInit {
         this.erreur.set(e.error?.erreur ?? "L'annulation a échoué, veuillez réessayer.");
       },
     });
+  }
+
+  peutDeplacer(rdv: RendezVous): boolean {
+    return this.estAVenir(rdv) && rdv.source !== 'TELEPHONE';
+  }
+
+  /** Creneaux du medecin du rendez-vous dont le panneau est ouvert. */
+  listerCreneaux = (): Observable<Creneau[]> => {
+    const rdv = this.rendezVous().find((r) => r.id === this.aDeplacer());
+    return this.annuaire.creneaux(rdv?.medecinId ?? '');
+  };
+
+  deplacerFn = (rdv: RendezVous, creneauId: string) => this.service.deplacer(rdv.id, creneauId);
+
+  apresDeplacement(creneau: Creneau) {
+    this.aDeplacer.set(null);
+    this.erreur.set('');
+    this.succes.set(`Rendez-vous déplacé au ${formatDate(creneau.debut, 'EEEE d MMMM à HH:mm', this.locale)}.`);
+    this.charger();
   }
 
   private estAVenir(rdv: RendezVous): boolean {
