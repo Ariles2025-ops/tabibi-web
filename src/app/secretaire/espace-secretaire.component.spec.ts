@@ -128,7 +128,7 @@ describe('EspaceSecretaireComponent', () => {
     expect(items[0].textContent).toContain('0770112233');
     expect(items[0].textContent).not.toContain('11111111');
     expect(bouton('Marquer honoré')).toBeDefined();
-    expect(bouton('Annuler')).toBeDefined();
+    expect(bouton('Annuler')).toBeUndefined();
 
     bouton('Passés')!.click();
     await afficher();
@@ -199,8 +199,16 @@ describe('EspaceSecretaireComponent', () => {
     expect(service.agenda).toHaveBeenCalledTimes(2);
   });
 
+  it('pas de bouton « Annuler » sur un rendez-vous deja commence (le serveur le refuse)', async () => {
+    await afficher();
+
+    expect(lignes().length).toBe(1);
+    expect(bouton('Annuler')).toBeUndefined();
+  });
+
   it('annule un rendez-vous apres confirmation dans la page ; le patient est prevenu', async () => {
-    service.annuler.and.returnValue(of({ ...CONFIRME, statut: 'ANNULE' }));
+    service.agenda.and.returnValue(of([FUTUR]));
+    service.annuler.and.returnValue(of({ ...FUTUR, statut: 'ANNULE' }));
     await afficher();
 
     bouton('Annuler')!.click();
@@ -215,13 +223,13 @@ describe('EspaceSecretaireComponent', () => {
     bouton('Oui')!.click();
     await afficher();
 
-    expect(service.annuler).toHaveBeenCalledWith('r1');
+    expect(service.annuler).toHaveBeenCalledWith('r3');
     expect(texte()).toContain('annulé : le patient est prévenu.');
     expect(service.agenda).toHaveBeenCalledTimes(2);
   });
 
   it('rendez-vous pris par telephone : ne dit pas que le patient est prevenu', async () => {
-    const TEL: RendezVous = { ...CONFIRME, source: 'TELEPHONE', nomPatient: 'Karim Ziani' };
+    const TEL: RendezVous = { ...FUTUR, source: 'TELEPHONE', nomPatient: 'Karim Ziani' };
     service.agenda.and.returnValue(of([TEL]));
     service.annuler.and.returnValue(of({ ...TEL, statut: 'ANNULE' }));
     await afficher();
@@ -233,7 +241,7 @@ describe('EspaceSecretaireComponent', () => {
     bouton('Oui')!.click();
     await afficher();
 
-    expect(service.annuler).toHaveBeenCalledWith('r1');
+    expect(service.annuler).toHaveBeenCalledWith('r3');
     expect(texte()).toContain('annulé : le créneau est de nouveau proposé.');
     expect(texte()).not.toContain('le patient est prévenu.');
   });
