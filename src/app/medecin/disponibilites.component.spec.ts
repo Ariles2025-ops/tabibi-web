@@ -227,7 +227,23 @@ describe('DisponibilitesComponent', () => {
       expect(texte()).toContain('3 créneaux ouverts.');
     });
 
-    it('s arrete a la premiere erreur et l explique', async () => {
+    it('s arrete a une erreur autre qu un chevauchement et l explique', async () => {
+      let appels = 0;
+      service.ouvrirCreneau.and.callFake((debut: string, duree: number) =>
+        ++appels === 2
+          ? throwError(() => new HttpErrorResponse({ status: 500, error: { erreur: 'Erreur serveur.' } }))
+          : of({ id: debut, medecinId: 'm1', debut, dureeMinutes: duree, disponible: true }),
+      );
+      await afficher();
+
+      await remplirSerie(dateDansUnAn(), '09:00', '11:00', '30');
+
+      expect(service.ouvrirCreneau).toHaveBeenCalledTimes(2);
+      expect(texte()).toContain("1 créneau ouvert avant l'arrêt.");
+      expect(texte()).toContain('Arrêt au créneau de 09:30 : Erreur serveur.');
+    });
+
+    it('ignore un chevauchement (400), ouvre les suivants et resume', async () => {
       let appels = 0;
       service.ouvrirCreneau.and.callFake((debut: string, duree: number) =>
         ++appels === 2
@@ -238,9 +254,8 @@ describe('DisponibilitesComponent', () => {
 
       await remplirSerie(dateDansUnAn(), '09:00', '11:00', '30');
 
-      expect(service.ouvrirCreneau).toHaveBeenCalledTimes(2);
-      expect(texte()).toContain("1 créneau ouvert avant l'arrêt.");
-      expect(texte()).toContain('Arrêt au créneau de 09:30 : Ce créneau chevauche un créneau déjà ouvert à cette heure-là.');
+      expect(service.ouvrirCreneau).toHaveBeenCalledTimes(4);
+      expect(texte()).toContain('3 créneaux ouverts, 1 ignoré (déjà pris).');
     });
   });
 });
