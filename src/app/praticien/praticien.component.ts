@@ -9,6 +9,7 @@ import { referencerPage } from '../seo/page-seo';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
+import { inscriptionFermee } from '../lancement';
 import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
 
 /**
@@ -29,7 +30,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
             <h1>{{ t('Développez votre cabinet avec', 'طوّر عيادتك مع') }} <span class="acc">{{ t('Ndawik', 'نداويك') }}</span></h1>
             <p>{{ t('Recevez vos rendez-vous en ligne, réduisez les absences grâce aux rappels automatiques et gagnez en visibilité auprès des patients de votre wilaya —', 'استقبل مواعيدك عبر الإنترنت، وقلّل الغيابات بفضل التذكيرات التلقائية، وزد ظهورك لدى مرضى ولايتك —') }} <b>{{ t('gratuitement', 'مجانًا') }}</b>.</p>
             <div class="prat-cta">
-              <button type="button" class="prat-btn-blanc" (click)="versFiche()">{{ t('Trouver ma fiche et créer mon compte', 'ابحث عن صفحتي وأنشئ حسابي') }}</button>
+              <button type="button" class="prat-btn-blanc" (click)="versFiche()">{{ inscriptionOuverte() ? t('Trouver ma fiche et créer mon compte', 'ابحث عن صفحتي وأنشئ حسابي') : t('Trouver ma fiche et faire ma demande', 'ابحث عن صفحتي وقدّم طلبي') }}</button>
             </div>
             <p class="prat-note">{{ t("Votre compte praticien est activé après vérification de votre inscription à l'ordre par notre équipe.", 'يُفعَّل حسابك كممارس بعد أن يتحقق فريقنا من تسجيلك في الهيئة.') }}</p>
           </div>
@@ -69,7 +70,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
           <p *ngIf="!rechercheEnCours() && nomFiche.trim().length >= 3 && fiches().length === 0" class="prat-muet">{{ t('Aucune fiche trouvée avec ce nom.', 'لم يتم العثور على أي صفحة بهذا الاسم.') }}</p>
           <div class="prat-pas-fiche">
             <span>{{ t("Votre fiche n'apparaît pas ?", 'صفحتك غير ظاهرة؟') }}</span>
-            <button type="button" class="prat-lien" (click)="sansFiche()">{{ t('Créer mon compte et déposer ma candidature', 'أنشئ حسابي وقدّم ترشحي') }}</button>
+            <button type="button" class="prat-lien" (click)="sansFiche()">{{ inscriptionOuverte() ? t('Créer mon compte et déposer ma candidature', 'أنشئ حسابي وقدّم ترشحي') : t('Faire ma demande', 'قدّم طلبي') }}</button>
           </div>
         </div>
       </section>
@@ -246,24 +247,38 @@ export class PraticienComponent {
     if (this.navigateur) document.getElementById('fiche')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  /** Fiche choisie : reclamation preremplie ; sans compte, on cree d'abord le compte puis on y revient. */
+  /** Faux en phase de test : le praticien envoie une demande, l'equipe cree son compte. */
+  inscriptionOuverte() { return !inscriptionFermee(); }
+
+  /**
+   * Fiche choisie : connecte, reclamation preremplie ; sinon, en phase de test, formulaire de demande prerempli
+   * (l'equipe cree le compte) ; avec inscription libre, creation du compte puis retour sur la candidature.
+   */
   cestMaFiche(m: Medecin) {
-    this.allerVers('/medecin/candidature?fiche=' + encodeURIComponent(m.id));
+    this.allerVers('/medecin/candidature?fiche=' + encodeURIComponent(m.id), m);
   }
 
-  /** Pas de fiche : compte puis candidature. */
+  /** Pas de fiche : candidature (connecte) ou demande (phase de test). */
   sansFiche() {
     this.allerVers('/medecin/candidature');
   }
 
-  private async allerVers(cible: string) {
+  private async allerVers(cible: string, fiche?: Medecin) {
     await this.auth.pret();
     if (this.auth.estConnecte()) {
       this.router.navigateByUrl(cible);
+    } else if (inscriptionFermee()) {
+      if (fiche) {
+        this.nom = fiche.nomComplet || this.nom;
+        this.ville = fiche.ville || this.ville;
+        this.ficheChoisie = fiche.id;
+      }
+      this.versDemande();
     } else {
       this.auth.sInscrireParEmail(cible);
     }
   }
+  ficheChoisie = '';
   nom = ''; specialite = ''; wilaya = ''; ville = ''; numeroOrdre = ''; telephone = ''; email = ''; message = '';
   envoye = signal(false);
   erreur = signal('');
@@ -290,6 +305,8 @@ export class PraticienComponent {
       "N° d'inscription à l'ordre : " + this.numeroOrdre,
       'Téléphone : ' + this.telephone,
       'E-mail : ' + (this.email || '—'),
+      '',
+      'Fiche Ndawik : ' + (this.ficheChoisie ? 'https://ndawik.com/praticiens/' + this.ficheChoisie : '—'),
       '',
       'Message : ' + (this.message || '—'),
     ].join('\n');

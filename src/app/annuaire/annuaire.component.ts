@@ -3,7 +3,7 @@ import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { ACCUEIL_AR, ACCUEIL_FR, referencerAccueil } from '../seo/marque';
 import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
-import { VISIO_ACTIVE } from '../lancement';
+import { VISIO_ACTIVE, inscriptionFermee } from '../lancement';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -224,7 +224,7 @@ const GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=dz.tabibi.app
           <h3>{{ texteNombre() }}</h3>
           <p>{{ t("La liste des médecins et leurs disponibilités sont réservées aux membres de Ndawik — c'est gratuit.", 'قائمة الأطباء ومواعيدهم المتاحة مخصّصة لأعضاء نداويك — والتسجيل مجاني.') }}</p>
           <div class="docs-gate__btns">
-            <a class="bouton" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ t('Créer un compte', 'إنشاء حساب') }}</a>
+            <a *ngIf="inscriptionOuverte()" class="bouton" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ t('Créer un compte', 'إنشاء حساب') }}</a>
             <a class="bouton-secondaire" (click)="seConnecter()" tabindex="0" role="button" style="cursor:pointer">{{ t('Se connecter', 'تسجيل الدخول') }}</a>
           </div>
         </div>
@@ -569,6 +569,7 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   seConnecter() { this.auth.seConnecter(); }
   /** « Créer un compte » : formulaire d'inscription (en pre-lancement, page /bientot). */
   sInscrire() { this.auth.sInscrireParEmail(); }
+  inscriptionOuverte() { return !inscriptionFermee(); }
 
   /** Clic sur le bouton « Rechercher » : lance la recherche et fait defiler vers la liste des resultats. */
   lancerRecherche() {

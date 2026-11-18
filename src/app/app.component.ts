@@ -5,7 +5,7 @@ import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { ClocheNotificationsComponent } from './notifications/cloche-notifications.component';
 import { ApiDisponibleService } from './partage/api-disponible.service';
-import { PRELANCEMENT, VISIO_ACTIVE } from './lancement';
+import { PRELANCEMENT, VISIO_ACTIVE, inscriptionFermee } from './lancement';
 import { estPageFrancaiseSeule, remettreDocumentFrancais } from './seo/page-seo';
 import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
@@ -74,7 +74,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
               <a class="side__help" [routerLink]="pre() + '/aide'">{{ ar() ? 'المساعدة' : "Centre d'aide" }}</a>
               <a class="side__help" [routerLink]="ar() ? '/' : '/ar'" [attr.lang]="ar() ? 'fr' : 'ar'">{{ ar() ? 'Français' : 'العربية' }}</a>
               <a class="side__login" (click)="seConnecter()" tabindex="0" role="button">{{ ar() ? 'تسجيل الدخول' : 'Se connecter' }}</a>
-              <a class="side__signup" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ ar() ? 'إنشاء حساب' : 'Créer un compte' }}</a>
+              <a *ngIf="inscriptionOuverte()" class="side__signup" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ ar() ? 'إنشاء حساب' : 'Créer un compte' }}</a>
             </ng-container>
             <ng-container *ngIf="connecte()">
               <a class="side__help" routerLink="/aide">Centre d'aide</a>
@@ -197,6 +197,7 @@ export class AppComponent implements OnInit {
 
   /** « Créer un compte » ouvre directement le formulaire d'inscription Keycloak. */
   sInscrire() { this.menuOuvert.set(false); this.auth.sInscrireParEmail(); }
+  inscriptionOuverte() { return !inscriptionFermee(); }
 
   /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()), puis roles. */
   async ngOnInit() {
