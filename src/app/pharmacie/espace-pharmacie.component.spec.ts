@@ -184,6 +184,23 @@ describe('EspacePharmacieComponent', () => {
     expect(service.repondre).not.toHaveBeenCalled();
   });
 
+  it('profil en erreur 500 : message visible et « Réessayer » recharge le profil', async () => {
+    profils.monProfil.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    await afficher();
+
+    expect(fixture.nativeElement.querySelector('.profil-erreur')).not.toBeNull();
+    expect(texte()).toContain('Impossible de charger le profil');
+    expect(fixture.nativeElement.querySelector('.formulaire-profil')).toBeNull();
+
+    profils.monProfil.and.returnValue(of(PROFIL));
+    fixture.nativeElement.querySelector('.bouton-reessayer-profil').click();
+    await afficher();
+
+    expect(profils.monProfil).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('.profil-erreur')).toBeNull();
+    expect(formulaireReponse()!.textContent).toContain('Répondre au nom de : Pharmacie El Amel');
+  });
+
   it('avec profil, affiche « Répondre au nom de », envoie le nom du profil et ne memorise rien', async () => {
     profils.monProfil.and.returnValue(of(PROFIL));
     service.repondre.and.returnValue(of(REPONSE));
