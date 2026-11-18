@@ -160,8 +160,11 @@ export class AgendaMedecinComponent implements OnInit {
   deplacerFn = (rdv: RendezVous, creneauId: string) => this.service.deplacerRendezVous(rdv.id, creneauId);
 
   apresDeplacement(creneau: Creneau) {
+    // Le patient n'est prévenu que pour un rendez-vous pris sur la plateforme, pas par téléphone.
+    const rdv = this.rendezVous().find((r) => r.id === this.aDeplacer());
     this.aDeplacer.set(null);
-    this.deplace.set(`Rendez-vous déplacé au ${formatDate(creneau.debut, 'EEEE d MMMM à HH:mm', this.locale)} : le patient est prévenu.`);
+    const prevenu = rdv?.source !== 'TELEPHONE';
+    this.deplace.set(`Rendez-vous déplacé au ${formatDate(creneau.debut, 'EEEE d MMMM à HH:mm', this.locale)}${prevenu ? ' : le patient est prévenu.' : '.'}`);
     this.charger();
   }
 
