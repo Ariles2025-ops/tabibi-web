@@ -168,4 +168,19 @@ describe('MesNotificationsComponent', () => {
     lignes()[1].click();
     expect(navigation).not.toHaveBeenCalled();
   });
+
+  it('un lien externe ou mal forme n est pas propose : pas de « Voir », pas de navigation', async () => {
+    const externe: Notification = { ...NON_LUE, lien: 'https://exemple.org/page' };
+    const relatif: Notification = { ...LUE, id: 'n3', lien: '//exemple.org' };
+    service.mesNotifications.and.returnValue(of([externe, relatif]));
+    const navigation = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
+    await afficher();
+
+    expect(lignes()[0].textContent).not.toContain('Voir');
+    expect(lignes()[1].textContent).not.toContain('Voir');
+    lignes()[0].click();
+    lignes()[1].click();
+    expect(navigation).not.toHaveBeenCalled();
+    expect(service.marquerLue).not.toHaveBeenCalled();
+  });
 });
