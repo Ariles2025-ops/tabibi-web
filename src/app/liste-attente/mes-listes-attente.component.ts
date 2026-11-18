@@ -39,7 +39,7 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
             </button>
             <div *ngIf="aConfirmer() === i.id" role="group" aria-label="Confirmer le retrait"
                  style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <span style="font-weight:600">Vous retirer de cette liste d'attente ?</span>
+              <span><strong>Vous retirer de cette liste d'attente ?</strong> Vous ne serez plus notifié des créneaux libérés.</span>
               <button type="button" (click)="retirer(i)" [disabled]="enCours() !== null"
                       style="padding:10px 16px;background:#b3261e;color:#fff;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
                 {{ enCours() === i.id ? 'Retrait…' : 'Oui, me retirer' }}

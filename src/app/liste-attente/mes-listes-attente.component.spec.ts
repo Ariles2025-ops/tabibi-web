@@ -69,6 +69,7 @@ describe('MesListesAttenteComponent', () => {
     boutonDe(lignes()[0], 'Me retirer')!.click();
     await afficher();
     expect(texte()).toContain("Vous retirer de cette liste d'attente ?");
+    expect(texte()).toContain('Vous ne serez plus notifié des créneaux libérés.');
     boutonDe(lignes()[0], 'Oui, me retirer')!.click();
     await afficher();
   }
