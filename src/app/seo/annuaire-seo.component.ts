@@ -530,7 +530,7 @@ const TEXTES_COMMUNE = {
   fr: {
     titre: (s: string, c: string, w: string) => `${s} à ${c} (${w})`,
     sousTitre: (s: string, c: string) => `Praticiens : ${s} à ${c}`,
-    cible: (s: string, c: string, a: string) => `${a} à ${c}`,
+    cible: (s: string, c: string, a: string) => `avec ${a} à ${c}`,
     intro: (s: string, c: string, w: string, n: number) =>
       `${n} praticiens (${s}) exercent à ${c}, dans la wilaya ${dePlace(w)}. Consultez leur fiche, comparez et prenez rendez-vous en ligne avec Ndawik.`,
     description: (s: string, c: string, w: string, n: number) =>
@@ -543,7 +543,7 @@ const TEXTES_COMMUNE = {
   ar: {
     titre: (s: string, c: string, w: string) => `${s} في ${c} (${w})`,
     sousTitre: (s: string, c: string) => `الأطباء: ${s} في ${c}`,
-    cible: (s: string, c: string, _a: string) => `${s} في ${c}`,
+    cible: (s: string, c: string, _a: string) => `مع ${s} في ${c}`,
     intro: (s: string, c: string, w: string, n: number) =>
       `${n} من الأطباء (${s}) يمارسون في ${c} بولاية ${w}. اطّلع على ملفاتهم واحجز موعدك عبر نداويك.`,
     description: (s: string, c: string, w: string, n: number) =>
