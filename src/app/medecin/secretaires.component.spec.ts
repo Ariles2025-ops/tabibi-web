@@ -167,6 +167,24 @@ describe('SecretairesComponent', () => {
     expect(service.secretaires).toHaveBeenCalledTimes(2);
   });
 
+  it("une invitation en attente s'annule (« Annuler l'invitation »), au lieu de « Retirer cette secrétaire » comme dans l'appli", async () => {
+    const EN_ATTENTE: Rattachement = { ...RATTACHEMENT, id: 'ra2', accepte: false };
+    service.secretaires.and.returnValue(of([EN_ATTENTE]));
+    service.retirerSecretaire.and.returnValue(of(void 0));
+    await afficher();
+
+    expect(bouton(lignes()[0], 'Retirer')).toBeUndefined();
+    bouton(lignes()[0], "Annuler l'invitation")!.click();
+    await afficher();
+    expect(lignes()[0].textContent).toContain('Annuler cette invitation ?');
+    expect(lignes()[0].textContent).not.toContain('Retirer cette secrétaire');
+    bouton(lignes()[0], 'Oui')!.click();
+    await afficher();
+
+    expect(service.retirerSecretaire).toHaveBeenCalledWith('ra2');
+    expect(texte()).toContain('Invitation annulée.');
+  });
+
   it('affiche un etat vide et le message reserve aux medecins sur un 403', async () => {
     service.secretaires.and.returnValue(of([]));
     await afficher();
