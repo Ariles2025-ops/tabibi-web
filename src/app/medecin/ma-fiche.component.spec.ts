@@ -53,6 +53,32 @@ describe('MaFicheComponent', () => {
     expect(TestBed.inject(ApiDisponibleService).ficheMedecin()).toBeFalse();
   });
 
+  it('affiche une erreur avec Reessayer sur un 500, sans toucher au menu ni naviguer', () => {
+    service.maFiche.and.returnValues(
+      throwError(() => new HttpErrorResponse({ status: 500 })),
+      of({ adresse: '12 rue Didouche' }),
+    );
+    TestBed.inject(ApiDisponibleService).ficheMedecin.set(true);
+    creer();
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('[role="alert"]')?.textContent).toContain('Impossible de charger');
+    expect(TestBed.inject(ApiDisponibleService).ficheMedecin()).toBeTrue();
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+    (el.querySelector('[role="alert"] button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(el.querySelector('[role="alert"]')).toBeNull();
+    expect(fixture.componentInstance.adresse).toBe('12 rue Didouche');
+  });
+
+  it('traite un 404 avec corps (medecin introuvable) comme une erreur recuperable', () => {
+    service.maFiche.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404, error: { erreur: 'Médecin introuvable' } })));
+    creer();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Réessayer');
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+  });
+
   it('refuse un telephone invalide puis enregistre une fiche valide', () => {
     service.maFiche.and.returnValue(of({}));
     service.enregistrerFiche.and.callFake((f) => of(f));
