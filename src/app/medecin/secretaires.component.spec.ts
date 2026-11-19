@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { Rattachement } from '../secretaire/secretaire.service';
+import { LangueService } from '../partage/langue.service';
 import { MedecinService } from './medecin.service';
 import { SecretairesComponent } from './secretaires.component';
 
@@ -29,6 +30,7 @@ describe('SecretairesComponent', () => {
   let service: jasmine.SpyObj<MedecinService>;
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<MedecinService>('MedecinService', ['secretaires', 'rattacherSecretaire', 'retirerSecretaire']);
     service.secretaires.and.returnValue(of([RATTACHEMENT, ANCIEN]));
@@ -194,5 +196,66 @@ describe('SecretairesComponent', () => {
     fixture = TestBed.createComponent(SecretairesComponent);
     await afficher();
     expect(texte()).toContain('Cette page est réservée aux médecins.');
+  });
+  describe('en arabe (comme dans l\'appli)', () => {
+    beforeEach(() => TestBed.inject(LangueService).ar.set(true));
+
+    it('affiche l\'ecran de droite a gauche, avec les memes mots que l\'appli et sans francais', async () => {
+      const EN_ATTENTE: Rattachement = { ...RATTACHEMENT, id: 'ra2', accepte: false };
+      service.secretaires.and.returnValue(of([RATTACHEMENT, EN_ATTENTE, ANCIEN]));
+      await afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      const t = texte();
+      expect(t).toContain('سكرتيراتي');
+      expect(t).toContain('السكرتيرات المرتبطات');
+      expect(t).toContain('دعوة هذه السكرتيرة');
+      expect(t).toContain('انضمت في');
+      expect(t).toContain('قيد الانتظار');
+      expect(t).toContain('إزالة');
+      expect(t).toContain('إلغاء الدعوة');
+      expect(t).toContain('سكرتيرة 66666666');
+      expect(t).not.toContain('Secrétaire');
+      expect(t).not.toContain('Retirer');
+      expect(t).not.toContain('Rattachée');
+    });
+
+    it('confirme le retrait en arabe puis annonce le resultat en arabe', async () => {
+      service.retirerSecretaire.and.returnValue(of(void 0));
+      await afficher();
+      bouton(lignes()[0], 'إزالة')!.click();
+      await afficher();
+      expect(lignes()[0].textContent).toContain('إزالة هذه السكرتيرة؟');
+      bouton(lignes()[0], 'نعم')!.click();
+      await afficher();
+      expect(service.retirerSecretaire).toHaveBeenCalledWith('ra0');
+      expect(texte()).toContain('تمت إزالة السكرتيرة وتم إعلامها.');
+    });
+
+    it('refuse une adresse invalide et annonce l\'invitation envoyee en arabe', async () => {
+      service.rattacherSecretaire.and.returnValue(of(RATTACHEMENT));
+      await afficher();
+      await saisir('pas-un-email');
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('أدخل البريد الإلكتروني لحساب سكرتيرتك على نداويك.');
+      expect(service.rattacherSecretaire).not.toHaveBeenCalled();
+
+      await saisir(EMAIL);
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('تم إرسال الدعوة: ستصل سكرتيرتك إلى مواعيدك بمجرد قبولها.');
+    });
+
+    it('affiche l\'etat vide et le message reserve aux medecins en arabe', async () => {
+      service.secretaires.and.returnValue(of([]));
+      await afficher();
+      expect(texte()).toContain('لا توجد سكرتيرة مرتبطة حاليًا.');
+
+      service.secretaires.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      fixture = TestBed.createComponent(SecretairesComponent);
+      await afficher();
+      expect(texte()).toContain('هذه الصفحة مخصّصة للأطباء.');
+    });
   });
 });
