@@ -37,7 +37,9 @@ import { Conversation, MessagerieService, abregerIdentifiant } from './messageri
                style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px;color:inherit;text-decoration:none">
               <span>
                 <strong>{{ interlocuteur(c) }}</strong><br>
-                <span style="color:var(--text3)" *ngIf="!c.dernierMessageLe">{{ l.t('Aucun message', 'لا توجد رسائل') }}</span>
+                <span style="color:var(--text3)" *ngIf="!c.dernierMessageLe && !c.creeLe">{{ l.t('Aucun message', 'لا توجد رسائل') }}</span>
+                <span style="color:var(--text3)" *ngIf="!c.dernierMessageLe && c.creeLe && !l.ar()">Ouverte le {{ c.creeLe | date:'EEEE d MMMM à HH:mm' }}</span>
+                <span style="color:var(--text3)" *ngIf="!c.dernierMessageLe && c.creeLe && l.ar()">فُتحت في <span dir="ltr">{{ c.creeLe | date:'dd/MM/yyyy HH:mm' }}</span></span>
                 <span style="color:var(--text3)" *ngIf="c.dernierMessageLe && !l.ar()">Dernier message le {{ c.dernierMessageLe | date:'EEEE d MMMM à HH:mm' }}</span>
                 <span style="color:var(--text3)" *ngIf="c.dernierMessageLe && l.ar()">آخر رسالة في <span dir="ltr">{{ c.dernierMessageLe | date:'dd/MM/yyyy HH:mm' }}</span></span>
               </span>

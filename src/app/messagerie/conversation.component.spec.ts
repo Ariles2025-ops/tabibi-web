@@ -148,6 +148,15 @@ describe('ConversationComponent', () => {
     fixture.destroy();
   }));
 
+  it('écrit « date inconnue » (comme l appli) pour un message sans date d envoi', fakeAsync(() => {
+    service.messages.and.returnValue(of([{ ...DU_MEDECIN, envoyeLe: '' }]));
+    afficher();
+
+    expect(bulles()[0].textContent).toContain('date inconnue');
+
+    fixture.destroy();
+  }));
+
   it('invite à écrire le premier message quand le fil est vide (comme l appli mobile)', fakeAsync(() => {
     service.messages.and.returnValue(of([]));
     afficher();
