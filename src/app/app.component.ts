@@ -24,7 +24,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
         <a class="side__brand" [routerLink]="ar() ? '/ar' : '/'"><img class="marque" src="assets/img/marque-blanche.svg" alt="" width="26" height="26">ndawik</a>
         <!-- Telephone : bouton « 3 barres » qui ouvre tout le menu -->
         <button type="button" class="side__burger" (click)="menuOuvert.set(!menuOuvert())"
-                [attr.aria-expanded]="menuOuvert()" aria-controls="menu-principal" [attr.aria-label]="menuOuvert() ? 'Fermer le menu' : 'Ouvrir le menu'">
+                [attr.aria-expanded]="menuOuvert()" aria-controls="menu-principal" [attr.aria-label]="menuOuvert() ? l.t('Fermer le menu', 'إغلاق القائمة') : l.t('Ouvrir le menu', 'فتح القائمة')">
           <i class="fa" [class.fa-bars]="!menuOuvert()" [class.fa-xmark]="menuOuvert()" aria-hidden="true"></i>
         </button>
         <nav class="side__nav" id="menu-principal" [class.ouvert]="menuOuvert()">
@@ -34,27 +34,27 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
           <a *ngIf="estPatient()" routerLink="/teleconsultations" routerLinkActive="actif">{{ l.t('Mes téléconsultations', 'استشاراتي عن بُعد') }}<span *ngIf="!visio" class="pastille-bientot">{{ l.t('Bientôt', 'قريبًا') }}</span></a>
           <a *ngIf="estPatient()" routerLink="/messagerie" routerLinkActive="actif">{{ l.t('Messagerie', 'الرسائل') }}</a>
           <a *ngIf="estPatient()" routerLink="/mes-avis" routerLinkActive="actif">{{ l.t('Mes avis', 'آرائي') }}</a>
-          <a *ngIf="estPatient()" routerLink="/dawini" routerLinkActive="actif">Dawini</a>
+          <a *ngIf="estPatient()" routerLink="/dawini" routerLinkActive="actif">{{ l.t('Dawini', 'داويني') }}</a>
           <a *ngIf="estPatient()" routerLink="/liste-attente" routerLinkActive="actif">{{ l.t("Mes listes d'attente", 'قوائم الانتظار') }}</a>
           <a *ngIf="estPatient()" routerLink="/invitations" routerLinkActive="actif">{{ l.t('Invitations de cabinet', 'دعوات العيادات') }}</a>
 
           <div *ngIf="estMedecin()" class="side__group">
-            <div class="side__grouptitle">Espace médecin</div>
-            <a routerLink="/medecin/agenda" routerLinkActive="actif">Agenda</a>
-            <a routerLink="/medecin/disponibilites" routerLinkActive="actif">Disponibilités</a>
-            <a *ngIf="apiDisponible.ficheMedecin()" routerLink="/medecin/ma-fiche" routerLinkActive="actif">Ma fiche</a>
-            <a routerLink="/medecin/ordonnances" routerLinkActive="actif">Mes ordonnances rédigées</a>
-            <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">Téléconsultations<span *ngIf="!visio" class="pastille-bientot">Bientôt</span></a>
-            <a routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
-            <a routerLink="/medecin/avis" routerLinkActive="actif">Avis des patients</a>
-            <a routerLink="/medecin/liste-attente" routerLinkActive="actif">Liste d'attente</a>
-            <a routerLink="/medecin/secretaires" routerLinkActive="actif">Mes secrétaires</a>
+            <div class="side__grouptitle">{{ l.t('Espace médecin', 'فضاء الطبيب') }}</div>
+            <a routerLink="/medecin/agenda" routerLinkActive="actif">{{ l.t('Agenda', 'المواعيد') }}</a>
+            <a routerLink="/medecin/disponibilites" routerLinkActive="actif">{{ l.t('Disponibilités', 'الأوقات المتاحة') }}</a>
+            <a *ngIf="apiDisponible.ficheMedecin()" routerLink="/medecin/ma-fiche" routerLinkActive="actif">{{ l.t('Ma fiche', 'صفحتي') }}</a>
+            <a routerLink="/medecin/ordonnances" routerLinkActive="actif">{{ l.t('Mes ordonnances rédigées', 'وصفاتي التي حررتها') }}</a>
+            <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">{{ l.t('Téléconsultations', 'الاستشارات عن بُعد') }}<span *ngIf="!visio" class="pastille-bientot">{{ l.t('Bientôt', 'قريبًا') }}</span></a>
+            <a routerLink="/messagerie" routerLinkActive="actif">{{ l.t('Messagerie', 'الرسائل') }}</a>
+            <a routerLink="/medecin/avis" routerLinkActive="actif">{{ l.t('Avis des patients', 'آراء المرضى') }}</a>
+            <a routerLink="/medecin/liste-attente" routerLinkActive="actif">{{ l.t("Liste d'attente", 'قائمة الانتظار') }}</a>
+            <a routerLink="/medecin/secretaires" routerLinkActive="actif">{{ l.t('Mes secrétaires', 'سكرتيراتي') }}</a>
           </div>
 
           <div *ngIf="estSecretaire()" class="side__group">
-            <div class="side__grouptitle">Espace secrétaire</div>
-            <a routerLink="/secretaire" routerLinkActive="actif">Agenda du cabinet</a>
-            <a routerLink="/invitations" routerLinkActive="actif">Invitations de cabinet</a>
+            <div class="side__grouptitle">{{ l.t('Espace secrétaire', 'فضاء السكرتارية') }}</div>
+            <a routerLink="/secretaire" routerLinkActive="actif">{{ l.t('Agenda du cabinet', 'مواعيد العيادة') }}</a>
+            <a routerLink="/invitations" routerLinkActive="actif">{{ l.t('Invitations de cabinet', 'دعوات العيادات') }}</a>
           </div>
 
           <div *ngIf="estPharmacie()" class="side__group">
