@@ -193,10 +193,18 @@ describe('MesConversationsComponent', () => {
   });
 
   it('dit « Aucun message » quand la date du dernier message manque, au lieu d une phrase vide', async () => {
-    service.mesConversations.and.returnValue(of([{ ...RECENTE, dernierMessageLe: '' }]));
+    service.mesConversations.and.returnValue(of([{ ...RECENTE, dernierMessageLe: '', creeLe: '' }]));
     await afficher();
 
     expect(texte()).toContain('Aucun message');
     expect(texte()).not.toContain('Dernier message le');
+  });
+
+  it('dit « Ouverte le … » (comme l appli) quand il n y a pas de dernier message mais une date d ouverture', async () => {
+    service.mesConversations.and.returnValue(of([{ ...RECENTE, dernierMessageLe: '', creeLe: '2026-09-18T10:00:00Z' }]));
+    await afficher();
+
+    expect(texte()).toContain('Ouverte le');
+    expect(texte()).not.toContain('Aucun message');
   });
 });

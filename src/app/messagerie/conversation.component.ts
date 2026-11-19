@@ -41,8 +41,9 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
           <li *ngFor="let m of messages()" [class.message-moi]="estDeMoi(m)" [class.message-autre]="!estDeMoi(m)">
             <p style="margin:0;white-space:pre-wrap">{{ m.contenu }}</p>
             <span style="display:block;margin:4px 0 0;color:var(--text3);font-size:.85rem">
-              <ng-container *ngIf="!l.ar()">{{ m.envoyeLe | date:'d MMMM à HH:mm' }}</ng-container>
-              <span *ngIf="l.ar()" dir="ltr">{{ m.envoyeLe | date:'dd/MM/yyyy HH:mm' }}</span>
+              <ng-container *ngIf="!m.envoyeLe">{{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-container>
+              <ng-container *ngIf="m.envoyeLe && !l.ar()">{{ m.envoyeLe | date:'d MMMM à HH:mm' }}</ng-container>
+              <span *ngIf="m.envoyeLe && l.ar()" dir="ltr">{{ m.envoyeLe | date:'dd/MM/yyyy HH:mm' }}</span>
               <ng-container *ngIf="estDeMoi(m) && m.luLe"> · {{ l.t('lu', 'مقروءة') }}</ng-container>
             </span>
           </li>
