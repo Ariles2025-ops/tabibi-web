@@ -30,6 +30,7 @@ const MESSAGE_CRENEAU_PRIS_AR = 'هذا الموعد حُجز للتوّ. لم �
       <div *ngIf="choisi() as c" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <span style="color:var(--text2);font-size:.9rem" *ngIf="!arabe()">Déplacer ce rendez-vous au {{ c.debut | date:'EEEE d MMMM à HH:mm' }} ?</span>
         <span style="color:var(--text2);font-size:.9rem" *ngIf="arabe()">نقل هذا الموعد إلى <span dir="ltr">{{ c.debut | date:'dd/MM/yyyy HH:mm' }}</span> ؟</span>
+        <span class="info-prevenir" *ngIf="avertirPatient()" style="color:var(--text3);font-size:.85rem">{{ notePatient() }}</span>
         <button type="button" class="bouton confirmer-deplacement" (click)="confirmer(c)" [disabled]="enCours()">
           {{ enCours() ? t('Déplacement…', 'جارٍ النقل…') : t('Confirmer', 'تأكيد') }}
         </button>
@@ -47,6 +48,8 @@ export class DeplacerRendezVousComponent implements OnInit {
   deplacer = input.required<(rdv: RendezVous, creneauId: string) => Observable<unknown>>();
   /** Affichage en arabe (ecrans qui le proposent) ; francais par defaut. */
   arabe = input(false);
+  /** Vrai sur les ecrans medecin / secretaire : precise si le patient est prevenu (comme l'appli). */
+  avertirPatient = input(false);
   deplace = output<Creneau>();
   annule = output<void>();
 
@@ -58,6 +61,13 @@ export class DeplacerRendezVousComponent implements OnInit {
 
   t(fr: string, ar: string): string {
     return this.arabe() ? ar : fr;
+  }
+
+  /** Rendez-vous pris par telephone : le patient n'a pas de compte, personne ne le previent. */
+  notePatient(): string {
+    return this.rendezVous().source === 'TELEPHONE'
+      ? this.t('Pensez à prévenir le patient par téléphone.', 'يرجى إبلاغ المريض هاتفيًا.')
+      : this.t('Le patient sera prévenu.', 'سيتم إعلام المريض.');
   }
 
   ngOnInit() {
