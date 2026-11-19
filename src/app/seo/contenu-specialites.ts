@@ -386,4 +386,84 @@ export const CONTENU_SPECIALITES: Record<string, { fr: ContenuSpecialite; ar: Co
       ],
     },
   },
+  'chirurgien-orthopediste': {
+    fr: {
+      apropos: 'Le chirurgien orthopédiste est un médecin spécialisé dans la prévention, le diagnostic et le traitement des troubles et des maladies des os, des articulations, des muscles et des ligaments. Il est conseillé de consulter ce spécialiste en cas de douleurs persistantes ou de limitations fonctionnelles des membres.',
+      faq: [
+        { q: 'Quelles sont les principales maladies traitées par un chirurgien orthopédiste?', r: 'Un chirurgien orthopédiste traite des conditions comme l\'arthrite, les fractures, et les déchirures des ligaments. Ces problèmes peuvent survenir après un accident ou se développer au fil du temps.' },
+        { q: 'Quelles sont les procédures chirurgicales courantes pratiquées par un chirurgien orthopédiste?', r: 'Les chirurgiens orthopédistes peuvent effectuer des opérations telles que les ostéotomies, les replacements articulaires et les interventions pour corriger les déformations osseuses. Ces interventions visent à soulager la douleur et à améliorer la mobilité.' },
+      ],
+    },
+    ar: {
+      apropos: 'جراح العظام هو طبيب متخصص في تشخيص وإصلاح مشاكل العظام والأنسجة المحيطة بها. يُستشير هذا الطبيب عند وجود مشاكل في العظام مثل التواءات أو كسور أو التهابات، وكذلك عند الحاجة إلى إجراء جراحة عظمية.',
+      faq: [
+        { q: 'هل يمكن أن يعالج جراح العظام جميع مشاكل العظام؟', r: 'لا، فهم يركزون بشكل رئيسي على العلاجات الجراحية والإزالة للمشاكل العظمية، مع مساعدة الأطباء الأسنان والمناظير في التشخيص والعلاج.' },
+        { q: 'متى يكون استشارة جراح العظام ضرورية؟', r: 'يجب استشارة جراح العظام عند الشعور بألم متواصل في العظام أو الأوتار أو الإصابة بكسر أو تواء، أو عند الحاجة إلى إجراء عملية جراحية عظمية.' },
+      ],
+    },
+  },
+  hopital: {
+    fr: {
+      apropos: 'L\'hôpital joue un rôle crucial dans le système de santé en Algérie en fournissant des soins médicaux de qualité et en garantissant l\'urgence des cas nécessitant un traitement rapide. Il est recommandé de consulter un hôpital en cas de maladies graves, d\'accidents ou lorsqu\'on doit passer des examens médicaux importants.',
+      faq: [
+        { q: 'Quelles sont les principales fonctions d\'un hôpital en Algérie ?', r: 'Un hôpital en Algérie offre des soins de santé complets, des services d\'urgence et de réanimation, ainsi que des espaces pour des opérations chirurgicales.' },
+        { q: 'Dans quelles situations devrait-on consulter un hôpital ?', r: 'On devrait consulter un hôpital en cas de maladies nécessitant une surveillance médicale ou chirurgicale, ainsi que lors de situations d\'urgence comme les accidents ou les malaises.' },
+      ],
+    },
+    ar: {
+      apropos: 'مستشفى في الجزائر هو مكان يوفر الرعاية الطبية للمرضى من خلال الأطباء والطاقم الطبي المتخصصين. يُستشار فيه عند الحاجة إلى العلاج أو الفحص الطبي أو تلقي الاستشارة الصحية العامة.',
+      faq: [
+        { q: 'هل يمكنني طلب موعد مسبق؟', r: 'نعم، يمكنك طلب المواعيد المسبقة عن طريق الاتصال بالمستشفى أو زيارة موقعه الإلكتروني.' },
+        { q: 'ما هي العيادات المتاحة في المستشفى؟', r: 'العيادات المتاحة تتضمن عيادات الأطباء المتخصصين في مختلف المجالات الطبية مثل الأمراض的心脏骤停无法直接翻译为阿拉伯语，因为它包含了一个中文术语“心脏骤停”，而“心脏骤停”在阿拉伯语中通常表达为“انقطاع القلب”. 以下是根据您的要求修改后的版本： ``` APROPOS: مستشفى في الجزائر هو مكان يوفر الرعاية الطبية للمرضى من خلال الأطباء والطاقم الطبي المتخصصين. يُستشار فيه عند الحاجة إلى العلاج أو الفحص الطبي أو تلقي الاستشارة الصحية العامة. Q1: هل يمكنني طلب موعد مسبق؟ R1: نعم، يمكنك طلب المواعيد المسبقة عن طريق الاتصال بالمستشفى أو زيارة موقعه الإلكتروني. Q2: ما هي العيادات المتاحة في المستشفى؟ R2: العيادات المتاحة تتضمن عيادات الأطباء المتخصصين في مختلف المجالات الطبية مثل الأمراض的心脏骤停通常用“انقطاع القلب”表示。 ``` 请注意，“心脏骤停”在阿拉伯语中应翻译为“انقطاع القلب”。如果您需要更准确的翻译，可能需要咨询专业翻译人员。' },
+      ],
+    },
+  },
+  kinesitherapeute: {
+    fr: {
+      apropos: 'Le kinésithérapeute est un professionnel de santé qui s\'occupe des troubles et des pathologies musculo-squelettiques. Il conseille et guide les patients dans la rééducation et l\'exercice physique. Il est recommandé de consulter un kinésithérapeute en cas de douleurs musculaires, de problèmes de posture ou de troubles articulaires.',
+      faq: [
+        { q: 'Quel est le rôle principal d\'un kinésithérapeute?', r: 'Le kinésithérapeute évalue les capacités et les limites du mouvement d\'un patient. Il élaboré un plan de rééducation personnalisé pour améliorer sa mobilité et sa force.' },
+        { q: 'Dans quelles situations devrais-je consulter un kinésithérapeute?', r: 'Vous devriez consulter un kinésithérapeute si vous éprouvez des douleurs musculaires persistantes, si vous avez des problèmes de posture ou si vous souhaitez améliorer votre condition physique.' },
+      ],
+    },
+    ar: {
+      apropos: 'الأخصائي في العلاج الطبيعي يلعب دورًا حيويًا في تقديم العلاجات الفعالة للحالة الجسدية والعضوية. يمكن للمرضى الاستعانة بهم عند الشعور بألم مزمن أو عند الاصابة بأي مشاكل صحية تتعلق بالجهاز العضلي-عظامي.',
+      faq: [
+        { q: 'ما هو العلاج الطبيعي؟', r: 'العلاج الطبيعي هو مجال مهني يهدف إلى تحسين صحة الأفراد ورفاهيتهم من خلال تدريب العضلات وتحسين نطاق الحركة. هو يستخدم تقنيات مختلفة لعلاج الألم والضعف.' },
+        { q: 'متى يمكن الاستعانة بالأخصائي في العلاج الطبيعي؟', r: 'يمكن الاستعانة بالأخصائي في العلاج الطبيعي عند الشعور بألم مزمن أو عند الإصابة بأي مشاكل صحية تتعلق بالجهاز العضلي-عظامي، مثل التهاب الركبة أو الظهر.' },
+      ],
+    },
+  },
+  laboratoire: {
+    fr: {
+      apropos: 'Le laboratoire d\'analyses joue un rôle crucial dans la santé publique en fournissant des résultats d\'examens médicaux précieux. Il est recommandé de consulter ce spécialiste lorsque des symptômes persistent ou lorsque l\'on souhaite effectuer des examens de screening ou de suivi médical.',
+      faq: [
+        { q: 'Quels types d\'examens peuvent être réalisés dans un laboratoire d\'analyses?', r: 'Un laboratoire d\'analyses peut effectuer une variété d\'examens, allant des tests sanguins aux analyses urinaires, des examens génétiques aux examens de dépistage.' },
+        { q: 'Comment peut-on interpréter les résultats d\'un examen d\'analyses?', r: 'Les résultats doivent être interprétés par un médecin qui connaît le contexte clinique du patient. Il est important de ne pas interpréter les résultats soi-même pour éviter toute mauvaise compréhension.' },
+      ],
+    },
+    ar: {
+      apropos: 'مخبر التحاليل الطبية هو قسم طبي مهم يقوم بتقديم خدمات الفحوصات الطبية الأولية. يجب استشارة هذا النوع من المختبرات عند الشك في وجود حالة صحية أو قبل الخضوع لعلاج معين. كما يمكن الاستعانة به في فحص التحاليل للتأكد من صحة الفرد قبل أدخاله في برامج العمل أو الدراسية.',
+      faq: [
+        { q: 'ما هي الخدمات التي يقدمها مخبر التحاليل الطبية؟', r: 'يقدم مخبر التحاليل الطبية مجموعة من الفحوصات الطبية الأولية مثل فحوصات الدم والبول والهيموغلوبين. يمكن أيضًا إجراء فحوصات خاصة بناءً على الاحتياجات الطبية.' },
+        { q: 'لماذا يجب استشارة مخبر التحاليل الطبية؟', r: 'يجب استشارة مخبر التحاليل الطبية عند الشك في وجود حالة صحية أو قبل الخضوع لعلاج معين لضمان صحة الفرد. كما يمكن استخدام نتائج الفحوصات المخبرية لاتخاذ قرارات طبية مبنية على الأدلة.' },
+      ],
+    },
+  },
+  'medecin-sport': {
+    fr: {
+      apropos: 'Le médecin du sport est un professionnel médical spécialisé dans l\'évaluation et la prise en charge des besoins médicaux des sportifs. Il conseille et accompagne les sportifs de tous niveaux, qu\'ils soient amateurs ou professionnels, pour optimiser leur performance et prévenir les blessures.',
+      faq: [
+        { q: 'Comment savoir si j\'ai besoin d\'une consultation chez un médecin du sport ?', r: 'Consultez un médecin du sport si vous souhaitez optimiser votre entraînement, prévenir les blessures ou vous retrouver d\'une blessure. Il peut également vous aider à adapter votre programme d\'entraînement en fonction de votre état de santé.' },
+        { q: 'Quelles sont les principales missions d\'un médecin du sport ?', r: 'Le médecin du sport évalue la santé globale du sportif, propose des conseils d\'entraînement adaptés, et intervient en cas de blessure pour un retour progressif à l\'activité sportive.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الرياضة هو متخصص في الرعاية الصحية الرياضية ومتابعة الأداء البدني للرياضيين المحترفين والهواة على حد سواء. يُفضل استشارة طبيب الرياضة عند الشعور بأي ألم أو إصابات رياضية، أو عند الحاجة إلى برنامج تدريبي مخصص للوصول إلى أهداف اللياقة البدنية.',
+      faq: [
+        { q: 'هل يمكن لطبيب الرياضة مساعدتي في تحسين أدائي الرياضي؟', r: 'نعم، يمكنه تقديم تدريب مخصص وشروحات حولTechniques correctes pour éviter les blessures et améliorer la performance.' },
+        { q: 'ما هي الخدمات التي يقدمها طبيب الرياضة؟', r: 'يوفر خدمات تقييم اللياقة البدنية، وإجراء الفحوصات الطبية، وتقديم نصائح حول التغذية والراحة.' },
+      ],
+    },
+  },
 };
