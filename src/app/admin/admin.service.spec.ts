@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { AdminService, Candidature, StatistiquesAdministration, libelleRappels, libelleStatutCandidature } from './admin.service';
+import { AdminService, Candidature, StatistiquesAdministration, libelleRappels, libelleStatutCandidature, libelleStatutCandidatureAr } from './admin.service';
 
 const BASE = 'http://localhost:8080';
 
@@ -118,6 +118,15 @@ describe('AdminService', () => {
 
     expect(statut).toBe(409);
     expect(message).toBe('Seule une candidature en attente peut etre validee.');
+  });
+
+  describe('libelleStatutCandidatureAr', () => {
+    it('traduit les statuts connus comme l\'appli et ne montre jamais null', () => {
+      expect(libelleStatutCandidatureAr('EN_ATTENTE')).toBe('قيد الانتظار');
+      expect(libelleStatutCandidatureAr('VALIDEE')).toBe('مُعتمدة');
+      expect(libelleStatutCandidatureAr('REFUSEE')).toBe('مرفوضة');
+      expect(libelleStatutCandidatureAr(null)).toBe('');
+    });
   });
 
   describe('libelleStatutCandidature', () => {

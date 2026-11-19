@@ -85,6 +85,18 @@ export function libelleStatutCandidature(statut: string | null | undefined): str
   return LIBELLES_STATUT_CANDIDATURE[statut] ?? libelleStatutGenerique(statut);
 }
 
+/** Libelles arabes des statuts de candidature (memes mots que l'appli). */
+const LIBELLES_STATUT_CANDIDATURE_AR: Partial<Record<string, string>> = {
+  EN_ATTENTE: 'قيد الانتظار',
+  VALIDEE: 'مُعتمدة',
+  REFUSEE: 'مرفوضة',
+};
+
+export function libelleStatutCandidatureAr(statut: string | null | undefined): string {
+  if (!statut) return '';
+  return LIBELLES_STATUT_CANDIDATURE_AR[statut] ?? libelleStatutGenerique(statut);
+}
+
 /** « 0 rappel envoyé », « 1 rappel envoyé », « 3 rappels envoyés ». */
 export function libelleRappels(nombre: number): string {
   return `${nombre} ${nombre > 1 ? 'rappels envoyés' : 'rappel envoyé'}`;
