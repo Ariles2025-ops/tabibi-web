@@ -9,6 +9,7 @@ import { Besoin, DawiniService, Reponse } from '../dawini/dawini.service';
 import { EspacePharmacieComponent } from './espace-pharmacie.component';
 import { Profil, ProfilService } from '../moi/profil.service';
 import { OrdonnanceService } from '../ordonnances/ordonnance.service';
+import { LangueService } from '../partage/langue.service';
 
 const PROFIL: Profil = {
   utilisateurId: 'ph1',
@@ -338,5 +339,49 @@ describe('EspacePharmacieComponent', () => {
     expect(texte()).toContain('Expirée');
     expect(texte()).not.toContain('Marquer comme délivrée');
     expect(texte()).not.toContain('Ordonnance valide');
+  });
+
+  describe('en arabe (comme l\'appli)', () => {
+    beforeEach(() => TestBed.inject(LangueService).ar.set(true));
+
+    it('affiche l\'espace de droite a gauche, sans texte francais', async () => {
+      await afficher();
+      await chercher('16');
+
+      const main: HTMLElement = fixture.nativeElement.querySelector('main');
+      expect(main.getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('فضاء الصيدلية');
+      expect(texte()).toContain('الدواء متوفر');
+      expect(texte()).toContain('2 ردود');
+      expect(texte()).not.toContain('Espace pharmacie');
+      expect(texte()).not.toContain('réponses');
+      expect(texte()).not.toContain('Répondre');
+      expect(texte()).not.toContain('publiée le');
+      expect(texte()).not.toContain('null');
+    });
+
+    it('traduit l\'envoi de la reponse', async () => {
+      profils.monProfil.and.returnValue(of(PROFIL));
+      service.repondre.and.returnValue(of(REPONSE));
+      await afficher();
+
+      await cocherDisponible(true);
+      repondre();
+      await afficher();
+      expect(service.repondre).toHaveBeenCalled();
+      expect(texte()).toContain('تم إرسال الرد بخصوص «Amoxicilline 1 g»: المريض مُبلَّغ.');
+      expect(texte()).not.toContain('le patient est prévenu');
+    });
+
+    it('traduit la verification d\'une ordonnance', async () => {
+      ordonnances.verifier.and.returnValue(of({ valide: true, emiseLe: '2026-09-18T10:00:00Z', statut: 'EXPIREE' }));
+      await afficher();
+      await saisir('codeOrdonnance', 'AB12CD34');
+      fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+      await afficher();
+
+      expect(texte()).toContain('منتهية الصلاحية');
+      expect(texte()).not.toContain('Expirée');
+    });
   });
 });

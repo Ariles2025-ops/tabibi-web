@@ -58,8 +58,8 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
           </div>
 
           <div *ngIf="estPharmacie()" class="side__group">
-            <div class="side__grouptitle">Espace pharmacie</div>
-            <a routerLink="/pharmacie" routerLinkActive="actif">Demandes de médicaments</a>
+            <div class="side__grouptitle">{{ l.t('Espace pharmacie', 'فضاء الصيدلية') }}</div>
+            <a routerLink="/pharmacie" routerLinkActive="actif">{{ l.t('Demandes de médicaments', 'طلبات الأدوية') }}</a>
           </div>
 
           <div *ngIf="estAdmin()" class="side__group">
