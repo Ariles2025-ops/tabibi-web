@@ -369,4 +369,23 @@ describe('FicheMedecinComponent (arabe)', () => {
     await afficher();
     expect(texte()).toContain('يجب أن يكون لديك موعد مع هذا الطبيب لمراسلته.');
   });
+
+  it('traduit en arabe les 409 de reservation et n affiche jamais le francais de l API', async () => {
+    const reserver = TestBed.inject(RendezVousService).reserver as jasmine.Spy;
+    await afficher();
+    const creneau = fixture.componentInstance.creneaux()[0];
+    const cas: [string, string][] = [
+      ['Vous avez déjà un rendez-vous à venir avec ce médecin : annulez-le pour en choisir un autre.', 'لديك بالفعل موعد قادم'],
+      ['Ce créneau chevauche un autre de vos rendez-vous.', 'يتداخل مع موعد آخر'],
+      ['Ce créneau est déjà passé.', 'قد مضى'],
+      ['Message inconnu en français.', 'هذا الموعد حُجز للتوّ.'],
+    ];
+    for (const [fr, ar] of cas) {
+      reserver.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: fr } })));
+      await fixture.componentInstance.reserver(creneau);
+      await afficher();
+      expect(fixture.componentInstance.erreur()).toContain(ar);
+      expect(texte()).not.toContain(fr);
+    }
+  });
 });
