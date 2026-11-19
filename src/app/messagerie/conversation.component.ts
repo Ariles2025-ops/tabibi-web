@@ -49,7 +49,15 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
         </ol>
         <p *ngIf="accessible() && messages().length === 0">{{ l.t('Aucun message pour le moment. Écrivez le premier.', 'لا توجد رسائل حاليًا. اكتب أول رسالة.') }}</p>
 
-        <form *ngIf="accessible()" (ngSubmit)="envoyer()" style="display:grid;gap:8px">
+        <p *ngIf="accessible() && conversation()?.fermee" data-testid="conversation-fermee" style="color:var(--text3)">
+          {{ moiPatient() ? l.t('Le médecin a fermé cette conversation.', 'أغلق الطبيب هذه المحادثة.') : l.t('Cette conversation est fermée.', 'هذه المحادثة مغلقة.') }}
+        </p>
+        <p *ngIf="interdit()" data-testid="envoi-interdit" style="color:#b3261e">
+          {{ l.t('Vous ne pouvez plus écrire à ce médecin : prenez un nouveau rendez-vous.', 'لا يمكنك الكتابة إلى هذا الطبيب بعد الآن: احجز موعدًا جديدًا.') }}
+          <a *ngIf="conversation() as c" [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">{{ l.t('Prendre rendez-vous', 'حجز موعد') }}</a>
+        </p>
+
+        <form *ngIf="accessible() && !conversation()?.fermee && !interdit()" (ngSubmit)="envoyer()" style="display:grid;gap:8px">
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             {{ l.t('Votre message', 'رسالتك') }}
             <textarea class="champ" [(ngModel)]="contenu" name="contenu" rows="3" style="color:var(--tbi-ink);font-size:1rem;resize:vertical"></textarea>
@@ -96,6 +104,8 @@ export class ConversationComponent implements OnInit, OnDestroy {
   charge = signal(false);
   enCours = signal(false);
   erreur = signal('');
+  /** Vrai quand l'envoi a ete refuse (403) faute de rendez-vous recent : le champ est remplace par une invitation a reprendre rendez-vous. */
+  interdit = signal(false);
 
   /** Libelle de l'autre participant : le medecin si je suis le patient, sinon « Patient » et un identifiant abrege. */
   interlocuteur = computed(() => {
@@ -104,6 +114,11 @@ export class ConversationComponent implements OnInit, OnDestroy {
     if (this.moi() === c.patientId) return this.nomMedecin() ?? this.l.t('Médecin', 'طبيب');
     return this.nomPatient() ?? `${this.l.t('Patient', 'مريض')} ${abregerIdentifiant(c.patientId)}`;
   });
+
+  /** Vrai si je suis le patient de la conversation. */
+  moiPatient(): boolean {
+    return this.moi() !== null && this.moi() === this.conversation()?.patientId;
+  }
 
   async ngOnInit() {
     await this.auth.pret();
@@ -134,6 +149,7 @@ export class ConversationComponent implements OnInit, OnDestroy {
     this.accessible.set(false);
     this.contenu = '';
     this.erreur.set('');
+    this.interdit.set(false);
     this.chargerConversation();
     this.charger();
     this.arreterRafraichissement();
@@ -185,7 +201,13 @@ export class ConversationComponent implements OnInit, OnDestroy {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.l.t('Cette conversation ne vous concerne pas.', 'هذه المحادثة لا تخصّك.'));
+          // La lecture a reussi : la conversation me concerne, c'est l'envoi qui est refuse (rendez-vous trop ancien).
+          if (this.moiPatient()) this.interdit.set(true);
+          else this.erreur.set(this.l.t("Vous n'avez pas le droit d'écrire dans cette conversation.", 'ليس لديك صلاحية الكتابة في هذه المحادثة.'));
+        } else if (e.status === 409) {
+          const c = this.conversation();
+          if (c) this.conversation.set({ ...c, fermee: true });
+          else this.erreur.set(this.l.t('Cette conversation est fermée.', 'هذه المحادثة مغلقة.'));
         } else if (e.status === 400) {
           this.erreur.set(e.error?.erreur ?? this.l.t(`Le message est vide ou dépasse ${LONGUEUR_MAX_MESSAGE} caractères.`, `الرسالة فارغة أو تتجاوز ${LONGUEUR_MAX_MESSAGE} حرف.`));
         } else {

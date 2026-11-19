@@ -24,6 +24,7 @@ const CONVERSATION: Conversation = {
   creeLe: '2026-09-18T10:00:00Z',
   dernierMessageLe: '2026-09-18T10:05:00Z',
   nonLus: 1,
+  fermee: false,
 };
 
 const DU_PATIENT: Message = {
@@ -241,6 +242,47 @@ describe('ConversationComponent', () => {
     expect(texte()).toContain('Le message ne peut pas depasser 2000 caracteres.');
     expect(service.messages).toHaveBeenCalledTimes(1);
     expect(zone().value).toBe('Bonjour');
+
+    fixture.destroy();
+  }));
+
+  it('remplace le champ par une phrase claire quand le medecin a ferme la conversation', fakeAsync(() => {
+    service.mesConversations.and.returnValue(of([{ ...CONVERSATION, fermee: true }]));
+    afficher();
+
+    expect(texte()).toContain('Le médecin a fermé cette conversation.');
+    expect(zone()).toBeNull();
+
+    fixture.destroy();
+  }));
+
+  it('sur un 409 a l envoi, affiche la conversation fermee en retirant le champ', fakeAsync(() => {
+    service.envoyer.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Conversation fermee.' } })));
+    afficher();
+
+    saisir('Bonjour');
+    boutonEnvoyer().click();
+    afficher();
+
+    expect(texte()).toContain('Le médecin a fermé cette conversation.');
+    expect(texte()).not.toContain('Conversation fermee.');
+    expect(zone()).toBeNull();
+
+    fixture.destroy();
+  }));
+
+  it('sur un 403 a l envoi, invite le patient a reprendre rendez-vous (et non « ne vous concerne pas »)', fakeAsync(() => {
+    service.envoyer.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403, error: { erreur: 'Vous ne pouvez plus ecrire a ce medecin.' } })));
+    afficher();
+
+    saisir('Bonjour');
+    boutonEnvoyer().click();
+    afficher();
+
+    expect(texte()).toContain('prenez un nouveau rendez-vous');
+    expect(texte()).not.toContain('ne vous concerne pas');
+    expect(fixture.nativeElement.querySelector('[data-testid="envoi-interdit"] a').getAttribute('href')).toBe('/medecins/' + MEDECIN_ID);
+    expect(zone()).toBeNull();
 
     fixture.destroy();
   }));
