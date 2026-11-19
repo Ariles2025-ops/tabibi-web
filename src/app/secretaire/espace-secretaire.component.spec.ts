@@ -9,6 +9,7 @@ import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { PatientsService } from '../medecin/patients.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
+import { LangueService } from '../partage/langue.service';
 import { EspaceSecretaireComponent } from './espace-secretaire.component';
 import { Rattachement, SecretaireService } from './secretaire.service';
 import { instantAlger, valeurDateHeureLocale } from '../medecin/agenda-utils';
@@ -353,5 +354,64 @@ describe('EspaceSecretaireComponent', () => {
     await afficher();
     expect(fixture.nativeElement.querySelector('app-rdv-telephone form')).not.toBeNull();
     expect(texte()).toContain('Nom du patient');
+  });
+  describe('en arabe', () => {
+    beforeEach(() => TestBed.inject(LangueService).ar.set(true));
+    afterEach(() => TestBed.inject(LangueService).ar.set(false));
+
+    it("reste en arabe (plus de retour force au francais), de droite a gauche, avec le selecteur de langue", async () => {
+      await afficher();
+      const main: HTMLElement = fixture.nativeElement.querySelector('main');
+      expect(TestBed.inject(LangueService).ar()).toBeTrue();
+      expect(main.getAttribute('dir')).toBe('rtl');
+      expect(main.getAttribute('lang')).toBe('ar');
+      expect(fixture.nativeElement.querySelector('app-selecteur-langue')).not.toBeNull();
+      expect(texte()).toContain('فضاء السكرتارية');
+      expect(texte()).not.toContain('Espace secrétaire');
+    });
+
+    it("affiche l'agenda, les statuts et les actions en arabe, sans francais", async () => {
+      await afficher();
+      expect(texte()).toContain('القادمة');
+      expect(texte()).toContain('السابقة');
+      expect(texte()).toContain('تسجيل الحضور');
+      expect(texte()).toContain('المريض غائب');
+      expect(texte()).toContain('مؤكد');
+      for (const fr of ['Marquer honoré', 'Patient absent', 'À venir', 'Passés', 'Créneaux', 'Chargement']) {
+        expect(texte()).not.toContain(fr);
+      }
+    });
+
+    it("annonce l'annulation et les erreurs en arabe", async () => {
+      service.annuler.and.returnValue(of(FUTUR));
+      service.agenda.and.returnValue(of([FUTUR]));
+      await afficher();
+      bouton('إلغاء')!.click();
+      await afficher();
+      expect(texte()).toContain('إلغاء هذا الموعد؟');
+      expect(texte()).toContain('سيتم إعلام المريض.');
+      bouton('نعم')!.click();
+      await afficher();
+      expect(texte()).toContain('تم إلغاء الموعد في');
+      expect(texte()).toContain('تم إعلام المريض.');
+    });
+
+    it("ouvre le panneau « Deplacer » en arabe (pas de francais)", async () => {
+      service.agenda.and.returnValue(of([FUTUR]));
+      await afficher();
+      bouton('نقل')!.click();
+      await afficher();
+      const panneau: HTMLElement = fixture.nativeElement.querySelector('app-deplacer-rendez-vous');
+      expect(panneau).not.toBeNull();
+      expect(panneau.textContent).toContain('اختر موعدًا جديدًا');
+      expect(panneau.textContent).not.toContain('Choisissez');
+      expect(panneau.querySelector('[role="group"]')!.getAttribute('aria-label')).toBe('نقل الموعد');
+    });
+
+    it("refuse en arabe un compte qui n'est pas secretaire (403)", async () => {
+      service.mesMedecins.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      await afficher();
+      expect(texte()).toContain('هذه الصفحة مخصصة للسكرتارية.');
+    });
   });
 });
