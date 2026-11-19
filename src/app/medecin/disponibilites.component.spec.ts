@@ -18,7 +18,9 @@ describe('DisponibilitesComponent', () => {
 
   beforeEach(() => {
     registerLocaleData(localeFr);
-    service = jasmine.createSpyObj<MedecinService>('MedecinService', ['ouvrirCreneau', 'creneaux', 'supprimerCreneau']);
+    service = jasmine.createSpyObj<MedecinService>('MedecinService', ['ouvrirCreneau', 'creneaux', 'supprimerCreneau', 'semaineType']);
+    // Par defaut : route « semaine type » absente (404) -> la serie s'ouvre creneau par creneau.
+    service.semaineType.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
     service.creneaux.and.returnValue(of([]));
     auth = { seConnecter: jasmine.createSpy('seConnecter') };
 
@@ -226,6 +228,30 @@ describe('DisponibilitesComponent', () => {
       expect(service.ouvrirCreneau.calls.argsFor(0)).toEqual([new Date(instantAlger(date, '09:00')).toISOString(), 30]);
       expect(service.ouvrirCreneau.calls.argsFor(2)).toEqual([new Date(instantAlger(date, '10:00')).toISOString(), 30]);
       expect(texte()).toContain('3 créneaux ouverts.');
+    });
+
+    it('ouvre la serie en un seul appel (une seule alerte aux inscrits en liste d attente)', async () => {
+      service.semaineType.and.returnValue(of({ crees: 5, ignores: 1 }));
+      const date = dateDansUnAn();
+      await afficher();
+
+      await remplirSerie(date, '09:00', '12:00', '30');
+
+      expect(service.ouvrirCreneau).not.toHaveBeenCalled();
+      expect(service.semaineType).toHaveBeenCalledTimes(1);
+      const jour = ['DIMANCHE', 'LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI'][new Date(`${date}T00:00:00Z`).getUTCDay()];
+      expect(service.semaineType.calls.argsFor(0)[0]).toEqual({ jours: [jour], debut: '09:00', fin: '12:00', dureeMinutes: 30, aPartirDu: date, nombreSemaines: 1 });
+      expect(texte()).toContain('5 créneaux ouverts, 1 ignoré (déjà pris).');
+    });
+
+    it('affiche l erreur de l ouverture en un seul appel', async () => {
+      service.semaineType.and.returnValue(throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: 'Plage invalide' } })));
+      await afficher();
+
+      await remplirSerie(dateDansUnAn(), '09:00', '12:00', '30');
+
+      expect(service.ouvrirCreneau).not.toHaveBeenCalled();
+      expect(texte()).toContain('Plage invalide');
     });
 
     it('s arrete a une erreur autre qu un chevauchement et l explique', async () => {
