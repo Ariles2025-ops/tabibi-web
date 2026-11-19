@@ -10,6 +10,7 @@ import { Candidature, DemandeCandidature } from '../admin/admin.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { CandidatureMedecinComponent } from './candidature-medecin.component';
+import { LangueService } from '../partage/langue.service';
 import { MedecinService } from './medecin.service';
 
 const DEMANDE: DemandeCandidature = {
@@ -232,5 +233,45 @@ describe('CandidatureMedecinComponent', () => {
     expect(depot.ficheReclamee).toBe('f1');
     expect(depot.nomComplet).toBe('BELKACEM Amina');
     expect(depot.ville).toBe('Hydra');
+  });
+
+  describe('en arabe', () => {
+    beforeEach(() => TestBed.inject(LangueService).definir(true));
+    afterEach(() => localStorage.removeItem('tabibi.langue'));
+
+    it('formulaire : titre, champs, listes en arabe et sens RTL, sans texte français', async () => {
+      await afficher();
+      const el: HTMLElement = fixture.nativeElement;
+      expect(el.querySelector('main')?.getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('ترشحي');
+      expect(texte()).toContain('رقم التسجيل في الهيئة');
+      expect(texte()).toContain('إيداع ترشحي');
+      expect(texte()).toContain('طبيب القلب');
+      expect(texte()).not.toContain('Ma candidature');
+      expect(texte()).not.toContain('Spécialité');
+      expect(texte()).not.toContain('Déposer');
+    });
+
+    it('candidature en attente : statut, détails et dates en arabe', async () => {
+      service.maCandidature.and.returnValue(of(EN_ATTENTE));
+      await afficher();
+      expect(texte()).toContain('قيد الانتظار');
+      expect(texte()).toContain('ترشحك قيد الفحص.');
+      expect(texte()).toContain('طبيب القلب');
+      expect(texte()).toContain('18/09/2026');
+      expect(texte()).not.toContain('En attente');
+      expect(texte()).not.toContain('Déposée le');
+    });
+
+    it('refus : motif et message d erreur de saisie en arabe', async () => {
+      service.maCandidature.and.returnValue(of(REFUSEE));
+      await afficher();
+      expect(texte()).toContain('مرفوضة');
+      expect(texte()).toContain('تم رفض ترشحك');
+      await saisir({ numeroOrdre: '' });
+      formulaire()!.dispatchEvent(new Event('submit'));
+      await afficher();
+      expect(texte()).toContain('أدخل الاسم الكامل والتخصص والولاية ورقم التسجيل في الهيئة.');
+    });
   });
 });
