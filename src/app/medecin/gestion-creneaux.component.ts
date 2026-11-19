@@ -242,7 +242,7 @@ export class GestionCreneauxComponent implements OnChanges {
         const maintenant = Date.now();
         this.creneaux.set(
           liste
-            .filter((c) => Date.parse(c.debut) > maintenant)
+            .filter((c) => Date.parse(c.debut) + c.dureeMinutes * 60_000 > maintenant)
             .sort((a, b) => Date.parse(a.debut) - Date.parse(b.debut)),
         );
         this.charge.set(false);
