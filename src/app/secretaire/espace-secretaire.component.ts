@@ -77,7 +77,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
                 <a *ngIf="r.telephonePatient || telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-inline-start:8px;text-decoration:none" dir="ltr">{{ tel }}</a>
               </div>
               <div *ngIf="estConfirme(r) && aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <span style="color:var(--text2);font-size:.9rem">{{ l.t('Annuler ce rendez-vous ?', 'إلغاء هذا الموعد؟') }}<ng-container *ngIf="r.source !== 'TELEPHONE'; else prevenirParTelephone"> {{ l.t('Le patient sera prévenu.', 'سيتم إعلام المريض.') }}</ng-container><ng-template #prevenirParTelephone> {{ l.t('Pensez à prévenir le patient par téléphone.', 'تذكّري إعلام المريض عبر الهاتف.') }}</ng-template></span>
+                <span style="color:var(--text2);font-size:.9rem">{{ l.t('Annuler ce rendez-vous ?', 'إلغاء هذا الموعد؟') }}<ng-container *ngIf="r.source !== 'TELEPHONE'; else prevenirParTelephone"> {{ l.t('Le patient sera prévenu.', 'سيتم إعلام المريض.') }}</ng-container><ng-template #prevenirParTelephone> {{ l.t('Pensez à prévenir le patient par téléphone.', 'يرجى إبلاغ المريض هاتفيًا.') }}</ng-template></span>
                 <button type="button" class="bouton" (click)="annuler(r)" [disabled]="enCours() !== null">
                   {{ estEnCours(r, 'annuler') ? l.t('Annulation…', 'جارٍ الإلغاء…') : l.t('Oui', 'نعم') }}
                 </button>
@@ -104,7 +104,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
                   {{ l.t('Annuler', 'إلغاء') }}
                 </button>
               </div>
-              <app-deplacer-rendez-vous *ngIf="aDeplacer() === r.id" [rendezVous]="r" [arabe]="l.ar()" [lister]="listerCreneaux" [deplacer]="deplacerFn"
+              <app-deplacer-rendez-vous *ngIf="aDeplacer() === r.id" [rendezVous]="r" [arabe]="l.ar()" [avertirPatient]="true" [lister]="listerCreneaux" [deplacer]="deplacerFn"
                 (deplace)="apresDeplacement($event)" (annule)="aDeplacer.set(null)" />
             </li>
           </ul>

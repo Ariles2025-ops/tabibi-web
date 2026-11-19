@@ -71,7 +71,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
             </div>
 
             <div *ngIf="aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <span style="color:var(--text2);font-size:.9rem">{{ l.t('Annuler ce rendez-vous ?', 'إلغاء هذا الموعد؟') }}<ng-container *ngIf="r.source !== 'TELEPHONE'"> {{ l.t('Le patient sera prévenu.', 'سيتم إعلام المريض.') }}</ng-container></span>
+              <span style="color:var(--text2);font-size:.9rem">{{ l.t('Annuler ce rendez-vous ?', 'إلغاء هذا الموعد؟') }}<ng-container *ngIf="r.source !== 'TELEPHONE'; else prevenirParTelephone"> {{ l.t('Le patient sera prévenu.', 'سيتم إعلام المريض.') }}</ng-container><ng-template #prevenirParTelephone> {{ l.t('Pensez à prévenir le patient par téléphone.', 'يرجى إبلاغ المريض هاتفيًا.') }}</ng-template></span>
               <button type="button" class="bouton" (click)="annuler(r)" [disabled]="enCours() !== null">
                 {{ estEnCours(r, 'annuler') ? l.t('Annulation…', 'جارٍ الإلغاء…') : l.t('Oui', 'نعم') }}
               </button>
@@ -105,7 +105,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
               <a *ngIf="peutRedigerOrdonnance(r)" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
                  [queryParams]="{ patientId: r.patientId, rendezVousId: r.id }">{{ l.t('Rédiger une ordonnance', 'كتابة وصفة') }}</a>
             </div>
-            <app-deplacer-rendez-vous *ngIf="aDeplacer() === r.id" [rendezVous]="r" [arabe]="l.ar()" [lister]="listerCreneaux" [deplacer]="deplacerFn"
+            <app-deplacer-rendez-vous *ngIf="aDeplacer() === r.id" [rendezVous]="r" [arabe]="l.ar()" [avertirPatient]="true" [lister]="listerCreneaux" [deplacer]="deplacerFn"
               (deplace)="apresDeplacement($event)" (annule)="aDeplacer.set(null)" />
           </li>
         </ul>
