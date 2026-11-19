@@ -112,7 +112,7 @@ const SERIE_MAX = 48;
       <p *ngIf="succes() as c" style="color:var(--blue);margin:12px 0 0">
         <ng-container *ngIf="!langue.ar()">Créneau ouvert le {{ c.debut | date:'EEEE d MMMM à HH:mm':'+0100' }} ({{ c.dureeMinutes }} min).</ng-container>
         <ng-container *ngIf="langue.ar()">تم فتح موعد بتاريخ <span dir="ltr">{{ c.debut | date:'dd/MM/yyyy HH:mm':'+0100' }}</span> ({{ c.dureeMinutes }} دقيقة).</ng-container>
-        <a *ngIf="lienAgenda() as lien" [routerLink]="lien" style="color:var(--blue)">{{ langue.t('Voir l'agenda', 'عرض الأجندة') }}</a>
+        <a *ngIf="lienAgenda() as lien" [routerLink]="lien" style="color:var(--blue)">{{ langue.t("Voir l'agenda", 'عرض الأجندة') }}</a>
       </p>
       <p *ngIf="succesSerie()" style="color:var(--blue);margin:12px 0 0">{{ succesSerie() }}</p>
       <p *ngIf="erreur()" role="alert" style="color:var(--red);margin:12px 0 0">{{ erreur() }}</p>
