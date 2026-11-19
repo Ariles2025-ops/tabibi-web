@@ -10,7 +10,7 @@ import { DUREE_MAX_MINUTES, DUREE_MIN_MINUTES } from '../secretaire/secretaire.s
 import { ApiDisponibleService } from '../partage/api-disponible.service';
 import { LangueService } from '../partage/langue.service';
 import { RdvTelephoneComponent } from './rdv-telephone.component';
-import { RdvTelephone, ResultatSemaineType, SemaineType } from './semaine-type';
+import { JOURS_SEMAINE, RdvTelephone, ResultatSemaineType, SemaineType } from './semaine-type';
 import { SemaineTypeComponent } from './semaine-type.component';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { grouperParJour, instantAlger, valeurDateHeureLocale, styleOnglet } from './agenda-utils';
@@ -318,7 +318,40 @@ export class GestionCreneauxComponent implements OnChanges {
       return;
     }
     this.ouverture.set(true);
+    if (debuts.length > 1 && this.source().semaineType && this.api.semaineType()) {
+      this.ouvrirEnLot(debuts, duree);
+      return;
+    }
     this.ouvrirSuivant(debuts, 0, duree);
+  }
+
+  /**
+   * Ouvre toute la serie en un seul appel (route « semaine type » sur une seule date) : l'API n'alerte alors
+   * qu'une fois les patients en liste d'attente, au lieu d'une alerte par creneau. Route absente (404) :
+   * retour a l'ouverture creneau par creneau.
+   */
+  private ouvrirEnLot(debuts: Date[], duree: number) {
+    const jour = JOURS_SEMAINE[new Date(`${this.serieDate}T00:00:00Z`).getUTCDay()].code;
+    const corps: SemaineType = {
+      jours: [jour],
+      debut: valeurDateHeureLocale(debuts[0]).slice(11),
+      fin: this.serieFin,
+      dureeMinutes: duree,
+      aPartirDu: this.serieDate,
+      nombreSemaines: 1,
+    };
+    this.source().semaineType!(corps).subscribe({
+      next: (r) => this.terminerSerie(r.crees, r.ignores),
+      error: (e: HttpErrorResponse) => {
+        if (e.status === 404) {
+          this.api.semaineType.set(false);
+          this.ouvrirSuivant(debuts, 0, duree);
+          return;
+        }
+        this.ouverture.set(false);
+        this.traiterErreurOuverture(e);
+      },
+    });
   }
 
   supprimer(c: Creneau) {
