@@ -109,7 +109,7 @@ export class TeleconsultationsMedecinComponent implements OnInit {
   }
 
   nom(patientId: string): string {
-    return nomPatient(this.repertoire(), patientId);
+    return nomPatient(this.repertoire(), patientId, this.l.ar());
   }
 
   /** Demarrable a partir de 15 min avant le rendez-vous ; si sa date est inconnue, le serveur tranche. */

@@ -323,6 +323,13 @@ describe('AgendaMedecinComponent', () => {
       expect(racine.querySelector('app-selecteur-langue')).not.toBeNull();
     });
 
+    it('un patient absent du répertoire s\'affiche « مريض », jamais « Patient » en français', async () => {
+      TestBed.inject(LangueService).definir(true);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(fixture.componentInstance.nom('inconnu')).toBe('مريض');
+    });
+
     it('messages d\'action en arabe (annulation, déplacement, erreur)', async () => {
       TestBed.inject(LangueService).definir(true);
       const arabe = fixture;
