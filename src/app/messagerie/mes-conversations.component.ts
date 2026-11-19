@@ -43,6 +43,7 @@ import { Conversation, MessagerieService, abregerIdentifiant } from './messageri
                 <span style="color:var(--text3)" *ngIf="c.dernierMessageLe && !l.ar()">Dernier message le {{ c.dernierMessageLe | date:'EEEE d MMMM à HH:mm' }}</span>
                 <span style="color:var(--text3)" *ngIf="c.dernierMessageLe && l.ar()">آخر رسالة في <span dir="ltr">{{ c.dernierMessageLe | date:'dd/MM/yyyy HH:mm' }}</span></span>
               </span>
+              <span *ngIf="c.fermee" data-testid="liste-fermee" style="color:var(--text3)">{{ l.t('Fermée', 'مغلقة') }}</span>
               <span *ngIf="c.nonLus > 0" style="color:var(--vert);font-weight:600">{{ libelleNonLus(c.nonLus) }}</span>
             </a>
           </li>

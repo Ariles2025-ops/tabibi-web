@@ -71,4 +71,9 @@ export class MessagerieService {
   envoyer(conversationId: string, contenu: string): Observable<Message> {
     return this.http.post<Message>(`${this.base}/api/conversations/${conversationId}/messages`, { contenu });
   }
+
+  /** Ferme la conversation (reserve au medecin ; plus aucun message ne peut ensuite y etre envoye, 409). */
+  fermer(conversationId: string): Observable<unknown> {
+    return this.http.post<unknown>(`${this.base}/api/conversations/${conversationId}/fermer`, {});
+  }
 }

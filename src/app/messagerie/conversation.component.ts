@@ -53,6 +53,11 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
         <p *ngIf="accessible() && conversation()?.fermee" data-testid="conversation-fermee" style="color:var(--text3)">
           {{ moiPatient() ? l.t('Le médecin a fermé cette conversation.', 'أغلق الطبيب هذه المحادثة.') : l.t('Cette conversation est fermée.', 'هذه المحادثة مغلقة.') }}
         </p>
+        <p *ngIf="peutFermer()">
+          <button type="button" class="bouton" data-testid="fermer-conversation" [disabled]="fermetureEnCours()" (click)="fermer()">
+            {{ l.t('Fermer la conversation', 'إغلاق المحادثة') }}
+          </button>
+        </p>
         <p *ngIf="interdit()" data-testid="envoi-interdit" style="color:#b3261e">
           {{ l.t('Vous ne pouvez plus écrire à ce médecin : prenez un nouveau rendez-vous.', 'لا يمكنك الكتابة إلى هذا الطبيب بعد الآن: احجز موعدًا جديدًا.') }}
           <a *ngIf="conversation() as c" [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">{{ l.t('Prendre rendez-vous', 'حجز موعد') }}</a>
@@ -107,6 +112,8 @@ export class ConversationComponent implements OnInit, OnDestroy {
   erreur = signal('');
   /** Vrai quand l'envoi a ete refuse (403) faute de rendez-vous recent : le champ est remplace par une invitation a reprendre rendez-vous. */
   interdit = signal(false);
+  /** Vrai pendant l'appel de fermeture : protege contre le double clic. */
+  fermetureEnCours = signal(false);
 
   /** Libelle de l'autre participant : le medecin si je suis le patient, sinon « Patient » et un identifiant abrege. */
   interlocuteur = computed(() => {
@@ -115,6 +122,36 @@ export class ConversationComponent implements OnInit, OnDestroy {
     if (this.moi() === c.patientId) return this.nomMedecin() ?? this.l.t('Médecin', 'طبيب');
     return this.nomPatient() ?? `${this.l.t('Patient', 'مريض')} ${abregerIdentifiant(c.patientId)}`;
   });
+
+  /** Le bouton « Fermer la conversation » n'est propose qu'au medecin, tant que la conversation est ouverte. */
+  peutFermer(): boolean {
+    const c = this.conversation();
+    return this.accessible() && !!c && !c.fermee && this.moi() === c.medecinId;
+  }
+
+  /** Ferme la conversation apres confirmation (POST .../fermer) ; le champ de saisie disparait ensuite. */
+  fermer() {
+    const c = this.conversation();
+    if (!c || this.fermetureEnCours()) return;
+    const message = this.l.t(
+      'Fermer cette conversation ? Le patient ne pourra plus vous écrire.',
+      'إغلاق هذه المحادثة؟ لن يتمكن المريض من مراسلتك بعد الآن.',
+    );
+    if (!window.confirm(message)) return;
+    this.fermetureEnCours.set(true);
+    this.erreur.set('');
+    this.service.fermer(c.id).subscribe({
+      next: () => {
+        this.fermetureEnCours.set(false);
+        this.conversation.set({ ...c, fermee: true });
+      },
+      error: (e: HttpErrorResponse) => {
+        this.fermetureEnCours.set(false);
+        if (e.status === 401) this.auth.seConnecter();
+        else this.erreur.set(e.error?.erreur ?? this.l.t('La fermeture de la conversation a échoué, veuillez réessayer.', 'فشل إغلاق المحادثة، يُرجى المحاولة مرة أخرى.'));
+      },
+    });
+  }
 
   /** Vrai si je suis le patient de la conversation. */
   moiPatient(): boolean {

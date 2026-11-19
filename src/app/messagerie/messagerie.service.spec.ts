@@ -84,6 +84,17 @@ describe('MessagerieService', () => {
     expect(recu).toEqual(MESSAGE);
   });
 
+  it('ferme une conversation par POST /api/conversations/{id}/fermer', () => {
+    let fini = false;
+    service.fermer('c1').subscribe(() => (fini = true));
+
+    const requete = http.expectOne(`${BASE}/api/conversations/c1/fermer`);
+    expect(requete.request.method).toBe('POST');
+    requete.flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(fini).toBeTrue();
+  });
+
   it('transmet le { erreur } d un 403 (aucun rendez-vous commun) et d un 400 (message vide)', () => {
     let statut = 0;
     let message = '';

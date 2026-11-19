@@ -4,7 +4,7 @@ import { registerLocaleData } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import localeFr from '@angular/common/locales/fr';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
@@ -68,7 +68,7 @@ describe('ConversationComponent', () => {
     registerLocaleData(localeFr);
     profil = { sujet: PATIENT, nom: 'patient.demo', roles: ['PATIENT'] };
     estMedecin = signal(false);
-    service = jasmine.createSpyObj<MessagerieService>('MessagerieService', ['mesConversations', 'messages', 'envoyer']);
+    service = jasmine.createSpyObj<MessagerieService>('MessagerieService', ['mesConversations', 'messages', 'envoyer', 'fermer']);
     service.mesConversations.and.returnValue(of([CONVERSATION]));
     service.messages.and.returnValue(of([DU_PATIENT, DU_MEDECIN]));
     annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin']);
@@ -262,6 +262,48 @@ describe('ConversationComponent', () => {
     expect(texte()).toContain('Le médecin a fermé cette conversation.');
     expect(zone()).toBeNull();
 
+    fixture.destroy();
+  }));
+
+  it('le medecin ferme la conversation apres confirmation, une seule fois malgre le double clic', fakeAsync(() => {
+    profil = { sujet: MEDECIN_ID, nom: 'dr.demo', roles: ['MEDECIN'] };
+    estMedecin.set(true);
+    const sujet = new Subject<unknown>();
+    service.fermer.and.returnValue(sujet);
+    spyOn(window, 'confirm').and.returnValue(true);
+    afficher();
+
+    const bouton = (): HTMLButtonElement => fixture.nativeElement.querySelector('[data-testid="fermer-conversation"]');
+    bouton().click();
+    afficher();
+    bouton().click();
+    expect(service.fermer).toHaveBeenCalledOnceWith('c1');
+
+    sujet.next({});
+    sujet.complete();
+    afficher();
+
+    expect(bouton()).toBeNull();
+    expect(texte()).toContain('Cette conversation est fermée.');
+    expect(zone()).toBeNull();
+
+    fixture.destroy();
+  }));
+
+  it('ne ferme rien si le medecin refuse la confirmation, et le patient n a pas le bouton', fakeAsync(() => {
+    profil = { sujet: MEDECIN_ID, nom: 'dr.demo', roles: ['MEDECIN'] };
+    estMedecin.set(true);
+    spyOn(window, 'confirm').and.returnValue(false);
+    afficher();
+    fixture.nativeElement.querySelector('[data-testid="fermer-conversation"]').click();
+    expect(service.fermer).not.toHaveBeenCalled();
+    fixture.destroy();
+
+    profil = { sujet: PATIENT, nom: 'patient.demo', roles: ['PATIENT'] };
+    estMedecin.set(false);
+    fixture = TestBed.createComponent(ConversationComponent);
+    afficher();
+    expect(fixture.nativeElement.querySelector('[data-testid="fermer-conversation"]')).toBeNull();
     fixture.destroy();
   }));
 
