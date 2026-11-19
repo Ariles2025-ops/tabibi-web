@@ -204,6 +204,19 @@ describe('AppComponent', () => {
     }
   });
 
+  it('menu pharmacie en arabe : aucun libellé français restant', async () => {
+    connecte = true;
+    estPharmacie.set(true);
+    TestBed.inject(LangueService).ar.set(true);
+    await afficher();
+
+    const texte = texteNav();
+    expect(texte).toContain('فضاء الصيدلية');
+    expect(texte).toContain('طلبات الأدوية');
+    expect(texte).not.toContain('Espace pharmacie');
+    expect(texte).not.toContain('Demandes de médicaments');
+  });
+
   it('menu secrétaire en arabe : aucun libellé français restant', async () => {
     connecte = true;
     estSecretaire.set(true);
