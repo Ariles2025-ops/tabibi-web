@@ -381,7 +381,7 @@ export class FicheMedecinComponent implements OnInit {
     this.annuaire.medecin(id).subscribe({
       next: (m) => this.medecin.set(m),
       error: (e: HttpErrorResponse) =>
-        this.erreur.set(e.status === 404 ? this.l.t('Praticien introuvable.', 'الممارس غير موجود.') : (e.error?.erreur ?? this.l.t('Impossible de charger la fiche du praticien.', 'تعذّر تحميل ملف الممارس.'))),
+        this.erreur.set(e.status === 404 ? this.l.t('Praticien introuvable.', 'الممارس غير موجود.') : this.messageApi(e, 'Impossible de charger la fiche du praticien.', 'تعذّر تحميل ملف الممارس.')),
     });
     this.annuaire.reclamable(id).subscribe({
       next: (r) => this.reclamable.set(r.reclamable),
@@ -405,6 +405,21 @@ export class FicheMedecinComponent implements OnInit {
     });
   }
 
+  /**
+   * Message d'erreur de l'API (toujours en français). En arabe, les refus connus sont traduits et
+   * tout autre message est remplacé par le repli arabe : jamais de français dans la page arabe.
+   */
+  private messageApi(e: HttpErrorResponse, reperFr: string, reperAr: string): string {
+    const api: string | undefined = e.error?.erreur;
+    if (!this.l.ar()) return api ?? reperFr;
+    const m = (api ?? '').toLowerCase();
+    if (m.includes('rendez-vous à venir')) return 'لديك بالفعل موعد قادم مع هذا الطبيب: ألغِه لاختيار موعد آخر.';
+    if (m.includes('chevauche')) return 'هذا الموعد يتداخل مع موعد آخر لديك.';
+    if (m.includes('déjà passé')) return 'هذا الموعد قد مضى.';
+    if (m.includes('pris') || m.includes('réservé')) return 'هذا الموعد حُجز للتوّ.';
+    return reperAr;
+  }
+
   private chargerCreneaux() {
     this.charge.set(true);
     this.annuaire.creneaux(this.medecinId).subscribe({
@@ -417,7 +432,7 @@ export class FicheMedecinComponent implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.creneaux.set([]);
-        this.erreur.set(e.error?.erreur ?? this.l.t('Impossible de charger les créneaux.', 'تعذّر تحميل المواعيد.'));
+        this.erreur.set(this.messageApi(e, 'Impossible de charger les créneaux.', 'تعذّر تحميل المواعيد.'));
         this.charge.set(false);
       },
     });
@@ -444,7 +459,7 @@ export class FicheMedecinComponent implements OnInit {
         if (e.status === 409) {
           this.selection.set(null);
           // L'API renvoie 409 pour plusieurs causes (créneau pris, passé, déjà un rendez-vous avec ce médecin…).
-          this.erreur.set(e.error?.erreur ?? this.l.t("Ce créneau vient d'être pris.", 'هذا الموعد حُجز للتوّ.'));
+          this.erreur.set(this.messageApi(e, "Ce créneau vient d'être pris.", 'هذا الموعد حُجز للتوّ.'));
           this.chargerCreneaux();
         } else if (e.status === 404) {
           // Créneau supprimé par le cabinet entre-temps : on le désélectionne et on recharge la liste.
@@ -456,7 +471,7 @@ export class FicheMedecinComponent implements OnInit {
         } else if (e.status === 403) {
           this.erreur.set(this.l.t('Seul un compte patient peut réserver un créneau.', 'يمكن لحساب المريض فقط حجز موعد.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? this.l.t('La réservation a échoué, veuillez réessayer.', 'فشل الحجز، يرجى المحاولة مرة أخرى.'));
+          this.erreur.set(this.messageApi(e, 'La réservation a échoué, veuillez réessayer.', 'فشل الحجز، يرجى المحاولة مرة أخرى.'));
         }
       },
     });
@@ -488,7 +503,7 @@ export class FicheMedecinComponent implements OnInit {
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreurMessagerie.set(e.error?.erreur ?? this.l.t("L'ouverture de la conversation a échoué, veuillez réessayer.", 'تعذّر فتح المحادثة، يرجى المحاولة مرة أخرى.'));
+          this.erreurMessagerie.set(this.messageApi(e, "L'ouverture de la conversation a échoué, veuillez réessayer.", 'تعذّر فتح المحادثة، يرجى المحاولة مرة أخرى.'));
         }
       },
     });
@@ -522,7 +537,7 @@ export class FicheMedecinComponent implements OnInit {
         } else if (e.status === 404) {
           this.erreurInscription.set(this.l.t('Praticien introuvable.', 'الممارس غير موجود.'));
         } else {
-          this.erreurInscription.set(e.error?.erreur ?? this.l.t("L'inscription a échoué, veuillez réessayer.", 'فشل التسجيل، يرجى المحاولة مرة أخرى.'));
+          this.erreurInscription.set(this.messageApi(e, "L'inscription a échoué, veuillez réessayer.", 'فشل التسجيل، يرجى المحاولة مرة أخرى.'));
         }
       },
     });
