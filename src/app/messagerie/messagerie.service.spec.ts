@@ -12,6 +12,7 @@ const CONVERSATION: Conversation = {
   creeLe: '2026-09-18T10:00:00Z',
   dernierMessageLe: '2026-09-18T10:05:00Z',
   nonLus: 1,
+  fermee: false,
 };
 
 const MESSAGE: Message = {

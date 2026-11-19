@@ -33,6 +33,7 @@ const CONVERSATION: Conversation = {
   creeLe: '2026-09-18T10:00:00Z',
   dernierMessageLe: '2026-09-18T10:00:00Z',
   nonLus: 0,
+  fermee: false,
 };
 
 const INSCRIPTION: InscriptionAttente = { id: 'i1', patientId: 'p1', medecinId: 'm1', inscritLe: '2026-09-18T10:00:00Z' };

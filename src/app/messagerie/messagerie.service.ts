@@ -18,6 +18,8 @@ export interface Conversation {
   creeLe: string;
   dernierMessageLe: string;
   nonLus: number;
+  /** Vrai quand le medecin a ferme la conversation : plus aucun message ne peut y etre envoye (409). */
+  fermee: boolean;
 }
 
 /** Message d'une conversation ; luLe vaut null tant que l'autre participant ne l'a pas lu. */

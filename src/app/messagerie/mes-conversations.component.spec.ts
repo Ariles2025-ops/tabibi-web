@@ -24,6 +24,7 @@ const RECENTE: Conversation = {
   creeLe: '2026-09-18T10:00:00Z',
   dernierMessageLe: '2026-09-18T10:05:00Z',
   nonLus: 2,
+  fermee: false,
 };
 
 const ANCIENNE: Conversation = {
@@ -33,6 +34,7 @@ const ANCIENNE: Conversation = {
   creeLe: '2026-09-10T10:00:00Z',
   dernierMessageLe: '2026-09-10T10:00:00Z',
   nonLus: 0,
+  fermee: false,
 };
 
 const MEDECIN: Medecin = {
