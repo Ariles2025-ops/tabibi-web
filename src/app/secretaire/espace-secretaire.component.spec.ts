@@ -396,6 +396,18 @@ describe('EspaceSecretaireComponent', () => {
       expect(texte()).toContain('تم إعلام المريض.');
     });
 
+    it("ouvre le panneau « Deplacer » en arabe (pas de francais)", async () => {
+      service.agenda.and.returnValue(of([FUTUR]));
+      await afficher();
+      bouton('نقل')!.click();
+      await afficher();
+      const panneau: HTMLElement = fixture.nativeElement.querySelector('app-deplacer-rendez-vous');
+      expect(panneau).not.toBeNull();
+      expect(panneau.textContent).toContain('اختر موعدًا جديدًا');
+      expect(panneau.textContent).not.toContain('Choisissez');
+      expect(panneau.querySelector('[role="group"]')!.getAttribute('aria-label')).toBe('نقل الموعد');
+    });
+
     it("refuse en arabe un compte qui n'est pas secretaire (403)", async () => {
       service.mesMedecins.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
       await afficher();

@@ -104,7 +104,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
                   {{ l.t('Annuler', 'إلغاء') }}
                 </button>
               </div>
-              <app-deplacer-rendez-vous *ngIf="aDeplacer() === r.id" [rendezVous]="r" [lister]="listerCreneaux" [deplacer]="deplacerFn"
+              <app-deplacer-rendez-vous *ngIf="aDeplacer() === r.id" [rendezVous]="r" [arabe]="l.ar()" [lister]="listerCreneaux" [deplacer]="deplacerFn"
                 (deplace)="apresDeplacement($event)" (annule)="aDeplacer.set(null)" />
             </li>
           </ul>
