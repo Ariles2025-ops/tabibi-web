@@ -127,6 +127,8 @@ describe('AppComponent', () => {
     expect(texte).toContain('آرائي');
     expect(texte).toContain('قوائم الانتظار');
     expect(texte).toContain('دعوات العيادات');
+    expect(texte).toContain('داويني');
+    expect(texte).not.toContain('Dawini');
     expect(texte).toContain('مركز المساعدة');
     expect(texte).toContain('حسابي');
     expect(texte).toContain('الإشعارات');
@@ -185,5 +187,34 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.querySelector('a[href="/secretaire"]')).not.toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
     expect(texteNav()).not.toContain('Administration');
+  });
+
+  it('menu médecin en arabe quand la langue des écrans privés est l\'arabe (comme les écrans eux-mêmes)', async () => {
+    connecte = true;
+    estMedecin.set(true);
+    TestBed.inject(LangueService).ar.set(true);
+    await afficher();
+
+    const texte = texteNav();
+    for (const ar of ['فضاء الطبيب', 'المواعيد', 'الأوقات المتاحة', 'وصفاتي التي حررتها', 'الاستشارات عن بُعد', 'الرسائل', 'آراء المرضى', 'قائمة الانتظار', 'سكرتيراتي']) {
+      expect(texte).toContain(ar);
+    }
+    for (const fr of ['Espace médecin', 'Disponibilités', 'Mes ordonnances rédigées', 'Avis des patients', 'Mes secrétaires', 'Messagerie']) {
+      expect(texte).not.toContain(fr);
+    }
+  });
+
+  it('menu secrétaire en arabe : aucun libellé français restant', async () => {
+    connecte = true;
+    estSecretaire.set(true);
+    TestBed.inject(LangueService).ar.set(true);
+    await afficher();
+
+    const texte = texteNav();
+    expect(texte).toContain('فضاء السكرتارية');
+    expect(texte).toContain('مواعيد العيادة');
+    expect(texte).not.toContain('Espace secrétaire');
+    expect(texte).not.toContain('Agenda du cabinet');
+    expect(texte).not.toContain('Invitations de cabinet');
   });
 });
