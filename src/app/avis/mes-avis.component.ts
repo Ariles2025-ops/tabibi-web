@@ -1,3 +1,4 @@
+import { libelleStatutGeneriqueAr } from '../partage/statut-generique';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -94,7 +95,7 @@ export class MesAvisComponent implements OnInit {
     if (brut === 'SIGNALE') return this.l.t('En cours de vérification', 'قيد التحقق');
     if (brut === 'MASQUE') return this.l.t('Masqué par la modération', 'أخفته الإدارة');
     if (brut === 'PUBLIE') return this.l.t('Publié', 'منشور');
-    return libelleStatutAvis(statut);
+    return this.l.ar() ? libelleStatutGeneriqueAr(statut) : libelleStatutAvis(statut);
   }
 
   /** Recupere (une seule fois par praticien) le nom des medecins notes. */

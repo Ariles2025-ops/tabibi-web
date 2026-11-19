@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
 import { wilayaParCode } from '../seo/referentiel-seo';
-import { libelleStatutGenerique } from '../partage/statut-generique';
+import { libelleStatutGenerique, libelleStatutGeneriqueAr } from '../partage/statut-generique';
 
 /**
  * Besoin de medicament publie par un patient (Dawini). `patientId` vaut null dans la vue remise aux pharmacies ;
@@ -70,7 +70,7 @@ const LIBELLES_STATUT_BESOIN_AR: Partial<Record<string, string>> = {
 export function libelleStatutBesoin(statut: string | null | undefined, arabe = false): string {
   if (!statut) return '';
   const cle = statut.trim().toUpperCase();
-  return (arabe ? LIBELLES_STATUT_BESOIN_AR[cle] : undefined) ?? LIBELLES_STATUT_BESOIN[cle] ?? libelleStatutGenerique(statut);
+  return arabe ? (LIBELLES_STATUT_BESOIN_AR[cle] ?? libelleStatutGeneriqueAr(statut)) : (LIBELLES_STATUT_BESOIN[cle] ?? libelleStatutGenerique(statut));
 }
 
 /** « 850 DA », « 1 250 DA » (milliers separes par une espace) ; chaine vide si le prix n'est pas renseigne. */
