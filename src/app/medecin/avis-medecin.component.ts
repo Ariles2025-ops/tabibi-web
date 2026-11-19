@@ -107,6 +107,12 @@ export class AvisMedecinComponent implements OnInit {
   }
 
   signaler(a: AvisPublic) {
+    // Confirmation avant l'envoi, comme dans l'appli (« Signaler cet avis ? »).
+    const message = this.l.t(
+      "Signaler cet avis ? Il reste visible jusqu'à la décision de l'équipe Ndawik.",
+      'الإبلاغ عن هذا الرأي؟ يبقى ظاهرًا حتى قرار فريق نداويك.',
+    );
+    if (!window.confirm(message)) return;
     this.enCours.set(a.id);
     this.succes.set('');
     this.erreur.set('');

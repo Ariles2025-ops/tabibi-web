@@ -26,10 +26,12 @@ describe('AvisMedecinComponent', () => {
   let fixture: ComponentFixture<AvisMedecinComponent>;
   let service: jasmine.SpyObj<AvisService>;
   let profil: Moi | null;
+  let confirmation: jasmine.Spy;
 
   beforeEach(() => {
     localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
+    confirmation = spyOn(window, 'confirm').and.returnValue(true); // « Signaler cet avis ? » accepte par defaut
     profil = { sujet: MEDECIN_ID, nom: 'medecin.demo', roles: ['MEDECIN'] };
     service = jasmine.createSpyObj<AvisService>('AvisService', ['synthese', 'signaler']);
     service.synthese.and.returnValue(of(SYNTHESE));
@@ -81,6 +83,7 @@ describe('AvisMedecinComponent', () => {
     boutonsSignaler()[0].click();
     await afficher();
 
+    expect(confirmation).toHaveBeenCalledWith(jasmine.stringContaining('Signaler cet avis ?'));
     expect(service.signaler).toHaveBeenCalledWith('a1');
     expect(texte()).toContain("Avis signalé : il reste visible jusqu'à la décision de l'équipe Ndawik.");
     expect(texte()).not.toContain('retiré');
@@ -89,6 +92,18 @@ describe('AvisMedecinComponent', () => {
     expect(items[0].textContent).toContain('Signalé');
     expect(items[0].querySelector('button')).toBeNull();
     expect(boutonsSignaler().length).toBe(1);
+  });
+
+  it('ne signale rien si le médecin refuse la confirmation', async () => {
+    confirmation.and.returnValue(false);
+    await afficher();
+
+    boutonsSignaler()[0].click();
+    await afficher();
+
+    expect(service.signaler).not.toHaveBeenCalled();
+    expect(boutonsSignaler().length).toBe(2);
+    expect(texte()).not.toContain('Avis signalé');
   });
 
   it('affiche le motif { erreur } d un 409 (deja signale) et marque l avis « Signalé »', async () => {
@@ -136,6 +151,9 @@ describe('AvisMedecinComponent', () => {
     expect(boutonsSignaler().some((b) => b.textContent?.trim() === 'إبلاغ')).toBeTrue();
     expect(texte()).not.toContain('Signaler');
     expect(texte()).not.toContain('Avis des patients');
+
+    boutonsSignaler()[0].click();
+    expect(confirmation).toHaveBeenCalledWith('الإبلاغ عن هذا الرأي؟ يبقى ظاهرًا حتى قرار فريق نداويك.');
     expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
   });
 });
