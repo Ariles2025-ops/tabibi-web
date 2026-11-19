@@ -412,7 +412,9 @@ export class FicheMedecinComponent implements OnInit {
   private messageApi(e: HttpErrorResponse, reperFr: string, reperAr: string): string {
     const api: string | undefined = e.error?.erreur;
     if (!this.l.ar()) return api ?? reperFr;
+    // Les 409 arrivent déjà traduits par l'intercepteur d'erreurs (erreur-api.interceptor) ; le reste garde le repli.
     const m = (api ?? '').toLowerCase();
+    if (/[\u0600-\u06FF]/.test(m)) return api!;
     if (m.includes('rendez-vous à venir')) return 'لديك بالفعل موعد قادم مع هذا الطبيب: ألغِه لاختيار موعد آخر.';
     if (m.includes('chevauche')) return 'هذا الموعد يتداخل مع موعد آخر لديك.';
     if (m.includes('déjà passé')) return 'هذا الموعد قد مضى.';
