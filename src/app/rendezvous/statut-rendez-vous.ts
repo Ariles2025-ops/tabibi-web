@@ -1,4 +1,4 @@
-import { libelleStatutGenerique } from '../partage/statut-generique';
+import { libelleStatutGenerique, libelleStatutGeneriqueAr } from '../partage/statut-generique';
 
 /**
  * Libelles francais des statuts de rendez-vous, identiques a ceux de l'appli mobile (libelles.dart) :
@@ -40,5 +40,5 @@ const LIBELLES_STATUT_RENDEZ_VOUS_AR: Partial<Record<string, string>> = {
 /** Libelle arabe d'un statut de rendez-vous ; un statut sans traduction retombe sur le libelle francais. */
 export function libelleStatutRendezVousAr(statut: string): string {
   const brut = (statut ?? '').trim().toUpperCase();
-  return LIBELLES_STATUT_RENDEZ_VOUS_AR[brut] ?? libelleStatutRendezVous(brut);
+  return LIBELLES_STATUT_RENDEZ_VOUS_AR[brut] ?? libelleStatutGeneriqueAr(brut);
 }

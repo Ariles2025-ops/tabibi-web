@@ -1,4 +1,4 @@
-import { libelleStatutGenerique } from '../partage/statut-generique';
+import { libelleStatutGenerique, libelleStatutGeneriqueAr } from '../partage/statut-generique';
 
 /** Libelles francais des statuts d'ordonnance connus ; un statut inconnu est affiche tel quel. */
 const LIBELLES_STATUT_ORDONNANCE: Partial<Record<string, string>> = {
@@ -23,5 +23,5 @@ const LIBELLES_STATUT_ORDONNANCE_AR: Partial<Record<string, string>> = {
 
 export function libelleStatutOrdonnanceAr(statut: string | null | undefined): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_ORDONNANCE_AR[statut.trim().toUpperCase()] ?? libelleStatutOrdonnance(statut);
+  return LIBELLES_STATUT_ORDONNANCE_AR[statut.trim().toUpperCase()] ?? libelleStatutGeneriqueAr(statut);
 }

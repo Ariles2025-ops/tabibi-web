@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ConfigService } from '../config/config.service';
-import { libelleStatutGenerique } from '../partage/statut-generique';
+import { libelleStatutGenerique, libelleStatutGeneriqueAr } from '../partage/statut-generique';
 
 /** Candidature d'un medecin a figurer dans l'annuaire, telle que renvoyee par l'API (au medecin comme a l'administrateur). */
 export interface Candidature {
@@ -94,7 +94,7 @@ const LIBELLES_STATUT_CANDIDATURE_AR: Partial<Record<string, string>> = {
 
 export function libelleStatutCandidatureAr(statut: string | null | undefined): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_CANDIDATURE_AR[statut] ?? libelleStatutGenerique(statut);
+  return LIBELLES_STATUT_CANDIDATURE_AR[statut] ?? libelleStatutGeneriqueAr(statut);
 }
 
 /** « 0 rappel envoyé », « 1 rappel envoyé », « 3 rappels envoyés ». */
