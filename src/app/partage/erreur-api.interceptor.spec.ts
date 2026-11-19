@@ -55,6 +55,26 @@ describe('erreurApiInterceptor', () => {
     expect(erreur('/api/b', { erreur: 'Non' }, { status: 401, statusText: 'U' }).status).toBe(401);
   });
 
+  describe('409 en arabe (comme traduireErreurServeur de l’appli)', () => {
+    beforeEach(() => langue.ar.set(true));
+
+    it('créneau pris, passé ou indisponible : texte arabe précis', () => {
+      expect(erreur('/api/a', { erreur: 'Ce créneau vient d\'être pris.' }, { status: 409, statusText: 'C' }).error.erreur).toBe('هذا الموعد حُجز للتوّ.');
+      expect(erreur('/api/b', { erreur: 'Ce créneau est déjà passé.' }, { status: 409, statusText: 'C' }).error.erreur).toBe('هذا الموعد قد مضى بالفعل.');
+      expect(erreur('/api/c', { erreur: 'Créneau indisponible.' }, { status: 409, statusText: 'C' }).error.erreur).toBe('هذا الموعد لم يعد متاحًا.');
+    });
+
+    it('autre 409 : texte générique arabe, jamais le français', () => {
+      expect(erreur('/api/d', { erreur: 'Avis déjà signalé.' }, { status: 409, statusText: 'C' }).error.erreur).toBe('تعذّر الإجراء: تغيّر الوضع في الأثناء');
+    });
+
+    it('409 sans message, 400 et message déjà en arabe : inchangés', () => {
+      expect(erreur('/api/e', null, { status: 409, statusText: 'C' }).error).toBeNull();
+      expect(erreur('/api/f', { erreur: 'Créneaux qui se chevauchent' }, { status: 400, statusText: 'B' }).error.erreur).toBe('Créneaux qui se chevauchent');
+      expect(erreur('/api/g', { erreur: 'موعد' }, { status: 409, statusText: 'C' }).error.erreur).toBe('موعد');
+    });
+  });
+
   it('ne touche pas aux appels hors /api/', () => {
     const e = erreur('/assets/config.json', null, { status: 500, statusText: 'KO' });
     expect(e.error).toBeNull();
