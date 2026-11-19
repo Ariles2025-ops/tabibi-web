@@ -215,7 +215,7 @@ export class EspaceSecretaireComponent implements OnInit {
   }
 
   nom(patientId: string): string {
-    return nomPatient(this.repertoire(), patientId);
+    return nomPatient(this.repertoire(), patientId, this.l.ar());
   }
 
   telephone(patientId: string): string {

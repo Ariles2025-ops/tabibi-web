@@ -27,6 +27,7 @@ describe('PatientsService', () => {
     expect(nomPatient(recu!, 'p1')).toBe('Yasmine Benali');
     expect(telephonePatient(recu!, 'p1')).toBe('0550123456');
     expect(nomPatient(recu!, 'inconnu')).toBe('Patient');
+    expect(nomPatient(recu!, 'inconnu', true)).toBe('مريض');
     expect(telephonePatient(recu!, 'inconnu')).toBe('');
   });
 
