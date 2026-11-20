@@ -86,9 +86,9 @@ describe('AdminService', () => {
 
     const requete = http.expectOne(`${BASE}/api/admin/statistiques`);
     expect(requete.request.method).toBe('GET');
-    requete.flush({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1 });
+    requete.flush({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1, avisSignales: 3 });
 
-    expect(recu).toEqual({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1 });
+    expect(recu).toEqual({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1, avisSignales: 3 });
   });
 
   it('execute les rappels par POST /api/admin/rappels/executer sans corps et renvoie le nombre', () => {

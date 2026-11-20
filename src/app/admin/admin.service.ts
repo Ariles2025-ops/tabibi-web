@@ -71,6 +71,8 @@ export interface StatistiquesAdministration {
   candidaturesEnAttente: number;
   candidaturesValidees: number;
   candidaturesRefusees: number;
+  /** Nombre d'avis signalés en attente de modération. */
+  avisSignales: number;
 }
 
 /** Libelles francais des statuts de candidature connus ; un statut inconnu est affiche tel quel. */
