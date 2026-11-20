@@ -108,9 +108,11 @@ export class MoiComponent implements OnInit {
         notifications,
       ];
     }
-    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, candidature, profil, notifications];
-    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, candidature, profil, notifications];
-    if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: t('Administration', 'الإدارة') }, profil, notifications];
+    // Comme « Messagerie » de « Mon compte » dans l'appli, ouverte à tous les rôles.
+    const messagerie = { lien: '/messagerie', libelle: t('Messagerie', 'الرسائل') };
+    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, messagerie, candidature, profil, notifications];
+    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, messagerie, candidature, profil, notifications];
+    if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: t('Administration', 'الإدارة') }, messagerie, profil, notifications];
     return [profil, { lien: '/mes-rendez-vous', libelle: t('Mes rendez-vous', 'مواعيدي') }, invitations, candidature, notifications];
   });
 

@@ -55,11 +55,13 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
             <div class="side__grouptitle">{{ l.t('Espace secrétaire', 'فضاء السكرتارية') }}</div>
             <a routerLink="/secretaire" routerLinkActive="actif">{{ l.t('Agenda du cabinet', 'مواعيد العيادة') }}</a>
             <a routerLink="/invitations" routerLinkActive="actif">{{ l.t('Invitations de cabinet', 'دعوات العيادات') }}</a>
+            <a routerLink="/messagerie" routerLinkActive="actif">{{ l.t('Messagerie', 'الرسائل') }}</a>
           </div>
 
           <div *ngIf="estPharmacie()" class="side__group">
             <div class="side__grouptitle">{{ l.t('Espace pharmacie', 'فضاء الصيدلية') }}</div>
             <a routerLink="/pharmacie" routerLinkActive="actif">{{ l.t('Demandes de médicaments', 'طلبات الأدوية') }}</a>
+            <a routerLink="/messagerie" routerLinkActive="actif">{{ l.t('Messagerie', 'الرسائل') }}</a>
           </div>
 
           <div *ngIf="estAdmin()" class="side__group">
@@ -68,6 +70,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
             <a routerLink="/admin/candidatures" routerLinkActive="actif">Candidatures</a>
             <a routerLink="/admin/demandes" routerLinkActive="actif">Demandes praticien</a>
             <a routerLink="/admin/avis" routerLinkActive="actif">Modération des avis</a>
+            <a routerLink="/messagerie" routerLinkActive="actif">{{ l.t('Messagerie', 'الرسائل') }}</a>
           </div>
 
           <div class="side__account">
