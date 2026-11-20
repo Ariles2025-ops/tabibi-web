@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
-import { inscriptionFermee } from '../lancement';
+import { VISIO_ACTIVE, inscriptionFermee } from '../lancement';
 import { RoleService } from '../auth/role.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
@@ -18,7 +18,7 @@ const LIBELLES_ROLES: Partial<Record<string, [string, string]>> = {
   ADMIN: ['Administrateur', 'مسؤول'],
 };
 
-interface Raccourci { lien: string; libelle: string; }
+interface Raccourci { lien: string; libelle: string; badge?: string; }
 
 /**
  * Mon compte : utilisateur connecte, role en francais, acces rapides selon le role, deconnexion et suppression
@@ -43,7 +43,7 @@ interface Raccourci { lien: string; libelle: string; }
         <ng-template #sansNom><p>{{ l.t('Vous êtes connecté(e).', 'أنت متصل.') }}</p></ng-template>
         <p *ngIf="rolesAffiches().length">{{ rolesAffiches().length > 1 ? l.t('Rôles', 'الأدوار') : l.t('Rôle', 'الدور') }} : {{ rolesAffiches().join(l.ar() ? '، ' : ', ') }}</p>
         <nav [attr.aria-label]="l.t('Accès rapides', 'وصول سريع')" style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0">
-          <a *ngFor="let r of raccourcis(); let premier = first" [class.bouton]="premier" [class.bouton-secondaire]="!premier" [routerLink]="r.lien">{{ r.libelle }}</a>
+          <a *ngFor="let r of raccourcis(); let premier = first" [class.bouton]="premier" [class.bouton-secondaire]="!premier" [routerLink]="r.lien">{{ r.libelle }}<span *ngIf="r.badge" class="pastille-bientot">{{ r.badge }}</span></a>
         </nav>
         <p style="display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="bouton-secondaire" (click)="seDeconnecter()">{{ l.t('Se déconnecter', 'تسجيل الخروج') }}</button>
@@ -104,6 +104,12 @@ export class MoiComponent implements OnInit {
     const messagerie = { lien: '/messagerie', libelle: t('Messagerie', 'الرسائل') };
     // Comme « Vérifier une ordonnance » de « Mon compte » dans l'appli, ouvert à tous les rôles.
     const verifier = { lien: '/verifier', libelle: t('Vérifier une ordonnance', 'التحقق من وصفة طبية') };
+    // Comme « Téléconsultation » de « Mon compte » dans l'appli : toujours visible, avec « Bientôt » tant que la visio n'est pas ouverte.
+    const visio = {
+      lien: r.includes('MEDECIN') ? '/medecin/teleconsultations' : '/teleconsultations',
+      libelle: VISIO_ACTIVE ? t('Téléconsultations', 'الاستشارات عن بُعد') : t('Téléconsultation', 'الاستشارة عن بُعد'),
+      badge: VISIO_ACTIVE ? undefined : t('Bientôt', 'قريبًا'),
+    };
     if (r.includes('MEDECIN')) {
       return [
         { lien: '/medecin/agenda', libelle: t('Mon agenda', 'المواعيد') },
@@ -114,20 +120,22 @@ export class MoiComponent implements OnInit {
         { lien: '/medecin/avis', libelle: t('Avis des patients', 'آراء المرضى') },
         { lien: '/medecin/secretaires', libelle: t('Mes secrétaires', 'سكرتيراتي') },
         messagerie,
+        visio,
         verifier,
         profil,
         notifications,
       ];
     }
-    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, messagerie, verifier, candidature, profil, notifications];
-    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, messagerie, verifier, candidature, profil, notifications];
-    if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: t('Administration', 'الإدارة') }, messagerie, verifier, profil, notifications];
+    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, messagerie, visio, verifier, candidature, profil, notifications];
+    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, messagerie, visio, verifier, candidature, profil, notifications];
+    if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: t('Administration', 'الإدارة') }, messagerie, visio, verifier, profil, notifications];
     // Patient : « Mon activité » et « Services » de « Mon compte » de l'appli (messagerie, avis, listes d'attente, Dawini).
     return [
       profil,
       { lien: '/mes-rendez-vous', libelle: t('Mes rendez-vous', 'مواعيدي') },
       { lien: '/mes-ordonnances', libelle: t('Mes ordonnances', 'وصفاتي الطبية') },
       messagerie,
+      visio,
       { lien: '/mes-avis', libelle: t('Mes avis', 'آرائي') },
       { lien: '/liste-attente', libelle: t("Mes listes d'attente", 'قوائم الانتظار') },
       { lien: '/dawini', libelle: t('Dawini', 'داويني') },
