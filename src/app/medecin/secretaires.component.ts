@@ -7,6 +7,7 @@ import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { abregerIdentifiant } from '../messagerie/messagerie.service';
 import { Rattachement } from '../secretaire/secretaire.service';
+import { instantLisible, trierParDateAncienneDabord } from '../partage/dates-lisibles';
 
 /** Forme minimale d'une adresse e-mail (le serveur verifie qu'un compte l'utilise). */
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -56,10 +57,11 @@ import { MedecinService } from './medecin.service';
           <div>
             <strong style="color:var(--ink)">{{ nom(r) }}</strong>
             <span *ngIf="r.secretaireNom && r.secretaireEmail" dir="ltr" style="color:var(--text3)"> · {{ r.secretaireEmail }}</span><br>
-            <span *ngIf="r.accepte !== false" style="color:var(--text3);font-size:.9rem">{{ l.t('Rattachée le', 'انضمت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ r.creeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span></span>
+            <span *ngIf="r.accepte !== false && dateLisible(r.creeLe)" class="date-rattachement" style="color:var(--text3);font-size:.9rem">{{ l.t('Rattachée le', 'انضمت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ r.creeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span></span>
             <span *ngIf="r.accepte === false" style="color:#8a5a00;font-size:.9rem">
               <strong style="background:#fff5d6;border-radius:999px;padding:2px 8px">{{ l.t('En attente', 'قيد الانتظار') }}</strong>
-              {{ l.t('Invitée le', 'دُعيت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ r.creeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span>{{ l.t(', pas encore acceptée', '، ولم تقبل بعد') }}
+              <ng-container *ngIf="dateLisible(r.creeLe); else sansDate">{{ l.t('Invitée le', 'دُعيت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ r.creeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span>{{ l.t(', pas encore acceptée', '، ولم تقبل بعد') }}</ng-container>
+              <ng-template #sansDate>{{ l.t('Pas encore acceptée', 'لم تُقبل بعد') }}</ng-template>
             </span>
           </div>
           <div *ngIf="aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -97,6 +99,9 @@ export class SecretairesComponent implements OnInit {
   erreurFormulaire = signal('');
   erreur = signal('');
 
+  /** Vrai si la date est lisible (sinon elle n'est pas affichee, comme dans l'appli). */
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
+
   ngOnInit() {
     this.charger();
   }
@@ -106,7 +111,7 @@ export class SecretairesComponent implements OnInit {
     this.erreur.set('');
     this.service.secretaires().subscribe({
       next: (liste) => {
-        this.rattachements.set([...liste].sort((a, b) => Date.parse(a.creeLe) - Date.parse(b.creeLe)));
+        this.rattachements.set(trierParDateAncienneDabord(liste, (r) => r.creeLe));
         this.charge.set(false);
       },
       error: (e: HttpErrorResponse) => {

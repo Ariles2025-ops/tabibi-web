@@ -83,6 +83,20 @@ describe('InvitationsComponent', () => {
       expect(el.textContent).toContain('Aucune invitation en attente.');
     });
 
+    it('une date d\'invitation absente ou illisible n\'est pas affichee (ni vide, ni erreur), comme dans l\'appli', async () => {
+      const { fixture } = creer(false, [
+        { id: 'i1', medecinId: 'm1', creeLe: '2026-09-18T10:00:00Z' } as Invitation,
+        { id: 'i2', medecinId: 'm2', creeLe: 'pas-une-date' } as Invitation,
+        { id: 'i3', medecinId: 'm3' } as Invitation,
+      ]);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const dates = (fixture.nativeElement as HTMLElement).querySelectorAll('.date-invitation');
+      expect(dates.length).toBe(1);
+      expect(fixture.nativeElement.textContent).not.toContain('Invalid');
+    });
+
     it('en arabe : refuser affiche la confirmation en arabe', async () => {
       const { fixture } = creer(true);
       fixture.detectChanges();
