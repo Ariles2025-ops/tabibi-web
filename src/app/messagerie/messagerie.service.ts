@@ -37,6 +37,29 @@ export function abregerIdentifiant(id: string): string {
   return id.length > 8 ? id.slice(0, 8) : id;
 }
 
+/** Instant (ms) de la derniere activite d'une conversation : dernier message, sinon ouverture ; null si aucune date lisible. */
+export function derniereActivite(c: Pick<Conversation, 'creeLe' | 'dernierMessageLe'>): number | null {
+  for (const iso of [c.dernierMessageLe, c.creeLe]) {
+    const instant = iso ? Date.parse(iso) : NaN;
+    if (!Number.isNaN(instant)) return instant;
+  }
+  return null;
+}
+
+/**
+ * Copie triee de la plus recente a la plus ancienne activite, comme `trierParActivite` de l'appli (messagerie.dart) :
+ * une date absente retombe sur la date d'ouverture, les conversations sans aucune date vont en fin de liste.
+ */
+export function trierParActivite(conversations: Conversation[]): Conversation[] {
+  return [...conversations].sort((a, b) => {
+    const da = derniereActivite(a);
+    const db = derniereActivite(b);
+    if (da === null) return db === null ? 0 : 1;
+    if (db === null) return -1;
+    return db - da;
+  });
+}
+
 /**
  * Messagerie patient-medecin : ouverture d'une conversation par le patient (apres un rendez-vous), liste
  * des conversations, lecture (qui marque lus les messages recus) et envoi (JWT via l'intercepteur ;
