@@ -20,3 +20,14 @@ export function trierParDateRecenteDabord<T>(elements: T[], date: (e: T) => stri
     return db - da;
   });
 }
+
+/** Copie triee de la plus ancienne a la plus recente ; les dates absentes ou illisibles vont aussi en fin de liste. */
+export function trierParDateAncienneDabord<T>(elements: T[], date: (e: T) => string | null | undefined): T[] {
+  return [...elements].sort((a, b) => {
+    const da = instantLisible(date(a));
+    const db = instantLisible(date(b));
+    if (da === null) return db === null ? 0 : 1;
+    if (db === null) return -1;
+    return da - db;
+  });
+}

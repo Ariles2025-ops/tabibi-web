@@ -1,4 +1,4 @@
-import { instantLisible, trierParDateRecenteDabord } from './dates-lisibles';
+import { instantLisible, trierParDateAncienneDabord, trierParDateRecenteDabord } from './dates-lisibles';
 
 describe('dates-lisibles', () => {
   it('instantLisible : null si absente ou illisible', () => {
@@ -17,5 +17,15 @@ describe('dates-lisibles', () => {
       { id: 'recent', d: '2026-06-01T00:00:00Z' },
     ];
     expect(trierParDateRecenteDabord(liste, (e) => e.d).map((e) => e.id)).toEqual(['recent', 'ancien', 'sans', 'illisible']);
+  });
+
+  it('trie du plus ancien au plus recent, dates inconnues en fin de liste', () => {
+    const liste = [
+      { id: 'sans', d: null as string | null },
+      { id: 'recent', d: '2026-06-01T00:00:00Z' },
+      { id: 'illisible', d: 'xx' },
+      { id: 'ancien', d: '2026-01-01T00:00:00Z' },
+    ];
+    expect(trierParDateAncienneDabord(liste, (e) => e.d).map((e) => e.id)).toEqual(['ancien', 'recent', 'sans', 'illisible']);
   });
 });

@@ -109,6 +109,39 @@ describe('MesDemandesComponent', () => {
     expect(items[1].textContent).toContain('1 réponse');
   });
 
+  it('une demande sans date lisible affiche « date inconnue » et passe en fin de liste, sans erreur (comme l\'appli)', async () => {
+    service.mesBesoins.and.returnValue(of([
+      { ...OUVERTE, id: 'b3', medicament: 'Sans date', publieLe: 'pas une date' },
+      CLOTUREE,
+      OUVERTE,
+    ]));
+    await afficher();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.map((li) => li.textContent)).toEqual([
+      jasmine.stringContaining('Amoxicilline 1 g'),
+      jasmine.stringContaining('Insuline'),
+      jasmine.stringContaining('Sans date'),
+    ]);
+    expect(items[2].textContent).toContain('date inconnue');
+    expect(items[2].textContent).not.toContain('publiée le');
+    expect(items[0].textContent).toContain('publiée le');
+  });
+
+  it('en arabe, une demande sans date affiche « تاريخ غير معروف »', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      service.mesBesoins.and.returnValue(of([{ ...OUVERTE, publieLe: null as unknown as string }]));
+      await afficher();
+
+      expect(texte()).toContain('تاريخ غير معروف');
+      expect(texte()).not.toContain('date inconnue');
+      expect(texte()).not.toContain('نُشر في');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
+  });
+
   it('propose les wilayas du referentiel et preselectionne celle du profil du patient', async () => {
     profils.monProfil.and.returnValue(of({ wilayaCode: '9' } as Profil));
     await afficher();

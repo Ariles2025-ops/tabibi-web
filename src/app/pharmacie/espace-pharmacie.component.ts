@@ -7,6 +7,7 @@ import { AuthService } from '../auth/auth.service';
 import { Besoin, DawiniService, DemandeReponse, libelleReponses, libelleWilaya } from '../dawini/dawini.service';
 import { Profil, ProfilService } from '../moi/profil.service';
 import { OrdonnanceService, Verification } from '../ordonnances/ordonnance.service';
+import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { wilayaParCode } from '../seo/referentiel-seo';
@@ -94,8 +95,11 @@ function formulaireVide(): FormulaireReponse {
           <strong>{{ b.medicament }}</strong>
           <span style="color:var(--text3)">
             · {{ wilaya(b.wilayaCode) }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
-            <ng-container *ngIf="!l.ar()">· publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}</ng-container>
-            <ng-container *ngIf="l.ar()">· نُشر في <span dir="ltr">{{ b.publieLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container>
+            <ng-container *ngIf="dateLisible(b.publieLe); else dateInconnue">
+              <ng-container *ngIf="!l.ar()">· publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}</ng-container>
+              <ng-container *ngIf="l.ar()">· نُشر في <span dir="ltr">{{ b.publieLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container>
+            </ng-container>
+            <ng-template #dateInconnue>· {{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-template>
             · {{ libelleReponses(b.nombreReponses) }}
           </span>
           <p *ngIf="b.precision" style="margin:6px 0 0">{{ b.precision }}</p>
@@ -180,6 +184,7 @@ export class EspacePharmacieComponent implements OnInit {
   /** Nom de la wilaya (referentiel) plutot que son code. */
   wilaya = (code: string | null | undefined): string => libelleWilaya(code, this.l.ar());
   l = inject(LangueService);
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
   private auth = inject(AuthService);
   private service = inject(DawiniService);
   private http = inject(HttpClient);
@@ -348,7 +353,7 @@ export class EspacePharmacieComponent implements OnInit {
     this.service.besoinsOuverts(wilaya).subscribe({
       next: (liste) => {
         // Les plus recentes d'abord ; un formulaire vierge par demande nouvelle.
-        this.besoins.set([...liste].sort((a, b) => Date.parse(b.publieLe) - Date.parse(a.publieLe)));
+        this.besoins.set(trierParDateRecenteDabord(liste, (b) => b.publieLe));
         for (const b of liste) this.formulaires[b.id] ??= formulaireVide();
         this.charge.set(false);
       },
