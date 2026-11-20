@@ -68,6 +68,8 @@ describe('MoiComponent', () => {
     expect(lien('/mes-rendez-vous')).not.toBeNull();
     expect(lien('/notifications')).not.toBeNull();
     expect(lien('/invitations')).not.toBeNull();
+    expect(texte()).toContain('Ma candidature de médecin');
+    expect(lien('/medecin/candidature')).not.toBeNull();
   });
 
   it('sans nom dans le profil, n affiche ni « en tant que » vide ni null', async () => {
@@ -90,6 +92,7 @@ describe('MoiComponent', () => {
     await afficher();
     expect(lien('/medecin/agenda')).not.toBeNull();
     expect(lien('/mes-rendez-vous')).toBeNull();
+    expect(lien('/medecin/candidature')).toBeNull(); // déjà médecin : sa candidature est validée
 
     moi.set({ ...PROFIL, roles: ['PATIENT', 'SECRETAIRE'] });
     await afficher();
@@ -189,6 +192,7 @@ describe('MoiComponent', () => {
       expect(texte()).toContain('الدور : مريض');
       expect(texte()).toContain('ملفي الشخصي');
       expect(texte()).toContain('مواعيدي');
+      expect(texte()).toContain('ترشحي كطبيب');
       expect(texte()).toContain('تسجيل الخروج');
       expect(texte()).toContain('حذف حسابي');
       expect(texte()).not.toContain('Mon compte');

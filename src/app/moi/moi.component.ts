@@ -98,6 +98,8 @@ export class MoiComponent implements OnInit {
     const notifications = { lien: '/notifications', libelle: t('Notifications', 'الإشعارات') };
     // Comme « Mon espace » de l'appli : l'invitation d'un médecin arrive à un compte patient, qui doit pouvoir l'ouvrir.
     const invitations = { lien: '/invitations', libelle: t('Invitations de cabinet', 'دعوات العيادات') };
+    // Comme « Ma candidature de médecin » du profil de l'appli : un compte non médecin peut déposer ou suivre sa candidature.
+    const candidature = { lien: '/medecin/candidature', libelle: t('Ma candidature de médecin', 'ترشحي كطبيب') };
     if (r.includes('MEDECIN')) {
       return [
         { lien: '/medecin/agenda', libelle: t('Mon agenda', 'المواعيد') },
@@ -106,10 +108,10 @@ export class MoiComponent implements OnInit {
         notifications,
       ];
     }
-    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, profil, notifications];
-    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, profil, notifications];
+    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, candidature, profil, notifications];
+    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, candidature, profil, notifications];
     if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: t('Administration', 'الإدارة') }, profil, notifications];
-    return [profil, { lien: '/mes-rendez-vous', libelle: t('Mes rendez-vous', 'مواعيدي') }, invitations, notifications];
+    return [profil, { lien: '/mes-rendez-vous', libelle: t('Mes rendez-vous', 'مواعيدي') }, invitations, candidature, notifications];
   });
 
   /** Seconde etape de la suppression du compte affichee (pas de confirm() du navigateur). */
