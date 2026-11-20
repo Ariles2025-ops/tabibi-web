@@ -7,6 +7,7 @@ import { OrdonnanceService, Verification } from './ordonnance.service';
 import { DOCUMENT } from '@angular/common';
 import { libelleStatutOrdonnance, libelleStatutOrdonnanceAr } from './statut-ordonnance';
 import { poserLangueDocument } from '../seo/page-seo';
+import { instantLisible } from '../partage/dates-lisibles';
 
 /** Page publique : un pharmacien saisit le code imprime sur l'ordonnance pour en verifier l'authenticite. */
 @Component({
@@ -28,8 +29,8 @@ import { poserLangueDocument } from '../seo/page-seo';
       <ng-container *ngIf="resultat() as r">
         <ng-container [ngSwitch]="r.statut">
           <p *ngSwitchCase="'DELIVREE'" class="verif-delivree" style="color:var(--red);font-weight:600">
-            <ng-container *ngIf="!ar">Déjà délivrée<ng-container *ngIf="r.delivreeLe"> le {{ r.delivreeLe | date:'d MMMM yyyy' }}</ng-container> : cette ordonnance ne peut pas être délivrée une nouvelle fois.</ng-container>
-            <ng-container *ngIf="ar">سُلّمت من قبل<ng-container *ngIf="r.delivreeLe"> بتاريخ <span dir="ltr">{{ r.delivreeLe | date:'dd/MM/yyyy' }}</span></ng-container>: لا يمكن تسليم هذه الوصفة مرة أخرى.</ng-container>
+            <ng-container *ngIf="!ar">Déjà délivrée<ng-container *ngIf="dateLisible(r.delivreeLe)"> le {{ r.delivreeLe | date:'d MMMM yyyy' }}</ng-container> : cette ordonnance ne peut pas être délivrée une nouvelle fois.</ng-container>
+            <ng-container *ngIf="ar">سُلّمت من قبل<ng-container *ngIf="dateLisible(r.delivreeLe)"> بتاريخ <span dir="ltr">{{ r.delivreeLe | date:'dd/MM/yyyy' }}</span></ng-container>: لا يمكن تسليم هذه الوصفة مرة أخرى.</ng-container>
           </p>
           <p *ngSwitchCase="'ANNULEE'" class="verif-annulee" style="color:var(--red);font-weight:600">
             {{ t('Annulée : cette ordonnance a été annulée par le médecin et ne doit pas être délivrée.', 'ملغاة: ألغى الطبيب هذه الوصفة ولا يجب تسليمها.') }}
@@ -39,8 +40,8 @@ import { poserLangueDocument } from '../seo/page-seo';
           </p>
           <ng-container *ngSwitchDefault>
             <p *ngIf="r.valide" style="color:var(--vert);font-weight:600">
-              <ng-container *ngIf="!ar">Ordonnance authentique, émise le {{ r.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}<ng-container *ngIf="r.statut"> ({{ libelleStatut(r.statut) }})</ng-container>.</ng-container>
-              <ng-container *ngIf="ar">وصفة أصلية، صدرت بتاريخ <span dir="ltr">{{ r.emiseLe | date:'dd/MM/yyyy HH:mm' }}</span><ng-container *ngIf="r.statut"> ({{ libelleStatut(r.statut) }})</ng-container>.</ng-container>
+              <ng-container *ngIf="!ar">Ordonnance authentique<ng-container *ngIf="dateLisible(r.emiseLe)">, émise le {{ r.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}</ng-container><ng-container *ngIf="r.statut"> ({{ libelleStatut(r.statut) }})</ng-container>.</ng-container>
+              <ng-container *ngIf="ar">وصفة أصلية<ng-container *ngIf="dateLisible(r.emiseLe)">، صدرت بتاريخ <span dir="ltr">{{ r.emiseLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container><ng-container *ngIf="r.statut"> ({{ libelleStatut(r.statut) }})</ng-container>.</ng-container>
             </p>
             <p *ngIf="!r.valide" class="verif-inconnu" style="color:#b3261e;font-weight:600">{{ t('Code inconnu : aucune ordonnance ne correspond à ce code.', 'رمز غير معروف: لا توجد أي وصفة تطابق هذا الرمز.') }}</p>
           </ng-container>
@@ -56,6 +57,7 @@ export class VerifierOrdonnanceComponent implements OnInit {
   /** Version arabe (/ar/verifier) : langue donnee par la route. */
   readonly ar = this.route.snapshot.data['langue'] === 'ar';
   t(fr: string, ar: string): string { return this.ar ? ar : fr; }
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
 
   private document = inject(DOCUMENT);
 

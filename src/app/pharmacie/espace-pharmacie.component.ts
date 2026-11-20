@@ -155,16 +155,19 @@ function formulaireVide(): FormulaireReponse {
         <div *ngIf="verification() as v" class="resultat-verification" style="margin:12px 0 0">
           <ng-container [ngSwitch]="v.statut">
             <p *ngSwitchCase="'DELIVREE'" style="color:var(--red);font-weight:600;margin:0">
-              <ng-container *ngIf="!l.ar()">Déjà délivrée<ng-container *ngIf="v.delivreeLe"> le {{ v.delivreeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container> : ne pas délivrer une nouvelle fois.</ng-container>
-              <ng-container *ngIf="l.ar()">سبق صرفها<ng-container *ngIf="v.delivreeLe"> في <span dir="ltr">{{ v.delivreeLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container> : لا تصرفها مرة أخرى.</ng-container>
+              <ng-container *ngIf="!l.ar()">Déjà délivrée<ng-container *ngIf="dateLisible(v.delivreeLe)"> le {{ v.delivreeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container> : ne pas délivrer une nouvelle fois.</ng-container>
+              <ng-container *ngIf="l.ar()">سبق صرفها<ng-container *ngIf="dateLisible(v.delivreeLe)"> في <span dir="ltr">{{ v.delivreeLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container> : لا تصرفها مرة أخرى.</ng-container>
             </p>
             <p *ngSwitchCase="'ANNULEE'" style="color:var(--red);font-weight:600;margin:0">{{ l.t('Annulée par le médecin : ne pas délivrer.', 'ألغاها الطبيب: لا تصرفها.') }}</p>
             <p *ngSwitchCase="'EXPIREE'" style="color:var(--red);font-weight:600;margin:0">{{ l.t('Expirée : ordonnance plus valable, ne pas délivrer.', 'منتهية الصلاحية: الوصفة لم تعد صالحة، لا تصرفها.') }}</p>
             <ng-container *ngSwitchDefault>
               <ng-container *ngIf="v.valide">
                 <p style="color:var(--green);font-weight:600;margin:0 0 10px">
-                  <ng-container *ngIf="!l.ar()">Ordonnance valide, émise le {{ v.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}.</ng-container>
-                  <ng-container *ngIf="l.ar()">وصفة صالحة، صدرت في <span dir="ltr">{{ v.emiseLe | date:'dd/MM/yyyy HH:mm' }}</span>.</ng-container>
+                  <ng-container *ngIf="dateLisible(v.emiseLe)">
+                    <ng-container *ngIf="!l.ar()">Ordonnance valide, émise le {{ v.emiseLe | date:'EEEE d MMMM yyyy à HH:mm' }}.</ng-container>
+                    <ng-container *ngIf="l.ar()">وصفة صالحة، صدرت في <span dir="ltr">{{ v.emiseLe | date:'dd/MM/yyyy HH:mm' }}</span>.</ng-container>
+                  </ng-container>
+                  <ng-container *ngIf="!dateLisible(v.emiseLe)">{{ l.t('Ordonnance valide.', 'وصفة صالحة.') }}</ng-container>
                 </p>
                 <button type="button" class="bouton" (click)="delivrer()" [disabled]="delivranceEnCours()">
                   {{ delivranceEnCours() ? l.t('Enregistrement…', 'جارٍ الحفظ…') : l.t('Marquer comme délivrée', 'تسجيل الصرف') }}
