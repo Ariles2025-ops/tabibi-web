@@ -187,6 +187,24 @@ describe('SecretairesComponent', () => {
     expect(texte()).toContain('Invitation annulée.');
   });
 
+  it('une date de rattachement absente ou illisible n\'est pas affichee et passe en fin de liste, comme dans l\'appli', async () => {
+    const SANS_DATE = { ...ANCIEN, id: 'ra3', secretaireNom: 'Sans Date', secretaireEmail: 'sd@exemple.dz', creeLe: '' } as Rattachement;
+    const ILLISIBLE = { ...ANCIEN, id: 'ra4', secretaireNom: 'Illisible', secretaireEmail: 'il@exemple.dz', creeLe: 'pas-une-date' } as Rattachement;
+    const EN_ATTENTE = { ...ANCIEN, id: 'ra5', secretaireNom: 'Attente', secretaireEmail: 'at@exemple.dz', creeLe: 'nimporte', accepte: false } as Rattachement;
+    service.secretaires.and.returnValue(of([SANS_DATE, RATTACHEMENT, ILLISIBLE, EN_ATTENTE]));
+    await afficher();
+    const l = lignes();
+    expect(l[0].textContent).toContain('Nadia Saidi');
+    expect(l[0].textContent).toContain('Rattachée le');
+    for (const ligne of l.slice(1)) {
+      expect(ligne.textContent).not.toContain('Rattachée le');
+      expect(ligne.textContent).not.toContain('Invitée le');
+    }
+    expect(l[3].textContent).toContain('Pas encore acceptée');
+    expect(texte()).not.toContain('null');
+    expect(texte()).not.toContain('Invalid');
+  });
+
   it('affiche un etat vide et le message reserve aux medecins sur un 403', async () => {
     service.secretaires.and.returnValue(of([]));
     await afficher();

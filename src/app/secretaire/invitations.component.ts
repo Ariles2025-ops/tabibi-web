@@ -9,6 +9,7 @@ import { RoleService } from '../auth/role.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { Invitation, SecretaireService } from './secretaire.service';
+import { instantLisible } from '../partage/dates-lisibles';
 
 interface InvitationAffichee extends Invitation {
   medecinNom: string;
@@ -42,7 +43,7 @@ interface InvitationAffichee extends Invitation {
           <div>
             <strong style="color:var(--ink);font-size:1.05rem">{{ i.medecinNom }}</strong>
             <div *ngIf="i.medecinDetail" style="color:var(--text3);font-size:.9rem">{{ i.medecinDetail }}</div>
-            <div style="color:var(--text3);font-size:.85rem">{{ l.t('Invitation du', 'دعوة بتاريخ') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ i.creeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span></div>
+            <div *ngIf="dateLisible(i.creeLe)" class="date-invitation" style="color:var(--text3);font-size:.85rem">{{ l.t('Invitation du', 'دعوة بتاريخ') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ i.creeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span></div>
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <button type="button" class="bouton" (click)="accepter(i)" [disabled]="enCours() !== null">
@@ -71,6 +72,9 @@ export class InvitationsComponent implements OnInit {
   enCours = signal<string | null>(null);
   erreur = signal('');
   succes = signal('');
+
+  /** Vrai si la date est lisible (sinon elle n'est pas affichee, comme dans l'appli). */
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
 
   async ngOnInit() {
     await this.auth.pret();
