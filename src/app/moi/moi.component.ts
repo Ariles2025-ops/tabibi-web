@@ -100,20 +100,32 @@ export class MoiComponent implements OnInit {
     const invitations = { lien: '/invitations', libelle: t('Invitations de cabinet', 'دعوات العيادات') };
     // Comme « Ma candidature de médecin » du profil de l'appli : un compte non médecin peut déposer ou suivre sa candidature.
     const candidature = { lien: '/medecin/candidature', libelle: t('Ma candidature de médecin', 'ترشحي كطبيب') };
+    // Comme « Messagerie » de « Mon compte » dans l'appli, ouverte à tous les rôles.
+    const messagerie = { lien: '/messagerie', libelle: t('Messagerie', 'الرسائل') };
     if (r.includes('MEDECIN')) {
       return [
         { lien: '/medecin/agenda', libelle: t('Mon agenda', 'المواعيد') },
         { lien: '/medecin/disponibilites', libelle: t('Disponibilités', 'الأوقات المتاحة') },
+        messagerie,
         profil,
         notifications,
       ];
     }
-    // Comme « Messagerie » de « Mon compte » dans l'appli, ouverte à tous les rôles.
-    const messagerie = { lien: '/messagerie', libelle: t('Messagerie', 'الرسائل') };
     if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, messagerie, candidature, profil, notifications];
     if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, messagerie, candidature, profil, notifications];
     if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: t('Administration', 'الإدارة') }, messagerie, profil, notifications];
-    return [profil, { lien: '/mes-rendez-vous', libelle: t('Mes rendez-vous', 'مواعيدي') }, invitations, candidature, notifications];
+    // Patient : « Mon activité » et « Services » de « Mon compte » de l'appli (messagerie, avis, listes d'attente, Dawini).
+    return [
+      profil,
+      { lien: '/mes-rendez-vous', libelle: t('Mes rendez-vous', 'مواعيدي') },
+      messagerie,
+      { lien: '/mes-avis', libelle: t('Mes avis', 'آرائي') },
+      { lien: '/liste-attente', libelle: t("Mes listes d'attente", 'قوائم الانتظار') },
+      { lien: '/dawini', libelle: t('Dawini', 'داويني') },
+      invitations,
+      candidature,
+      notifications,
+    ];
   });
 
   /** Seconde etape de la suppression du compte affichee (pas de confirm() du navigateur). */
