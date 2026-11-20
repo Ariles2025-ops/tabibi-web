@@ -6,6 +6,7 @@ import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { LangueService } from '../partage/langue.service';
+import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { libelleStatutTeleconsultation, libelleStatutTeleconsultationAr } from './statut-teleconsultation';
 import { Teleconsultation, TeleconsultationService, salleAccessible } from './teleconsultation.service';
@@ -37,12 +38,13 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
           <li *ngFor="let t of teleconsultations()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
               <div>
-                <strong *ngIf="datesRendezVous()[t.rendezVousId] as debut">{{ l.t('Rendez-vous du', 'موعد يوم') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ debut | date:formatDate() }}</span></strong>
-                <strong *ngIf="!datesRendezVous()[t.rendezVousId]">{{ l.t('Téléconsultation proposée le', 'استشارة عن بُعد اقتُرحت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ t.creeLe | date:formatDate() }}</span></strong>
+                <strong *ngIf="dateLisible(datesRendezVous()[t.rendezVousId]) && datesRendezVous()[t.rendezVousId] as debut">{{ l.t('Rendez-vous du', 'موعد يوم') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ debut | date:formatDate() }}</span></strong>
+                <strong *ngIf="!dateLisible(datesRendezVous()[t.rendezVousId]) && dateLisible(t.creeLe)">{{ l.t('Téléconsultation proposée le', 'استشارة عن بُعد اقتُرحت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ t.creeLe | date:formatDate() }}</span></strong>
+                <strong *ngIf="!dateLisible(datesRendezVous()[t.rendezVousId]) && !dateLisible(t.creeLe)">{{ l.t('Téléconsultation · date inconnue', 'استشارة عن بُعد · تاريخ غير معروف') }}</strong>
                 <br>
                 <a [routerLink]="['/medecins', t.medecinId]" style="color:var(--vert)">{{ noms()[t.medecinId] ?? l.t('Voir le praticien', 'عرض الممارس') }}</a>
                 <span style="color:var(--text3)"> · {{ libelleStatut(t.statut) }}</span>
-                <span *ngIf="t.consentementPatientLe" style="color:var(--text3)"> · {{ l.t('consentement donné le', 'تمت الموافقة في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ t.consentementPatientLe | date:formatDate() }}</span></span>
+                <span *ngIf="dateLisible(t.consentementPatientLe)" style="color:var(--text3)"> · {{ l.t('consentement donné le', 'تمت الموافقة في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ t.consentementPatientLe | date:formatDate() }}</span></span>
               </div>
               <ng-container *ngIf="salleAccessible(t)">
                 <a *ngIf="fenetre(t) === 'ouverte'" class="bouton" [href]="t.lienSalle" target="_blank" rel="noopener">
@@ -112,7 +114,7 @@ export class MesTeleconsultationsComponent implements OnInit {
     this.service.mes().subscribe({
       next: (liste) => {
         // Les plus recentes d'abord.
-        this.teleconsultations.set([...liste].sort((a, b) => Date.parse(b.creeLe) - Date.parse(a.creeLe)));
+        this.teleconsultations.set(trierParDateRecenteDabord(liste, (t) => t.creeLe));
         this.chargerNoms(liste);
         this.chargerDatesRendezVous(liste);
         this.charge.set(false);
@@ -173,6 +175,9 @@ export class MesTeleconsultationsComponent implements OnInit {
   libelleStatut(statut: string): string {
     return this.l.ar() ? libelleStatutTeleconsultationAr(statut) : libelleStatutTeleconsultation(statut);
   }
+
+  /** Date de l'API presente et lisible (sinon « date inconnue », comme dans l'appli). */
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
 
   /** Format de date : chiffres latins jj/mm/aaaa en arabe (comme les autres ecrans), texte long en francais. */
   formatDate(): string {

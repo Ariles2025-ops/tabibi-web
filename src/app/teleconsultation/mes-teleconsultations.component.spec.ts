@@ -211,6 +211,47 @@ describe('MesTeleconsultationsComponent', () => {
     expect(rendezVous.mes).not.toHaveBeenCalled();
   });
 
+  it('date de proposition et de consentement illisibles : « date inconnue », jamais « null » ni erreur', async () => {
+    service.mes.and.returnValue(of([{ ...CONSENTIE, creeLe: 'pas-une-date', consentementPatientLe: 'n importe quoi' }]));
+    rendezVous.mes.and.returnValue(of([]));
+    await afficher();
+
+    expect(texte()).toContain('Téléconsultation · date inconnue');
+    expect(texte()).not.toContain('consentement donné le');
+    expect(texte()).not.toContain('null');
+  });
+
+  it('date inconnue en arabe', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    service.mes.and.returnValue(of([{ ...SANS_CONSENTEMENT, creeLe: '' }]));
+    rendezVous.mes.and.returnValue(of([]));
+    await afficher();
+
+    expect(texte()).toContain('استشارة عن بُعد · تاريخ غير معروف');
+    TestBed.inject(LangueService).ar.set(false);
+  });
+
+  it('un rendez-vous à la date illisible retombe sur la date de proposition', async () => {
+    rendezVous.mes.and.returnValue(of([{ ...RENDEZ_VOUS, debut: 'x' }]));
+    await afficher();
+
+    expect(texte()).toContain('Téléconsultation proposée le');
+    expect(texte()).not.toContain('Rendez-vous du');
+  });
+
+  it('classe les téléconsultations sans date lisible en fin de liste', async () => {
+    service.mes.and.returnValue(
+      of([
+        { ...SANS_CONSENTEMENT, id: 'sans-date', creeLe: '' },
+        { ...SANS_CONSENTEMENT, id: 'ancienne', creeLe: '2026-01-01T10:00:00Z' },
+        { ...SANS_CONSENTEMENT, id: 'recente', creeLe: '2026-09-01T10:00:00Z' },
+      ]),
+    );
+    await afficher();
+
+    expect(fixture.componentInstance.teleconsultations().map((t) => t.id)).toEqual(['recente', 'ancienne', 'sans-date']);
+  });
+
   it('redirige vers la connexion si l utilisateur n est pas connecte', async () => {
     auth.estConnecte = () => false;
     await afficher();
