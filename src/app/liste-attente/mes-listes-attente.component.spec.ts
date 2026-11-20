@@ -165,4 +165,21 @@ describe('MesListesAttenteComponent', () => {
     expect(texte()).toContain('تم الانسحاب من قائمة الانتظار.');
     TestBed.inject(LangueService).ar.set(false);
   });
+
+  it("sans date d'inscription : « Date d'inscription inconnue », jamais « Inscrit le » vide, et la ligne passe en dernier", async () => {
+    service.mes.and.returnValue(of([{ id: 'i3', patientId: 'p1', medecinId: 'm1' }, ANCIENNE]));
+    await afficher();
+
+    expect(lignes()[1].textContent).toContain("Date d'inscription inconnue");
+    expect(lignes()[1].textContent).not.toContain('Inscrit le');
+    expect(lignes()[0].textContent).toContain('Inscrit le');
+  });
+
+  it("en arabe, sans date d'inscription : « تاريخ التسجيل غير معروف »", async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    service.mes.and.returnValue(of([{ id: 'i3', patientId: 'p1', medecinId: 'm1' }]));
+    await afficher();
+
+    expect(texte()).toContain('تاريخ التسجيل غير معروف');
+  });
 });

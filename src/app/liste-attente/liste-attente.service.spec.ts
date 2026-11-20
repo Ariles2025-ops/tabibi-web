@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { InscriptionAttente, ListeAttenteService } from './liste-attente.service';
+import { InscriptionAttente, ListeAttenteService, instantInscription, trierParInscription } from './liste-attente.service';
 
 const BASE = 'http://localhost:8080';
 
@@ -82,5 +82,34 @@ describe('ListeAttenteService', () => {
 
     expect(statut).toBe(409);
     expect(message).toBe('Vous etes deja inscrit sur la liste d attente de ce medecin.');
+  });
+});
+
+describe('trierParInscription', () => {
+  const base = { patientId: 'p', medecinId: 'm' };
+  const a: InscriptionAttente = { ...base, id: 'a', inscritLe: '2026-09-10T08:30:00Z' };
+  const b: InscriptionAttente = { ...base, id: 'b', inscritLe: '2026-09-18T10:00:00Z' };
+
+  it('classe de la plus ancienne a la plus recente, comme l\'appli', () => {
+    expect(trierParInscription([b, a]).map((i) => i.id)).toEqual(['a', 'b']);
+  });
+
+  it('place les dates absentes ou illisibles en fin de liste', () => {
+    const sans: InscriptionAttente = { ...base, id: 'sans' };
+    const nulle: InscriptionAttente = { ...base, id: 'nulle', inscritLe: null };
+    const illisible: InscriptionAttente = { ...base, id: 'illisible', inscritLe: 'pas une date' };
+    expect(trierParInscription([sans, b, nulle, a, illisible]).map((i) => i.id)).toEqual(['a', 'b', 'sans', 'nulle', 'illisible']);
+  });
+
+  it('ne modifie pas la liste d\'origine', () => {
+    const liste = [b, a];
+    trierParInscription(liste);
+    expect(liste[0].id).toBe('b');
+  });
+
+  it('instantInscription vaut null sans date lisible', () => {
+    expect(instantInscription({})).toBeNull();
+    expect(instantInscription({ inscritLe: 'x' })).toBeNull();
+    expect(instantInscription(a)).toBe(Date.parse('2026-09-10T08:30:00Z'));
   });
 });

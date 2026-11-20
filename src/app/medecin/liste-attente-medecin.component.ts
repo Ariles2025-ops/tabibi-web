@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { AuthService } from '../auth/auth.service';
-import { InscriptionAttente, ListeAttenteService } from '../liste-attente/liste-attente.service';
+import { InscriptionAttente, ListeAttenteService, instantInscription, trierParInscription } from '../liste-attente/liste-attente.service';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from './patients.service';
 
 /**
@@ -38,7 +38,8 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
             <a *ngIf="telephone(i.patientId) as tel" [href]="'tel:' + tel" dir="ltr" style="color:var(--text3);margin-inline-start:8px;text-decoration:none">
               <i class="fa fa-phone fa-xs"></i> {{ tel }}
             </a><br>
-            <span style="color:var(--text3);font-size:.9rem">{{ l.t('Inscrit le', 'سُجّل في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ i.inscritLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : "d MMMM yyyy à HH:mm") }}</span></span>
+            <span style="color:var(--text3);font-size:.9rem" *ngIf="!date(i)">{{ l.t("Date d'inscription inconnue", 'تاريخ التسجيل غير معروف') }}</span>
+            <span style="color:var(--text3);font-size:.9rem" *ngIf="date(i)">{{ l.t('Inscrit le', 'سُجّل في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ i.inscritLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : "d MMMM yyyy à HH:mm") }}</span></span>
           </span>
         </li>
       </ol>
@@ -60,12 +61,17 @@ export class ListeAttenteMedecinComponent implements OnInit {
   repertoire = signal<RepertoirePatients>(new Map());
   erreur = signal('');
 
+  /** Instant d'inscription, null si la date est absente ou illisible (message « Date d'inscription inconnue »). */
+  date(i: InscriptionAttente): number | null {
+    return instantInscription(i);
+  }
+
   ngOnInit() {
     this.patients.patientsDuMedecin().subscribe({ next: (r) => this.repertoire.set(r), error: () => undefined });
     this.charge.set(true);
     this.service.duMedecin().subscribe({
       next: (liste) => {
-        this.inscriptions.set([...liste].sort((a, b) => Date.parse(a.inscritLe) - Date.parse(b.inscritLe)));
+        this.inscriptions.set(trierParInscription(liste));
         this.charge.set(false);
       },
       error: (e: HttpErrorResponse) => {
