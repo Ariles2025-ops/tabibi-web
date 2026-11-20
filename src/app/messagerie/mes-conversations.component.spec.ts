@@ -207,4 +207,13 @@ describe('MesConversationsComponent', () => {
     expect(texte()).toContain('Ouverte le');
     expect(texte()).not.toContain('Aucun message');
   });
+  it('classe une conversation sans date de dernier message d après sa date d ouverture, et celles sans date en dernier (comme l appli)', async () => {
+    const sansMessage = { ...ANCIENNE, id: 'c3', medecinId: 'm3', dernierMessageLe: '', creeLe: '2026-09-15T10:00:00Z' };
+    const sansDate = { ...ANCIENNE, id: 'c4', medecinId: 'm4', dernierMessageLe: '', creeLe: '' };
+    service.mesConversations.and.returnValue(of([sansDate, ANCIENNE, sansMessage, RECENTE]));
+    await afficher();
+
+    const ids = Array.from(fixture.nativeElement.querySelectorAll('a[href^="/messagerie/"]')).map((a) => (a as HTMLAnchorElement).getAttribute('href'));
+    expect(ids).toEqual(['/messagerie/c1', '/messagerie/c3', '/messagerie/c2', '/messagerie/c4']);
+  });
 });

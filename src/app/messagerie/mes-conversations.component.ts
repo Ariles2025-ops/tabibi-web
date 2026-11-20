@@ -8,7 +8,7 @@ import { RoleService } from '../auth/role.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { PatientsService, RepertoirePatients } from '../medecin/patients.service';
-import { Conversation, MessagerieService, abregerIdentifiant } from './messagerie.service';
+import { Conversation, MessagerieService, abregerIdentifiant, trierParActivite } from './messagerie.service';
 
 /**
  * Mes conversations (GET /api/conversations), la plus recente activite d'abord. L'interlocuteur est le
@@ -99,7 +99,7 @@ export class MesConversationsComponent implements OnInit {
     this.service.mesConversations().subscribe({
       next: (liste) => {
         // La plus recente activite d'abord.
-        this.conversations.set([...liste].sort((a, b) => Date.parse(b.dernierMessageLe) - Date.parse(a.dernierMessageLe)));
+        this.conversations.set(trierParActivite(liste));
         this.chargerNoms(liste);
         this.charge.set(false);
       },
