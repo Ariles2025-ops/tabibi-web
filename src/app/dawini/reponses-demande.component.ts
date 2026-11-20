@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { instantLisible, trierParDateAncienneDabord } from '../partage/dates-lisibles';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { Besoin, DawiniService, Reponse, formaterPrix, libelleDisponibilite, libelleStatutBesoin, libelleWilaya } from './dawini.service';
@@ -28,8 +29,15 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleDisponibilite, lib
         <ng-container *ngIf="besoin() as b">
           <p style="color:var(--text3);margin:0 0 16px">
             {{ libelleStatut(b.statut) }} · {{ wilaya(b.wilayaCode) }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
-            <ng-container *ngIf="!l.ar()">· publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}<ng-container *ngIf="b.clotureLe"> · clôturée le {{ b.clotureLe | date:'d MMMM à HH:mm' }}</ng-container></ng-container>
-            <ng-container *ngIf="l.ar()">· نُشر في <span dir="ltr">{{ b.publieLe | date:'dd/MM/yyyy HH:mm' }}</span><ng-container *ngIf="b.clotureLe"> · أُغلق في <span dir="ltr">{{ b.clotureLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container></ng-container>
+            <ng-container *ngIf="dateLisible(b.publieLe); else dateInconnue">
+              <ng-container *ngIf="!l.ar()">· publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}</ng-container>
+              <ng-container *ngIf="l.ar()">· نُشر في <span dir="ltr">{{ b.publieLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container>
+            </ng-container>
+            <ng-template #dateInconnue>· {{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-template>
+            <ng-container *ngIf="dateLisible(b.clotureLe)">
+              <ng-container *ngIf="!l.ar()"> · clôturée le {{ b.clotureLe | date:'d MMMM à HH:mm' }}</ng-container>
+              <ng-container *ngIf="l.ar()"> · أُغلق في <span dir="ltr">{{ b.clotureLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container>
+            </ng-container>
             <ng-container *ngIf="b.precision"><br>{{ b.precision }}</ng-container>
           </p>
           <p *ngIf="b.statut === 'OUVERT' && !aConfirmer()" style="margin:0 0 16px">
@@ -53,7 +61,7 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleDisponibilite, lib
             <strong>{{ r.nomPharmacie }}</strong>
             <span [style.color]="r.disponible ? 'var(--vert)' : '#b3261e'"> · {{ dispo(r.disponible) }}</span>
             <span *ngIf="r.prixDa !== null" style="color:var(--text3)"> · {{ prix(r.prixDa) }}</span>
-            <span style="color:var(--text3)"> · {{ r.repondueLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM à HH:mm') }}</span>
+            <span style="color:var(--text3)"> · <ng-container *ngIf="dateLisible(r.repondueLe); else dateReponseInconnue"><span [attr.dir]="l.ar() ? 'ltr' : null">{{ r.repondueLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM à HH:mm') }}</span></ng-container><ng-template #dateReponseInconnue>{{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-template></span>
             <p *ngIf="r.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ r.commentaire }}</p>
           </li>
         </ul>
@@ -64,6 +72,7 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleDisponibilite, lib
 })
 export class ReponsesDemandeComponent implements OnInit {
   l = inject(LangueService);
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
   /** Nom de la wilaya (referentiel) plutot que son code, dans la langue de l'ecran. */
   wilaya = (code: string | null | undefined) => libelleWilaya(code, this.l.ar());
   private route = inject(ActivatedRoute);
@@ -102,7 +111,7 @@ export class ReponsesDemandeComponent implements OnInit {
     this.service.reponses(this.besoinId).subscribe({
       next: (liste) => {
         // Les plus anciennes d'abord.
-        this.reponses.set([...liste].sort((a, b) => Date.parse(a.repondueLe) - Date.parse(b.repondueLe)));
+        this.reponses.set(trierParDateAncienneDabord(liste, (r) => r.repondueLe));
         this.charge.set(false);
       },
       error: (e: HttpErrorResponse) => {

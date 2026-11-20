@@ -171,6 +171,21 @@ describe('EspacePharmacieComponent', () => {
     expect(formulaireReponse()!.querySelector('input[type="number"]')).not.toBeNull();
   });
 
+  it('une demande sans date lisible affiche « date inconnue » et passe en fin de liste (comme l\'appli)', async () => {
+    service.besoinsOuverts.and.returnValue(of([
+      { ...BESOIN, id: 'b9', medicament: 'Sans date', publieLe: 'pas une date' },
+      BESOIN,
+    ]));
+    await afficher();
+    await chercher('16');
+
+    const t = texte();
+    expect(t.indexOf('Amoxicilline 1 g')).toBeGreaterThan(-1);
+    expect(t.indexOf('Sans date')).toBeGreaterThan(t.indexOf('Amoxicilline 1 g'));
+    expect(t).toContain('date inconnue');
+    expect(t.match(/publiée le/g)?.length).toBe(1);
+  });
+
   it('sans profil, indique de renseigner le nom, desactive Repondre et n envoie rien', async () => {
     await afficher();
     await chercher('16');

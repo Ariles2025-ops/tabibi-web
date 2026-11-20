@@ -121,6 +121,33 @@ describe('ReponsesDemandeComponent', () => {
     expect(boutonCloturer()).toBeDefined();
   });
 
+  it('une reponse sans date lisible affiche « date inconnue » et passe en fin de liste, sans erreur (comme l\'appli)', async () => {
+    service.reponses.and.returnValue(of([
+      { ...DISPONIBLE, id: 'rp3', nomPharmacie: 'Pharmacie Sans Date', repondueLe: 'xx' },
+      DISPONIBLE,
+      INDISPONIBLE,
+    ]));
+    await afficher();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.map((li) => li.textContent)).toEqual([
+      jasmine.stringContaining('Pharmacie du Centre'),
+      jasmine.stringContaining('Pharmacie El Amel'),
+      jasmine.stringContaining('Pharmacie Sans Date'),
+    ]);
+    expect(items[2].textContent).toContain('date inconnue');
+    expect(items[0].textContent).not.toContain('date inconnue');
+  });
+
+  it('une demande sans date de publication lisible affiche « date inconnue », et une clôture illisible est omise', async () => {
+    service.mesBesoins.and.returnValue(of([{ ...CLOTUREE, publieLe: 'pas une date', clotureLe: 'xx' }]));
+    await afficher();
+
+    expect(texte()).toContain('date inconnue');
+    expect(texte()).not.toContain('publiée le');
+    expect(texte()).not.toContain('clôturée le');
+  });
+
   it('cloture la demande, confirme et retire le bouton', async () => {
     service.cloturer.and.returnValue(of(CLOTUREE));
     await afficher();

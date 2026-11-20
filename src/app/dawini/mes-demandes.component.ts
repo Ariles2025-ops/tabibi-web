@@ -8,6 +8,7 @@ import { AuthService } from '../auth/auth.service';
 import { ProfilService } from '../moi/profil.service';
 import { wilayaParCode } from '../seo/referentiel-seo';
 import { LangueService } from '../partage/langue.service';
+import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { Besoin, DawiniService, DemandeBesoin, libelleReponses, libelleStatutBesoin, libelleWilaya } from './dawini.service';
 
@@ -82,7 +83,7 @@ interface OptionWilaya { code: string; nom: string; }
                 <span style="color:var(--text3)"> · {{ libelleStatut(b.statut) }}</span><br>
                 <span style="color:var(--text3)">
                   {{ wilaya(b.wilayaCode) }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
-                  · <ng-container *ngIf="!l.ar()">publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}</ng-container><ng-container *ngIf="l.ar()">نُشر في <span dir="ltr">{{ b.publieLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container>
+                  · <ng-container *ngIf="dateLisible(b.publieLe); else dateInconnue"><ng-container *ngIf="!l.ar()">publiée le {{ b.publieLe | date:'d MMMM à HH:mm' }}</ng-container><ng-container *ngIf="l.ar()">نُشر في <span dir="ltr">{{ b.publieLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container></ng-container><ng-template #dateInconnue>{{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-template>
                 </span>
               </span>
               <span style="color:var(--vert);font-weight:600">{{ libelleReponses(b.nombreReponses) }}</span>
@@ -96,6 +97,7 @@ interface OptionWilaya { code: string; nom: string; }
 })
 export class MesDemandesComponent implements OnInit {
   l = inject(LangueService);
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
   /** Nom de la wilaya (referentiel) plutot que son code, dans la langue de l'ecran. */
   wilaya = (code: string | null | undefined) => libelleWilaya(code, this.l.ar());
 
@@ -155,7 +157,7 @@ export class MesDemandesComponent implements OnInit {
     this.service.mesBesoins().subscribe({
       next: (liste) => {
         // Les plus recentes d'abord.
-        this.besoins.set([...liste].sort((a, b) => Date.parse(b.publieLe) - Date.parse(a.publieLe)));
+        this.besoins.set(trierParDateRecenteDabord(liste, (b) => b.publieLe));
         this.charge.set(false);
       },
       error: (e: HttpErrorResponse) => {
