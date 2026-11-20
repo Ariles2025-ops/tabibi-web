@@ -164,6 +164,7 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.querySelector('a[href="/admin"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/admin/candidatures"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/admin/avis"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).not.toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
   });
 
@@ -174,6 +175,8 @@ describe('AppComponent', () => {
 
     expect(texteNav()).toContain('Espace pharmacie');
     expect(fixture.nativeElement.querySelector('a[href="/pharmacie"]')).not.toBeNull();
+    // Messagerie ouverte à tous les rôles, comme « Mon compte » de l'appli.
+    expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).not.toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
     expect(texteNav()).not.toContain('Administration');
   });
@@ -185,6 +188,7 @@ describe('AppComponent', () => {
 
     expect(texteNav()).toContain('Espace secrétaire');
     expect(fixture.nativeElement.querySelector('a[href="/secretaire"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).not.toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
     expect(texteNav()).not.toContain('Administration');
   });

@@ -101,6 +101,14 @@ describe('MoiComponent', () => {
     expect(lien('/mes-rendez-vous')).toBeNull();
   });
 
+  it('propose la messagerie à la secrétaire, à la pharmacie et à l\'administrateur, comme « Mon compte » de l\'appli', async () => {
+    for (const role of ['SECRETAIRE', 'PHARMACIE', 'ADMIN']) {
+      moi.set({ ...PROFIL, roles: ['PATIENT', role] });
+      await afficher();
+      expect(lien('/messagerie')).not.toBeNull();
+    }
+  });
+
   it('n affiche plus l identifiant technique du compte, meme a une secretaire', async () => {
     moi.set({ ...PROFIL, roles: ['SECRETAIRE'] });
     await afficher();
