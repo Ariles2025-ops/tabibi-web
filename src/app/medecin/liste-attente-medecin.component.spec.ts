@@ -55,8 +55,8 @@ describe('ListeAttenteMedecinComponent', () => {
     expect(lignes[0].textContent).toContain('0661000000');
     expect(lignes[0].textContent).not.toContain('22222222');
     expect(lignes[0].textContent).toContain('Inscrit le 10 septembre 2026');
-    expect(lignes[1].textContent).toContain('Patient');
-    expect(lignes[1].textContent).not.toContain('11111111');
+    expect(lignes[1].textContent).toContain('Patient 11111111');
+    expect(lignes[1].textContent).not.toContain('11111111-');
     expect(lignes[1].textContent).toContain('Inscrit le 18 septembre 2026');
   });
 

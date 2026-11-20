@@ -327,7 +327,7 @@ describe('AgendaMedecinComponent', () => {
       TestBed.inject(LangueService).definir(true);
       fixture.detectChanges();
       await fixture.whenStable();
-      expect(fixture.componentInstance.nom('inconnu')).toBe('مريض');
+      expect(fixture.componentInstance.nom('inconnu')).toBe('مريض inconnu');
     });
 
     it('messages d\'action en arabe (annulation, déplacement, erreur)', async () => {
