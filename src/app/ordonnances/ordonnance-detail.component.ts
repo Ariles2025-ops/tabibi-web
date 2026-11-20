@@ -37,7 +37,7 @@ import { instantLisible } from '../partage/dates-lisibles';
               <ng-container *ngIf="dateLisible(o.emiseLe); else emiseInconnue">{{ l.t('Émise le', 'صدرت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.emiseLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span></ng-container><ng-template #emiseInconnue>{{ l.t('Date inconnue', 'تاريخ غير معروف') }}</ng-template> · <app-badge-statut-ordonnance [statut]="o.statut" [arabe]="l.ar()" />
             </p>
             <p *ngIf="o.statut === 'ANNULEE'" style="color:var(--red);margin:4px 0 0">{{ l.t('Annulée par le médecin', 'ألغاها الطبيب') }}<ng-container *ngIf="o.motifAnnulation"> : {{ o.motifAnnulation }}</ng-container></p>
-            <p *ngIf="o.statut === 'DELIVREE'" style="color:var(--text2);margin:4px 0 0">{{ l.t('Délivrée en pharmacie', 'صُرفت في الصيدلية') }}<ng-container *ngIf="o.delivreeLe">{{ l.t(' le ', ' في ') }}<span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.delivreeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></ng-container></p>
+            <p *ngIf="o.statut === 'DELIVREE'" style="color:var(--text2);margin:4px 0 0">{{ l.t('Délivrée en pharmacie', 'صُرفت في الصيدلية') }}<ng-container *ngIf="dateLisible(o.delivreeLe)">{{ l.t(' le ', ' في ') }}<span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.delivreeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></ng-container></p>
             <p style="color:var(--text3);margin:4px 0 0">
               {{ l.t('Praticien', 'الممارس') }} : {{ medecin()?.nomComplet ?? l.t('Votre médecin', 'طبيبك') }}
               <ng-container *ngIf="nomPatient()"><br>{{ l.t('Patient', 'المريض') }} : {{ nomPatient() }}</ng-container>

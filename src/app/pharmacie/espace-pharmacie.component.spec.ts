@@ -344,6 +344,18 @@ describe('EspacePharmacieComponent', () => {
     expect(texte()).not.toContain('Marquer comme délivrée');
   });
 
+  it('une date d\'émission absente ou illisible n\'affiche ni « émise le » vide ni erreur, comme l\'appli', async () => {
+    ordonnances.verifier.and.returnValue(of({ valide: true, emiseLe: 'pas-une-date', statut: 'EMISE' }));
+    await afficher();
+    await saisir('codeOrdonnance', 'AB12CD34');
+    fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+    await afficher();
+
+    expect(texte()).toContain('Ordonnance valide.');
+    expect(texte()).not.toContain('émise le');
+    expect(texte()).toContain('Marquer comme délivrée');
+  });
+
   it('signale une ordonnance expiree sans proposer la delivrance', async () => {
     ordonnances.verifier.and.returnValue(of({ valide: true, emiseLe: '2026-01-18T10:00:00Z', statut: 'EXPIREE' }));
     await afficher();

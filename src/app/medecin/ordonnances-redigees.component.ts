@@ -11,6 +11,7 @@ import { libelleStatutOrdonnance } from '../ordonnances/statut-ordonnance';
 import { BadgeStatutOrdonnanceComponent } from '../ordonnances/badge-statut-ordonnance.component';
 import { MedecinService } from './medecin.service';
 import { PatientsService, RepertoirePatients, nomPatient } from './patients.service';
+import { instantLisible } from '../partage/dates-lisibles';
 
 /** Ordonnances emises par le medecin connecte (GET /api/medecin/ordonnances), avec le nom du patient. */
 @Component({
@@ -37,7 +38,7 @@ import { PatientsService, RepertoirePatients, nomPatient } from './patients.serv
               <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
                 <app-badge-statut-ordonnance [statut]="o.statut" [arabe]="l.ar()" />
                 <span *ngIf="o.statut === 'ANNULEE' && o.motifAnnulation" style="color:var(--text3);font-size:13px">{{ l.t('Motif :', 'السبب:') }} {{ o.motifAnnulation }}</span>
-                <span *ngIf="o.statut === 'DELIVREE' && o.delivreeLe" style="color:var(--text3);font-size:13px">{{ l.t('le', 'في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.delivreeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></span>
+                <span *ngIf="o.statut === 'DELIVREE' && dateLisible(o.delivreeLe)" style="color:var(--text3);font-size:13px">{{ l.t('le', 'في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.delivreeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></span>
               </span>
             </span>
             <code style="font-size:1rem;letter-spacing:.1em;color:var(--blue-d);background:var(--blue-l);border-radius:999px;padding:4px 12px">{{ o.codeVerification }}</code>
@@ -67,6 +68,7 @@ import { PatientsService, RepertoirePatients, nomPatient } from './patients.serv
 })
 export class OrdonnancesRedigeesComponent implements OnInit {
   l = inject(LangueService);
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
   private auth = inject(AuthService);
   private service = inject(MedecinService);
   private patients = inject(PatientsService);
