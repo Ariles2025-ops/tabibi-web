@@ -100,4 +100,22 @@ describe('ListeAttenteMedecinComponent', () => {
     expect(texte()).toContain('لا يوجد مرضى في قائمة الانتظار حاليًا.');
     expect(texte()).not.toContain("Aucun patient");
   });
+
+  it("sans date d'inscription : « Date d'inscription inconnue » (jamais « Inscrit le » vide), en dernier dans la file", () => {
+    service.duMedecin.and.returnValue(of([{ id: 'i3', patientId: '33333333-3333-3333-3333-333333333333', medecinId: 'm1' }, ANCIENNE]));
+    fixture.detectChanges();
+    const lignes: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+
+    expect(lignes[0].textContent).toContain('Inscrit le');
+    expect(lignes[1].textContent).toContain("Date d'inscription inconnue");
+    expect(lignes[1].textContent).not.toContain('Inscrit le');
+  });
+
+  it("en arabe, sans date d'inscription : « تاريخ التسجيل غير معروف »", () => {
+    TestBed.inject(LangueService).ar.set(true);
+    service.duMedecin.and.returnValue(of([{ id: 'i3', patientId: '33333333-3333-3333-3333-333333333333', medecinId: 'm1' }]));
+    fixture.detectChanges();
+
+    expect(texte()).toContain('تاريخ التسجيل غير معروف');
+  });
 });
