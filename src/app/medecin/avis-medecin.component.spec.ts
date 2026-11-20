@@ -76,6 +76,16 @@ describe('AvisMedecinComponent', () => {
     expect(boutonsSignaler()[0].textContent).toContain('Signaler');
   });
 
+  it('un avis sans date lisible affiche « date inconnue » et passe en fin de liste, comme dans l appli', async () => {
+    service.synthese.and.returnValue(of({ ...SYNTHESE, nombre: 3, avis: [{ id: 'a3', note: 3, commentaire: null, deposeLe: 'illisible' }, ...SYNTHESE.avis] }));
+    await afficher();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.length).toBe(3);
+    expect(items[0].textContent).toContain('18 septembre 2026');
+    expect(items[2].textContent).toContain('date inconnue');
+  });
+
   it('signale un avis : il reste visible, marque « Signalé », sans bouton', async () => {
     service.signaler.and.returnValue(of({ id: 'a1', rendezVousId: 'r1', medecinId: MEDECIN_ID, note: 5, commentaire: 'Très bon accueil.', statut: 'SIGNALE', deposeLe: '2026-09-18T10:00:00Z' }));
     await afficher();

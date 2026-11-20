@@ -2,6 +2,7 @@ import { Component, OnChanges, computed, inject, input, signal } from '@angular/
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from './avis.service';
+import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
 
 /** Nombre de derniers avis affiches sous la moyenne. */
 const NOMBRE_DERNIERS_AVIS = 5;
@@ -23,7 +24,7 @@ const NOMBRE_DERNIERS_AVIS = 5;
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:8px">
         <li *ngFor="let a of derniers()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px 14px">
           <strong>{{ a.note }} / 5</strong>
-          <span style="color:var(--text3)"> · <ng-container *ngIf="!arabe()">{{ a.deposeLe | date:'d MMMM yyyy' }}</ng-container><span *ngIf="arabe()" dir="ltr">{{ a.deposeLe | date:'dd/MM/yyyy' }}</span></span>
+          <span style="color:var(--text3)"> · <ng-container *ngIf="dateLisible(a.deposeLe) && !arabe()">{{ a.deposeLe | date:'d MMMM yyyy' }}</ng-container><span *ngIf="dateLisible(a.deposeLe) && arabe()" dir="ltr">{{ a.deposeLe | date:'dd/MM/yyyy' }}</span><ng-container *ngIf="!dateLisible(a.deposeLe)">{{ arabe() ? 'تاريخ غير معروف' : 'date inconnue' }}</ng-container></span>
           <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
         </li>
       </ul>
@@ -48,8 +49,11 @@ export class SyntheseAvisComponent implements OnChanges {
   derniers = computed<AvisPublic[]>(() => {
     const s = this.synthese();
     if (!s) return [];
-    return [...s.avis].sort((a, b) => Date.parse(b.deposeLe) - Date.parse(a.deposeLe)).slice(0, NOMBRE_DERNIERS_AVIS);
+    return trierParDateRecenteDabord(s.avis, (a) => a.deposeLe).slice(0, NOMBRE_DERNIERS_AVIS);
   });
+
+  /** Vrai si la date est lisible (sinon « date inconnue », comme dans l'appli). */
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
 
   ngOnChanges() {
     this.charger();

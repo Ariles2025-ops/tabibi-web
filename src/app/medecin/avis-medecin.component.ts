@@ -6,6 +6,7 @@ import { SelecteurLangueComponent } from '../partage/selecteur-langue.component'
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/avis.service';
+import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
 
 /**
  * Avis publics recus par le medecin connecte (GET /api/medecins/{moi}/avis, ou « moi » est le sujet du jeton lu
@@ -35,7 +36,7 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
             style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:var(--r12);padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div>
             <strong>{{ a.note }} / 5</strong>
-            <span style="color:var(--text3)"> · <span [attr.dir]="l.ar() ? 'ltr' : null">{{ a.deposeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></span>
+            <span style="color:var(--text3)"> · <span *ngIf="dateLisible(a.deposeLe)" [attr.dir]="l.ar() ? 'ltr' : null">{{ a.deposeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span><ng-container *ngIf="!dateLisible(a.deposeLe)">{{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-container></span>
             <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
           </div>
           <span *ngIf="estSignale(a)"
@@ -49,6 +50,8 @@ import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from '../avis/
   `
 })
 export class AvisMedecinComponent implements OnInit {
+  /** Vrai si la date est lisible (sinon « date inconnue », comme dans l'appli). */
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
   l = inject(LangueService);
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
@@ -73,7 +76,7 @@ export class AvisMedecinComponent implements OnInit {
   /** Avis publies, les plus recents d'abord. */
   avis = computed<AvisPublic[]>(() => {
     const s = this.synthese();
-    return s ? [...s.avis].sort((a, b) => Date.parse(b.deposeLe) - Date.parse(a.deposeLe)) : [];
+    return s ? trierParDateRecenteDabord(s.avis, (a) => a.deposeLe) : [];
   });
 
   async ngOnInit() {

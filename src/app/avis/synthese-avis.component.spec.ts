@@ -53,6 +53,25 @@ describe('SyntheseAvisComponent', () => {
     expect(items[1].textContent).toContain('4 / 5');
   });
 
+  it('un avis sans date lisible affiche « date inconnue » et passe en fin de liste, comme dans l appli', () => {
+    service.synthese.and.returnValue(of({ ...SYNTHESE, nombre: 3, avis: [{ id: 'a3', note: 3, commentaire: null, deposeLe: 'illisible' }, ...SYNTHESE.avis] }));
+    fixture.detectChanges();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.length).toBe(3);
+    expect(items[0].textContent).toContain('18 septembre 2026');
+    expect(items[2].textContent).toContain('date inconnue');
+  });
+
+  it('en arabe, un avis sans date lisible affiche « تاريخ غير معروف »', () => {
+    service.synthese.and.returnValue(of({ ...SYNTHESE, nombre: 1, avis: [{ id: 'a3', note: 3, commentaire: null, deposeLe: 'illisible' }] }));
+    fixture.componentRef.setInput('arabe', true);
+    fixture.detectChanges();
+
+    expect(texte()).toContain('تاريخ غير معروف');
+    expect(texte()).not.toContain('date inconnue');
+  });
+
   it('indique qu il n y a aucun avis quand la moyenne est absente', () => {
     service.synthese.and.returnValue(of({ moyenne: null, nombre: 0, avis: [] }));
     fixture.detectChanges();
