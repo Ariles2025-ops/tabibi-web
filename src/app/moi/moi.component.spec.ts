@@ -135,6 +135,26 @@ describe('MoiComponent', () => {
     }
   });
 
+  it('affiche « Téléconsultation » avec « Bientôt » à chaque rôle (visio pas encore ouverte), comme « Mon compte » de l\'appli', async () => {
+    for (const role of ['PATIENT', 'MEDECIN', 'SECRETAIRE', 'PHARMACIE', 'ADMIN']) {
+      moi.set({ ...PROFIL, roles: [role] });
+      await afficher();
+      const href = role === 'MEDECIN' ? '/medecin/teleconsultations' : '/teleconsultations';
+      const a = lien(href) as HTMLElement | null;
+      expect(a).withContext(role).not.toBeNull();
+      expect(a!.textContent).toContain('Téléconsultation');
+      expect(a!.textContent).toContain('Bientôt');
+    }
+  });
+
+  it('affiche la téléconsultation et « Bientôt » en arabe', async () => {
+    TestBed.inject(LangueService).definir(true);
+    await afficher();
+    const a = lien('/teleconsultations') as HTMLElement | null;
+    expect(a?.textContent).toContain('الاستشارة عن بُعد');
+    expect(a?.textContent).toContain('قريبًا');
+  });
+
   it('n affiche plus l identifiant technique du compte, meme a une secretaire', async () => {
     moi.set({ ...PROFIL, roles: ['SECRETAIRE'] });
     await afficher();
