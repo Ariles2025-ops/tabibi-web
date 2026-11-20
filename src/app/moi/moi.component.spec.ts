@@ -111,6 +111,22 @@ describe('MoiComponent', () => {
     for (const l of ['/messagerie', '/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).not.toBeNull();
   });
 
+  it('propose au médecin ses ordonnances, avis, liste d\'attente et secrétaires, au patient ses ordonnances, et à tous « Vérifier une ordonnance », comme l\'appli', async () => {
+    moi.set({ ...PROFIL, roles: ['MEDECIN'] });
+    await afficher();
+    for (const l of ['/medecin/ordonnances', '/medecin/avis', '/medecin/liste-attente', '/medecin/secretaires', '/verifier']) expect(lien(l)).not.toBeNull();
+
+    moi.set({ ...PROFIL, roles: ['PATIENT'] });
+    await afficher();
+    for (const l of ['/mes-ordonnances', '/verifier']) expect(lien(l)).not.toBeNull();
+
+    for (const role of ['SECRETAIRE', 'PHARMACIE', 'ADMIN']) {
+      moi.set({ ...PROFIL, roles: [role] });
+      await afficher();
+      expect(lien('/verifier')).not.toBeNull();
+    }
+  });
+
   it('propose la messagerie à la secrétaire, à la pharmacie et à l\'administrateur, comme « Mon compte » de l\'appli', async () => {
     for (const role of ['SECRETAIRE', 'PHARMACIE', 'ADMIN']) {
       moi.set({ ...PROFIL, roles: ['PATIENT', role] });

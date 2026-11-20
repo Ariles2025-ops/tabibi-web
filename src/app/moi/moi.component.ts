@@ -102,26 +102,36 @@ export class MoiComponent implements OnInit {
     const candidature = { lien: '/medecin/candidature', libelle: t('Ma candidature de médecin', 'ترشحي كطبيب') };
     // Comme « Messagerie » de « Mon compte » dans l'appli, ouverte à tous les rôles.
     const messagerie = { lien: '/messagerie', libelle: t('Messagerie', 'الرسائل') };
+    // Comme « Vérifier une ordonnance » de « Mon compte » dans l'appli, ouvert à tous les rôles.
+    const verifier = { lien: '/verifier', libelle: t('Vérifier une ordonnance', 'التحقق من وصفة طبية') };
     if (r.includes('MEDECIN')) {
       return [
         { lien: '/medecin/agenda', libelle: t('Mon agenda', 'المواعيد') },
         { lien: '/medecin/disponibilites', libelle: t('Disponibilités', 'الأوقات المتاحة') },
+        // Comme « Mon espace » de l'appli : ordonnances rédigées, liste d'attente, avis et secrétaires du médecin.
+        { lien: '/medecin/ordonnances', libelle: t('Mes ordonnances rédigées', 'وصفاتي التي حررتها') },
+        { lien: '/medecin/liste-attente', libelle: t("Liste d'attente", 'قائمة الانتظار') },
+        { lien: '/medecin/avis', libelle: t('Avis des patients', 'آراء المرضى') },
+        { lien: '/medecin/secretaires', libelle: t('Mes secrétaires', 'سكرتيراتي') },
         messagerie,
+        verifier,
         profil,
         notifications,
       ];
     }
-    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, messagerie, candidature, profil, notifications];
-    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, messagerie, candidature, profil, notifications];
-    if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: t('Administration', 'الإدارة') }, messagerie, profil, notifications];
+    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, messagerie, verifier, candidature, profil, notifications];
+    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, messagerie, verifier, candidature, profil, notifications];
+    if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: t('Administration', 'الإدارة') }, messagerie, verifier, profil, notifications];
     // Patient : « Mon activité » et « Services » de « Mon compte » de l'appli (messagerie, avis, listes d'attente, Dawini).
     return [
       profil,
       { lien: '/mes-rendez-vous', libelle: t('Mes rendez-vous', 'مواعيدي') },
+      { lien: '/mes-ordonnances', libelle: t('Mes ordonnances', 'وصفاتي الطبية') },
       messagerie,
       { lien: '/mes-avis', libelle: t('Mes avis', 'آرائي') },
       { lien: '/liste-attente', libelle: t("Mes listes d'attente", 'قوائم الانتظار') },
       { lien: '/dawini', libelle: t('Dawini', 'داويني') },
+      verifier,
       invitations,
       candidature,
       notifications,
