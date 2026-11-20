@@ -466,4 +466,52 @@ export const CONTENU_SPECIALITES: Record<string, { fr: ContenuSpecialite; ar: Co
       ],
     },
   },
+  'medecin-travail': {
+    fr: {
+      apropos: 'Le médecin du travail est un professionnel qui examine et conseille les travailleurs dans le but de prévenir les accidents du travail et les maladies professionnelles. Il est recommandé de consulter un médecin du travail lorsqu\'on souffre de symptômes liés à son emploi ou lorsqu\'on a besoin de passer un examen médical pour l\'attribution d\'un poste.',
+      faq: [
+        { q: 'Quel est le rôle principal d\'un médecin du travail en Algérie ?', r: 'Le médecin du travail évalue la santé des travailleurs et identifie les risques liés au poste de travail. Il propose des mesures de prévention pour améliorer la santé et la sécurité au travail.' },
+        { q: 'Peut-on consulter un médecin du travail pour une maladie non liée au travail ?', r: 'Bien que le médecin du travail se concentre principalement sur les problèmes liés au travail, il peut également évaluer d\'autres conditions de santé si elles sont directement liées à l\'environnement professionnel.' },
+      ],
+    },
+    ar: {
+      apropos: 'يعمل طبيب العمل على تقييم وضمان صحة العمال في مكان العمل، وينصح بالكشف الطبي الدوري والاحتياطي. يجب استشارة طبيب العمل في حالة شعور العامل بأي أعراض صحية قد تكون مرتبطة بالعمل أو قبل البدء في وظيفة جديدة تتطلب تحليلاً طبيًا.',
+      faq: [
+        { q: 'ما هي المهام الرئيسية لطبيب العمل؟', r: 'يشمل دور طبيب العمل تقديم الكشوف الطبية الدورية، وتقديم المشورة فيما يتعلق بصحة العمال في مكان العمل، وفحص العمال قبل بدء العمل أو عند تغيير الوظائف.' },
+        { q: 'متى يجب على العاملين زيارة طبيب العمل؟', r: 'يجب زيارة طبيب العمل في حالات مثل الشعور بأعراض صحية قد تكون مرتبطة بالعمل، أو عند بداية عمل جديدة تتطلب الكشف الطبي، أو بأي وقت يعتقد العامل أنه قد يكون لديه انتهاكًا صحيًا في مكان العمل.' },
+      ],
+    },
+  },
+  neurologue: {
+    fr: {
+      apropos: 'Le neurologue est un médecin qui se spécialise dans le diagnostic et le traitement des maladies concernant le système nerveux central et périphérique. Il est recommandé de consulter un neurologue lorsqu\'on présente des symptômes comme la douleur, la faiblesse, la perte de sensations ou des troubles du sommeil.',
+      faq: [
+        { q: 'Quels sont les symptômes qui doivent inciter à consulter un neurologue ?', r: 'La présence de douleurs chroniques, de troubles motrices ou sensitives, de problèmes de mémoire ou de concentration peuvent être des signes à ne pas ignorer.' },
+        { q: 'Un neurologue peut-il traiter les problèmes de santé mentale ?', r: 'Bien que certains troubles mentaux puissent présenter des aspects neurologiques, la majorité est gérée par des psychiatres. Un neurologue peut collaborer dans le cadre d\'un traitement complexe mais n\'est pas spécialisé dans les troubles psychiques.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الأعصاب هو متخصص في تشخيص وعلاج أمراض الجهاز العصبي المركزي والipheral. يجب استشارة هذا الطبيب عند الشعور بآلام متكررة في الجسم أو صعوبات في الحركة أو ضعف في العضلات.',
+      faq: [
+        { q: 'ما هي أعراض مشاكل الجهاز العصبي التي يجب استشارة طبيب الأعصاب عنها؟', r: 'الأعراض الشائعة تشمل الألم المستمر، التingلا، الشعور بالخدر أو الضعف في الجسم.' },
+        { q: 'هل يمكن لطبيب الأعصاب مساعدة في حالات فقدان الشعور في الجسم؟', r: 'نعم، يمكن أن يقدم المتخصص التشخيص والعلاج لحالات فقدان الشعور الناتجة عن مشاكل في الجهاز العصبي.' },
+      ],
+    },
+  },
+  opticien: {
+    fr: {
+      apropos: 'Un opticien est un professionnel qui se spécialise dans la prescription, la fabrication et la vente de lunettes et de lentilles de contact. Il est recommandé de consulter un opticien régulièrement pour vérifier la santé des yeux et vérifier si un ajustement de prescription est nécessaire.',
+      faq: [
+        { q: 'Est-ce qu\'un opticien peut vérifier la santé des yeux?', r: 'Oui, un opticien peut effectuer un examen des yeux pour détecter certaines conditions, comme la dégénérescence rétinienne ou les cataractes, qui peuvent nécessiter une consultation avec un oculiste.' },
+        { q: 'Quelle est la différence entre un opticien et un oculiste?', r: 'Un opticien se concentre sur la prescription et la vente d\'outils de correction visuelle, tandis qu\'un oculiste, également appelé ophtalmologiste, est un médecin qui peut examiner et traiter les problèmes oculaires.' },
+      ],
+    },
+    ar: {
+      apropos: 'أخصائي البصريات هو متخصص في دراسة العين وتصحيح الأخطاء المرئية. يمكن للمرء استشارة هذا المتخصص عند الشك في وجود مشاكل في الرؤية أو الحاجة لتصحيح نظرية.',
+      faq: [
+        { q: 'هل يمكن لخصائي البصريات أن يشخص أمراض العيون؟', r: 'لا، خبراء العيون أو جراحو العيون هم الذين ي诊断眼睛疾病。但是，我会按照要求使用正确的阿拉伯文来回答： Q1: هل يمكن لخصائي البصريات أن يشخص أمراض العيون؟ R1: لا، خبراء العيون أو جراحو العيون هم الذين يشخصون أمراض العيون ويقومون بالعلاج اللازم.' },
+        { q: 'ما هي الخدمات التي يقدمها خبير البصريات؟', r: 'يقدم خبير البصريات الفحوصات الأولية للرؤية ويقترح العدسات أو القراءات الأخرى لتصحيح النظر.' },
+      ],
+    },
+  },
 };
