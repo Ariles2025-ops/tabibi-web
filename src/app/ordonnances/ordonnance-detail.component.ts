@@ -11,6 +11,7 @@ import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { libelleStatutOrdonnance, libelleStatutOrdonnanceAr } from './statut-ordonnance';
 import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.component';
+import { instantLisible } from '../partage/dates-lisibles';
 
 @Component({
     selector: 'app-ordonnance-detail',
@@ -33,7 +34,7 @@ import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.compon
           <div>
             <h1 style="color:var(--vert);margin:0 0 4px">{{ l.t('Ordonnance', 'الوصفة الطبية') }}</h1>
             <p style="color:var(--text3);margin:0">
-              {{ l.t('Émise le', 'صدرت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.emiseLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span> · <app-badge-statut-ordonnance [statut]="o.statut" [arabe]="l.ar()" />
+              <ng-container *ngIf="dateLisible(o.emiseLe); else emiseInconnue">{{ l.t('Émise le', 'صدرت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.emiseLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span></ng-container><ng-template #emiseInconnue>{{ l.t('Date inconnue', 'تاريخ غير معروف') }}</ng-template> · <app-badge-statut-ordonnance [statut]="o.statut" [arabe]="l.ar()" />
             </p>
             <p *ngIf="o.statut === 'ANNULEE'" style="color:var(--red);margin:4px 0 0">{{ l.t('Annulée par le médecin', 'ألغاها الطبيب') }}<ng-container *ngIf="o.motifAnnulation"> : {{ o.motifAnnulation }}</ng-container></p>
             <p *ngIf="o.statut === 'DELIVREE'" style="color:var(--text2);margin:4px 0 0">{{ l.t('Délivrée en pharmacie', 'صُرفت في الصيدلية') }}<ng-container *ngIf="o.delivreeLe">{{ l.t(' le ', ' في ') }}<span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.delivreeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></ng-container></p>
@@ -87,6 +88,8 @@ import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.compon
 })
 export class OrdonnanceDetailComponent implements OnInit {
   l = inject(LangueService);
+  /** Vrai si la date est lisible (sinon « Date inconnue », comme dans l'appli). */
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
   private service = inject(OrdonnanceService);

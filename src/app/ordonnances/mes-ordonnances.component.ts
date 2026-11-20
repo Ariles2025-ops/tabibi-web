@@ -7,6 +7,7 @@ import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { ListeOrdonnancesComponent } from './liste-ordonnances.component';
 import { Ordonnance, OrdonnanceService } from './ordonnance.service';
+import { trierParDateRecenteDabord } from '../partage/dates-lisibles';
 
 @Component({
     selector: 'app-mes-ordonnances',
@@ -60,7 +61,7 @@ export class MesOrdonnancesComponent implements OnInit {
     this.service.mes().subscribe({
       next: (liste) => {
         // Les plus recentes d'abord.
-        this.ordonnances.set([...liste].sort((a, b) => Date.parse(b.emiseLe) - Date.parse(a.emiseLe)));
+        this.ordonnances.set(trierParDateRecenteDabord(liste, (o) => o.emiseLe));
         this.chargerNoms(liste);
         this.charge.set(false);
       },

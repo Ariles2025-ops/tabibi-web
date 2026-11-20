@@ -118,4 +118,14 @@ describe('MesAvisComponent', () => {
       TestBed.inject(LangueService).ar.set(false);
     }
   });
+
+  it('un avis sans date lisible affiche « date inconnue » et passe en fin de liste, comme dans l appli', async () => {
+    service.mes.and.returnValue(of([{ ...ANCIEN, id: 'a3', deposeLe: 'illisible' }, ANCIEN, RECENT]));
+    await afficher();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.length).toBe(3);
+    expect(items[0].textContent).toContain('18 septembre 2026');
+    expect(items[2].textContent).toContain('date inconnue');
+  });
 });

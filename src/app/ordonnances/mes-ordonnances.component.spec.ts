@@ -85,4 +85,13 @@ describe('MesOrdonnancesComponent', () => {
       TestBed.inject(LangueService).ar.set(false);
     }
   });
+
+  it('une ordonnance sans date lisible affiche « Date inconnue » et passe en fin de liste, comme dans l appli', async () => {
+    service.mes.and.returnValue(of([{ ...DELIVREE, id: 'o3', emiseLe: 'illisible' }, DELIVREE, ANNULEE]));
+    await afficher();
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.length).toBe(3);
+    expect(items[0].textContent).not.toContain('Date inconnue');
+    expect(items[2].textContent).toContain('Date inconnue');
+  });
 });

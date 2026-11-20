@@ -7,6 +7,7 @@ import { AuthService } from '../auth/auth.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { Avis, AvisService, libelleStatutAvis } from './avis.service';
+import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
 
 /** Avis deposes par le patient connecte (GET /api/avis/mes), tous statuts, les plus recents d'abord. */
 @Component({
@@ -27,7 +28,7 @@ import { Avis, AvisService, libelleStatutAvis } from './avis.service';
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let a of avis()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
             <strong>{{ a.note }} / 5</strong>
-            <span style="color:var(--text3)"> · {{ libelleStatut(a.statut) }} · <span [attr.dir]="l.ar() ? 'ltr' : null">{{ a.deposeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></span><br>
+            <span style="color:var(--text3)"> · {{ libelleStatut(a.statut) }} · <span *ngIf="dateLisible(a.deposeLe)" [attr.dir]="l.ar() ? 'ltr' : null">{{ a.deposeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span><ng-container *ngIf="!dateLisible(a.deposeLe)">{{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-container></span><br>
             <a [routerLink]="['/medecins', a.medecinId]" style="color:var(--vert)">{{ noms()[a.medecinId] ?? l.t('Voir le praticien', 'عرض الطبيب') }}</a>
             <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
           </li>
@@ -65,13 +66,16 @@ export class MesAvisComponent implements OnInit {
     this.charger();
   }
 
+  /** Vrai si la date est lisible (sinon « date inconnue », comme dans l'appli). */
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
+
   charger() {
     this.charge.set(true);
     this.erreur.set('');
     this.service.mes().subscribe({
       next: (liste) => {
         // Les plus recents d'abord.
-        this.avis.set([...liste].sort((a, b) => Date.parse(b.deposeLe) - Date.parse(a.deposeLe)));
+        this.avis.set(trierParDateRecenteDabord(liste, (a) => a.deposeLe));
         this.chargerNoms(liste);
         this.charge.set(false);
       },

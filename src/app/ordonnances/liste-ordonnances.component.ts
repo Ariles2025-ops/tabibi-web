@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Ordonnance } from './ordonnance.service';
 import { libelleStatutOrdonnance } from './statut-ordonnance';
 import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.component';
+import { instantLisible } from '../partage/dates-lisibles';
 
 /** Liste d'ordonnances (date, praticien si fourni, code, statut) ; chaque ligne mene au detail /ordonnances/:id. */
 @Component({
@@ -15,7 +16,7 @@ import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.compon
         <a [routerLink]="['/ordonnances', o.id]"
            style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;color:inherit;text-decoration:none">
           <span>
-            <strong style="color:var(--ink)"><i class="fa fa-file-prescription fa-xs" style="color:var(--blue)"></i> <span [attr.dir]="arabe() ? 'ltr' : null">{{ o.emiseLe | date:(arabe() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span></strong><br>
+            <strong style="color:var(--ink)"><i class="fa fa-file-prescription fa-xs" style="color:var(--blue)"></i> <span *ngIf="dateLisible(o.emiseLe)" [attr.dir]="arabe() ? 'ltr' : null">{{ o.emiseLe | date:(arabe() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span><span *ngIf="!dateLisible(o.emiseLe)">{{ arabe() ? 'تاريخ غير معروف' : 'Date inconnue' }}</span></strong><br>
             <span style="color:var(--text3)">
               <ng-container *ngIf="afficherPatient()">{{ arabe() ? 'المريض' : 'Patient' }} : {{ o.patientId }} · </ng-container><ng-container *ngIf="nomsMedecins() as noms"><ng-container *ngIf="noms[o.medecinId] as nom">{{ nom }}</ng-container></ng-container>
             </span>
@@ -32,6 +33,8 @@ import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.compon
   `
 })
 export class ListeOrdonnancesComponent {
+  /** Vrai si la date est lisible (sinon « Date inconnue », comme dans l'appli). */
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
   ordonnances = input.required<Ordonnance[]>();
   /** Affiche l'identifiant du patient sur chaque ligne (liste du medecin). */
   afficherPatient = input(false);
