@@ -236,4 +236,25 @@ describe('MesNotificationsComponent', () => {
       expect(fixture.nativeElement.textContent).toContain('تم تعليم 2 إشعار(ات) كمقروءة');
     });
   });
+
+  it('une notification sans date lisible affiche « date inconnue » et passe en fin de liste, comme dans l appli', async () => {
+    service.mesNotifications.and.returnValue(of([{ ...LUE, id: 'n3', creeLe: 'pas une date' }, LUE, NON_LUE]));
+    await afficher();
+    const items = lignes();
+    expect(items.length).toBe(3);
+    expect(items[2].textContent).toContain('date inconnue');
+    expect(items[0].textContent).not.toContain('date inconnue');
+    expect(items[1].textContent).not.toContain('date inconnue');
+  });
+
+  it('en arabe, une notification sans date affiche « تاريخ غير معروف »', async () => {
+    service.mesNotifications.and.returnValue(of([{ ...LUE, creeLe: '' }]));
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      await afficher();
+      expect(fixture.nativeElement.textContent).toContain('تاريخ غير معروف');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
+  });
 });

@@ -7,6 +7,7 @@ import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { cibleDuLien } from './cible-notification';
 import { Notification, NotificationService } from './notification.service';
+import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
 
 /** Boite de reception de l'utilisateur connecte (GET /api/notifications/mes), avec marquage lu. */
 @Component({
@@ -37,7 +38,7 @@ import { Notification, NotificationService } from './notification.service';
               style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <strong>{{ n.sujet }}</strong>
-              <span style="color:var(--text3)"> · <span [attr.dir]="l.ar() ? 'ltr' : null">{{ n.creeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span></span><br>
+              <span style="color:var(--text3)"> · <ng-container *ngIf="dateLisible(n.creeLe); else dateInconnue"><span [attr.dir]="l.ar() ? 'ltr' : null">{{ n.creeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span></ng-container><ng-template #dateInconnue>{{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-template></span><br>
               <span>{{ n.message }}</span>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -82,13 +83,16 @@ export class MesNotificationsComponent implements OnInit {
     this.charger();
   }
 
+  /** Vrai si la date est lisible (sinon « date inconnue », comme dans l'appli). */
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
+
   charger() {
     this.charge.set(true);
     this.erreur.set('');
     this.service.mesNotifications().subscribe({
       next: (liste) => {
         // Les plus recentes d'abord.
-        this.notifications.set([...liste].sort((a, b) => Date.parse(b.creeLe) - Date.parse(a.creeLe)));
+        this.notifications.set(trierParDateRecenteDabord(liste, (n) => n.creeLe));
         this.charge.set(false);
       },
       error: (e: HttpErrorResponse) => {
