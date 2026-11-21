@@ -546,12 +546,13 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
     this.abonnementAuto = this.saisie
       .pipe(
         debounceTime(250),
-        map((t) => t.trim()),
-        distinctUntilChanged(),
-        switchMap((t) =>
+        // Les suggestions respectent la specialite et la wilaya deja choisies (comme la liste principale).
+        map((t) => ({ t: t.trim(), s: this.specialite, w: this.wilaya })),
+        distinctUntilChanged((a, b) => a.t === b.t && a.s === b.s && a.w === b.w),
+        switchMap(({ t, s, w }) =>
           t.length < 2
             ? of<Medecin[]>([])
-            : this.service.rechercher(undefined, undefined, t).pipe(
+            : this.service.rechercher(s || undefined, w || undefined, t).pipe(
                 map((liste) => liste.slice(0, 6)),
                 catchError(() => of<Medecin[]>([])),
               ),
@@ -601,6 +602,7 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   /** Changement d'un des deux <select> : ferme l'autocompletion et relance la recherche combinee (texte + specialite + wilaya). */
   surFiltre() {
     this.suggestionsVisibles.set(false);
+    this.suggestions.set([]); // anciennes suggestions hors criteres : ne pas les reafficher au focus
     this.commune = '';
     this.chargerCommunes();
     this.rechercher();
