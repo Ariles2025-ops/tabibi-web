@@ -97,6 +97,14 @@ describe('AppComponent', () => {
     expect(pied.querySelector('a[href="/supprimer-mon-compte"]')).not.toBeNull();
   });
 
+  it('pied de page : la colonne des liens vers les wilayas s\'intitule « Wilayas » (pas « Villes »), comme son lien', async () => {
+    await afficher();
+
+    const titres = Array.from(fixture.nativeElement.querySelectorAll('footer h2') as NodeListOf<HTMLElement>).map((h) => h.textContent?.trim());
+    expect(titres).toContain('Wilayas');
+    expect(titres).not.toContain('Villes');
+  });
+
   it('affiche la cloche de notifications et « Mes ordonnances » une fois connecte', async () => {
     connecte = true;
     await afficher();

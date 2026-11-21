@@ -332,7 +332,7 @@ describe('FicheMedecinComponent (arabe)', () => {
 
     expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
     for (const mot of ['العودة إلى البحث', 'مراسلة الطبيب', 'احجز موعدًا', 'أقرب موعد متاح', 'مكان الاستشارة', 'العيادة', 'معلومات عملية',
-      'التسجيل في قائمة الانتظار', 'آراء المرضى', 'ولاية الجزائر', 'الفرنسية، العربية', 'العنوان', 'أوقات العمل', '4,5 / 5 (2 رأي)']) {
+      'التسجيل في قائمة الانتظار', 'آراء المرضى', 'ولاية الجزائر', 'الفرنسية، العربية', 'العنوان', 'أوقات العمل', 'اللغات المتحدَّث بها', '4,5 / 5 (2 رأي)']) {
       expect(texte()).withContext(mot).toContain(mot);
     }
     for (const mot of ['Retour', 'Prendre rendez-vous', "Liste d'attente", 'Écrire', 'Avis des patients', 'Prochaine', ' avis)', 'null', 'undefined']) {
