@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
@@ -26,6 +26,7 @@ import { instantLisible } from '../partage/dates-lisibles';
         <app-selecteur-langue />
       </div>
 
+      <p *ngIf="emise()" class="ordonnance-emise sans-impression" role="status" style="margin:0 0 16px;color:var(--vert);font-weight:600">{{ l.t('Ordonnance émise.', 'تم إصدار الوصفة.') }}</p>
       <p *ngIf="charge()">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
@@ -91,6 +92,8 @@ export class OrdonnanceDetailComponent implements OnInit {
   /** Vrai si la date est lisible (sinon « Date inconnue », comme dans l'appli). */
   dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
   private route = inject(ActivatedRoute);
+  /** Vrai juste apres l'emission par le medecin (« Ordonnance émise. », comme l'appli) ; jamais apres un rechargement. */
+  emise = signal(inject(Router).getCurrentNavigation()?.extras.state?.['ordonnanceEmise'] === true);
   private auth = inject(AuthService);
   private service = inject(OrdonnanceService);
   private annuaire = inject(AnnuaireService);

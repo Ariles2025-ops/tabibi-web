@@ -194,7 +194,7 @@ export class NouvelleOrdonnanceComponent implements OnInit {
     this.enCours.set(true);
     this.erreur.set('');
     this.service.emettre({ patientId, lignes, ...(rendezVousId ? { rendezVousId } : {}) }).subscribe({
-      next: (o) => this.router.navigate(['/ordonnances', o.id]),
+      next: (o) => this.router.navigate(['/ordonnances', o.id], { state: { ordonnanceEmise: true } }),
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
         if (e.status === 401) {
