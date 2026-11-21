@@ -8,7 +8,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject, Subscription, catchError, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
-import { AnnuaireService, Medecin } from './annuaire.service';
+import { AnnuaireService, CommuneApi, Medecin } from './annuaire.service';
 import { AuthService } from '../auth/auth.service';
 
 /** Une wilaya du referentiel (assets/referentiel.json) : code officiel + libelle FR. */
@@ -75,6 +75,13 @@ const GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=dz.tabibi.app
               <select [(ngModel)]="specialite" (change)="surFiltre()" [attr.aria-label]="t('Spécialité', 'التخصص')">
                 <option value="">{{ t('Toutes les spécialités', 'جميع التخصصات') }}</option>
                 <option *ngFor="let s of specialites()" [value]="s.slug">{{ nomSpecialite(s.slug, s.nom) }}</option>
+              </select>
+            </label>
+            <label class="dl-chip" *ngIf="wilaya && communes().length">
+              <i class="fa fa-location-dot" aria-hidden="true"></i>
+              <select [(ngModel)]="commune" (change)="surCommune()" [attr.aria-label]="t('Commune', 'البلدية')">
+                <option value="">{{ t('Toutes les communes', 'جميع البلديات') }}</option>
+                <option *ngFor="let c of communes()" [value]="c.slug">{{ c.nom }}</option>
               </select>
             </label>
           </div>
@@ -230,6 +237,9 @@ const GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=dz.tabibi.app
         </div>
       </div>
 
+      </div>
+      <div *ngIf="connecte() && !charge() && resultats().length > 0 && resteAcharger()" style="text-align:center;padding:20px var(--gutter)">
+        <button type="button" class="bouton-secondaire" (click)="voirPlus()" [disabled]="chargePlus()" style="cursor:pointer">{{ chargePlus() ? t('Chargement…', 'جارٍ التحميل…') : t('Voir plus de médecins', 'عرض المزيد من الأطباء') }}</button>
       </div>
       <p *ngIf="!charge() && !erreur() && resultats().length === 0" style="text-align:center;color:var(--text3);padding:32px var(--gutter)">
         {{ t('Aucun médecin trouvé. Essayez un autre nom ou une autre wilaya.', 'لم نعثر على أي طبيب. جرّب اسمًا آخر أو ولاية أخرى.') }}
@@ -441,7 +451,15 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   private saisie = new Subject<string>();
   private abonnementAuto: Subscription | null = null;
   /** Demandes de recherche : switchMap annule la requete precedente, seule la derniere met a jour la liste. */
-  private recherches = new Subject<void>();
+  private recherches = new Subject<number>();
+  /** Nombre de pages deja chargees (page 0 = premiere) et total reel renvoye par l'API (X-Total-Count). */
+  private pagesChargees = 1;
+  total = signal(0);
+  chargePlus = signal(false);
+  /** Filtre commune (slug), propose une fois la wilaya choisie. */
+  commune = '';
+  communes = signal<CommuneApi[]>([]);
+  private abonnementCommunes: Subscription | null = null;
   private abonnementRecherche: Subscription | null = null;
   /** Filtres passes dans l'URL (?specialite=…&wilaya=…), par exemple depuis les liens du pied de page. */
   private abonnementParams: Subscription | null = null;
@@ -453,20 +471,32 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.abonnementRecherche = this.recherches
       .pipe(
-        switchMap(() =>
-          this.service.rechercher(this.specialite, this.wilaya, this.q).pipe(
-            map((r) => ({ r, ok: true })),
-            catchError(() => of({ r: [] as Medecin[], ok: false })),
+        switchMap((page) =>
+          this.service.rechercherPage(this.specialite, this.wilaya, this.q, this.commune, page).pipe(
+            map((r) => ({ r, ok: true, page })),
+            catchError(() => of({ r: { medecins: [] as Medecin[], total: 0 }, ok: false, page })),
           ),
         ),
       )
-      .subscribe(({ r, ok }) => {
-        if (ok) this.resultats.set(r);
+      .subscribe(({ r, ok, page }) => {
+        if (ok) {
+          if (page === 0) this.resultats.set(r.medecins);
+          else {
+            const deja = new Set(this.resultats().map((m) => m.id));
+            this.resultats.set([...this.resultats(), ...r.medecins.filter((m) => !deja.has(m.id))]);
+          }
+          this.pagesChargees = page + 1;
+          this.total.set(Math.max(r.total, this.resultats().length));
+        } else if (page > 0) this.erreur.set(this.t(
+          'Impossible de charger la suite. Réessayez.',
+          'تعذّر تحميل المزيد. أعد المحاولة.',
+        ));
         else this.erreur.set(this.t(
           'Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.',
           'تعذّر الاتصال بالخادم. تحقّق من اتصالك بالإنترنت وأعد المحاولة.',
         ));
         this.charge.set(false);
+        this.chargePlus.set(false);
       });
     // Accueil francais (/) <-> arabe (/ar) pour les moteurs de recherche.
     const ar = this.ar();
@@ -498,6 +528,8 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
       this.q = q ?? '';
       this.specialite = specialite ?? '';
       this.wilaya = wilaya ?? '';
+      this.commune = '';
+      this.chargerCommunes();
       this.auth.pret().then(() => {
         this.connecte.set(this.auth.estConnecte());
         this.lancerRecherche();
@@ -528,6 +560,7 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.abonnementRecherche?.unsubscribe();
     this.abonnementRecherche = null;
+    this.abonnementCommunes?.unsubscribe();
     this.abonnementAuto?.unsubscribe();
     this.abonnementAuto = null;
     this.abonnementParams?.unsubscribe();
@@ -562,7 +595,37 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   /** Changement d'un des deux <select> : ferme l'autocompletion et relance la recherche combinee (texte + specialite + wilaya). */
   surFiltre() {
     this.suggestionsVisibles.set(false);
+    this.commune = '';
+    this.chargerCommunes();
     this.rechercher();
+  }
+
+  /** Changement du <select> commune : relance la recherche avec le filtre commune. */
+  surCommune() {
+    this.rechercher();
+  }
+
+  /** Alimente le <select> commune (GET /api/medecins/communes) une fois la wilaya choisie. */
+  private chargerCommunes() {
+    this.abonnementCommunes?.unsubscribe();
+    this.communes.set([]);
+    if (!this.wilaya) return;
+    this.abonnementCommunes = this.service.communes(this.specialite, this.wilaya)
+      .pipe(catchError(() => of<CommuneApi[]>([])))
+      .subscribe((l) => this.communes.set(l ?? []));
+  }
+
+  /** « Voir plus de médecins » : ajoute la page suivante a la liste. */
+  voirPlus() {
+    if (this.chargePlus()) return;
+    this.chargePlus.set(true);
+    this.erreur.set('');
+    this.recherches.next(this.pagesChargees);
+  }
+
+  /** Reste-t-il des medecins a charger ? */
+  resteAcharger(): boolean {
+    return this.resultats().length < this.total();
   }
 
   /** Bouton « Se connecter » du cadenas sur les resultats floutes. */
@@ -589,7 +652,7 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
   rechercher() {
     this.charge.set(true);
     this.erreur.set('');
-    this.recherches.next();
+    this.recherches.next(0);
   }
 
   /** Texte affiche selon la langue de la page : francais sur /, arabe sur /ar. */
@@ -613,9 +676,8 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
 
   /** « 3 médecins trouvés » / « 50+ … » : nombre de medecins, accorde en francais ou en arabe. */
   texteNombre(): string {
-    const n = this.resultats().length;
-    if (!this.ar()) return n >= 50 ? '50+ médecins trouvés' : `${n} ${n > 1 ? 'médecins trouvés' : 'médecin trouvé'}`;
-    if (n >= 50) return 'أكثر من 50 طبيبًا';
+    const n = Math.max(this.total(), this.resultats().length);
+    if (!this.ar()) return `${n} ${n > 1 ? 'médecins trouvés' : 'médecin trouvé'}`;
     if (n === 1) return 'طبيب واحد';
     if (n === 2) return 'طبيبان';
     return n <= 10 ? `${n} أطباء` : `${n} طبيبًا`;
@@ -623,9 +685,6 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
 
   /** Compteur a cote du titre des resultats. */
   texteCompte(): string {
-    if (this.resultats().length >= 50 && this.connecte()) {
-      return this.t('50 premiers résultats — affinez votre recherche', 'أول 50 نتيجة — دقّق بحثك');
-    }
     return this.texteNombre();
   }
 
