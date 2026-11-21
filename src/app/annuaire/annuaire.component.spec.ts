@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Subject, map, of } from 'rxjs';
+import { Subject, map, of, throwError } from 'rxjs';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { ACCUEIL_AR } from '../seo/marque';
@@ -142,6 +142,35 @@ describe('AnnuaireComponent : recherche', () => {
     seconde.next([m('recent')]);
     expect(c.resultats().map((x) => x.id)).toEqual(['recent']);
     expect(c.charge()).toBeFalse();
+  });
+
+  it('echec d une nouvelle recherche : l ancienne liste est videe, seule l erreur reste', () => {
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercherPage']);
+    const m = (id: string) => ({ id, nomComplet: id } as Medecin);
+    annuaire.rechercherPage.and.returnValues(
+      of({ medecins: [m('alger')], total: 1 }),
+      throwError(() => new Error('reseau')),
+    );
+    TestBed.configureTestingModule({
+      imports: [AnnuaireComponent],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: { estConnecte: () => false, pret: () => Promise.resolve() } },
+        { provide: AnnuaireService, useValue: annuaire },
+      ],
+    });
+    const fixture = TestBed.createComponent(AnnuaireComponent);
+    fixture.detectChanges();
+    const c = fixture.componentInstance;
+
+    c.rechercher();
+    expect(c.resultats().length).toBe(1);
+    c.rechercher();
+    expect(c.erreur()).not.toBe('');
+    expect(c.resultats()).toEqual([]);
+    expect(c.total()).toBe(0);
   });
 });
 
