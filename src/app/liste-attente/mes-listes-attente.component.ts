@@ -65,6 +65,7 @@ import { InscriptionAttente, ListeAttenteService, instantInscription, trierParIn
   `
 })
 export class MesListesAttenteComponent implements OnInit {
+  readonly libelleMedecin = libelleMedecin;
   l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(ListeAttenteService);

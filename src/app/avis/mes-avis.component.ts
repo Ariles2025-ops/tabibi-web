@@ -43,6 +43,7 @@ import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisi
   `
 })
 export class MesAvisComponent implements OnInit {
+  readonly libelleMedecin = libelleMedecin;
   l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(AvisService);

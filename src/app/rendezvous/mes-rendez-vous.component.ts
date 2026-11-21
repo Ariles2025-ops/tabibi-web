@@ -173,6 +173,7 @@ import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from '.
   `]
 })
 export class MesRendezVousComponent implements OnInit {
+  readonly libelleMedecin = libelleMedecin;
   l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(RendezVousService);

@@ -79,6 +79,7 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
   `
 })
 export class MesTeleconsultationsComponent implements OnInit {
+  readonly libelleMedecin = libelleMedecin;
   l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(TeleconsultationService);
