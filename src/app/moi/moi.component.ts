@@ -9,6 +9,7 @@ import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { ApiDisponibleService } from '../partage/api-disponible.service';
 import { MoiService } from './moi.service';
+import { marquerCompteSupprime } from './compte-supprime';
 
 /** Libelles francais des roles metier ; tout autre role (technique) n'est pas affiche. */
 const LIBELLES_ROLES: Partial<Record<string, [string, string]>> = {
@@ -175,6 +176,7 @@ export class MoiComponent implements OnInit {
     this.moiService.supprimer().subscribe({
       next: () => {
         this.suppressionEnCours.set(false);
+        marquerCompteSupprime();
         this.seDeconnecter();
       },
       error: (e: HttpErrorResponse) => {
