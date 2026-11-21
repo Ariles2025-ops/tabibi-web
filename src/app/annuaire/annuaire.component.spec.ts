@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Subject, map, of, throwError } from 'rxjs';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Title } from '@angular/platform-browser';
@@ -279,4 +279,38 @@ describe('AnnuaireComponent : pagination et commune', () => {
     c.surCommune();
     expect(annuaire.rechercherPage.calls.mostRecent().args[3]).toBe('bab-ezzouar');
   });
+
+  it('l autocompletion du nom respecte la specialite et la wilaya choisies', fakeAsync(() => {
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercherPage', 'communes', 'rechercher']);
+    annuaire.communes.and.returnValue(of([]));
+    annuaire.rechercherPage.and.returnValue(of({ medecins: [], total: 0 }));
+    annuaire.rechercher.and.returnValue(of([]));
+    TestBed.configureTestingModule({
+      imports: [AnnuaireComponent],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: { estConnecte: () => false, pret: () => Promise.resolve() } },
+        { provide: AnnuaireService, useValue: annuaire },
+      ],
+    });
+    const fixture = TestBed.createComponent(AnnuaireComponent);
+    fixture.detectChanges();
+    const c = fixture.componentInstance;
+    c.specialite = 'dermatologue';
+    c.wilaya = '31';
+    c.surFiltre();
+    c.q = 'Ben';
+    c.surSaisie();
+    tick(300);
+    expect(annuaire.rechercher).toHaveBeenCalledWith('dermatologue', '31', 'Ben');
+    // Meme texte apres changement de filtre : nouvelle requete avec le nouveau filtre.
+    c.wilaya = '16';
+    c.surFiltre();
+    c.surSaisie();
+    tick(300);
+    expect(annuaire.rechercher.calls.mostRecent().args).toEqual(['dermatologue', '16', 'Ben']);
+    tick(400);
+  }));
 });
