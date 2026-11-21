@@ -27,6 +27,7 @@ import { instantLisible } from '../partage/dates-lisibles';
 
       <p *ngIf="charge()" style="color:var(--text3)">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
       <p *ngIf="erreur()" role="alert" style="color:var(--red)">{{ erreur() }}</p>
+      <p *ngIf="succes()" role="status" data-testid="succes-annulation" style="color:var(--vert)">{{ l.t('Ordonnance annulée.', 'تم إلغاء الوصفة.') }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let o of ordonnances()" style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1)">
@@ -77,6 +78,8 @@ export class OrdonnancesRedigeesComponent implements OnInit {
   repertoire = signal<RepertoirePatients>(new Map());
   charge = signal(false);
   erreur = signal('');
+  /** Vrai juste apres une annulation reussie : « Ordonnance annulée. », comme l'appli. */
+  succes = signal(false);
   /** Ordonnance dont l'annulation attend confirmation (Oui / Non), ou null. */
   aAnnuler = signal<string | null>(null);
   /** Ordonnance en cours d'annulation cote serveur, ou null. */
@@ -116,6 +119,7 @@ export class OrdonnancesRedigeesComponent implements OnInit {
   demanderAnnulation(o: Ordonnance) {
     this.motif = '';
     this.erreur.set('');
+    this.succes.set(false);
     this.aAnnuler.set(o.id);
   }
 
@@ -126,6 +130,7 @@ export class OrdonnancesRedigeesComponent implements OnInit {
       next: (maj) => {
         this.enCours.set(null);
         this.aAnnuler.set(null);
+        this.succes.set(true);
         this.ordonnances.update((liste) => liste.map((x) => (x.id === maj.id ? maj : x)));
       },
       error: (e: HttpErrorResponse) => {

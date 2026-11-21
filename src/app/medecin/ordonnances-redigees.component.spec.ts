@@ -64,4 +64,19 @@ describe('OrdonnancesRedigeesComponent', () => {
     expect(texte()).not.toContain('Patient');
     expect(texte()).not.toContain('Mes ordonnances');
   });
+
+  it('confirme « Ordonnance annulée. » (FR/AR) apres une annulation reussie, comme l\'appli', () => {
+    const medecin = TestBed.inject(MedecinService) as jasmine.SpyObj<MedecinService>;
+    medecin.annulerOrdonnance.and.returnValue(of({ ...EMISE, statut: 'ANNULEE' } as Ordonnance));
+    fixture.detectChanges();
+    expect(texte()).not.toContain('Ordonnance annulée.');
+    fixture.componentInstance.demanderAnnulation(EMISE);
+    fixture.componentInstance.confirmerAnnulation(EMISE);
+    fixture.detectChanges();
+    expect(texte()).toContain('Ordonnance annulée.');
+    TestBed.inject(LangueService).ar.set(true);
+    fixture.detectChanges();
+    expect(texte()).toContain('تم إلغاء الوصفة.');
+    expect(texte()).not.toContain('Ordonnance annulée.');
+  });
 });
