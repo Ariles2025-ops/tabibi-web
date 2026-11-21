@@ -127,7 +127,7 @@ export class InvitationsComponent implements OnInit {
         await this.auth.actualiserRoles();
         await this.roleService.recharger();
         this.enCours.set(null);
-        this.router.navigateByUrl('/secretaire');
+        this.router.navigateByUrl('/secretaire', { state: { invitationAcceptee: true } });
       },
       error: (e: HttpErrorResponse) => this.echec(e),
     });
