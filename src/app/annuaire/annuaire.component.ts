@@ -491,10 +491,16 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
           'Impossible de charger la suite. Réessayez.',
           'تعذّر تحميل المزيد. أعد المحاولة.',
         ));
-        else this.erreur.set(this.t(
+        else {
+          // Echec d'une nouvelle recherche : ne pas laisser l'ancienne liste affichee sous l'erreur.
+          this.resultats.set([]);
+          this.total.set(0);
+          this.pagesChargees = 0;
+          this.erreur.set(this.t(
           'Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez.',
           'تعذّر الاتصال بالخادم. تحقّق من اتصالك بالإنترنت وأعد المحاولة.',
-        ));
+          ));
+        }
         this.charge.set(false);
         this.chargePlus.set(false);
       });
