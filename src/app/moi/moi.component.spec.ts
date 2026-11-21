@@ -7,6 +7,7 @@ import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { Moi, MoiService } from './moi.service';
 import { LangueService } from '../partage/langue.service';
+import { ApiDisponibleService } from '../partage/api-disponible.service';
 import { MoiComponent } from './moi.component';
 
 const PROFIL: Moi = { sujet: '55555555-5555-5555-5555-555555555555', nom: 'patient.demo', roles: ['PATIENT'] };
@@ -101,6 +102,22 @@ describe('MoiComponent', () => {
     expect(lien('/secretaire')).not.toBeNull();
     expect(lien('/invitations')).not.toBeNull();
     expect(lien('/mes-rendez-vous')).toBeNull();
+  });
+
+  it('propose « Ma fiche » au médecin seulement quand la route de l\'API existe, comme « Mon espace » de l\'appli', async () => {
+    const api = TestBed.inject(ApiDisponibleService);
+    moi.set({ ...PROFIL, roles: ['MEDECIN'] });
+    await afficher();
+    expect(lien('/medecin/ma-fiche')).toBeNull();
+
+    api.ficheMedecin.set(true);
+    await afficher();
+    expect(lien('/medecin/ma-fiche')).not.toBeNull();
+    expect(texte()).toContain('Ma fiche');
+
+    moi.set(PROFIL);
+    await afficher();
+    expect(lien('/medecin/ma-fiche')).toBeNull();
   });
 
   it('propose la messagerie au médecin et au patient, et au patient ses avis, listes d\'attente et Dawini, comme « Mon compte » de l\'appli', async () => {

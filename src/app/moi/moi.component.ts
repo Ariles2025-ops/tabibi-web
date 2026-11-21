@@ -7,6 +7,7 @@ import { VISIO_ACTIVE, inscriptionFermee } from '../lancement';
 import { RoleService } from '../auth/role.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
+import { ApiDisponibleService } from '../partage/api-disponible.service';
 import { MoiService } from './moi.service';
 
 /** Libelles francais des roles metier ; tout autre role (technique) n'est pas affiche. */
@@ -78,6 +79,7 @@ export class MoiComponent implements OnInit {
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   private moiService = inject(MoiService);
+  private apiDisponible = inject(ApiDisponibleService);
   connecte = signal(false);
   /** Profil /api/moi, lu depuis le cache de RoleService (une seule requete par chargement de page). */
   moi = this.roleService.moi;
@@ -119,6 +121,8 @@ export class MoiComponent implements OnInit {
         { lien: '/medecin/liste-attente', libelle: t("Liste d'attente", 'قائمة الانتظار') },
         { lien: '/medecin/avis', libelle: t('Avis des patients', 'آراء المرضى') },
         { lien: '/medecin/secretaires', libelle: t('Mes secrétaires', 'سكرتيراتي') },
+        // Comme « Ma fiche » de « Mon espace » dans l'appli : visible seulement si la route de l'API existe (sonde faite par le menu).
+        ...(this.apiDisponible.ficheMedecin() ? [{ lien: '/medecin/ma-fiche', libelle: t('Ma fiche', 'صفحتي') }] : []),
         messagerie,
         visio,
         verifier,
