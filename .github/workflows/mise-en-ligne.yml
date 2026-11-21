@@ -33,3 +33,22 @@ jobs:
           # 3 = ce commit n'est plus la tête de main : une fusion plus récente arrive et sera déployée par son propre passage. Pas une panne.
           if [ "$code" = 3 ]; then echo "Version dépassée par une fusion plus récente : rien à faire."; exit 0; fi
           exit "$code"
+
+  parcours-fiche:
+    # Après chaque mise en ligne : le parcours « ouvrir une fiche praticien » (FR/AR, ordinateur/téléphone)
+    # doit passer sur le vrai site. Incident du 21/11/2026 : ce parcours n'était vérifié que par le homelab.
+    needs: deployer
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Parcours fiche praticien sur ndawik.com
+        env:
+          TABIBI_E2E_URL: https://ndawik.com
+        run: npx playwright test e2e/fiche-praticien.spec.ts
