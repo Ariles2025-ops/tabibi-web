@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Subject } from 'rxjs';
+import { Subject, map, of } from 'rxjs';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { ACCUEIL_AR } from '../seo/marque';
@@ -49,8 +49,8 @@ describe('AnnuaireComponent : reperes d accessibilite', () => {
 /** Hors connexion, pas de cadenas quand il n'y a rien a debloquer (aucun resultat ou erreur). */
 describe('AnnuaireComponent : cadenas sans resultat', () => {
   function creer(retour: Subject<Medecin[]>) {
-    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher']);
-    annuaire.rechercher.and.returnValue(retour);
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercherPage']);
+    annuaire.rechercherPage.and.returnValue(retour.pipe(map((medecins) => ({ medecins, total: medecins.length }))));
     TestBed.configureTestingModule({
       imports: [AnnuaireComponent],
       providers: [
@@ -115,8 +115,11 @@ describe('AnnuaireComponent : recherche', () => {
   it('seule la derniere recherche met a jour les resultats', () => {
     const premiere = new Subject<Medecin[]>();
     const seconde = new Subject<Medecin[]>();
-    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher']);
-    annuaire.rechercher.and.returnValues(premiere, seconde);
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercherPage']);
+    annuaire.rechercherPage.and.returnValues(
+      premiere.pipe(map((medecins) => ({ medecins, total: medecins.length }))),
+      seconde.pipe(map((medecins) => ({ medecins, total: medecins.length }))),
+    );
     TestBed.configureTestingModule({
       imports: [AnnuaireComponent],
       providers: [
@@ -183,5 +186,68 @@ describe('AnnuaireComponent : accueil arabe', () => {
     expect(play.href).toBe('https://play.google.com/store/apps/details?id=dz.tabibi.app');
     expect(play.target).toBe('_blank');
     expect(main.querySelector('.hero-stores .store--bientot')!.getAttribute('aria-disabled')).toBe('true');
+  });
+});
+
+/** Plus de plafond a 50 : total reel (X-Total-Count), « Voir plus » ajoute la page suivante, filtre commune. */
+describe('AnnuaireComponent : pagination et commune', () => {
+  it('affiche le vrai total, charge la page suivante et masque le bouton une fois tout charge', () => {
+    const m = (id: string) => ({ id, nomComplet: id } as Medecin);
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercherPage', 'communes']);
+    annuaire.communes.and.returnValue(of([{ slug: 'bab-ezzouar', nom: 'Bab Ezzouar', nombre: 5 }]));
+    annuaire.rechercherPage.and.returnValues(
+      of({ medecins: [m('a'), m('b')], total: 3 }),
+      of({ medecins: [m('b'), m('c')], total: 3 }),
+    );
+    TestBed.configureTestingModule({
+      imports: [AnnuaireComponent],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: { estConnecte: () => true, pret: () => Promise.resolve() } },
+        { provide: AnnuaireService, useValue: annuaire },
+      ],
+    });
+    const fixture = TestBed.createComponent(AnnuaireComponent);
+    const c = fixture.componentInstance;
+    c.q = 'x';
+    c.connecte.set(true);
+    fixture.detectChanges();
+
+    c.rechercher();
+    expect(c.texteCompte()).toBe('3 médecins trouvés');
+    expect(c.resteAcharger()).toBeTrue();
+    c.voirPlus();
+    expect(annuaire.rechercherPage.calls.mostRecent().args[4]).toBe(1);
+    expect(c.resultats().map((x) => x.id)).toEqual(['a', 'b', 'c']);
+    expect(c.resteAcharger()).toBeFalse();
+  });
+
+  it('choisir une wilaya charge les communes ; la commune est envoyee a la recherche', () => {
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercherPage', 'communes']);
+    annuaire.communes.and.returnValue(of([{ slug: 'bab-ezzouar', nom: 'Bab Ezzouar', nombre: 5 }]));
+    annuaire.rechercherPage.and.returnValue(of({ medecins: [], total: 0 }));
+    TestBed.configureTestingModule({
+      imports: [AnnuaireComponent],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: { estConnecte: () => false, pret: () => Promise.resolve() } },
+        { provide: AnnuaireService, useValue: annuaire },
+      ],
+    });
+    const fixture = TestBed.createComponent(AnnuaireComponent);
+    fixture.detectChanges();
+    const c = fixture.componentInstance;
+    c.specialite = 'medecin-generaliste';
+    c.wilaya = '16';
+    c.surFiltre();
+    expect(annuaire.communes).toHaveBeenCalledWith('medecin-generaliste', '16');
+    expect(c.communes().length).toBe(1);
+    c.commune = 'bab-ezzouar';
+    c.surCommune();
+    expect(annuaire.rechercherPage.calls.mostRecent().args[3]).toBe('bab-ezzouar');
   });
 });
