@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
@@ -12,7 +12,7 @@ import { OrdonnanceDetailComponent } from './ordonnance-detail.component';
 
 /** Detail d'ordonnance : meme message que l'appli quand l'ordonnance n'a aucun medicament. */
 describe('OrdonnanceDetailComponent', () => {
-  async function afficher(lignes: Ordonnance['lignes'], statut = 'EMISE', arabe = false) {
+  async function afficher(lignes: Ordonnance['lignes'], statut = 'EMISE', arabe = false, emise = false) {
     const ordonnance = {
       id: 'o1', patientId: 'p1', medecinId: 'm1', emiseLe: '2026-12-04T09:00:00Z',
       statut, codeVerification: 'AB12CD34', lignes,
@@ -34,6 +34,9 @@ describe('OrdonnanceDetailComponent', () => {
       ],
     });
     TestBed.inject(LangueService).ar.set(arabe);
+    if (emise) {
+      spyOn(TestBed.inject(Router), 'getCurrentNavigation').and.returnValue({ extras: { state: { ordonnanceEmise: true } } } as any);
+    }
     const fixture = TestBed.createComponent(OrdonnanceDetailComponent);
     fixture.componentInstance['charger']('o1');
     fixture.detectChanges();
@@ -46,6 +49,14 @@ describe('OrdonnanceDetailComponent', () => {
     const el = await afficher([]);
     expect(el.textContent).toContain('Aucun médicament sur cette ordonnance.');
     expect(el.querySelector('table')).toBeNull();
+  });
+
+  it('confirme « Ordonnance émise. » (FR/AR) juste après l\'émission, et pas quand on ouvre ou recharge la page', async () => {
+    expect((await afficher([])).querySelector('.ordonnance-emise')).toBeNull();
+    TestBed.resetTestingModule();
+    expect((await afficher([], 'EMISE', false, true)).querySelector('.ordonnance-emise')?.textContent).toContain('Ordonnance émise.');
+    TestBed.resetTestingModule();
+    expect((await afficher([], 'EMISE', true, true)).querySelector('.ordonnance-emise')?.textContent).toContain('تم إصدار الوصفة.');
   });
 
   it('affiche le tableau quand l\'ordonnance a des médicaments', async () => {
