@@ -111,6 +111,12 @@ describe('MoiComponent', () => {
     for (const l of ['/messagerie', '/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).not.toBeNull();
   });
 
+  it('nomme l\'entrée Dawini « Dawini (pharmacies) » / « داويني (الصيدليات) », comme « Mon compte » de l\'appli', async () => {
+    moi.set({ ...PROFIL, roles: ['PATIENT'] });
+    await afficher();
+    expect(lien('/dawini')?.textContent).toContain('Dawini (pharmacies)');
+  });
+
   it('propose au médecin ses ordonnances, avis, liste d\'attente et secrétaires, au patient ses ordonnances, et à tous « Vérifier une ordonnance », comme l\'appli', async () => {
     moi.set({ ...PROFIL, roles: ['MEDECIN'] });
     await afficher();
