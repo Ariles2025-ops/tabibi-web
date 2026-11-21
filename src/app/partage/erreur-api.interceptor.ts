@@ -41,6 +41,8 @@ export function messageRefusArabe(e: HttpErrorResponse, langue: LangueService): 
   const texte = e.error?.erreur;
   if (![400, 403, 404].includes(e.status) || !langue.ar() || typeof texte !== 'string' || !texte.trim()) return null;
   if (/[\u0600-\u06FF]/.test(texte)) return null;
+  // 400 « chevauche » : le texte d'origine reste, la serie de creneaux (gestion-creneaux) s'en sert pour ignorer un creneau existant.
+  if (e.status === 400 && /chevauch/i.test(texte)) return null;
   return e.status === 404 ? 'العنصر المطلوب غير موجود.' : VIDE;
 }
 

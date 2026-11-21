@@ -78,6 +78,10 @@ describe('erreurApiInterceptor', () => {
       expect(erreur('/api/i', { erreur: 'Introuvable' }, { status: 404, statusText: 'N' }).error.erreur).toBe('العنصر المطلوب غير موجود.');
     });
 
+    it('400 « chevauche » : texte d’origine conservé pour que la série de créneaux ignore le créneau existant', () => {
+      expect(erreur('/api/c', { erreur: 'Créneaux qui se chevauchent' }, { status: 400, statusText: 'B' }).error.erreur).toBe('Créneaux qui se chevauchent');
+    });
+
     it('409 sans message et message déjà en arabe : inchangés', () => {
       expect(erreur('/api/e', null, { status: 409, statusText: 'C' }).error).toBeNull();
       expect(erreur('/api/j', { erreur: 'موعد' }, { status: 400, statusText: 'B' }).error.erreur).toBe('موعد');
