@@ -45,6 +45,7 @@ describe('MesDemandesComponent', () => {
   let profils: jasmine.SpyObj<ProfilService>;
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<DawiniService>('DawiniService', ['mesBesoins', 'publier']);
     service.mesBesoins.and.returnValue(of([CLOTUREE, OUVERTE]));
