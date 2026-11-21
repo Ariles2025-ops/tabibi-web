@@ -50,6 +50,10 @@ describe('erreurApiInterceptor', () => {
     expect(e.error.erreur).toBe('يواجه الخادم مشكلة. حاول لاحقًا.');
   });
 
+  it('400 en français : inchangé quand la langue est le français', () => {
+    expect(erreur('/api/k', { erreur: 'Données invalides' }, { status: 400, statusText: 'B' }).error.erreur).toBe('Données invalides');
+  });
+
   it('409 et 401 gardent le message de l’API', () => {
     expect(erreur('/api/a', { erreur: 'Créneau pris' }, { status: 409, statusText: 'C' }).error.erreur).toBe('Créneau pris');
     expect(erreur('/api/b', { erreur: 'Non' }, { status: 401, statusText: 'U' }).status).toBe(401);
@@ -68,9 +72,15 @@ describe('erreurApiInterceptor', () => {
       expect(erreur('/api/d', { erreur: 'Avis déjà signalé.' }, { status: 409, statusText: 'C' }).error.erreur).toBe('تعذّر الإجراء: تغيّر الوضع في الأثناء');
     });
 
-    it('409 sans message, 400 et message déjà en arabe : inchangés', () => {
+    it('400 et 403 en français : message retiré (repli arabe de l’écran), 404 : texte arabe générique', () => {
+      expect(erreur('/api/f', { erreur: 'Aucun compte Ndawik n\'utilise cette adresse e-mail.' }, { status: 400, statusText: 'B' }).error.erreur).toBeUndefined();
+      expect(erreur('/api/h', { erreur: 'Accès refusé' }, { status: 403, statusText: 'F' }).error.erreur).toBeUndefined();
+      expect(erreur('/api/i', { erreur: 'Introuvable' }, { status: 404, statusText: 'N' }).error.erreur).toBe('العنصر المطلوب غير موجود.');
+    });
+
+    it('409 sans message et message déjà en arabe : inchangés', () => {
       expect(erreur('/api/e', null, { status: 409, statusText: 'C' }).error).toBeNull();
-      expect(erreur('/api/f', { erreur: 'Créneaux qui se chevauchent' }, { status: 400, statusText: 'B' }).error.erreur).toBe('Créneaux qui se chevauchent');
+      expect(erreur('/api/j', { erreur: 'موعد' }, { status: 400, statusText: 'B' }).error.erreur).toBe('موعد');
       expect(erreur('/api/g', { erreur: 'موعد' }, { status: 409, statusText: 'C' }).error.erreur).toBe('موعد');
     });
   });
