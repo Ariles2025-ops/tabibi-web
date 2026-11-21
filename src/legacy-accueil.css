@@ -848,7 +848,7 @@ body.recherche-active [data-replier-recherche]{ display:none !important; }
 .dwh-mock-req .b{ margin-inline-start:auto; background:rgba(212,164,55,.92); color:#fff; border-radius:999px; padding:3px 9px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
 .dwh-mock-resp{ background:#fff; border-radius:18px; padding:14px; box-shadow:0 18px 44px rgba(2,30,22,.35); }
 .dwh-mock-resp .top{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:800; color:var(--ink); flex-wrap:wrap; }
-.dwh-mock-resp .ok{ margin-inline-start:auto; display:inline-flex; align-items:center; gap:5px; background:var(--tbi-mint); color:#0F7560; border-radius:999px; padding:4px 10px; font-size:11px; font-weight:700; }
+.dwh-mock-resp .ok{ margin-inline-start:auto; display:inline-flex; align-items:center; gap:5px; background:var(--tbi-mint); color:#0B5E4C; border-radius:999px; padding:4px 10px; font-size:11px; font-weight:700; }
 .dwh-mock-resp small{ display:block; font-size:11.5px; color:var(--text3); margin:5px 0 10px; }
 .dwh-mock-actions{ display:flex; gap:8px; }
 .dwh-mock-actions span{ flex:1; text-align:center; border:1.5px solid #E7E0D2; border-radius:999px; padding:7px 6px; font-size:11.5px; font-weight:700; color:#0F7560; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
