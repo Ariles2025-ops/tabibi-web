@@ -34,6 +34,7 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
       <ng-container *ngIf="connecte()">
         <p *ngIf="charge()">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
+        <p *ngIf="succes()" class="consentement-enregistre" role="status" style="color:var(--vert);font-weight:600">{{ succes() }}</p>
 
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let t of teleconsultations()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
@@ -97,6 +98,8 @@ export class MesTeleconsultationsComponent implements OnInit {
   /** Identifiant de la teleconsultation dont le consentement est en cours d'envoi. */
   enCours = signal<string | null>(null);
   erreur = signal('');
+  /** Confirmation apres le consentement (« Consentement enregistré », comme l'appli). */
+  succes = signal('');
 
   async ngOnInit() {
     await this.auth.pret();
@@ -138,10 +141,12 @@ export class MesTeleconsultationsComponent implements OnInit {
   consentir(t: Teleconsultation) {
     this.enCours.set(t.id);
     this.erreur.set('');
+    this.succes.set('');
     this.service.consentir(t.id).subscribe({
       next: (consentie) => {
         this.enCours.set(null);
         this.teleconsultations.update((liste) => liste.map((x) => (x.id === consentie.id ? consentie : x)));
+        this.succes.set(this.l.t('Consentement enregistré', 'تم تسجيل موافقتك'));
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
