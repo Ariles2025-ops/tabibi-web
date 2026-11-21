@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { Conversation, LONGUEUR_MAX_MESSAGE, Message, MessagerieService, abregerIdentifiant, derniereActivite, trierParActivite } from './messagerie.service';
+import { Conversation, LONGUEUR_MAX_MESSAGE, Message, MessagerieService, abregerIdentifiant, derniereActivite, libelleMedecin, trierParActivite } from './messagerie.service';
 
 const BASE = 'http://localhost:8080';
 
@@ -125,6 +125,18 @@ describe('MessagerieService', () => {
     expect(LONGUEUR_MAX_MESSAGE).toBe(2000);
     expect(abregerIdentifiant('22222222-2222-2222-2222-222222222222')).toBe('22222222');
     expect(abregerIdentifiant('p1')).toBe('p1');
+  });
+});
+
+describe('libelleMedecin', () => {
+  it('repli d un praticien dont la fiche est indisponible : « Médecin » + identifiant abrégé, comme dans l appli', () => {
+    expect(libelleMedecin('33333333-3333-3333-3333-333333333333')).toBe('Médecin 33333333');
+    expect(libelleMedecin('33333333-3333-3333-3333-333333333333', true)).toBe('طبيب 33333333');
+  });
+
+  it('sans identifiant : « Médecin inconnu » / « طبيب غير معروف »', () => {
+    expect(libelleMedecin('')).toBe('Médecin inconnu');
+    expect(libelleMedecin(null, true)).toBe('طبيب غير معروف');
   });
 });
 
