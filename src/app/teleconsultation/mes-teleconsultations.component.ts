@@ -6,6 +6,7 @@ import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RendezVousService } from '../rendezvous/rendezvous.service';
 import { LangueService } from '../partage/langue.service';
+import { libelleMedecin } from '../messagerie/messagerie.service';
 import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { libelleStatutTeleconsultation, libelleStatutTeleconsultationAr } from './statut-teleconsultation';
@@ -42,7 +43,7 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
                 <strong *ngIf="!dateLisible(datesRendezVous()[t.rendezVousId]) && dateLisible(t.creeLe)">{{ l.t('Téléconsultation proposée le', 'استشارة عن بُعد اقتُرحت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ t.creeLe | date:formatDate() }}</span></strong>
                 <strong *ngIf="!dateLisible(datesRendezVous()[t.rendezVousId]) && !dateLisible(t.creeLe)">{{ l.t('Téléconsultation · date inconnue', 'استشارة عن بُعد · تاريخ غير معروف') }}</strong>
                 <br>
-                <a [routerLink]="['/medecins', t.medecinId]" style="color:var(--vert)">{{ noms()[t.medecinId] ?? l.t('Voir le praticien', 'عرض الممارس') }}</a>
+                <a [routerLink]="['/medecins', t.medecinId]" style="color:var(--vert)">{{ noms()[t.medecinId] ?? libelleMedecin(t.medecinId, l.ar()) }}</a>
                 <span style="color:var(--text3)"> · {{ libelleStatut(t.statut) }}</span>
                 <span *ngIf="dateLisible(t.consentementPatientLe)" style="color:var(--text3)"> · {{ l.t('consentement donné le', 'تمت الموافقة في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ t.consentementPatientLe | date:formatDate() }}</span></span>
               </div>

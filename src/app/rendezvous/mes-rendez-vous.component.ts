@@ -9,6 +9,7 @@ import { AvisService } from '../avis/avis.service';
 import { RendezVous, RendezVousService } from './rendezvous.service';
 import { DeplacerRendezVousComponent } from './deplacer-rendez-vous.component';
 import { LangueService } from '../partage/langue.service';
+import { libelleMedecin } from '../messagerie/messagerie.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from './statut-rendez-vous';
 
@@ -56,7 +57,7 @@ import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from '.
                 <div class="mr-corps">
                   <span class="mr-quand" *ngIf="!l.ar()"><span class="mr-cap">{{ r.debut | date:'EEEE d MMMM' }}</span> à {{ r.debut | date:'HH:mm' }}</span>
                   <span class="mr-quand" *ngIf="l.ar()" dir="ltr">{{ r.debut | date:'dd/MM/yyyy HH:mm' }}</span>
-                  <a [routerLink]="['/medecins', r.medecinId]" class="mr-doc">{{ noms()[r.medecinId] ?? l.t('Voir le praticien', 'عرض الممارس') }}</a>
+                  <a [routerLink]="['/medecins', r.medecinId]" class="mr-doc">{{ noms()[r.medecinId] ?? libelleMedecin(r.medecinId, l.ar()) }}</a>
                   <span class="mr-statut" [class.mr-statut--ok]="r.statut === 'CONFIRME' || r.statut === 'RESERVE'">{{ libelleStatut(r.statut) }}</span>
                 </div>
                 <div class="mr-actions">
@@ -92,7 +93,7 @@ import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from '.
                 <div class="mr-corps">
                   <span class="mr-quand" *ngIf="!l.ar()"><span class="mr-cap">{{ r.debut | date:'EEEE d MMMM y' }}</span> à {{ r.debut | date:'HH:mm' }}</span>
                   <span class="mr-quand" *ngIf="l.ar()" dir="ltr">{{ r.debut | date:'dd/MM/yyyy HH:mm' }}</span>
-                  <a [routerLink]="['/medecins', r.medecinId]" class="mr-doc">{{ noms()[r.medecinId] ?? l.t('Voir le praticien', 'عرض الممارس') }}</a>
+                  <a [routerLink]="['/medecins', r.medecinId]" class="mr-doc">{{ noms()[r.medecinId] ?? libelleMedecin(r.medecinId, l.ar()) }}</a>
                   <span class="mr-statut" [class.mr-statut--annule]="estAnnule(r.statut) || r.statut === 'ABSENT'">{{ libelleStatutPasse(r) }}</span>
                 </div>
                 <div class="mr-actions">

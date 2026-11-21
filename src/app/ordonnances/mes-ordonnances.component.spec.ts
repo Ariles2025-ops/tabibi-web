@@ -3,7 +3,7 @@ import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { LangueService } from '../partage/langue.service';
@@ -93,5 +93,20 @@ describe('MesOrdonnancesComponent', () => {
     expect(items.length).toBe(3);
     expect(items[0].textContent).not.toContain('Date inconnue');
     expect(items[2].textContent).toContain('Date inconnue');
+  });
+
+  it('un praticien dont la fiche est indisponible s affiche « Médecin » + identifiant abrégé (jamais vide), en français et en arabe', async () => {
+    service.mes.and.returnValue(of([{ ...DELIVREE, medecinId: 'abcdef12-0000-0000-0000-000000000000' }]));
+    const annuaire = TestBed.inject(AnnuaireService) as jasmine.SpyObj<AnnuaireService>;
+    annuaire.medecin.and.returnValue(throwError(() => new Error('indisponible')));
+    await afficher();
+    expect(fixture.nativeElement.textContent).toContain('Médecin abcdef12');
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('طبيب abcdef12');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
   });
 });

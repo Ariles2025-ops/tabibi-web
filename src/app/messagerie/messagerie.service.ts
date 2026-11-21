@@ -37,6 +37,15 @@ export function abregerIdentifiant(id: string): string {
   return id.length > 8 ? id.slice(0, 8) : id;
 }
 
+/**
+ * Libelle d'un praticien dont la fiche est indisponible : « Médecin 1a2b3c4d » (identifiant abrege) pour distinguer
+ * deux praticiens, « Médecin inconnu » sans identifiant, comme dans l'appli.
+ */
+export function libelleMedecin(id: string | null | undefined, arabe = false): string {
+  if (!id) return arabe ? 'طبيب غير معروف' : 'Médecin inconnu';
+  return `${arabe ? 'طبيب' : 'Médecin'} ${abregerIdentifiant(id)}`;
+}
+
 /** Instant (ms) de la derniere activite d'une conversation : dernier message, sinon ouverture ; null si aucune date lisible. */
 export function derniereActivite(c: Pick<Conversation, 'creeLe' | 'dernierMessageLe'>): number | null {
   for (const iso of [c.dernierMessageLe, c.creeLe]) {
