@@ -97,6 +97,15 @@ describe('AppComponent', () => {
     expect(pied.querySelector('a[href="/supprimer-mon-compte"]')).not.toBeNull();
   });
 
+  it('pied de page en arabe : le lien de suppression de compte s\'intitule « حذف حسابي », comme dans l\'appli et sur « حسابي »', async () => {
+    await afficher();
+    fixture.componentInstance.ar.set(true);
+    fixture.detectChanges();
+
+    const lien = fixture.nativeElement.querySelector('footer a[href="/ar/supprimer-mon-compte"]') as HTMLElement | null;
+    expect(lien?.textContent?.trim()).toBe('حذف حسابي');
+  });
+
   it('pied de page : la colonne des liens vers les wilayas s\'intitule « Wilayas » (pas « Villes »), comme son lien', async () => {
     await afficher();
 
