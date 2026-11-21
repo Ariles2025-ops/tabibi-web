@@ -8,6 +8,7 @@ import { ClocheNotificationsComponent } from './notifications/cloche-notificatio
 import { ApiDisponibleService } from './partage/api-disponible.service';
 import { PRELANCEMENT, VISIO_ACTIVE, inscriptionFermee } from './lancement';
 import { estPageFrancaiseSeule, remettreDocumentFrancais } from './seo/page-seo';
+import { consommerCompteSupprime } from './moi/compte-supprime';
 import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
 @Component({
@@ -18,6 +19,12 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
       <span class="lancement-bandeau__pastille">{{ ar() ? 'قريبًا' : 'Bientôt' }}</span>
       <strong>{{ ar() ? 'الإطلاق قريبًا' : 'Lancement prochainement' }}</strong>
       <span class="lancement-bandeau__txt">{{ ar() ? '— حجز المواعيد عبر الإنترنت متاح قريبًا جدًا. منصة طبية: ابحث عن طبيب من الآن.' : "— la prise de rendez-vous en ligne ouvre très bientôt. Trouvez déjà un médecin sur la plateforme." }}</span>
+    </div>
+    <div class="compte-supprime" *ngIf="compteSupprime()" role="status" [attr.dir]="l.ar() ? 'rtl' : null"
+         style="background:#E7F3EF;color:#0F7560;font-weight:600;padding:10px 16px;text-align:center">
+      {{ l.t('Votre compte a été supprimé.', 'تم حذف حسابك.') }}
+      <button type="button" (click)="compteSupprime.set(false)" style="margin-inline-start:12px;background:none;border:0;color:inherit;cursor:pointer;font-weight:600"
+              [attr.aria-label]="l.t('Fermer', 'إغلاق')">✕</button>
     </div>
     <div class="shell">
       <aside class="side">
@@ -180,6 +187,9 @@ export class AppComponent implements OnInit {
 
   /** Menu « 3 barres » ouvert (vue telephone) ; referme a chaque changement de page. */
   menuOuvert = signal(false);
+
+  /** Confirmation affichée au retour sur le site après la suppression du compte (comme l'appli). */
+  compteSupprime = signal(consommerCompteSupprime());
 
   /** Etat de connexion, connu une fois l'initialisation OIDC terminee (liens reserves aux connectes). */
   connecte = signal(false);

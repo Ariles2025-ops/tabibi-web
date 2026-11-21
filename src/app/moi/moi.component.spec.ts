@@ -6,6 +6,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { Moi, MoiService } from './moi.service';
+import { consommerCompteSupprime } from './compte-supprime';
 import { LangueService } from '../partage/langue.service';
 import { ApiDisponibleService } from '../partage/api-disponible.service';
 import { MoiComponent } from './moi.component';
@@ -201,6 +202,8 @@ describe('MoiComponent', () => {
     await afficher();
     expect(service.supprimer).toHaveBeenCalledTimes(1);
     expect(auth.seDeconnecter).toHaveBeenCalled();
+    expect(consommerCompteSupprime()).toBeTrue();
+    expect(consommerCompteSupprime()).toBeFalse();
   });
 
   it('annuler la confirmation ne supprime rien ; un echec est explique', async () => {

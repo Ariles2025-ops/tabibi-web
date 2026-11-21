@@ -7,6 +7,7 @@ import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { ApiDisponibleService } from './partage/api-disponible.service';
 import { LangueService } from './partage/langue.service';
+import { marquerCompteSupprime } from './moi/compte-supprime';
 import { NotificationService } from './notifications/notification.service';
 
 /** Test de fumee de la barre de navigation : liens publics, cloche des connectes, sections du medecin, de la pharmacie, de la secretaire et de l'administrateur. */
@@ -260,5 +261,16 @@ describe('AppComponent', () => {
     expect(texte).not.toContain('Espace secrétaire');
     expect(texte).not.toContain('Agenda du cabinet');
     expect(texte).not.toContain('Invitations de cabinet');
+  });
+
+  it('confirme « Votre compte a été supprimé. » une seule fois après une suppression de compte', async () => {
+    marquerCompteSupprime();
+    fixture = TestBed.createComponent(AppComponent);
+    await afficher();
+    expect(fixture.nativeElement.querySelector('.compte-supprime')?.textContent).toContain('Votre compte a été supprimé.');
+
+    fixture = TestBed.createComponent(AppComponent);
+    await afficher();
+    expect(fixture.nativeElement.querySelector('.compte-supprime')).toBeNull();
   });
 });
