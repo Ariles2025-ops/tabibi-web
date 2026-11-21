@@ -138,7 +138,7 @@ export class MoiComponent implements OnInit {
       visio,
       { lien: '/mes-avis', libelle: t('Mes avis', 'آرائي') },
       { lien: '/liste-attente', libelle: t("Mes listes d'attente", 'قوائم الانتظار') },
-      { lien: '/dawini', libelle: t('Dawini', 'داويني') },
+      { lien: '/dawini', libelle: t('Dawini (pharmacies)', 'داويني (الصيدليات)') },
       verifier,
       invitations,
       candidature,
