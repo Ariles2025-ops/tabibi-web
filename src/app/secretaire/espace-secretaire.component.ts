@@ -2,6 +2,7 @@ import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular
 import { CommonModule, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { DeplacerRendezVousComponent } from '../rendezvous/deplacer-rendez-vous.component';
 import { AnnuaireService, Creneau } from '../annuaire/annuaire.service';
@@ -126,6 +127,8 @@ export class EspaceSecretaireComponent implements OnInit {
   private annuaire = inject(AnnuaireService);
   private patients = inject(PatientsService);
   private locale = inject(LOCALE_ID);
+  /** Vrai si l'on arrive de l'acceptation d'une invitation (etat de navigation) : la page le confirme, comme l'appli. */
+  private invitationAcceptee = inject(Router).getCurrentNavigation()?.extras.state?.['invitationAcceptee'] === true;
 
   rattachements = signal<Rattachement[]>([]);
   /** Nom complet des medecins (annuaire), par identifiant ; a defaut, un identifiant abrege est affiche. */
@@ -176,6 +179,9 @@ export class EspaceSecretaireComponent implements OnInit {
         this.charge.set(false);
         // Un seul cabinet : il est choisi d'office.
         if (liste.length === 1) this.choisir(liste[0].medecinId);
+        if (this.invitationAcceptee) {
+          this.succes.set(this.l.t('Invitation acceptée : votre espace secrétaire est ouvert.', 'تم قبول الدعوة: تم فتح فضاء السكرتارية.'));
+        }
       },
       error: (e: HttpErrorResponse) => {
         this.charge.set(false);

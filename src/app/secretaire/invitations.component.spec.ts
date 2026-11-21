@@ -35,7 +35,7 @@ describe('InvitationsComponent', () => {
     await new Promise((r) => setTimeout(r));
 
     expect(ordre).toEqual(['jeton', 'profil']);
-    expect(navigation).toHaveBeenCalledWith('/secretaire');
+    expect(navigation).toHaveBeenCalledWith('/secretaire', { state: { invitationAcceptee: true } });
   });
 
   describe('langue', () => {
