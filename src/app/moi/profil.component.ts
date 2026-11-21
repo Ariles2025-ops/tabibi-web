@@ -5,6 +5,7 @@ import { catchError, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { instantLisible } from '../partage/dates-lisibles';
 import { LangueService } from '../partage/langue.service';
 import { WILAYAS_SEO } from '../seo/referentiel-seo';
 import {
@@ -89,9 +90,12 @@ function formulaireVide(): DemandeProfil {
           <div>
             <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? l.t('Enregistrement…', 'جارٍ الحفظ…') : l.t('Enregistrer', 'حفظ') }}</button>
           </div>
-          <p *ngIf="profil() as p" style="color:var(--text3);font-size:.9rem;margin:0">
-            <ng-container *ngIf="!l.ar()">Dernière mise à jour le {{ p.misAJourLe | date:'d MMMM yyyy à HH:mm' }}.</ng-container>
-            <ng-container *ngIf="l.ar()">آخر تحديث في <span dir="ltr">{{ p.misAJourLe | date:'dd/MM/yyyy HH:mm' }}</span>.</ng-container>
+          <p *ngIf="profil() as p" class="profil-maj" style="color:var(--text3);font-size:.9rem;margin:0">
+            <ng-container *ngIf="dateLisible(p.misAJourLe)">
+              <ng-container *ngIf="!l.ar()">Dernière mise à jour le {{ p.misAJourLe | date:'d MMMM yyyy à HH:mm' }}.</ng-container>
+              <ng-container *ngIf="l.ar()">آخر تحديث في <span dir="ltr">{{ p.misAJourLe | date:'dd/MM/yyyy HH:mm' }}</span>.</ng-container>
+            </ng-container>
+            <ng-container *ngIf="!dateLisible(p.misAJourLe)">{{ l.t('Profil non enregistré', 'الملف غير محفوظ') }}</ng-container>
           </p>
         </form>
       </ng-container>
@@ -108,6 +112,11 @@ export class ProfilComponent implements OnInit {
   connecte = signal<boolean | null>(null);
   /** Profil enregistre cote API ; null tant qu'il n'a jamais ete renseigne. */
   profil = signal<Profil | null>(null);
+
+  /** Vrai si la date de mise a jour est lisible ; sinon « Profil non enregistre », comme l'appli (libelleMiseAJour). */
+  dateLisible(iso: string | null | undefined): boolean {
+    return instantLisible(iso) !== null;
+  }
   formulaire: DemandeProfil = formulaireVide();
   langues = LANGUES;
   longueurMaxNom = LONGUEUR_MAX_NOM;

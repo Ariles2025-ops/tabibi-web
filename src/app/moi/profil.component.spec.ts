@@ -125,6 +125,25 @@ describe('ProfilComponent', () => {
     expect(texte()).toContain('Dernière mise à jour le 18 septembre 2026');
   });
 
+  it('profil sans date de mise a jour lisible : « Profil non enregistré » (FR/AR), comme l\'appli, jamais « mise à jour le » vide', async () => {
+    service.monProfil.and.returnValue(of({ ...PROFIL, misAJourLe: null } as unknown as Profil));
+    await afficher();
+    expect(texte()).toContain('Profil non enregistré');
+    expect(texte()).not.toContain('Dernière mise à jour');
+  });
+
+  it('profil à date de mise à jour illisible : « الملف غير محفوظ » en arabe', async () => {
+    TestBed.inject(LangueService).definir(true);
+    try {
+      service.monProfil.and.returnValue(of({ ...PROFIL, misAJourLe: 'pas-une-date' }));
+      await afficher();
+      expect(texte()).toContain('الملف غير محفوظ');
+      expect(texte()).not.toContain('آخر تحديث');
+    } finally {
+      TestBed.inject(LangueService).definir(false);
+    }
+  });
+
   it('refuse cote client un profil invalide (nom trop court, telephone mal forme) sans appeler l API', async () => {
     await afficher();
 
