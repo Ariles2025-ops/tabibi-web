@@ -213,8 +213,12 @@ export class GestionCreneauxComponent implements OnChanges {
     this.charger();
   }
 
+  /** RDV pris au telephone enregistre : confirmation visible, comme « Rendez-vous enregistré » de l'appli. */
   rdvEnregistre() {
     this.rdvPour.set(null);
+    this.succes.set(null);
+    this.erreur.set('');
+    this.succesSerie.set(this.langue.t('Rendez-vous enregistré.', 'تم تسجيل الموعد.'));
     this.charger();
     this.rdvPris.emit();
   }
