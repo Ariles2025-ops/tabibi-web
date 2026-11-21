@@ -53,6 +53,7 @@ describe('ReponsesDemandeComponent', () => {
   let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy };
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<DawiniService>('DawiniService', ['mesBesoins', 'reponses', 'cloturer']);
     service.mesBesoins.and.returnValue(of([OUVERTE]));

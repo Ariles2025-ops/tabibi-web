@@ -22,6 +22,8 @@ describe('MoiComponent', () => {
   };
   let service: jasmine.SpyObj<MoiService>;
 
+  afterEach(() => localStorage.removeItem('tabibi.langue')); // ne pas laisser « ar » aux autres suites
+
   beforeEach(() => {
     localStorage.removeItem('tabibi.langue');
     connecte = true;
