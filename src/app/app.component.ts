@@ -137,7 +137,7 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
                 <a [routerLink]="pre() + '/specialites'" class="siteft__tout">{{ ar() ? 'جميع التخصصات ←' : 'Toutes les spécialités →' }}</a>
               </div>
               <div class="siteft__col">
-                <h2>{{ ar() ? 'الولايات' : 'Villes' }}</h2>
+                <h2>{{ ar() ? 'الولايات' : 'Wilayas' }}</h2>
                 <a *ngFor="let w of wilayasPied" [routerLink]="[pre() + '/wilayas', w.slug]">{{ ar() ? w.nomAr : w.nom }}</a>
                 <a [routerLink]="pre() + '/wilayas'" class="siteft__tout">{{ ar() ? 'جميع الولايات ←' : 'Toutes les wilayas →' }}</a>
               </div>

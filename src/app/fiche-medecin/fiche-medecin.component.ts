@@ -147,7 +147,7 @@ import { SelecteurLangueComponent } from '../partage/selecteur-langue.component'
                 <li *ngIf="m.adresse"><i class="fa fa-map-pin"></i><div><strong>{{ l.t('Adresse', 'العنوان') }}</strong><span>{{ m.adresse }}</span></div></li>
                 <li *ngIf="m.telephoneCabinet"><i class="fa fa-phone"></i><div><strong>{{ l.t('Téléphone', 'الهاتف') }}</strong><span><a [href]="'tel:' + m.telephoneCabinet" dir="ltr">{{ m.telephoneCabinet }}</a></span></div></li>
                 <li *ngIf="m.horaires"><i class="fa fa-clock"></i><div><strong>{{ l.t('Horaires', 'أوقات العمل') }}</strong><span>{{ m.horaires }}</span></div></li>
-                <li *ngIf="m.langues?.length"><i class="fa fa-language"></i><div><strong>{{ l.t('Langues', 'اللغات') }}</strong><span>{{ libellesLangues(m.langues) }}</span></div></li>
+                <li *ngIf="m.langues?.length"><i class="fa fa-language"></i><div><strong>{{ l.t('Langues parlées', 'اللغات المتحدَّث بها') }}</strong><span>{{ libellesLangues(m.langues) }}</span></div></li>
               </ul>
               <p *ngIf="m.presentation" class="fm-lieu-txt" style="white-space:pre-line">{{ m.presentation }}</p>
             </section>

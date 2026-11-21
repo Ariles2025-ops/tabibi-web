@@ -489,7 +489,7 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
     // Pas de chargement par defaut : l'accueil n'affiche aucun medecin tant qu'on ne cherche pas.
     // Etat de connexion : determine si les resultats sont visibles ou floutes.
     this.auth.pret().then(() => this.connecte.set(this.auth.estConnecte()));
-    // Filtres de l'URL : appliques a l'arrivee et a chaque changement (liens « Spécialités » / « Villes » du pied de page).
+    // Filtres de l'URL : appliques a l'arrivee et a chaque changement (liens « Spécialités » / « Wilayas » du pied de page).
     this.abonnementParams = this.route.queryParamMap.subscribe((p) => {
       const specialite = p.get('specialite');
       const wilaya = p.get('wilaya');
