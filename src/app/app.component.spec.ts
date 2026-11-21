@@ -105,6 +105,16 @@ describe('AppComponent', () => {
     expect(titres).not.toContain('Villes');
   });
 
+  it('pied de page : les liens légaux portent les mêmes libellés que l\'appli (« Politique de confidentialité »)', async () => {
+    await afficher();
+
+    const pied: HTMLElement = fixture.nativeElement.querySelector('footer');
+    const lien = (href: string) => pied.querySelector(`a[href="${href}"]`)?.textContent?.trim();
+    expect(lien('/legal/confidentialite.html')).toBe('Politique de confidentialité');
+    expect(lien('/legal/cgu.html')).toBe("Conditions d'utilisation");
+    expect(lien('/legal/mentions-legales.html')).toBe('Mentions légales');
+  });
+
   it('affiche la cloche de notifications et « Mes ordonnances » une fois connecte', async () => {
     connecte = true;
     await afficher();
