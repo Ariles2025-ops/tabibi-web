@@ -119,7 +119,7 @@ describe('MesTeleconsultationsComponent', () => {
     expect(texte()).not.toContain('Rejoindre la téléconsultation');
     expect(texte()).toContain('Planifiée');
     expect(texte()).toContain('Dr Amina Belkacem');
-    expect(texte()).toContain('Rendez-vous du');
+    expect(texte()).toContain('Rendez-vous le');
     expect(texte()).toContain('7 décembre 2026');
   });
 
@@ -207,7 +207,7 @@ describe('MesTeleconsultationsComponent', () => {
     fixture.componentInstance.charger();
     fixture.detectChanges();
     expect(lienSalle()).toBeNull();
-    expect(texte()).toContain('Le créneau de cette téléconsultation est passé');
+    expect(texte()).toContain('Le créneau de ce rendez-vous est passé');
   });
 
   it('affiche le motif { erreur } d un 409 au consentement et recharge la liste', async () => {
@@ -256,7 +256,7 @@ describe('MesTeleconsultationsComponent', () => {
     await afficher();
 
     expect(texte()).toContain('Téléconsultation proposée le');
-    expect(texte()).not.toContain('Rendez-vous du');
+    expect(texte()).not.toContain('Rendez-vous le');
   });
 
   it('classe les téléconsultations sans date lisible en fin de liste', async () => {

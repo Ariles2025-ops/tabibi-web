@@ -197,7 +197,7 @@ export class AgendaMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.l.t('Cette page est réservée aux médecins.', 'هذه الصفحة مخصصة للأطباء.'));
+          this.erreur.set(this.l.t('Cette page est réservée aux médecins.', 'هذه الصفحة مخصّصة للأطباء.'));
         } else {
           this.erreur.set(e.error?.erreur ?? this.l.t("Impossible de charger l'agenda.", 'تعذّر تحميل المواعيد.'));
         }

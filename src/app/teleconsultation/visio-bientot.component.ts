@@ -13,9 +13,9 @@ import { SelecteurLangueComponent } from '../partage/selecteur-langue.component'
       <div style="margin-top:16px">
         <span class="visio-badge" style="display:inline-block;background:#D4A437;color:var(--tbi-ink);font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:999px">{{ l.t('Bientôt', 'قريبًا') }}</span>
       </div>
-      <h1 style="color:var(--vert);margin:16px 0 10px">{{ l.t('Téléconsultation', 'الاستشارة عن بعد') }}</h1>
+      <h1 style="color:var(--vert);margin:16px 0 10px">{{ l.t('Téléconsultation', 'الاستشارة عن بُعد') }}</h1>
       <p class="visio-texte" style="color:var(--text3);line-height:1.6;margin:0 0 22px">
-        {{ l.t('La consultation à distance par vidéo arrive bientôt sur Ndawik. En attendant, vos rendez-vous se passent au cabinet.', 'الاستشارة عن بعد عبر الفيديو ستتوفر قريبًا على نداويك. وفي الانتظار، تتم مواعيدك في العيادة.') }}
+        {{ l.t('La consultation à distance par vidéo arrive bientôt sur Ndawik. En attendant, vos rendez-vous se passent au cabinet.', 'الاستشارة عن بُعد عبر الفيديو ستتوفر قريبًا على نداويك. وفي الانتظار، تتم مواعيدك في العيادة.') }}
       </p>
       <a class="bouton" routerLink="/">{{ l.t("Retour à l'accueil", 'العودة إلى الرئيسية') }}</a>
     </main>

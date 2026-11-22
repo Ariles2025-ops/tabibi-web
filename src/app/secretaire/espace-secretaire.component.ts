@@ -188,7 +188,7 @@ export class EspaceSecretaireComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.l.t('Cette page est réservée aux secrétaires.', 'هذه الصفحة مخصصة للسكرتارية.'));
+          this.erreur.set(this.l.t('Cette page est réservée aux secrétaires.', 'هذه الصفحة مخصّصة للسكرتارية.'));
         } else {
           this.erreur.set(e.error?.erreur ?? this.l.t('Impossible de charger vos cabinets.', 'تعذّر تحميل عياداتك.'));
         }
