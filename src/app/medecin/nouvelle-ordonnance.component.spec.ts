@@ -22,6 +22,8 @@ const ABSENT_P1: RendezVous = { ...RDV_P1, id: 'r4', statut: 'ABSENT' };
 describe('NouvelleOrdonnanceComponent', () => {
   let fixture: ComponentFixture<NouvelleOrdonnanceComponent>;
   let ordonnances: jasmine.SpyObj<OrdonnanceService>;
+  let patients: jasmine.SpyObj<PatientsService>;
+  let medecin: jasmine.SpyObj<MedecinService>;
   let query: Record<string, string>;
 
   function creer() {
@@ -31,11 +33,12 @@ describe('NouvelleOrdonnanceComponent', () => {
 
   beforeEach(() => {
     registerLocaleData(localeFr);
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     query = {};
     ordonnances = jasmine.createSpyObj<OrdonnanceService>('OrdonnanceService', ['emettre']);
-    const patients = jasmine.createSpyObj<PatientsService>('PatientsService', ['patientsDuMedecin']);
+    patients = jasmine.createSpyObj<PatientsService>('PatientsService', ['patientsDuMedecin']);
     patients.patientsDuMedecin.and.returnValue(of(new Map([[YASMINE.patientId, YASMINE], [KARIM.patientId, KARIM]])));
-    const medecin = jasmine.createSpyObj<MedecinService>('MedecinService', ['agenda']);
+    medecin = jasmine.createSpyObj<MedecinService>('MedecinService', ['agenda']);
     medecin.agenda.and.returnValue(of([RDV_P1, RDV_P2, ANNULE_P1, ABSENT_P1]));
 
     TestBed.configureTestingModule({
@@ -83,6 +86,19 @@ describe('NouvelleOrdonnanceComponent', () => {
     expect(libelles(rdv)[1]).toContain('18 septembre 2026');
   });
 
+  it("ne propose pas un patient seulement en liste d'attente ou dont les RDV sont annules/absents", async () => {
+    const attente: PatientResume = { patientId: 'p3', nomComplet: 'Amel Attente', telephone: null, email: null };
+    const annule: PatientResume = { patientId: 'p4', nomComplet: 'Nadir Annule', telephone: null, email: null };
+    patients.patientsDuMedecin.and.returnValue(
+      of(new Map([YASMINE, KARIM, attente, annule].map((p) => [p.patientId, p] as [string, PatientResume]))),
+    );
+    medecin.agenda.and.returnValue(of([RDV_P1, { ...RDV_P1, id: 'r9', patientId: 'p4', statut: 'ANNULE' }]));
+    creer();
+    await afficher();
+
+    expect(libelles(select('patientId'))).toEqual(['Choisir un patient', 'Yasmine Benali · 0550123456']);
+  });
+
   it('prerempli depuis l agenda (?patientId=&rendezVousId=) et emet avec un medicament seul', async () => {
     query = { patientId: 'p1', rendezVousId: 'r1' };
     ordonnances.emettre.and.returnValue(of({ id: 'o1' } as Ordonnance));
@@ -107,7 +123,7 @@ describe('NouvelleOrdonnanceComponent', () => {
       rendezVousId: 'r1',
       lignes: [{ medicament: 'Paracétamol 1 g', posologie: '', duree: '' }],
     });
-    expect(navigation).toHaveBeenCalledWith(['/ordonnances', 'o1']);
+    expect(navigation).toHaveBeenCalledWith(['/ordonnances', 'o1'], { state: { ordonnanceEmise: true } });
   });
 
   it("affiche le message de l'API (403 ou 409) au lieu d'un texte generique", async () => {
@@ -123,5 +139,31 @@ describe('NouvelleOrdonnanceComponent', () => {
     await afficher();
 
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Rendez-vous absent.');
+  });
+  it('est disponible en arabe, comme dans l\'appli : libelles, placeholders, sens RTL et message d\'erreur', async () => {
+    localStorage.setItem('tabibi.langue', 'ar');
+    ordonnances.emettre.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404, error: {} })));
+    query = { patientId: 'p1' };
+    creer();
+    await afficher();
+
+    const racine: HTMLElement = fixture.nativeElement;
+    expect(racine.querySelector('main')!.getAttribute('dir')).toBe('rtl');
+    expect(racine.querySelector('h1')!.textContent).toContain('وصفة جديدة');
+    expect(libelles(select('patientId'))[0]).toBe('اختر مريضًا');
+    expect(libelles(select('rendezVousId'))[0]).toBe('لا شيء');
+    expect(racine.textContent).toContain('الموعد المرتبط (اختياري)');
+    expect(racine.textContent).toContain('إضافة سطر');
+    expect(racine.querySelector('button[type="submit"]')!.textContent).toContain('إصدار الوصفة');
+    const medicament: HTMLInputElement = racine.querySelector('input[placeholder="مثال: باراسيتامول 1 غ"]')!;
+    expect(medicament).not.toBeNull();
+    medicament.value = 'Doliprane';
+    medicament.dispatchEvent(new Event('input'));
+    await afficher();
+    racine.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await afficher();
+
+    expect(racine.querySelector('[role="alert"]')!.textContent).toContain('المريض أو الموعد غير موجود.');
+    localStorage.removeItem('tabibi.langue');
   });
 });

@@ -3,26 +3,30 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { cibleDuLien } from './cible-notification';
 import { Notification, NotificationService } from './notification.service';
+import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
 
 /** Boite de reception de l'utilisateur connecte (GET /api/notifications/mes), avec marquage lu. */
 @Component({
     selector: 'app-mes-notifications',
-    imports: [CommonModule],
+    imports: [CommonModule, SelecteurLangueComponent],
     template: `
-    <main style="max-width:720px;margin:32px auto;padding:0 16px">
+    <main style="max-width:720px;margin:32px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
-        <h1 style="color:var(--vert);margin:0">Mes notifications</h1>
+        <h1 style="color:var(--vert);margin:0">{{ l.t('Mes notifications', 'إشعاراتي') }}</h1>
+        <app-selecteur-langue />
         <button *ngIf="connecte()" type="button" class="bouton-secondaire" (click)="toutMarquerLu()"
                 [disabled]="nombreNonLues() === 0 || enCours() !== null">
-          {{ enCours() === 'toutes' ? 'Enregistrement…' : 'Tout marquer comme lu' }}
+          {{ enCours() === 'toutes' ? l.t('Enregistrement…', 'جارٍ الحفظ…') : l.t('Tout marquer comme lu', 'تعليم الكل كمقروء') }}
         </button>
       </div>
 
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">Chargement…</p>
+        <p *ngIf="charge()">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
         <p *ngIf="succes()" role="status" style="color:var(--vert)">{{ succes() }}</p>
 
@@ -34,24 +38,25 @@ import { Notification, NotificationService } from './notification.service';
               style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <strong>{{ n.sujet }}</strong>
-              <span style="color:var(--text3)"> · {{ n.creeLe | date:'EEEE d MMMM yyyy à HH:mm' }}</span><br>
+              <span style="color:var(--text3)"> · <ng-container *ngIf="dateLisible(n.creeLe); else dateInconnue"><span [attr.dir]="l.ar() ? 'ltr' : null">{{ n.creeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span></ng-container><ng-template #dateInconnue>{{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-template></span><br>
               <span>{{ n.message }}</span>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <button *ngIf="!n.lue" type="button" class="bouton-secondaire" (click)="$event.stopPropagation(); marquerLue(n)"
                       (keydown.enter)="$event.stopPropagation()" [disabled]="enCours() !== null">
-                {{ enCours() === n.id ? 'Enregistrement…' : 'Marquer comme lue' }}
+                {{ enCours() === n.id ? l.t('Enregistrement…', 'جارٍ الحفظ…') : l.t('Marquer comme lue', 'تعليم كمقروء') }}
               </button>
-              <span *ngIf="aLien(n)" class="notification-voir" style="color:var(--blue);font-weight:600">Voir →</span>
+              <span *ngIf="aLien(n)" class="notification-voir" style="color:var(--blue);font-weight:600">{{ l.t('Voir →', 'عرض ←') }}</span>
             </div>
           </li>
         </ul>
-        <p *ngIf="!charge() && !erreur() && notifications().length === 0">Aucune notification pour le moment.</p>
+        <p *ngIf="!charge() && !erreur() && notifications().length === 0">{{ l.t('Aucune notification pour le moment.', 'لا توجد إشعارات حاليًا.') }}</p>
       </ng-container>
     </main>
   `
 })
 export class MesNotificationsComponent implements OnInit {
+  l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(NotificationService);
   private router = inject(Router);
@@ -78,13 +83,16 @@ export class MesNotificationsComponent implements OnInit {
     this.charger();
   }
 
+  /** Vrai si la date est lisible (sinon « date inconnue », comme dans l'appli). */
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
+
   charger() {
     this.charge.set(true);
     this.erreur.set('');
     this.service.mesNotifications().subscribe({
       next: (liste) => {
         // Les plus recentes d'abord.
-        this.notifications.set([...liste].sort((a, b) => Date.parse(b.creeLe) - Date.parse(a.creeLe)));
+        this.notifications.set(trierParDateRecenteDabord(liste, (n) => n.creeLe));
         this.charge.set(false);
       },
       error: (e: HttpErrorResponse) => {
@@ -92,7 +100,7 @@ export class MesNotificationsComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger vos notifications.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Impossible de charger vos notifications.', 'تعذّر تحميل إشعاراتك.'));
         }
       },
     });
@@ -108,7 +116,7 @@ export class MesNotificationsComponent implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
-        this.erreur.set(e.error?.erreur ?? 'Le marquage de la notification a échoué, veuillez réessayer.');
+        this.erreur.set(e.error?.erreur ?? this.l.t('Le marquage de la notification a échoué, veuillez réessayer.', 'تعذّر تعليم الإشعار كمقروء، يُرجى المحاولة مرة أخرى.'));
       },
     });
   }
@@ -141,11 +149,15 @@ export class MesNotificationsComponent implements OnInit {
       next: (nombre) => {
         this.enCours.set(null);
         this.charger();
-        this.succes.set(nombre > 0 ? `${nombre} notification(s) marquée(s) lue(s)` : 'Aucune notification à marquer');
+        this.succes.set(
+          nombre > 0
+            ? this.l.t(`${nombre} notification(s) marquée(s) lue(s)`, `تم تعليم ${nombre} إشعار(ات) كمقروءة`)
+            : this.l.t('Aucune notification à marquer', 'لا توجد إشعارات لتعليمها'),
+        );
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
-        this.erreur.set(e.error?.erreur ?? 'Le marquage des notifications a échoué, veuillez réessayer.');
+        this.erreur.set(e.error?.erreur ?? this.l.t('Le marquage des notifications a échoué, veuillez réessayer.', 'تعذّر تعليم الإشعارات كمقروءة، يُرجى المحاولة مرة أخرى.'));
       },
     });
   }

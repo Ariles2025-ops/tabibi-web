@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { Profil, ProfilService } from '../moi/profil.service';
+import { LangueService } from '../partage/langue.service';
 import { Besoin, DawiniService } from './dawini.service';
 import { MesDemandesComponent } from './mes-demandes.component';
 
@@ -44,6 +45,7 @@ describe('MesDemandesComponent', () => {
   let profils: jasmine.SpyObj<ProfilService>;
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<DawiniService>('DawiniService', ['mesBesoins', 'publier']);
     service.mesBesoins.and.returnValue(of([CLOTUREE, OUVERTE]));
@@ -108,6 +110,39 @@ describe('MesDemandesComponent', () => {
     expect(items[1].textContent).toContain('1 réponse');
   });
 
+  it('une demande sans date lisible affiche « date inconnue » et passe en fin de liste, sans erreur (comme l\'appli)', async () => {
+    service.mesBesoins.and.returnValue(of([
+      { ...OUVERTE, id: 'b3', medicament: 'Sans date', publieLe: 'pas une date' },
+      CLOTUREE,
+      OUVERTE,
+    ]));
+    await afficher();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.map((li) => li.textContent)).toEqual([
+      jasmine.stringContaining('Amoxicilline 1 g'),
+      jasmine.stringContaining('Insuline'),
+      jasmine.stringContaining('Sans date'),
+    ]);
+    expect(items[2].textContent).toContain('date inconnue');
+    expect(items[2].textContent).not.toContain('publiée le');
+    expect(items[0].textContent).toContain('publiée le');
+  });
+
+  it('en arabe, une demande sans date affiche « تاريخ غير معروف »', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      service.mesBesoins.and.returnValue(of([{ ...OUVERTE, publieLe: null as unknown as string }]));
+      await afficher();
+
+      expect(texte()).toContain('تاريخ غير معروف');
+      expect(texte()).not.toContain('date inconnue');
+      expect(texte()).not.toContain('نُشر في');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
+  });
+
   it('propose les wilayas du referentiel et preselectionne celle du profil du patient', async () => {
     profils.monProfil.and.returnValue(of({ wilayaCode: '9' } as Profil));
     await afficher();
@@ -126,7 +161,19 @@ describe('MesDemandesComponent', () => {
     await afficher();
 
     expect(service.publier).not.toHaveBeenCalled();
-    expect(texte()).toContain('Indiquez le médicament recherché et choisissez votre wilaya.');
+    expect(texte()).toContain('Indiquez le médicament recherché.');
+    expect(texte()).not.toContain('choisissez votre wilaya');
+  });
+
+  it('demande la wilaya seule quand le médicament est renseigné (même message que l\'appli)', async () => {
+    await afficher();
+
+    await saisir({ medicament: 'Amoxicilline 1 g', wilayaCode: '' });
+    soumettre();
+    await afficher();
+
+    expect(service.publier).not.toHaveBeenCalled();
+    expect(texte()).toContain('Choisissez votre wilaya.');
   });
 
   it('publie la demande (champs nettoyes, facultatifs omis s ils sont vides), confirme, vide le formulaire et recharge', async () => {
@@ -167,5 +214,39 @@ describe('MesDemandesComponent', () => {
     await afficher();
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.mesBesoins).toHaveBeenCalledTimes(1);
+  });
+
+  describe('en arabe (comme l\'appli)', () => {
+    beforeEach(() => TestBed.inject(LangueService).ar.set(true));
+    afterEach(() => TestBed.inject(LangueService).ar.set(false));
+
+    it('affiche le formulaire et la liste en arabe, de droite à gauche, avec la wilaya en arabe', async () => {
+      await afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      expect(fixture.nativeElement.querySelector('h1').textContent).toContain('داويني');
+      expect(texte()).toContain('الدواء المطلوب *');
+      expect(texte()).toContain('طلباتي');
+      const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+      expect(items[0].textContent).toContain('مفتوح');
+      expect(items[0].textContent).toContain('3 ردود');
+      expect(items[0].textContent).toContain('الجزائر');
+      expect(items[1].textContent).toContain('مغلق');
+      expect(items[1].textContent).toContain('1 رد');
+      expect(texte()).not.toContain('Ouverte');
+      expect(texte()).not.toContain('réponse');
+    });
+
+    it('refuse une demande vide avec les messages arabes de l\'appli', async () => {
+      await afficher();
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('أدخل اسم الدواء المطلوب.');
+
+      await saisir({ medicament: 'Insuline' });
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('اختر ولايتك.');
+    });
   });
 });

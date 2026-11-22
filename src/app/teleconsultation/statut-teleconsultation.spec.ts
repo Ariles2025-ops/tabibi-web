@@ -1,4 +1,4 @@
-import { libelleStatutTeleconsultation } from './statut-teleconsultation';
+import { libelleStatutTeleconsultation, libelleStatutTeleconsultationAr } from './statut-teleconsultation';
 
 describe('libelleStatutTeleconsultation', () => {
   it('traduit les statuts connus en francais', () => {
@@ -19,5 +19,19 @@ describe('libelleStatutTeleconsultation (casse et espaces)', () => {
   it('ignore la casse et les espaces, comme l\'appli mobile', () => {
     expect(libelleStatutTeleconsultation(' en_cours ')).toBe('En cours');
     expect(libelleStatutTeleconsultation('terminee')).toBe('Terminée');
+  });
+});
+
+describe('libelleStatutTeleconsultationAr', () => {
+  it('reprend les libelles arabes de l\'appli', () => {
+    expect(libelleStatutTeleconsultationAr('PLANIFIEE')).toBe('مبرمجة');
+    expect(libelleStatutTeleconsultationAr('EN_COURS')).toBe('جارية');
+    expect(libelleStatutTeleconsultationAr(' terminee ')).toBe('منتهية');
+    expect(libelleStatutTeleconsultationAr('ANNULEE')).toBe('ملغاة');
+  });
+
+  it('garde le repli francais pour un statut inconnu et rien pour un statut absent', () => {
+    expect(libelleStatutTeleconsultationAr('REPORTEE')).toBe('Reportee');
+    expect(libelleStatutTeleconsultationAr(null)).toBe('');
   });
 });

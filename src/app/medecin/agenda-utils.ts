@@ -1,19 +1,27 @@
 import { RendezVous } from '../rendezvous/rendezvous.service';
 
-/** Elements regroupes par jour (heure locale) ; `debut` du premier element sert a afficher la date. */
+/** Elements regroupes par jour (heure d'Algerie) ; `debut` du premier element sert a afficher la date. */
 export interface Journee<T extends { debut: string }> {
   cle: string;
   debut: string;
   elements: T[];
 }
 
-/** Cle du jour local (« 2026-11-15 ») d'une date ISO 8601. */
+/** Heure de l'Algerie : UTC+1 toute l'annee (pas d'heure d'ete), quel que soit le fuseau du navigateur. */
+export const DECALAGE_ALGER_MS = 60 * 60_000;
+
+/** Cle du jour en heure d'Algerie (« 2026-11-15 ») d'une date ISO 8601. */
 export function cleJour(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return new Date(Date.parse(iso) + DECALAGE_ALGER_MS).toISOString().slice(0, 10);
 }
 
-/** Trie par `debut` (croissant ou decroissant) puis regroupe par jour local. */
+/** Instant ISO 8601 (UTC) d'une date « yyyy-MM-dd » et d'une heure « HH:mm » saisies en heure d'Algerie ; NaN si invalide. */
+export function instantAlger(date: string, heure: string): number {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}(:\d{2})?$/.test(heure)) return NaN;
+  return Date.parse(`${date}T${heure.length === 5 ? heure + ':00' : heure}+01:00`);
+}
+
+/** Trie par `debut` (croissant ou decroissant) puis regroupe par jour (heure d'Algerie). */
 export function grouperParJour<T extends { debut: string }>(liste: T[], ordre: 'croissant' | 'decroissant' = 'croissant'): Journee<T>[] {
   const signe = ordre === 'croissant' ? 1 : -1;
   const tries = [...liste].sort((a, b) => signe * (Date.parse(a.debut) - Date.parse(b.debut)));
@@ -27,11 +35,9 @@ export function grouperParJour<T extends { debut: string }>(liste: T[], ordre: '
   return jours;
 }
 
-/** Minuit (heure locale) du jour de `maintenant`. */
+/** Minuit (heure d'Algerie) du jour de `maintenant`. */
 function debutDuJour(maintenant: number): number {
-  const d = new Date(maintenant);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
+  return Date.parse(`${cleJour(new Date(maintenant).toISOString())}T00:00:00+01:00`);
 }
 
 /** Rendez-vous d'aujourd'hui et a venir, du plus proche au plus lointain, par jour. */
@@ -69,16 +75,20 @@ export function peutProposerTeleconsultation(r: RendezVous, maintenant = Date.no
   return estConfirme(r) && Date.parse(r.debut) > maintenant;
 }
 
+/** Le cabinet ne peut annuler qu'un rendez-vous confirme qui n'a pas encore commence (le serveur refuse sinon : 409). */
+export function peutAnnulerCabinet(r: RendezVous, maintenant = Date.now()): boolean {
+  return estConfirme(r) && Date.parse(r.debut) > maintenant;
+}
+
 /** Action en cours sur un element d'une liste (seul le bouton clique affiche « … »). */
 export interface ActionEnCours {
   id: string;
   action: string;
 }
 
-/** Valeur « yyyy-MM-ddTHH:mm » (heure locale) attendue par un champ datetime-local. */
+/** Valeur « yyyy-MM-ddTHH:mm » (heure d'Algerie) attendue par un champ datetime-local. */
 export function valeurDateHeureLocale(d: Date): string {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  return new Date(d.getTime() + DECALAGE_ALGER_MS).toISOString().slice(0, 16);
 }
 
 /** Style d'un onglet (« À venir » / « Passés », « Un créneau » / « Une série »). */

@@ -86,13 +86,13 @@ export class RdvTelephoneComponent {
       },
       error: (e: HttpErrorResponse) => {
         this.envoi.set(false);
-        if (e.status === 404 && e.error?.erreur) {
+        if ((e.status === 404 || e.status === 409) && e.error?.erreur) {
           // Creneau disparu (supprime ou deja pris) : on affiche le message et on recharge, le bouton reste.
           this.disparu.emit(String(e.error.erreur));
         } else if (e.status === 404) this.api.rdvTelephone.set(false); // route absente (404 sans corps) : le bouton disparait, sans erreur
         else if (e.status === 401) this.auth.seConnecter();
         else if (e.status === 403) this.erreur.set(this.message403());
-        else if (e.status === 409) this.erreur.set(e.error?.erreur ?? this.l.t('Ce créneau vient d’être pris.', 'تم حجز هذا الموعد للتو.'));
+        else if (e.status === 409) this.erreur.set(this.l.t('Ce créneau vient d’être pris.', 'تم حجز هذا الموعد للتو.'));
         else this.erreur.set(e.error?.erreur ?? this.l.t("L'enregistrement a échoué, veuillez réessayer.", 'فشل التسجيل، حاول مجددًا.'));
       },
     });

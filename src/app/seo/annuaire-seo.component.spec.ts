@@ -59,6 +59,15 @@ describe('AnnuaireSeoComponent', () => {
     expect(annuaire.rechercher).toHaveBeenCalledWith('pharmacie', '16', undefined, undefined);
   });
 
+  it('page pharmacie : textes de chargement, nombre et « aucun » propres aux pharmacies', () => {
+    const f = creer({ specialite: 'pharmacie', wilaya: 'alger' });
+    const t = f.componentInstance.t;
+    expect(t.chargementPharma).toBe('Chargement des pharmacies…');
+    expect(t.nombrePharma(3)).toBe('3 pharmacies');
+    expect(f.nativeElement.textContent).toContain('Aucune pharmacie référencée');
+    expect(f.nativeElement.textContent).not.toContain('praticien référencé');
+  });
+
   it('accorde l article : « une sage-femme », « un ORL »', () => {
     let f = creer({ specialite: 'sage-femme' });
     expect(f.componentInstance.intro).toContain('Trouvez une sage-femme');
@@ -202,6 +211,35 @@ describe('AnnuaireSeoComponent', () => {
     const ligne = f.nativeElement.querySelector('.seo-med__txt small').textContent as string;
     expect(ligne).toContain('طبيب أمراض الدم');
     expect(ligne).not.toContain('Médecin');
+  });
+
+  it('page commune : cible et question FAQ avec « avec » / « مع » (FR et AR)', () => {
+    const cas = [
+      { langue: undefined, cible: 'avec un cardiologue à Sétif', q: 'Comment prendre rendez-vous avec un cardiologue à Sétif ?' },
+      { langue: 'ar', cible: /^مع .+ في سطيف$/, q: /^كيف أحجز موعدًا مع .+ في سطيف؟$/ },
+    ];
+    for (const c of cas) {
+      TestBed.resetTestingModule();
+      reponse = { status: jasmine.createSpy('status') };
+      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
+      const gens = [1, 2, 3].map((i) => ({ id: `c${i}`, nomComplet: `Dr C${i}`, specialiteSlug: 'cardiologue', specialiteFr: 'Cardiologue', wilayaCode: '19', wilayaFr: 'Sétif', ville: 'Sétif' })) as Medecin[];
+      annuaire.rechercher.and.returnValue(of(gens));
+      annuaire.communes.and.returnValue(of([{ slug: 'setif-ville', nom: 'Sétif', nombre: 3 }] as any));
+      TestBed.configureTestingModule({
+        imports: [AnnuaireSeoComponent],
+        providers: [
+          provideRouter([]),
+          { provide: ActivatedRoute, useValue: { snapshot: { data: c.langue ? { langue: c.langue } : {} }, paramMap: of(convertToParamMap({ specialite: 'cardiologue', wilaya: 'setif', commune: 'setif-ville' })) } },
+          { provide: AnnuaireService, useValue: annuaire },
+          { provide: REPONSE_HTTP, useValue: reponse },
+        ],
+      });
+      const f = TestBed.createComponent(AnnuaireSeoComponent);
+      f.detectChanges();
+      const q = f.componentInstance.faqVisible().find((x) => x.q.includes(f.componentInstance.cible))!.q;
+      if (typeof c.cible === 'string') { expect(f.componentInstance.cible).toBe(c.cible); expect(q).toBe(c.q as string); }
+      else { expect(f.componentInstance.cible).toMatch(c.cible); expect(q).toMatch(c.q as RegExp); }
+    }
   });
 
   it('elide « de » devant une wilaya commencant par une voyelle (d\'Alger, d\'Oran, de Blida)', () => {

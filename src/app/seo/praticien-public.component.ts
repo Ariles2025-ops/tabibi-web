@@ -4,7 +4,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { libelleLangue } from '../fiche-medecin/fiche-infos';
-import { SPECIALITES_SEO, liensLangues, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
+import { SLUG_PHARMACIE, SPECIALITES_SEO, liensLangues, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
 import { poserLangueDocument } from './page-seo';
 import { StatutHttpService } from './statut-http';
 import { ecrireJsonLd, fil, typeSchemaOrg } from './donnees-structurees';
@@ -34,7 +34,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         <div class="pp-haut">
           <nav class="pp-fil" [attr.aria-label]="ar ? 'مسار التصفح' : 'Fil d’Ariane'">
             <a [routerLink]="ar ? '/ar' : '/'" class="pp-accueil">{{ ar ? 'الرئيسية' : 'Accueil' }}</a><span>›</span>
-            <a [routerLink]="p + '/specialites'">{{ ar ? 'الأطباء' : 'Médecins' }}</a>
+            <a [routerLink]="p + '/specialites'">{{ pharmacie ? (ar ? 'الصيدليات' : 'Pharmacies') : (ar ? 'الأطباء' : 'Médecins') }}</a>
             <ng-container *ngIf="specialiteConnue"><span>›</span>
               <a [routerLink]="[p + '/specialites', m.specialiteSlug]">{{ specialite }}</a></ng-container>
             <ng-container *ngIf="specialiteConnue && wilayaSlug"><span>›</span>
@@ -67,8 +67,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             <div *ngIf="m.adresse"><dt>{{ ar ? 'العنوان' : 'Adresse' }}</dt><dd dir="auto">{{ m.adresse }}</dd></div>
             <div *ngIf="m.telephoneCabinet"><dt>{{ ar ? 'هاتف العيادة' : 'Téléphone' }}</dt><dd dir="ltr"><a [href]="'tel:' + m.telephoneCabinet">{{ m.telephoneCabinet }}</a></dd></div>
             <div *ngIf="m.horaires"><dt>{{ ar ? 'أوقات العمل' : 'Horaires' }}</dt><dd dir="auto">{{ m.horaires }}</dd></div>
-            <div *ngIf="m.langues?.length"><dt>{{ ar ? 'اللغات' : 'Langues' }}</dt><dd>{{ langues(m.langues) }}</dd></div>
-            <div><dt>{{ ar ? 'الدفع' : 'Paiement' }}</dt><dd>{{ ar ? 'في العيادة (نقدًا أو ببطاقة الشفاء حسب الطبيب)' : 'Au cabinet (espèces ou carte Chifa selon le praticien)' }}</dd></div>
+            <div *ngIf="m.langues?.length"><dt>{{ ar ? 'اللغات المتحدَّث بها' : 'Langues parlées' }}</dt><dd>{{ langues(m.langues) }}</dd></div>
+            <div *ngIf="!pharmacie"><dt>{{ ar ? 'الدفع' : 'Paiement' }}</dt><dd>{{ ar ? 'في العيادة (نقدًا أو ببطاقة الشفاء حسب الطبيب)' : 'Au cabinet (espèces ou carte Chifa selon le praticien)' }}</dd></div>
           </dl>
         </section>
 
@@ -78,7 +78,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         </section>
 
         <section class="pp-bloc" *ngIf="confreres().length">
-          <h2>{{ ar ? 'أطباء آخرون' : 'Autres praticiens' }} : {{ specialite }}<ng-container *ngIf="wilaya"> {{ ar ? 'في' : 'à' }} {{ wilaya }}</ng-container></h2>
+          <h2>{{ pharmacie ? (ar ? 'صيدليات أخرى' : 'Autres pharmacies') : (ar ? 'أطباء آخرون' : 'Autres praticiens') }} : {{ specialite }}<ng-container *ngIf="wilaya"> {{ ar ? 'في' : 'à' }} {{ wilaya }}</ng-container></h2>
           <ul class="pp-confreres">
             <li *ngFor="let c of confreres()">
               <a [routerLink]="lien(c)"><strong dir="auto">{{ c.nomComplet }}</strong><small dir="auto">{{ ar ? wilaya : (c.ville || c.wilayaFr) }}</small></a>
@@ -148,6 +148,8 @@ export class PraticienPublicComponent implements OnInit {
   confreres = signal<Medecin[]>([]);
   charge = signal(true);
   specialiteConnue = false;
+  /** Fiche d'une pharmacie : ni consultation ni cabinet (pas de ligne « Paiement »). */
+  pharmacie = false;
   /** Langue de la page (donnee de route) : prefixe '' en francais, '/ar' en arabe. */
   ar = false;
   p = '';
@@ -199,6 +201,7 @@ export class PraticienPublicComponent implements OnInit {
         const spec = SPECIALITES_SEO.find((s) => s.slug === m.specialiteSlug);
         const wil = wilayaParCode(m.wilayaCode);
         this.specialiteConnue = !!spec;
+        this.pharmacie = m.specialiteSlug === SLUG_PHARMACIE;
         this.wilayaSlug = wil?.slug ?? null;
         this.specialite = spec ? (this.ar ? spec.nomAr : spec.nom) : m.specialiteFr;
         this.wilaya = wil ? (this.ar ? wil.nomAr : wil.nom) : (m.wilayaFr || '');

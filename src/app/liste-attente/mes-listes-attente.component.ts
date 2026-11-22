@@ -5,8 +5,9 @@ import { RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { LangueService } from '../partage/langue.service';
+import { libelleMedecin } from '../messagerie/messagerie.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
-import { InscriptionAttente, ListeAttenteService } from './liste-attente.service';
+import { InscriptionAttente, ListeAttenteService, instantInscription, trierParInscription } from './liste-attente.service';
 
 /**
  * Mes listes d'attente (role PATIENT) : inscriptions du patient (GET /api/liste-attente/mes), les plus anciennes
@@ -35,9 +36,10 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
           <li *ngFor="let i of inscriptions()"
               style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
-              <a [routerLink]="['/medecins', i.medecinId]" style="color:var(--vert);font-weight:600">{{ noms()[i.medecinId] ?? l.t('Voir le praticien', 'عرض الطبيب') }}</a><br>
-              <span style="color:var(--text3)" *ngIf="!l.ar()">Inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
-              <span style="color:var(--text3)" *ngIf="l.ar()">التسجيل في <span dir="ltr">{{ i.inscritLe | date:'dd/MM/yyyy HH:mm' }}</span></span>
+              <a [routerLink]="['/medecins', i.medecinId]" style="color:var(--vert);font-weight:600">{{ noms()[i.medecinId] ?? libelleMedecin(i.medecinId, l.ar()) }}</a><br>
+              <span style="color:var(--text3)" *ngIf="!date(i)">{{ l.t("Date d'inscription inconnue", 'تاريخ التسجيل غير معروف') }}</span>
+              <span style="color:var(--text3)" *ngIf="date(i) && !l.ar()">Inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
+              <span style="color:var(--text3)" *ngIf="date(i) && l.ar()">التسجيل في <span dir="ltr">{{ i.inscritLe | date:'dd/MM/yyyy HH:mm' }}</span></span>
             </div>
             <button *ngIf="aConfirmer() !== i.id" type="button" (click)="aConfirmer.set(i.id)" [disabled]="enCours() !== null"
                     style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
@@ -63,6 +65,7 @@ import { InscriptionAttente, ListeAttenteService } from './liste-attente.service
   `
 })
 export class MesListesAttenteComponent implements OnInit {
+  readonly libelleMedecin = libelleMedecin;
   l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(ListeAttenteService);
@@ -93,12 +96,17 @@ export class MesListesAttenteComponent implements OnInit {
     this.charger();
   }
 
+  /** Instant d'inscription, null si la date est absente ou illisible (message « Date d'inscription inconnue »). */
+  date(i: InscriptionAttente): number | null {
+    return instantInscription(i);
+  }
+
   charger() {
     this.charge.set(true);
     this.erreur.set('');
     this.service.mes().subscribe({
       next: (liste) => {
-        this.inscriptions.set([...liste].sort((a, b) => Date.parse(a.inscritLe) - Date.parse(b.inscritLe)));
+        this.inscriptions.set(trierParInscription(liste));
         this.chargerNoms(liste);
         this.charge.set(false);
       },

@@ -10,13 +10,20 @@ import { RoleService } from '../auth/role.service';
 import { SyntheseAvisComponent } from '../avis/synthese-avis.component';
 import { ListeAttenteService } from '../liste-attente/liste-attente.service';
 import { MessagerieService } from '../messagerie/messagerie.service';
+import { cleJour } from '../medecin/agenda-utils';
+import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 
 @Component({
     selector: 'app-fiche-medecin',
-    imports: [CommonModule, RouterLink, SyntheseAvisComponent],
+    imports: [CommonModule, RouterLink, SyntheseAvisComponent, SelecteurLangueComponent],
     template: `
-    <main class="fm">
-      <a routerLink="/" class="fm-back"><i class="fa fa-arrow-left fa-xs"></i> Retour à la recherche</a>
+    <main class="fm" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <div class="fm-haut">
+        <a routerLink="/" class="fm-back"><i class="fa fa-xs" [class.fa-arrow-left]="!l.ar()" [class.fa-arrow-right]="l.ar()"></i> {{ l.t('Retour à la recherche', 'العودة إلى البحث') }}</a>
+        <app-selecteur-langue />
+      </div>
 
       <p *ngIf="erreur() && !medecin()" class="fm-err">{{ erreur() }}</p>
 
@@ -26,99 +33,102 @@ import { MessagerieService } from '../messagerie/messagerie.service';
           <div class="fm-ava" aria-hidden="true">{{ initiales(m.nomComplet) }}</div>
           <div class="fm-id">
             <h1>{{ m.nomComplet }}</h1>
-            <span class="fm-spe"><i class="fa fa-stethoscope fa-xs"></i> {{ m.specialiteFr }}</span>
-            <span class="fm-lieu"><i class="fa fa-location-dot fa-xs"></i> {{ m.ville || m.wilayaFr }} ({{ m.wilayaFr }})</span>
+            <span class="fm-spe"><i class="fa fa-stethoscope fa-xs"></i> {{ specialite(m) }}</span>
+            <span class="fm-lieu"><i class="fa fa-location-dot fa-xs"></i> {{ m.ville || wilaya(m) }} ({{ wilaya(m) }})</span>
             <div class="fm-badges">
-              <span class="fm-badge" *ngIf="creneaux().length"><i class="fa fa-calendar-check fa-xs"></i> Rendez-vous en ligne</span>
-              <span class="fm-badge fm-badge--neutre"><i class="fa fa-wallet fa-xs"></i> Paiement au cabinet</span>
+              <span class="fm-badge" *ngIf="creneaux().length"><i class="fa fa-calendar-check fa-xs"></i> {{ l.t('Rendez-vous en ligne', 'حجز المواعيد عبر الإنترنت') }}</span>
+              <span class="fm-badge fm-badge--neutre"><i class="fa fa-wallet fa-xs"></i> {{ l.t('Paiement au cabinet', 'الدفع في العيادة') }}</span>
             </div>
           </div>
           <div class="fm-hero-act" *ngIf="!reclamable() && !messagerieReservee()">
             <button type="button" class="fm-btn fm-btn--sec" (click)="ecrire()" [disabled]="ouvertureMessagerie()">
-              <i class="fa fa-comment-dots"></i> {{ ouvertureMessagerie() ? 'Ouverture…' : 'Écrire au médecin' }}
+              <i class="fa fa-comment-dots"></i> {{ ouvertureMessagerie() ? l.t('Ouverture…', 'جارٍ الفتح…') : l.t('Écrire au médecin', 'مراسلة الطبيب') }}
             </button>
           </div>
-          <p *ngIf="!reclamable() && messagerieReservee()" class="fm-hero-msg">La messagerie est réservée aux patients.</p>
+          <p *ngIf="!reclamable() && messagerieReservee()" class="fm-hero-msg">{{ l.t('La messagerie est réservée aux patients.', 'المراسلة مخصّصة للمرضى.') }}</p>
           <p *ngIf="erreurMessagerie()" class="fm-err fm-hero-msg">{{ erreurMessagerie() }}</p>
         </header>
 
         <div class="fm-grid">
           <!-- Prise de rendez-vous (colonne de droite sur ordinateur, en premier sur mobile) -->
           <aside class="fm-book" aria-labelledby="fm-book-titre">
-            <h2 id="fm-book-titre">Prendre rendez-vous</h2>
+            <h2 id="fm-book-titre">{{ l.t('Prendre rendez-vous', 'احجز موعدًا') }}</h2>
             <p class="fm-next" *ngIf="creneaux()[0] as premier">
-              Prochaine disponibilité : <strong>{{ premier.debut | date:'EEE d MMM à HH:mm' }}</strong>
+              {{ l.t('Prochaine disponibilité :', 'أقرب موعد متاح:') }} <strong *ngIf="!l.ar()">{{ premier.debut | date:'EEE d MMM à HH:mm' }}</strong><strong *ngIf="l.ar()" dir="ltr">{{ premier.debut | date:'dd/MM/yyyy HH:mm' }}</strong>
             </p>
 
             <div *ngIf="reservation() as r" class="fm-ok" role="status">
               <i class="fa fa-circle-check"></i>
               <div>
-                <strong>Rendez-vous confirmé</strong>
-                <span>{{ r.debut | date:'EEEE d MMMM à HH:mm' }}</span>
-                <a routerLink="/mes-rendez-vous">Voir mes rendez-vous</a>
+                <strong>{{ l.t('Rendez-vous confirmé', 'تم تأكيد الموعد') }}</strong>
+                <span *ngIf="!l.ar()">{{ r.debut | date:'EEEE d MMMM à HH:mm' }}</span>
+                <span *ngIf="l.ar()" dir="ltr">{{ r.debut | date:'dd/MM/yyyy HH:mm' }}</span>
+                <a routerLink="/mes-rendez-vous">{{ l.t('Voir mes rendez-vous', 'عرض مواعيدي') }}</a>
               </div>
             </div>
             <p *ngIf="erreur()" class="fm-err">{{ erreur() }}</p>
-            <p *ngIf="charge()" class="fm-muted">Chargement des disponibilités…</p>
+            <p *ngIf="charge()" class="fm-muted">{{ l.t('Chargement des disponibilités…', 'جارٍ تحميل المواعيد المتاحة…') }}</p>
 
             <!-- Etape 2 : confirmation du creneau choisi -->
             <div *ngIf="selection() as s" class="fm-confirm">
-              <span class="fm-confirm-lbl">Votre rendez-vous</span>
-              <strong class="fm-confirm-date">{{ s.debut | date:'EEEE d MMMM' }}</strong>
-              <span class="fm-confirm-heure"><i class="fa fa-clock fa-xs"></i> {{ s.debut | date:'HH:mm' }} · {{ s.dureeMinutes }} min</span>
+              <span class="fm-confirm-lbl">{{ l.t('Votre rendez-vous', 'موعدك') }}</span>
+              <strong class="fm-confirm-date" *ngIf="!l.ar()">{{ s.debut | date:'EEEE d MMMM' }}</strong>
+              <strong class="fm-confirm-date" *ngIf="l.ar()" dir="ltr">{{ s.debut | date:'dd/MM/yyyy' }}</strong>
+              <span class="fm-confirm-heure"><i class="fa fa-clock fa-xs"></i> <span dir="ltr">{{ s.debut | date:'HH:mm' }}</span> · {{ s.dureeMinutes }} {{ l.t('min', 'د') }}</span>
               <button type="button" class="fm-btn fm-btn--pri" (click)="reserver(s)" [disabled]="enCours() !== null">
-                {{ enCours() ? 'Réservation…' : 'Confirmer le rendez-vous' }}
+                {{ enCours() ? l.t('Réservation…', 'جارٍ الحجز…') : l.t('Confirmer le rendez-vous', 'تأكيد الموعد') }}
               </button>
-              <button type="button" class="fm-link" (click)="selection.set(null)" [disabled]="enCours() !== null">Choisir un autre horaire</button>
+              <button type="button" class="fm-link" (click)="selection.set(null)" [disabled]="enCours() !== null">{{ l.t('Choisir un autre horaire', 'اختيار موعد آخر') }}</button>
             </div>
 
             <!-- Etape 1 : choix du jour et de l'heure -->
             <ng-container *ngIf="!selection() && joursCreneaux().length">
               <div class="fm-nav">
-                <button type="button" class="fm-nav-btn" (click)="page.set(page() - 1)" [disabled]="page() === 0" aria-label="Jours précédents"><i class="fa fa-chevron-left"></i></button>
-                <span class="fm-nav-lbl">Choisissez un horaire</span>
-                <button type="button" class="fm-nav-btn" (click)="page.set(page() + 1)" [disabled]="!pageSuivante()" aria-label="Jours suivants"><i class="fa fa-chevron-right"></i></button>
+                <button type="button" class="fm-nav-btn" (click)="page.set(page() - 1)" [disabled]="page() === 0" [attr.aria-label]="l.t('Jours précédents', 'الأيام السابقة')"><i class="fa" [class.fa-chevron-left]="!l.ar()" [class.fa-chevron-right]="l.ar()"></i></button>
+                <span class="fm-nav-lbl">{{ l.t('Choisissez un horaire', 'اختر موعدًا') }}</span>
+                <button type="button" class="fm-nav-btn" (click)="page.set(page() + 1)" [disabled]="!pageSuivante()" [attr.aria-label]="l.t('Jours suivants', 'الأيام التالية')"><i class="fa" [class.fa-chevron-right]="!l.ar()" [class.fa-chevron-left]="l.ar()"></i></button>
               </div>
               <div class="fm-jours">
                 <div class="fm-jour" *ngFor="let j of joursVisibles()">
                   <div class="fm-jour-tete">
-                    <span class="fm-jour-nom">{{ j.date | date:'EEE' }}</span>
-                    <span class="fm-jour-num">{{ j.date | date:'d MMM' }}</span>
+                    <span class="fm-jour-nom" *ngIf="!l.ar()">{{ j.date | date:'EEE' }}</span>
+                    <span class="fm-jour-num" *ngIf="!l.ar()">{{ j.date | date:'d MMM' }}</span>
+                    <span class="fm-jour-num" *ngIf="l.ar()" dir="ltr">{{ j.date | date:'dd/MM' }}</span>
                   </div>
                   <button type="button" class="fm-slot" *ngFor="let c of (toutAfficher() ? j.creneaux : j.creneaux.slice(0, 4))"
                           (click)="selection.set(c)" [disabled]="enCours() !== null"
-                          [attr.aria-label]="'Choisir le ' + (c.debut | date:'EEEE d MMMM à HH:mm')" dir="ltr">
+                          [attr.aria-label]="l.t('Choisir le ', 'اختيار موعد ') + (c.debut | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM à HH:mm'))" dir="ltr">
                     {{ c.debut | date:'HH:mm' }}
                   </button>
                 </div>
               </div>
               <button *ngIf="plusDHoraires()" type="button" class="fm-link fm-plus" (click)="toutAfficher.set(!toutAfficher())">
-                {{ toutAfficher() ? "Voir moins d'horaires" : "Voir plus d'horaires" }}
+                {{ toutAfficher() ? l.t("Voir moins d'horaires", 'عرض مواعيد أقل') : l.t("Voir plus d'horaires", 'عرض مواعيد أكثر') }}
                 <i class="fa fa-xs" [class.fa-chevron-down]="!toutAfficher()" [class.fa-chevron-up]="toutAfficher()"></i>
               </button>
             </ng-container>
 
-            <p *ngIf="!charge() && !erreur() && creneaux().length === 0" class="fm-vide">Aucun créneau disponible pour le moment.</p>
+            <p *ngIf="!charge() && !erreur() && creneaux().length === 0" class="fm-vide">{{ l.t('Aucun créneau disponible pour le moment.', 'لا توجد مواعيد متاحة حاليًا.') }}</p>
 
             <!-- Fiche importee, sans compte : personne ne lirait un message ni une liste d'attente -->
             <div *ngIf="reclamable()" class="fm-attente fm-absent">
-              <p><strong>Ce praticien n'est pas encore sur Ndawik</strong>
-                Sa fiche provient de sources publiques : il ne reçoit pas encore de messages ni de demandes de rendez-vous en ligne.</p>
-              <a routerLink="/praticien" class="fm-link">C'est votre fiche ? <i class="fa fa-arrow-right fa-xs"></i></a>
+              <p><strong>{{ l.t("Ce praticien n'est pas encore sur Ndawik", 'هذا الممارس ليس بعد على نداويك') }}</strong>
+                {{ l.t("Sa fiche provient de sources publiques : il ne reçoit pas encore de messages ni de demandes de rendez-vous en ligne.", 'ملفّه مأخوذ من مصادر عامة: لا يستقبل بعدُ رسائل ولا طلبات مواعيد عبر الإنترنت.') }}</p>
+              <a routerLink="/praticien" class="fm-link">{{ l.t("C'est votre fiche ?", 'هل هذا ملفّك؟') }} <i class="fa fa-xs" [class.fa-arrow-right]="!l.ar()" [class.fa-arrow-left]="l.ar()"></i></a>
             </div>
 
             <!-- Liste d'attente -->
             <div *ngIf="!charge() && !reclamable()" class="fm-attente">
               <p>
-                <strong>{{ creneaux().length === 0 ? 'Aucun créneau ne vous est proposé ?' : 'Aucun créneau ne vous convient ?' }}</strong>
-                Inscrivez-vous sur la liste d'attente de ce praticien. Vous serez notifié dès qu'un créneau se libère.
+                <strong>{{ creneaux().length === 0 ? l.t('Aucun créneau ne vous est proposé ?', 'لا توجد مواعيد مقترحة لك؟') : l.t('Aucun créneau ne vous convient ?', 'لا يناسبك أي موعد؟') }}</strong>
+                {{ l.t("Inscrivez-vous sur la liste d'attente de ce praticien. Vous serez notifié dès qu'un créneau se libère.", 'سجّل في قائمة انتظار هذا الممارس. سيصلك إشعار فور توفّر موعد.') }}
               </p>
               <p *ngIf="inscription()" class="fm-attente-ok">
                 {{ inscription() }}
-                <a routerLink="/liste-attente">Voir mes listes d'attente</a>
+                <a routerLink="/liste-attente">{{ l.t("Voir mes listes d'attente", 'عرض قوائم انتظاري') }}</a>
               </p>
               <button *ngIf="!inscription()" type="button" class="fm-btn fm-btn--sec fm-btn--bloc" (click)="inscrire()" [disabled]="inscriptionEnCours()">
-                <i class="fa fa-bell"></i> {{ inscriptionEnCours() ? 'Inscription…' : "M'inscrire sur la liste d'attente" }}
+                <i class="fa fa-bell"></i> {{ inscriptionEnCours() ? l.t('Inscription…', 'جارٍ التسجيل…') : l.t("M'inscrire sur la liste d'attente", 'التسجيل في قائمة الانتظار') }}
               </button>
               <p *ngIf="erreurInscription()" class="fm-err">{{ erreurInscription() }}</p>
             </div>
@@ -127,32 +137,32 @@ import { MessagerieService } from '../messagerie/messagerie.service';
           <!-- Informations -->
           <div class="fm-infos">
             <section class="fm-card">
-              <h2><i class="fa fa-location-dot"></i> Lieu de consultation</h2>
-              <p class="fm-lieu-txt">{{ m.ville || m.wilayaFr }}, wilaya de {{ m.wilayaFr }}</p>
+              <h2><i class="fa fa-location-dot"></i> {{ l.t('Lieu de consultation', 'مكان الاستشارة') }}</h2>
+              <p class="fm-lieu-txt">{{ m.ville || wilaya(m) }}, {{ l.t('wilaya de', 'ولاية') }} {{ wilaya(m) }}</p>
             </section>
 
             <section class="fm-card fm-cabinet" *ngIf="aInfos(m)">
-              <h2><i class="fa fa-stethoscope"></i> Le cabinet</h2>
+              <h2><i class="fa fa-stethoscope"></i> {{ l.t('Le cabinet', 'العيادة') }}</h2>
               <ul class="fm-pratique">
-                <li *ngIf="m.adresse"><i class="fa fa-map-pin"></i><div><strong>Adresse</strong><span>{{ m.adresse }}</span></div></li>
-                <li *ngIf="m.telephoneCabinet"><i class="fa fa-phone"></i><div><strong>Téléphone</strong><span><a [href]="'tel:' + m.telephoneCabinet">{{ m.telephoneCabinet }}</a></span></div></li>
-                <li *ngIf="m.horaires"><i class="fa fa-clock"></i><div><strong>Horaires</strong><span>{{ m.horaires }}</span></div></li>
-                <li *ngIf="m.langues?.length"><i class="fa fa-language"></i><div><strong>Langues</strong><span>{{ libellesLangues(m.langues) }}</span></div></li>
+                <li *ngIf="m.adresse"><i class="fa fa-map-pin"></i><div><strong>{{ l.t('Adresse', 'العنوان') }}</strong><span>{{ m.adresse }}</span></div></li>
+                <li *ngIf="m.telephoneCabinet"><i class="fa fa-phone"></i><div><strong>{{ l.t('Téléphone', 'الهاتف') }}</strong><span><a [href]="'tel:' + m.telephoneCabinet" dir="ltr">{{ m.telephoneCabinet }}</a></span></div></li>
+                <li *ngIf="m.horaires"><i class="fa fa-clock"></i><div><strong>{{ l.t('Horaires', 'أوقات العمل') }}</strong><span>{{ m.horaires }}</span></div></li>
+                <li *ngIf="m.langues?.length"><i class="fa fa-language"></i><div><strong>{{ l.t('Langues parlées', 'اللغات المتحدَّث بها') }}</strong><span>{{ libellesLangues(m.langues) }}</span></div></li>
               </ul>
               <p *ngIf="m.presentation" class="fm-lieu-txt" style="white-space:pre-line">{{ m.presentation }}</p>
             </section>
 
             <section class="fm-card">
-              <h2><i class="fa fa-circle-info"></i> Informations pratiques</h2>
+              <h2><i class="fa fa-circle-info"></i> {{ l.t('Informations pratiques', 'معلومات عملية') }}</h2>
               <ul class="fm-pratique">
-                <li><i class="fa fa-wallet"></i><div><strong>Paiement au cabinet</strong><span>Vous réglez la consultation directement sur place.</span></div></li>
-                <li><i class="fa fa-bolt"></i><div><strong>Confirmation immédiate</strong><span>Votre rendez-vous est enregistré dès la réservation.</span></div></li>
-                <li><i class="fa fa-calendar-xmark"></i><div><strong>Un empêchement ?</strong><span>Annulez depuis « Mes rendez-vous » pour libérer la place.</span></div></li>
+                <li><i class="fa fa-wallet"></i><div><strong>{{ l.t('Paiement au cabinet', 'الدفع في العيادة') }}</strong><span>{{ l.t('Vous réglez la consultation directement sur place.', 'تدفع ثمن الاستشارة مباشرة في العيادة.') }}</span></div></li>
+                <li><i class="fa fa-bolt"></i><div><strong>{{ l.t('Confirmation immédiate', 'تأكيد فوري') }}</strong><span>{{ l.t('Votre rendez-vous est enregistré dès la réservation.', 'يُسجَّل موعدك فور الحجز.') }}</span></div></li>
+                <li><i class="fa fa-calendar-xmark"></i><div><strong>{{ l.t('Un empêchement ?', 'هل طرأ ما يمنعك؟') }}</strong><span>{{ l.t('Annulez depuis « Mes rendez-vous » pour libérer la place.', 'ألغِ الموعد من «مواعيدي» لإتاحة المكان لغيرك.') }}</span></div></li>
               </ul>
             </section>
 
             <section class="fm-card">
-              <app-synthese-avis [medecinId]="m.id" />
+              <app-synthese-avis [medecinId]="m.id" [arabe]="l.ar()" />
             </section>
           </div>
         </div>
@@ -162,7 +172,8 @@ import { MessagerieService } from '../messagerie/messagerie.service';
     styles: [`
     :host { display:block; background:var(--bg); }
     .fm { max-width:1080px; margin:0 auto; padding:20px var(--gutter) 48px; }
-    .fm-back { display:inline-flex; align-items:center; gap:6px; color:var(--blue); font-weight:600; font-size:14px; text-decoration:none; margin-bottom:16px; }
+    .fm-haut { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    .fm-back { display:inline-flex; align-items:center; gap:6px; color:var(--blue); font-weight:600; font-size:14px; text-decoration:none; }
     .fm-back:hover { text-decoration:underline; }
 
     /* En-tete d'identite */
@@ -265,10 +276,24 @@ import { MessagerieService } from '../messagerie/messagerie.service';
   `]
 })
 export class FicheMedecinComponent implements OnInit {
+  l = inject(LangueService);
   aInfos = aDesInfos;
 
+  /** Wilaya dans la langue d'affichage (repli sur le francais si l'API ne fournit pas l'arabe). */
+  wilaya(m: Medecin): string {
+    if (!this.l.ar()) return m.wilayaFr;
+    return WILAYAS_SEO.find((w) => w.code === String(m.wilayaCode))?.nomAr ?? m.wilayaFr;
+  }
+
+  /** Specialite dans la langue d'affichage (referentiel, comme l'appli ; repli sur le libelle francais de l'API). */
+  specialite(m: Medecin): string {
+    if (!this.l.ar()) return m.specialiteFr;
+    if (m.specialiteSlug === 'autre') return 'أخرى';
+    return SPECIALITES_SEO.find((x) => x.slug === m.specialiteSlug)?.nomAr ?? m.specialiteFr;
+  }
+
   libellesLangues(codes: string[] | null | undefined): string {
-    return (codes ?? []).map((c) => libelleLangue(c, false)).join(', ');
+    return (codes ?? []).map((c) => libelleLangue(c, this.l.ar())).join(this.l.ar() ? '، ' : ', ');
   }
 
   private route = inject(ActivatedRoute);
@@ -292,8 +317,7 @@ export class FicheMedecinComponent implements OnInit {
   joursCreneaux = computed<{ date: string; creneaux: Creneau[] }[]>(() => {
     const groupes = new Map<string, { date: string; creneaux: Creneau[] }>();
     for (const c of this.creneaux()) {
-      const d = new Date(c.debut);
-      const cle = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      const cle = cleJour(c.debut);
       let groupe = groupes.get(cle);
       if (!groupe) { groupe = { date: c.debut, creneaux: [] }; groupes.set(cle, groupe); }
       groupe.creneaux.push(c);
@@ -357,7 +381,7 @@ export class FicheMedecinComponent implements OnInit {
     this.annuaire.medecin(id).subscribe({
       next: (m) => this.medecin.set(m),
       error: (e: HttpErrorResponse) =>
-        this.erreur.set(e.status === 404 ? 'Praticien introuvable.' : (e.error?.erreur ?? 'Impossible de charger la fiche du praticien.')),
+        this.erreur.set(e.status === 404 ? this.l.t('Praticien introuvable.', 'الممارس غير موجود.') : this.messageApi(e, 'Impossible de charger la fiche du praticien.', 'تعذّر تحميل ملف الممارس.')),
     });
     this.annuaire.reclamable(id).subscribe({
       next: (r) => this.reclamable.set(r.reclamable),
@@ -374,11 +398,28 @@ export class FicheMedecinComponent implements OnInit {
     this.listeAttente.mes().subscribe({
       next: (inscriptions) => {
         if (inscriptions.some((i) => i.medecinId === id)) {
-          this.inscription.set("Vous êtes déjà inscrit sur la liste d'attente de ce praticien.");
+          this.inscription.set(this.l.t("Vous êtes déjà inscrit sur la liste d'attente de ce praticien.", 'أنت مسجّل بالفعل في قائمة انتظار هذا الممارس.'));
         }
       },
       error: () => undefined,
     });
+  }
+
+  /**
+   * Message d'erreur de l'API (toujours en français). En arabe, les refus connus sont traduits et
+   * tout autre message est remplacé par le repli arabe : jamais de français dans la page arabe.
+   */
+  private messageApi(e: HttpErrorResponse, reperFr: string, reperAr: string): string {
+    const api: string | undefined = e.error?.erreur;
+    if (!this.l.ar()) return api ?? reperFr;
+    // Les 409 arrivent déjà traduits par l'intercepteur d'erreurs (erreur-api.interceptor) ; le reste garde le repli.
+    const m = (api ?? '').toLowerCase();
+    if (/[\u0600-\u06FF]/.test(m)) return api!;
+    if (m.includes('rendez-vous à venir')) return 'لديك بالفعل موعد قادم مع هذا الطبيب: ألغِه لاختيار موعد آخر.';
+    if (m.includes('chevauche')) return 'هذا الموعد يتداخل مع موعد آخر لديك.';
+    if (m.includes('déjà passé')) return 'هذا الموعد قد مضى.';
+    if (m.includes('pris') || m.includes('réservé')) return 'هذا الموعد حُجز للتوّ.';
+    return reperAr;
   }
 
   private chargerCreneaux() {
@@ -393,7 +434,7 @@ export class FicheMedecinComponent implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         this.creneaux.set([]);
-        this.erreur.set(e.error?.erreur ?? 'Impossible de charger les créneaux.');
+        this.erreur.set(this.messageApi(e, 'Impossible de charger les créneaux.', 'تعذّر تحميل المواعيد.'));
         this.charge.set(false);
       },
     });
@@ -420,14 +461,19 @@ export class FicheMedecinComponent implements OnInit {
         if (e.status === 409) {
           this.selection.set(null);
           // L'API renvoie 409 pour plusieurs causes (créneau pris, passé, déjà un rendez-vous avec ce médecin…).
-          this.erreur.set(e.error?.erreur ?? "Ce créneau vient d'être pris.");
+          this.erreur.set(this.messageApi(e, "Ce créneau vient d'être pris.", 'هذا الموعد حُجز للتوّ.'));
+          this.chargerCreneaux();
+        } else if (e.status === 404) {
+          // Créneau supprimé par le cabinet entre-temps : on le désélectionne et on recharge la liste.
+          this.selection.set(null);
+          this.erreur.set(this.l.t("Ce créneau n'est plus disponible.", 'هذا الموعد لم يعد متاحًا.'));
           this.chargerCreneaux();
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Seul un compte patient peut réserver un créneau.');
+          this.erreur.set(this.l.t('Seul un compte patient peut réserver un créneau.', 'يمكن لحساب المريض فقط حجز موعد.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'La réservation a échoué, veuillez réessayer.');
+          this.erreur.set(this.messageApi(e, 'La réservation a échoué, veuillez réessayer.', 'فشل الحجز، يرجى المحاولة مرة أخرى.'));
         }
       },
     });
@@ -455,11 +501,11 @@ export class FicheMedecinComponent implements OnInit {
       error: (e: HttpErrorResponse) => {
         this.ouvertureMessagerie.set(false);
         if (e.status === 403) {
-          this.erreurMessagerie.set('Vous devez avoir un rendez-vous avec ce médecin pour lui écrire.');
+          this.erreurMessagerie.set(this.l.t('Vous devez avoir un rendez-vous avec ce médecin pour lui écrire.', 'يجب أن يكون لديك موعد مع هذا الطبيب لمراسلته.'));
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreurMessagerie.set(e.error?.erreur ?? "L'ouverture de la conversation a échoué, veuillez réessayer.");
+          this.erreurMessagerie.set(this.messageApi(e, "L'ouverture de la conversation a échoué, veuillez réessayer.", 'تعذّر فتح المحادثة، يرجى المحاولة مرة أخرى.'));
         }
       },
     });
@@ -480,20 +526,20 @@ export class FicheMedecinComponent implements OnInit {
     this.listeAttente.inscrire(this.medecinId).subscribe({
       next: () => {
         this.inscriptionEnCours.set(false);
-        this.inscription.set("Vous êtes inscrit sur la liste d'attente de ce praticien.");
+        this.inscription.set(this.l.t("Vous êtes inscrit sur la liste d'attente de ce praticien.", 'أنت مسجّل في قائمة انتظار هذا الممارس.'));
       },
       error: (e: HttpErrorResponse) => {
         this.inscriptionEnCours.set(false);
         if (e.status === 409) {
-          this.inscription.set('Vous êtes déjà inscrit sur cette liste.');
+          this.inscription.set(this.l.t('Vous êtes déjà inscrit sur cette liste.', 'أنت مسجّل بالفعل في هذه القائمة.'));
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreurInscription.set("Seul un compte patient peut s'inscrire sur une liste d'attente.");
+          this.erreurInscription.set(this.l.t("Seul un compte patient peut s'inscrire sur une liste d'attente.", 'يمكن لحساب المريض فقط التسجيل في قائمة انتظار.'));
         } else if (e.status === 404) {
-          this.erreurInscription.set('Praticien introuvable.');
+          this.erreurInscription.set(this.l.t('Praticien introuvable.', 'الممارس غير موجود.'));
         } else {
-          this.erreurInscription.set(e.error?.erreur ?? "L'inscription a échoué, veuillez réessayer.");
+          this.erreurInscription.set(this.messageApi(e, "L'inscription a échoué, veuillez réessayer.", 'فشل التسجيل، يرجى المحاولة مرة أخرى.'));
         }
       },
     });

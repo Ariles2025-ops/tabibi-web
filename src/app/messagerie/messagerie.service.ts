@@ -18,6 +18,8 @@ export interface Conversation {
   creeLe: string;
   dernierMessageLe: string;
   nonLus: number;
+  /** Vrai quand le medecin a ferme la conversation : plus aucun message ne peut y etre envoye (409). */
+  fermee: boolean;
 }
 
 /** Message d'une conversation ; luLe vaut null tant que l'autre participant ne l'a pas lu. */
@@ -33,6 +35,38 @@ export interface Message {
 /** Identifiant abrege d'un utilisateur (huit premiers caracteres), pour designer un patient sans afficher tout l'UUID. */
 export function abregerIdentifiant(id: string): string {
   return id.length > 8 ? id.slice(0, 8) : id;
+}
+
+/**
+ * Libelle d'un praticien dont la fiche est indisponible : « Médecin 1a2b3c4d » (identifiant abrege) pour distinguer
+ * deux praticiens, « Médecin inconnu » sans identifiant, comme dans l'appli.
+ */
+export function libelleMedecin(id: string | null | undefined, arabe = false): string {
+  if (!id) return arabe ? 'طبيب غير معروف' : 'Médecin inconnu';
+  return `${arabe ? 'طبيب' : 'Médecin'} ${abregerIdentifiant(id)}`;
+}
+
+/** Instant (ms) de la derniere activite d'une conversation : dernier message, sinon ouverture ; null si aucune date lisible. */
+export function derniereActivite(c: Pick<Conversation, 'creeLe' | 'dernierMessageLe'>): number | null {
+  for (const iso of [c.dernierMessageLe, c.creeLe]) {
+    const instant = iso ? Date.parse(iso) : NaN;
+    if (!Number.isNaN(instant)) return instant;
+  }
+  return null;
+}
+
+/**
+ * Copie triee de la plus recente a la plus ancienne activite, comme `trierParActivite` de l'appli (messagerie.dart) :
+ * une date absente retombe sur la date d'ouverture, les conversations sans aucune date vont en fin de liste.
+ */
+export function trierParActivite(conversations: Conversation[]): Conversation[] {
+  return [...conversations].sort((a, b) => {
+    const da = derniereActivite(a);
+    const db = derniereActivite(b);
+    if (da === null) return db === null ? 0 : 1;
+    if (db === null) return -1;
+    return db - da;
+  });
 }
 
 /**
@@ -68,5 +102,10 @@ export class MessagerieService {
   /** Envoi d'un message (201 ; 400 si vide ou au-dela de 2000 caracteres) ; l'autre participant est prevenu. */
   envoyer(conversationId: string, contenu: string): Observable<Message> {
     return this.http.post<Message>(`${this.base}/api/conversations/${conversationId}/messages`, { contenu });
+  }
+
+  /** Ferme la conversation (reserve au medecin ; plus aucun message ne peut ensuite y etre envoye, 409). */
+  fermer(conversationId: string): Observable<unknown> {
+    return this.http.post<unknown>(`${this.base}/api/conversations/${conversationId}/fermer`, {});
   }
 }

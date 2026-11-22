@@ -1,4 +1,4 @@
-import { estAnnule, libelleStatutRendezVous } from './statut-rendez-vous';
+import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from './statut-rendez-vous';
 
 describe('statuts de rendez-vous (vocabulaire commun site / appli)', () => {
   it('affiche Confirmé, Annulé, Honoré, Absent', () => {
@@ -27,5 +27,22 @@ describe('statuts de rendez-vous (vocabulaire commun site / appli)', () => {
     expect(estAnnule('ANNULE')).toBeTrue();
     expect(estAnnule('ANNULEE')).toBeTrue();
     expect(estAnnule('CONFIRME')).toBeFalse();
+  });
+});
+
+describe('statuts de rendez-vous en arabe (comme libelles.dart de l appli)', () => {
+  it('traduit les statuts connus, RESERVE comme CONFIRME', () => {
+    expect(libelleStatutRendezVousAr('CONFIRME')).toBe('مؤكد');
+    expect(libelleStatutRendezVousAr('RESERVE')).toBe('مؤكد');
+    expect(libelleStatutRendezVousAr('ANNULE')).toBe('ملغى');
+    expect(libelleStatutRendezVousAr('ANNULEE')).toBe('ملغاة');
+    expect(libelleStatutRendezVousAr('HONORE')).toBe('تم الحضور');
+    expect(libelleStatutRendezVousAr('ABSENT')).toBe('غائب');
+    expect(libelleStatutRendezVousAr('EN_ATTENTE')).toBe('قيد الانتظار');
+  });
+
+  it('retombe sur le francais lisible pour un statut inconnu, et rien si vide', () => {
+    expect(libelleStatutRendezVousAr('MA_VALEUR')).toBe('Ma valeur');
+    expect(libelleStatutRendezVousAr('')).toBe('');
   });
 });

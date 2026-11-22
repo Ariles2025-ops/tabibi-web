@@ -386,4 +386,212 @@ export const CONTENU_SPECIALITES: Record<string, { fr: ContenuSpecialite; ar: Co
       ],
     },
   },
+  'chirurgien-orthopediste': {
+    fr: {
+      apropos: 'Le chirurgien orthopédiste est un médecin spécialisé dans la prévention, le diagnostic et le traitement des troubles et des maladies des os, des articulations, des muscles et des ligaments. Il est conseillé de consulter ce spécialiste en cas de douleurs persistantes ou de limitations fonctionnelles des membres.',
+      faq: [
+        { q: 'Quelles sont les principales maladies traitées par un chirurgien orthopédiste?', r: 'Un chirurgien orthopédiste traite des conditions comme l\'arthrite, les fractures, et les déchirures des ligaments. Ces problèmes peuvent survenir après un accident ou se développer au fil du temps.' },
+        { q: 'Quelles sont les procédures chirurgicales courantes pratiquées par un chirurgien orthopédiste?', r: 'Les chirurgiens orthopédistes peuvent effectuer des opérations telles que les ostéotomies, les replacements articulaires et les interventions pour corriger les déformations osseuses. Ces interventions visent à soulager la douleur et à améliorer la mobilité.' },
+      ],
+    },
+    ar: {
+      apropos: 'جراح العظام هو طبيب متخصص في تشخيص وإصلاح مشاكل العظام والأنسجة المحيطة بها. يُستشير هذا الطبيب عند وجود مشاكل في العظام مثل التواءات أو كسور أو التهابات، وكذلك عند الحاجة إلى إجراء جراحة عظمية.',
+      faq: [
+        { q: 'هل يمكن أن يعالج جراح العظام جميع مشاكل العظام؟', r: 'لا، فهم يركزون بشكل رئيسي على العلاجات الجراحية والإزالة للمشاكل العظمية، مع مساعدة الأطباء الأسنان والمناظير في التشخيص والعلاج.' },
+        { q: 'متى يكون استشارة جراح العظام ضرورية؟', r: 'يجب استشارة جراح العظام عند الشعور بألم متواصل في العظام أو الأوتار أو الإصابة بكسر أو تواء، أو عند الحاجة إلى إجراء عملية جراحية عظمية.' },
+      ],
+    },
+  },
+  hopital: {
+    fr: {
+      apropos: 'L\'hôpital joue un rôle crucial dans le système de santé en Algérie en fournissant des soins médicaux de qualité et en garantissant l\'urgence des cas nécessitant un traitement rapide. Il est recommandé de consulter un hôpital en cas de maladies graves, d\'accidents ou lorsqu\'on doit passer des examens médicaux importants.',
+      faq: [
+        { q: 'Quelles sont les principales fonctions d\'un hôpital en Algérie ?', r: 'Un hôpital en Algérie offre des soins de santé complets, des services d\'urgence et de réanimation, ainsi que des espaces pour des opérations chirurgicales.' },
+        { q: 'Dans quelles situations devrait-on consulter un hôpital ?', r: 'On devrait consulter un hôpital en cas de maladies nécessitant une surveillance médicale ou chirurgicale, ainsi que lors de situations d\'urgence comme les accidents ou les malaises.' },
+      ],
+    },
+    ar: {
+      apropos: 'مستشفى في الجزائر هو مكان يوفر الرعاية الطبية للمرضى من خلال الأطباء والطاقم الطبي المتخصصين. يُستشار فيه عند الحاجة إلى العلاج أو الفحص الطبي أو تلقي الاستشارة الصحية العامة.',
+      faq: [
+        { q: 'هل يمكنني طلب موعد مسبق؟', r: 'نعم، يمكنك طلب المواعيد المسبقة عن طريق الاتصال بالمستشفى أو زيارة موقعه الإلكتروني.' },
+        { q: 'ما هي العيادات المتاحة في المستشفى؟', r: 'العيادات المتاحة تتضمن عيادات الأطباء المتخصصين في مختلف المجالات الطبية مثل الأمراض的心脏骤停无法直接翻译为阿拉伯语，因为它包含了一个中文术语“心脏骤停”，而“心脏骤停”在阿拉伯语中通常表达为“انقطاع القلب”. 以下是根据您的要求修改后的版本： ``` APROPOS: مستشفى في الجزائر هو مكان يوفر الرعاية الطبية للمرضى من خلال الأطباء والطاقم الطبي المتخصصين. يُستشار فيه عند الحاجة إلى العلاج أو الفحص الطبي أو تلقي الاستشارة الصحية العامة. Q1: هل يمكنني طلب موعد مسبق؟ R1: نعم، يمكنك طلب المواعيد المسبقة عن طريق الاتصال بالمستشفى أو زيارة موقعه الإلكتروني. Q2: ما هي العيادات المتاحة في المستشفى؟ R2: العيادات المتاحة تتضمن عيادات الأطباء المتخصصين في مختلف المجالات الطبية مثل الأمراض的心脏骤停通常用“انقطاع القلب”表示。 ``` 请注意，“心脏骤停”在阿拉伯语中应翻译为“انقطاع القلب”。如果您需要更准确的翻译，可能需要咨询专业翻译人员。' },
+      ],
+    },
+  },
+  kinesitherapeute: {
+    fr: {
+      apropos: 'Le kinésithérapeute est un professionnel de santé qui s\'occupe des troubles et des pathologies musculo-squelettiques. Il conseille et guide les patients dans la rééducation et l\'exercice physique. Il est recommandé de consulter un kinésithérapeute en cas de douleurs musculaires, de problèmes de posture ou de troubles articulaires.',
+      faq: [
+        { q: 'Quel est le rôle principal d\'un kinésithérapeute?', r: 'Le kinésithérapeute évalue les capacités et les limites du mouvement d\'un patient. Il élaboré un plan de rééducation personnalisé pour améliorer sa mobilité et sa force.' },
+        { q: 'Dans quelles situations devrais-je consulter un kinésithérapeute?', r: 'Vous devriez consulter un kinésithérapeute si vous éprouvez des douleurs musculaires persistantes, si vous avez des problèmes de posture ou si vous souhaitez améliorer votre condition physique.' },
+      ],
+    },
+    ar: {
+      apropos: 'الأخصائي في العلاج الطبيعي يلعب دورًا حيويًا في تقديم العلاجات الفعالة للحالة الجسدية والعضوية. يمكن للمرضى الاستعانة بهم عند الشعور بألم مزمن أو عند الاصابة بأي مشاكل صحية تتعلق بالجهاز العضلي-عظامي.',
+      faq: [
+        { q: 'ما هو العلاج الطبيعي؟', r: 'العلاج الطبيعي هو مجال مهني يهدف إلى تحسين صحة الأفراد ورفاهيتهم من خلال تدريب العضلات وتحسين نطاق الحركة. هو يستخدم تقنيات مختلفة لعلاج الألم والضعف.' },
+        { q: 'متى يمكن الاستعانة بالأخصائي في العلاج الطبيعي؟', r: 'يمكن الاستعانة بالأخصائي في العلاج الطبيعي عند الشعور بألم مزمن أو عند الإصابة بأي مشاكل صحية تتعلق بالجهاز العضلي-عظامي، مثل التهاب الركبة أو الظهر.' },
+      ],
+    },
+  },
+  laboratoire: {
+    fr: {
+      apropos: 'Le laboratoire d\'analyses joue un rôle crucial dans la santé publique en fournissant des résultats d\'examens médicaux précieux. Il est recommandé de consulter ce spécialiste lorsque des symptômes persistent ou lorsque l\'on souhaite effectuer des examens de screening ou de suivi médical.',
+      faq: [
+        { q: 'Quels types d\'examens peuvent être réalisés dans un laboratoire d\'analyses?', r: 'Un laboratoire d\'analyses peut effectuer une variété d\'examens, allant des tests sanguins aux analyses urinaires, des examens génétiques aux examens de dépistage.' },
+        { q: 'Comment peut-on interpréter les résultats d\'un examen d\'analyses?', r: 'Les résultats doivent être interprétés par un médecin qui connaît le contexte clinique du patient. Il est important de ne pas interpréter les résultats soi-même pour éviter toute mauvaise compréhension.' },
+      ],
+    },
+    ar: {
+      apropos: 'مخبر التحاليل الطبية هو قسم طبي مهم يقوم بتقديم خدمات الفحوصات الطبية الأولية. يجب استشارة هذا النوع من المختبرات عند الشك في وجود حالة صحية أو قبل الخضوع لعلاج معين. كما يمكن الاستعانة به في فحص التحاليل للتأكد من صحة الفرد قبل أدخاله في برامج العمل أو الدراسية.',
+      faq: [
+        { q: 'ما هي الخدمات التي يقدمها مخبر التحاليل الطبية؟', r: 'يقدم مخبر التحاليل الطبية مجموعة من الفحوصات الطبية الأولية مثل فحوصات الدم والبول والهيموغلوبين. يمكن أيضًا إجراء فحوصات خاصة بناءً على الاحتياجات الطبية.' },
+        { q: 'لماذا يجب استشارة مخبر التحاليل الطبية؟', r: 'يجب استشارة مخبر التحاليل الطبية عند الشك في وجود حالة صحية أو قبل الخضوع لعلاج معين لضمان صحة الفرد. كما يمكن استخدام نتائج الفحوصات المخبرية لاتخاذ قرارات طبية مبنية على الأدلة.' },
+      ],
+    },
+  },
+  'medecin-sport': {
+    fr: {
+      apropos: 'Le médecin du sport est un professionnel médical spécialisé dans l\'évaluation et la prise en charge des besoins médicaux des sportifs. Il conseille et accompagne les sportifs de tous niveaux, qu\'ils soient amateurs ou professionnels, pour optimiser leur performance et prévenir les blessures.',
+      faq: [
+        { q: 'Comment savoir si j\'ai besoin d\'une consultation chez un médecin du sport ?', r: 'Consultez un médecin du sport si vous souhaitez optimiser votre entraînement, prévenir les blessures ou vous retrouver d\'une blessure. Il peut également vous aider à adapter votre programme d\'entraînement en fonction de votre état de santé.' },
+        { q: 'Quelles sont les principales missions d\'un médecin du sport ?', r: 'Le médecin du sport évalue la santé globale du sportif, propose des conseils d\'entraînement adaptés, et intervient en cas de blessure pour un retour progressif à l\'activité sportive.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الرياضة هو متخصص في الرعاية الصحية الرياضية ومتابعة الأداء البدني للرياضيين المحترفين والهواة على حد سواء. يُفضل استشارة طبيب الرياضة عند الشعور بأي ألم أو إصابات رياضية، أو عند الحاجة إلى برنامج تدريبي مخصص للوصول إلى أهداف اللياقة البدنية.',
+      faq: [
+        { q: 'هل يمكن لطبيب الرياضة مساعدتي في تحسين أدائي الرياضي؟', r: 'نعم، يمكنه تقديم تدريب مخصص وشروحات حولTechniques correctes pour éviter les blessures et améliorer la performance.' },
+        { q: 'ما هي الخدمات التي يقدمها طبيب الرياضة؟', r: 'يوفر خدمات تقييم اللياقة البدنية، وإجراء الفحوصات الطبية، وتقديم نصائح حول التغذية والراحة.' },
+      ],
+    },
+  },
+  'medecin-travail': {
+    fr: {
+      apropos: 'Le médecin du travail est un professionnel qui examine et conseille les travailleurs dans le but de prévenir les accidents du travail et les maladies professionnelles. Il est recommandé de consulter un médecin du travail lorsqu\'on souffre de symptômes liés à son emploi ou lorsqu\'on a besoin de passer un examen médical pour l\'attribution d\'un poste.',
+      faq: [
+        { q: 'Quel est le rôle principal d\'un médecin du travail en Algérie ?', r: 'Le médecin du travail évalue la santé des travailleurs et identifie les risques liés au poste de travail. Il propose des mesures de prévention pour améliorer la santé et la sécurité au travail.' },
+        { q: 'Peut-on consulter un médecin du travail pour une maladie non liée au travail ?', r: 'Bien que le médecin du travail se concentre principalement sur les problèmes liés au travail, il peut également évaluer d\'autres conditions de santé si elles sont directement liées à l\'environnement professionnel.' },
+      ],
+    },
+    ar: {
+      apropos: 'يعمل طبيب العمل على تقييم وضمان صحة العمال في مكان العمل، وينصح بالكشف الطبي الدوري والاحتياطي. يجب استشارة طبيب العمل في حالة شعور العامل بأي أعراض صحية قد تكون مرتبطة بالعمل أو قبل البدء في وظيفة جديدة تتطلب تحليلاً طبيًا.',
+      faq: [
+        { q: 'ما هي المهام الرئيسية لطبيب العمل؟', r: 'يشمل دور طبيب العمل تقديم الكشوف الطبية الدورية، وتقديم المشورة فيما يتعلق بصحة العمال في مكان العمل، وفحص العمال قبل بدء العمل أو عند تغيير الوظائف.' },
+        { q: 'متى يجب على العاملين زيارة طبيب العمل؟', r: 'يجب زيارة طبيب العمل في حالات مثل الشعور بأعراض صحية قد تكون مرتبطة بالعمل، أو عند بداية عمل جديدة تتطلب الكشف الطبي، أو بأي وقت يعتقد العامل أنه قد يكون لديه انتهاكًا صحيًا في مكان العمل.' },
+      ],
+    },
+  },
+  neurologue: {
+    fr: {
+      apropos: 'Le neurologue est un médecin qui se spécialise dans le diagnostic et le traitement des maladies concernant le système nerveux central et périphérique. Il est recommandé de consulter un neurologue lorsqu\'on présente des symptômes comme la douleur, la faiblesse, la perte de sensations ou des troubles du sommeil.',
+      faq: [
+        { q: 'Quels sont les symptômes qui doivent inciter à consulter un neurologue ?', r: 'La présence de douleurs chroniques, de troubles motrices ou sensitives, de problèmes de mémoire ou de concentration peuvent être des signes à ne pas ignorer.' },
+        { q: 'Un neurologue peut-il traiter les problèmes de santé mentale ?', r: 'Bien que certains troubles mentaux puissent présenter des aspects neurologiques, la majorité est gérée par des psychiatres. Un neurologue peut collaborer dans le cadre d\'un traitement complexe mais n\'est pas spécialisé dans les troubles psychiques.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الأعصاب هو متخصص في تشخيص وعلاج أمراض الجهاز العصبي المركزي والipheral. يجب استشارة هذا الطبيب عند الشعور بآلام متكررة في الجسم أو صعوبات في الحركة أو ضعف في العضلات.',
+      faq: [
+        { q: 'ما هي أعراض مشاكل الجهاز العصبي التي يجب استشارة طبيب الأعصاب عنها؟', r: 'الأعراض الشائعة تشمل الألم المستمر، التingلا، الشعور بالخدر أو الضعف في الجسم.' },
+        { q: 'هل يمكن لطبيب الأعصاب مساعدة في حالات فقدان الشعور في الجسم؟', r: 'نعم، يمكن أن يقدم المتخصص التشخيص والعلاج لحالات فقدان الشعور الناتجة عن مشاكل في الجهاز العصبي.' },
+      ],
+    },
+  },
+  opticien: {
+    fr: {
+      apropos: 'Un opticien est un professionnel qui se spécialise dans la prescription, la fabrication et la vente de lunettes et de lentilles de contact. Il est recommandé de consulter un opticien régulièrement pour vérifier la santé des yeux et vérifier si un ajustement de prescription est nécessaire.',
+      faq: [
+        { q: 'Est-ce qu\'un opticien peut vérifier la santé des yeux?', r: 'Oui, un opticien peut effectuer un examen des yeux pour détecter certaines conditions, comme la dégénérescence rétinienne ou les cataractes, qui peuvent nécessiter une consultation avec un oculiste.' },
+        { q: 'Quelle est la différence entre un opticien et un oculiste?', r: 'Un opticien se concentre sur la prescription et la vente d\'outils de correction visuelle, tandis qu\'un oculiste, également appelé ophtalmologiste, est un médecin qui peut examiner et traiter les problèmes oculaires.' },
+      ],
+    },
+    ar: {
+      apropos: 'أخصائي البصريات هو متخصص في دراسة العين وتصحيح الأخطاء المرئية. يمكن للمرء استشارة هذا المتخصص عند الشك في وجود مشاكل في الرؤية أو الحاجة لتصحيح نظرية.',
+      faq: [
+        { q: 'هل يمكن لخصائي البصريات أن يشخص أمراض العيون؟', r: 'لا، خبراء العيون أو جراحو العيون هم الذين ي诊断眼睛疾病。但是，我会按照要求使用正确的阿拉伯文来回答： Q1: هل يمكن لخصائي البصريات أن يشخص أمراض العيون؟ R1: لا، خبراء العيون أو جراحو العيون هم الذين يشخصون أمراض العيون ويقومون بالعلاج اللازم.' },
+        { q: 'ما هي الخدمات التي يقدمها خبير البصريات؟', r: 'يقدم خبير البصريات الفحوصات الأولية للرؤية ويقترح العدسات أو القراءات الأخرى لتصحيح النظر.' },
+      ],
+    },
+  },
+  nutritionniste: {
+    fr: {
+      apropos: 'Un nutritionniste est un professionnel formé pour évaluer les besoins nutritionnels individuels et proposer des plans d\'alimentation adaptés. On doit consulter un nutritionniste lorsqu\'on souhaite améliorer son alimentation, prévenir ou gérer certaines pathologies liées à la nutrition, ou lors de la préparation à une chirurgie.',
+      faq: [
+        { q: 'Quel est l\'objectif principal d\'un nutritionniste?', r: 'L\'objectif principal d\'un nutritionniste est d\'aider les patients à adopter une alimentation saine et équilibrée qui répond à leurs besoins nutritionnels spécifiques.' },
+        { q: 'Peut-on consulter un nutritionniste si on n\'a pas de problème de santé?', r: 'Oui, on peut consulter un nutritionniste si on souhaite améliorer son mode de vie, prévenir les maladies liées à la nutrition ou simplement avoir des conseils sur une alimentation plus saine.' },
+      ],
+    },
+    ar: {
+      apropos: 'هو أخصائي التغذية مسؤول عن تقديم المشورة والتوجيه حول النظام الغذائي الصحي، والعمل على تحقيق التوازن في تناول الطعام لتحسين الصحة العامة. يُفضل استشارة أخصائي التغذية عند وجود مشاكل في الوزن، أو الحاجة لتنويع النظام الغذائي، أو عند البحث عن طرق صحية لتحسين الصحة العامة.',
+      faq: [
+        { q: 'ما هو الدور الرئيسي لأخصائي التغذية؟', r: 'أخصائي التغذية يقدم مشورات حول النظام الغذائي الصحي، ويعمل على تحقيق التوازن في تناول الطعام لتحسين الصحة العامة.' },
+        { q: 'متى يجب استشارة أخصائي التغذية؟', r: 'يجب استشارة أخصائي التغذية عند وجود مشاكل في الوزن أو الحاجة لتنويع النظام الغذائي، أو عند البحث عن طرق صحية لتحسين الصحة العامة.' },
+      ],
+    },
+  },
+  nephrologue: {
+    fr: {
+      apropos: 'Le néphrologue est un spécialiste médical qui se concentre sur le traitement des maladies rénales. Il est conseillé de consulter un néphrologue lorsque l\'on soupçonne un problème rénal, comme une insuffisance rénale ou une maladie rénale chronique.',
+      faq: [
+        { q: 'Quelles sont les principales fonctions d\'un néphrologue ?', r: 'Le néphrologue évalue et traite les problèmes liés aux reins, propose des traitements pour l\'insuffisance rénale et conseille sur la dialyse et les transplantations rénales.' },
+        { q: 'Comment peut-on prévenir les problèmes rénaux ?', r: 'Il est recommandé de maintenir une alimentation saine, de rester hydraté, de faire régulièrement des examens médicaux et de contrôler les maladies chroniques comme le diabète et l\'hypertension artérielle.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الكلى هو متخصص في علاج أمراض الكلى. يُستشير هذا الطبيب عند ظهور أعراض مثل التشنجات الدواليبية، والتغيرات في التبول، أو وجود البروتين في البول.',
+      faq: [
+        { q: 'هل يمكن لطبيب الكلى التشخيص والعلاج لجميع مشاكل الكلى؟', r: 'نعم، طبيب الكلى قادر على التشخيص والعلاج لمعظم حالات أمراض الكلى. R2: قد يحتاج بعض الحالات إلى استشارة متخصصين آخرين لتقديم العلاج الشامل.' },
+        { q: 'ما هي أعراض الأمراض الكلوية التي يجب استشارة طبيب الكلى؟ R1: قد تشمل الأعراض التشنجات الدواليبية، والتغيرات في التبول، أو وجود البروتين في البول.', r: 'قد يحتاج بعض الحالات إلى استشارة متخصصين آخرين لتقديم العلاج الشامل. Q2: ما هي أعراض الأمراض الكلوية التي يجب استشارة طبيب الكلى؟ R1: قد تشمل الأعراض التشنجات الدواليبية، والتغيرات في التبول، أو وجود البروتين في البول. R2: إذا ظهرت هذه الأعراض، يُنصح بزيارة طبيب الكلى للتشخيص والعلاج.' },
+      ],
+    },
+  },
+  oncologue: {
+    fr: {
+      apropos: 'L\'oncologue est un médecin qui se spécialise dans le diagnostic et le traitement des cancers. Il est conseillé de consulter un oncologue lorsque l\'on présente des symptômes suspects ou lorsqu\'un diagnostic de cancer a été posé.',
+      faq: [
+        { q: 'Quelles sont les principales méthodes de traitement utilisées par un oncologue?', r: 'Un oncologue utilise diverses méthodes de traitement, dont la chimiothérapie, la radiothérapie et l\'ostéopathie, en fonction du type et de l\'étendue du cancer.' },
+        { q: 'Comment peut-on prévenir le cancer?', r: 'La prévention du cancer peut impliquer des mesures telles que l\'adoption d\'un régime alimentaire équilibré, l\'exercice régulier et la limitation du tabagisme et de l\'alcool.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الأورام هو متخصص في تشخيص وعلاج الأمراض السرطانية. يُستشير الطبيب الأورام عادة بعد تشخيص السرطان أو عند الحاجة إلى تقييم علاج مُحدد.',
+      faq: [
+        { q: 'ما هي مهام طبيب الأورام؟', r: 'طبيب الأورام يقوم بتشخيص السرطان وتخطيط العلاج المناسب.' },
+        { q: 'متى يجب على الشخص استشارة طبيب الأورام؟', r: 'يجب استشارة طبيب الأورام عند ظهور أعراض محتملة للسرطان أو بعد إجراء فحوصات التشخيص المبكر.' },
+      ],
+    },
+  },
+  orthophoniste: {
+    fr: {
+      apropos: 'Un orthophoniste est un professionnel de la santé qui se spécialise dans l\'évaluation et le traitement des troubles de la parole, de la voix, de la langue et des troubles de la communication. Il est conseillé de consulter un orthophoniste lorsque des difficultés de communication ou de production de la parole sont observées chez un enfant ou un adulte.',
+      faq: [
+        { q: 'Quelles sont les causes les plus courantes qui peuvent amener à consulter un orthophoniste ?', r: 'Les causes peuvent être diverses, notamment des troubles de la parole, des problèmes de langage, des troubles du développement ou des conséquences d\'un accident cérébral.' },
+        { q: 'Comment peut-on reconnaître que l\'on a besoin d\'un orthophoniste ?', r: 'Il est possible de reconnaître ces besoins par une articulation difficile, un bégaiement persistant, une maîtrise limitée de la langue, ou encore une communication expressive et réceptive compromise.' },
+      ],
+    },
+    ar: {
+      apropos: 'هو أخصائي تقويم النطق متخصص في الكشف عن مشاكل الإيقاع الصوتي واللarynx لدى الأطفال والكبار. يُستشار هذا النوع من الأخصائيين عند ظهور علامات مشكلات النطق لدى الطفل قبل سن الثالثة أو عند وجود صعوبات في النطق والفهم لدى البالغين.',
+      faq: [
+        { q: 'هل يمكن للاخصائي تقويم النطق الكشف عن مشاكل الحواسيب الصوتية؟', r: 'نعم، يمكن للأخصائي تقويم النطق الكشف عن مشاكل الحواسيب الصوتية، وذلك عن طريق إجراء الفحوصات اللازمة وتحليل النطق والصوت للشخص المريض.' },
+        { q: 'متى يجب استشارة أخصائي تقويم النطق؟', r: 'يجب استشارة الأخصائي تقويم النطق عند ظهور مشاكل في النطق أو فهم اللغة لدى الطفل قبل سن الثالثة، وكذلك عند البالغين الذين يواجهون صعوبات في النطق أو الفهم.' },
+      ],
+    },
+  },
+  orthopediste: {
+    fr: {
+      apropos: 'Un orthopédiste est un médecin spécialisé dans le diagnostic et le traitement des troubles de l\'appareil locomoteur, y compris les articulations, les muscles et les os. Il est conseillé de consulter un orthopédiste lorsque l\'on ressent des douleurs ou des limitations de mouvement qui persistent ou s\'aggravent.',
+      faq: [
+        { q: 'Quelles sont les principales fonctions d\'un orthopédiste?', r: 'Un orthopédiste évalue et diagnostique les problèmes articulaires et musculaires, propose des traitements non chirurgicaux tels que des bandages, des appareillages ou des exercices physiques, et conseille sur la prévention des blessures.' },
+        { q: 'Comment peut-on identifier une blessure nécessitant un avis orthopédique?', r: 'Une douleur persistante ou une limitation de mouvement qui empêche les activités quotidiennes peuvent indiquer la nécessité d\'une consultation orthopédique.' },
+      ],
+    },
+    ar: {
+      apropos: 'يُعد أخصائي العظام متخصصًا في التشخيص والعلاج والوقاية من أمراض العظام والأنسجة المحيطة بها. يُفضل استشارة هذا النوع من الأطباء عند الشعور بألم في العظام أو الظهر أو المفاصل أو عندما يكون هناك خطر على صحة العظام.',
+      faq: [
+        { q: 'ما هي الأعراض التي يجب استشارة أخصائي العظام بشأنها؟', r: 'يجب التوجه إلى أخصائي العظام إذا شعرت بألم شديد في العظام أو المفاصل، أو إذا كان لديك تاريخ عائلي للعظام الضعيفة.' },
+        { q: 'كيف يمكن للاخصائي العظام المساعدة في تقوية العظام؟', r: 'يمكن للأخصائي العظام تقديم نصائح حول النظام الغذائي المناسب ونوعية الفيتامينات والمعادن التي يجب تناولها لتعزيز صحة العظام، كما يمكنه أيضاً تقديم تمارين محددة لتعزيز قوة العظام.' },
+      ],
+    },
+  },
 };

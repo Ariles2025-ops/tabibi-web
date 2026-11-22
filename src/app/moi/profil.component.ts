@@ -5,6 +5,9 @@ import { catchError, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { instantLisible } from '../partage/dates-lisibles';
+import { LangueService } from '../partage/langue.service';
+import { WILAYAS_SEO } from '../seo/referentiel-seo';
 import {
   ANNEE_NAISSANCE_MIN,
   DemandeProfil,
@@ -18,6 +21,9 @@ import {
   nettoyerProfil,
   validerProfil,
 } from './profil.service';
+
+/** Libelles arabes des wilayas, par code (referentiel SEO). */
+const WILAYAS_AR = new Map(WILAYAS_SEO.map((w) => [w.code, w.nomAr]));
 
 /** Champs du formulaire, vides (langue fr par defaut, comme cote API). */
 function formulaireVide(): DemandeProfil {
@@ -33,59 +39,63 @@ function formulaireVide(): DemandeProfil {
     selector: 'app-profil',
     imports: [CommonModule, FormsModule, RouterLink],
     template: `
-    <main style="max-width:640px;margin:32px auto;padding:0 16px">
-      <p style="margin:0 0 16px"><a routerLink="/moi" style="color:var(--vert)">Retour à mon compte</a></p>
-      <h1 style="color:var(--vert);margin:0 0 8px">Mon profil</h1>
+    <main style="max-width:640px;margin:32px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <p style="margin:0 0 16px"><a routerLink="/moi" style="color:var(--vert)">{{ l.t('Retour à mon compte', 'العودة إلى حسابي') }}</a></p>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ l.t('Mon profil', 'ملفي الشخصي') }}</h1>
       <p style="color:var(--text3);margin:0 0 20px">
-        Ces informations servent aux praticiens et aux rappels de rendez-vous. Seul le nom complet est obligatoire.
+        {{ l.t('Ces informations servent aux praticiens et aux rappels de rendez-vous. Seul le nom complet est obligatoire.', 'تُستعمل هذه المعلومات من طرف الأطباء ولتذكيرات المواعيد. الاسم الكامل وحده إجباري.') }}
       </p>
 
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">Chargement…</p>
+        <p *ngIf="charge()">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
         <p *ngIf="erreurChargement()" style="color:#b3261e">{{ erreurChargement() }}</p>
 
         <form *ngIf="!charge() && !erreurChargement()" (ngSubmit)="enregistrer()" style="display:grid;gap:12px">
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Nom complet *
+            {{ l.t('Nom complet *', 'الاسم الكامل *') }}
             <input class="champ" [(ngModel)]="formulaire.nomComplet" name="nomComplet" required [maxlength]="longueurMaxNom"
-                   placeholder="Ex. Amina Belkacem" style="color:var(--tbi-ink);font-size:1rem">
+                   [placeholder]="l.t('Ex. Amina Belkacem', 'مثال: أمينة بلقاسم')" style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Téléphone
-              <input class="champ" [(ngModel)]="formulaire.telephone" name="telephone" type="tel" placeholder="Ex. 0550 12 34 56"
+              {{ l.t('Téléphone', 'الهاتف') }}
+              <input class="champ" [(ngModel)]="formulaire.telephone" name="telephone" type="tel" placeholder="0550 12 34 56" dir="ltr"
                      style="color:var(--tbi-ink);font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Date de naissance
+              {{ l.t('Date de naissance', 'تاريخ الميلاد') }}
               <input class="champ" [(ngModel)]="formulaire.dateNaissance" name="dateNaissance" type="date" [max]="hier" [min]="dateMin"
                      style="color:var(--tbi-ink);font-size:1rem">
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Wilaya
+              {{ l.t('Wilaya', 'الولاية') }}
               <select class="champ" [(ngModel)]="formulaire.wilayaCode" name="wilayaCode" style="color:var(--tbi-ink);font-size:1rem">
-                <option value="">Non renseignée</option>
+                <option value="">{{ l.t('Non renseignée', 'غير محدّدة') }}</option>
                 <option *ngIf="wilayaHorsListe()" [value]="formulaire.wilayaCode">{{ formulaire.wilayaCode }}</option>
-                <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.code }} — {{ w.nom }}</option>
+                <option *ngFor="let w of wilayas()" [value]="w.code">{{ w.code }} — {{ nomWilaya(w) }}</option>
               </select>
             </label>
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-              Langue préférée
+              {{ l.t('Langue préférée', 'اللغة المفضلة') }}
               <select class="champ" [(ngModel)]="formulaire.langue" name="langue" style="color:var(--tbi-ink);font-size:1rem">
                 <option *ngFor="let l of langues" [value]="l.code">{{ l.libelle }}</option>
               </select>
             </label>
           </div>
-          <p style="color:var(--text3);font-size:.9rem;margin:0">* Champ obligatoire.</p>
-          <p class="profil-confidentialite" style="color:var(--text3);font-size:.9rem;margin:0">Ces informations ne sont visibles que de vous et des praticiens que vous consultez.</p>
+          <p style="color:var(--text3);font-size:.9rem;margin:0">{{ l.t('* Champ obligatoire.', '* حقل إجباري.') }}</p>
+          <p class="profil-confidentialite" style="color:var(--text3);font-size:.9rem;margin:0">{{ l.t('Ces informations ne sont visibles que de vous et des praticiens que vous consultez.', 'هذه المعلومات لا يراها إلا أنت والأطباء الذين تستشيرهم.') }}</p>
           <p *ngIf="succes()" style="color:var(--vert);margin:0">{{ succes() }}</p>
           <p *ngIf="erreur()" style="color:#b3261e;margin:0">{{ erreur() }}</p>
           <div>
-            <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? 'Enregistrement…' : 'Enregistrer' }}</button>
+            <button type="submit" class="bouton" [disabled]="enCours()">{{ enCours() ? l.t('Enregistrement…', 'جارٍ الحفظ…') : l.t('Enregistrer', 'حفظ') }}</button>
           </div>
-          <p *ngIf="profil() as p" style="color:var(--text3);font-size:.9rem;margin:0">
-            Dernière mise à jour le {{ p.misAJourLe | date:'d MMMM yyyy à HH:mm' }}.
+          <p *ngIf="profil() as p" class="profil-maj" style="color:var(--text3);font-size:.9rem;margin:0">
+            <ng-container *ngIf="dateLisible(p.misAJourLe)">
+              <ng-container *ngIf="!l.ar()">Dernière mise à jour le {{ p.misAJourLe | date:'d MMMM yyyy à HH:mm' }}.</ng-container>
+              <ng-container *ngIf="l.ar()">آخر تحديث في <span dir="ltr">{{ p.misAJourLe | date:'dd/MM/yyyy HH:mm' }}</span>.</ng-container>
+            </ng-container>
+            <ng-container *ngIf="!dateLisible(p.misAJourLe)">{{ l.t('Profil non enregistré', 'الملف غير محفوظ') }}</ng-container>
           </p>
         </form>
       </ng-container>
@@ -93,6 +103,7 @@ function formulaireVide(): DemandeProfil {
   `
 })
 export class ProfilComponent implements OnInit {
+  l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(ProfilService);
   private http = inject(HttpClient);
@@ -101,6 +112,11 @@ export class ProfilComponent implements OnInit {
   connecte = signal<boolean | null>(null);
   /** Profil enregistre cote API ; null tant qu'il n'a jamais ete renseigne. */
   profil = signal<Profil | null>(null);
+
+  /** Vrai si la date de mise a jour est lisible ; sinon « Profil non enregistre », comme l'appli (libelleMiseAJour). */
+  dateLisible(iso: string | null | undefined): boolean {
+    return instantLisible(iso) !== null;
+  }
   formulaire: DemandeProfil = formulaireVide();
   langues = LANGUES;
   longueurMaxNom = LONGUEUR_MAX_NOM;
@@ -149,7 +165,7 @@ export class ProfilComponent implements OnInit {
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreurChargement.set(e.error?.erreur ?? 'Impossible de charger votre profil.');
+          this.erreurChargement.set(e.error?.erreur ?? this.l.t('Impossible de charger votre profil.', 'تعذّر تحميل ملفك الشخصي.'));
         }
       },
     });
@@ -158,7 +174,7 @@ export class ProfilComponent implements OnInit {
   enregistrer() {
     const demande = nettoyerProfil(this.formulaire);
     this.succes.set('');
-    const motif = validerProfil(demande);
+    const motif = validerProfil(demande, new Date(), this.l.ar());
     if (motif) {
       this.erreur.set(motif);
       return;
@@ -169,16 +185,18 @@ export class ProfilComponent implements OnInit {
       next: (p) => {
         this.enCours.set(false);
         this.afficher(p);
-        this.succes.set('Profil enregistré.');
+        this.succes.set(this.l.t('Profil enregistré.', 'تم حفظ الملف الشخصي.'));
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 400) {
-          this.erreur.set(e.error?.erreur ?? 'Le profil est invalide.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Le profil est invalide.', 'الملف الشخصي غير صالح.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'enregistrement du profil a échoué, veuillez réessayer.");
+          this.erreur.set(
+            e.error?.erreur ?? this.l.t("L'enregistrement du profil a échoué, veuillez réessayer.", 'تعذّر حفظ الملف الشخصي، يُرجى المحاولة مرة أخرى.'),
+          );
         }
       },
     });
@@ -194,6 +212,11 @@ export class ProfilComponent implements OnInit {
       wilayaCode: p.wilayaCode ?? '',
       langue: p.langue || LANGUE_PAR_DEFAUT,
     };
+  }
+
+  /** Libelle d'une wilaya : en arabe quand l'arabe est choisi et qu'il existe, sinon le libelle francais. */
+  nomWilaya(w: { code: string; nom: string }): string {
+    return (this.l.ar() && WILAYAS_AR.get(w.code)) || w.nom;
   }
 
   /** Vrai si le code enregistre n'est pas dans le referentiel : on le garde selectionnable pour ne pas le perdre. */

@@ -1,13 +1,18 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
+import { Creneau } from '../annuaire/annuaire.service';
+import { DeplacerRendezVousComponent } from '../rendezvous/deplacer-rendez-vous.component';
 import { AuthService } from '../auth/auth.service';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { RendezVous } from '../rendezvous/rendezvous.service';
-import { estAnnule, libelleStatutRendezVous } from '../rendezvous/statut-rendez-vous';
+import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from '../rendezvous/statut-rendez-vous';
 import { TeleconsultationService } from '../teleconsultation/teleconsultation.service';
 import { VISIO_ACTIVE } from '../lancement';
-import { ActionEnCours, estConfirme, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
+import { ActionEnCours, estConfirme, peutAnnulerCabinet, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
 import { MedecinService } from './medecin.service';
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from './patients.service';
 
@@ -18,36 +23,40 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
  */
 @Component({
     selector: 'app-agenda-medecin',
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, DeplacerRendezVousComponent, SelecteurLangueComponent],
     template: `
-    <main style="max-width:760px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--blue);margin:0 0 16px">Agenda</h1>
+    <main style="max-width:760px;margin:32px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
+        <h1 style="color:var(--blue);margin:0">{{ l.t('Agenda', 'المواعيد') }}</h1>
+        <app-selecteur-langue />
+      </div>
 
       <div role="tablist" style="display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap">
         <button type="button" role="tab" [attr.aria-selected]="vue() === 'avenir'" (click)="vue.set('avenir')"
-                [ngStyle]="ongletStyle(vue() === 'avenir')">À venir ({{ nombreAVenir() }})</button>
+                [ngStyle]="ongletStyle(vue() === 'avenir')">{{ l.t('À venir', 'القادمة') }} ({{ nombreAVenir() }})</button>
         <button type="button" role="tab" [attr.aria-selected]="vue() === 'passes'" (click)="vue.set('passes')"
-                [ngStyle]="ongletStyle(vue() === 'passes')">Passés ({{ nombrePasses() }})</button>
+                [ngStyle]="ongletStyle(vue() === 'passes')">{{ l.t('Passés', 'السابقة') }} ({{ nombrePasses() }})</button>
       </div>
 
-      <p *ngIf="charge()" style="color:var(--text3)">Chargement…</p>
+      <p *ngIf="charge()" style="color:var(--text3)">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
       <p *ngIf="erreur()" role="alert" style="color:var(--red)">{{ erreur() }}</p>
       <p *ngIf="teleconsultationProposee() as r" style="color:var(--blue)">
-        Téléconsultation proposée au patient pour le rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }}.
-        <a routerLink="/medecin/teleconsultations" style="color:var(--blue)">Voir mes téléconsultations</a>
+        {{ l.t('Téléconsultation proposée au patient pour le rendez-vous du ' + dateLongue(r.debut) + '.', 'تم اقتراح استشارة عن بُعد على المريض للموعد في ' + dateLongue(r.debut) + '.') }}
+        <a routerLink="/medecin/teleconsultations" style="color:var(--blue)">{{ l.t('Voir mes téléconsultations', 'عرض استشاراتي عن بُعد') }}</a>
       </p>
       <p *ngIf="annule() as r" style="color:var(--blue)">
-        Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }} annulé : le créneau est de nouveau proposé<ng-container *ngIf="r.source !== 'TELEPHONE'"> et le patient est prévenu</ng-container>.
+        {{ l.t('Rendez-vous du ' + dateLongue(r.debut) + ' annulé : le créneau est de nouveau proposé', 'تم إلغاء الموعد في ' + dateLongue(r.debut) + ': الموعد متاح من جديد') }}<ng-container *ngIf="r.source !== 'TELEPHONE'">{{ l.t(' et le patient est prévenu', ' وتم إعلام المريض') }}</ng-container>.
       </p>
+      <p *ngIf="deplace()" style="color:var(--blue)">{{ deplace() }}</p>
       <p *ngIf="honore() as r" style="color:var(--blue)">
-        Rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }} marqué honoré.
+        {{ l.t('Rendez-vous du ' + dateLongue(r.debut) + ' marqué honoré.', 'تم تسجيل حضور المريض للموعد في ' + dateLongue(r.debut) + '.') }}
       </p>
       <p *ngIf="absent() as r" style="color:var(--blue)">
-        Patient signalé absent au rendez-vous du {{ r.debut | date:'EEEE d MMMM à HH:mm' }}.
+        {{ l.t('Patient signalé absent au rendez-vous du ' + dateLongue(r.debut) + '.', 'تم تسجيل غياب المريض عن الموعد في ' + dateLongue(r.debut) + '.') }}
       </p>
 
       <section *ngFor="let j of jours()" style="margin:0 0 20px">
-        <h2 style="font-size:.95rem;margin:0 0 8px;color:var(--text2);text-transform:capitalize">{{ j.debut | date:'EEEE d MMMM yyyy' }}</h2>
+        <h2 style="font-size:.95rem;margin:0 0 8px;color:var(--text2);text-transform:capitalize">{{ j.debut | date:(l.ar() ? 'dd/MM/yyyy' : 'EEEE d MMMM yyyy') }}</h2>
         <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
           <li *ngFor="let r of j.elements"
               style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
@@ -62,50 +71,53 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
             </div>
 
             <div *ngIf="aConfirmer() === r.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <span style="color:var(--text2);font-size:.9rem">Annuler ce rendez-vous ?<ng-container *ngIf="r.source !== 'TELEPHONE'"> Le patient sera prévenu.</ng-container></span>
+              <span style="color:var(--text2);font-size:.9rem">{{ l.t('Annuler ce rendez-vous ?', 'إلغاء هذا الموعد؟') }}<ng-container *ngIf="r.source !== 'TELEPHONE'; else prevenirParTelephone"> {{ l.t('Le patient sera prévenu.', 'سيتم إعلام المريض.') }}</ng-container><ng-template #prevenirParTelephone> {{ l.t('Pensez à prévenir le patient par téléphone.', 'يرجى إبلاغ المريض هاتفيًا.') }}</ng-template></span>
               <button type="button" class="bouton" (click)="annuler(r)" [disabled]="enCours() !== null">
-                {{ estEnCours(r, 'annuler') ? 'Annulation…' : 'Oui' }}
+                {{ estEnCours(r, 'annuler') ? l.t('Annulation…', 'جارٍ الإلغاء…') : l.t('Oui', 'نعم') }}
               </button>
-              <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">Non</button>
+              <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">{{ l.t('Non', 'لا') }}</button>
             </div>
 
             <div *ngIf="absentAConfirmer() === r.id" class="confirmation-absent" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <span style="color:var(--text2);font-size:.9rem">Signaler le patient absent à ce rendez-vous ?</span>
+              <span style="color:var(--text2);font-size:.9rem">{{ l.t('Signaler le patient absent à ce rendez-vous ?', 'تسجيل غياب المريض عن هذا الموعد؟') }}</span>
               <button type="button" class="bouton" (click)="marquerAbsent(r)" [disabled]="enCours() !== null">
-                {{ estEnCours(r, 'absent') ? 'Enregistrement…' : 'Oui' }}
+                {{ estEnCours(r, 'absent') ? l.t('Enregistrement…', 'جارٍ التسجيل…') : l.t('Oui', 'نعم') }}
               </button>
-              <button type="button" class="bouton-secondaire" (click)="absentAConfirmer.set(null)" [disabled]="enCours() !== null">Non</button>
+              <button type="button" class="bouton-secondaire" (click)="absentAConfirmer.set(null)" [disabled]="enCours() !== null">{{ l.t('Non', 'لا') }}</button>
             </div>
 
             <div *ngIf="aConfirmer() !== r.id && absentAConfirmer() !== r.id" style="display:flex;gap:8px;flex-wrap:wrap">
               <button *ngIf="peutHonorer(r)" type="button" class="bouton" (click)="honorer(r)" [disabled]="enCours() !== null">
-                {{ estEnCours(r, 'honorer') ? 'Enregistrement…' : 'Marquer honoré' }}
+                {{ estEnCours(r, 'honorer') ? l.t('Enregistrement…', 'جارٍ التسجيل…') : l.t('Marquer honoré', 'تسجيل الحضور') }}
               </button>
               <button *ngIf="peutMarquerAbsent(r)" type="button" class="bouton-secondaire" (click)="demanderAbsent(r)" [disabled]="enCours() !== null">
-                Patient absent
+                {{ l.t('Patient absent', 'المريض غائب') }}
               </button>
               <button *ngIf="visio && peutProposer(r)" type="button" class="bouton-secondaire" (click)="proposerTeleconsultation(r)"
                       [disabled]="enCours() !== null">
-                {{ estEnCours(r, 'teleconsultation') ? 'Envoi…' : 'Proposer une téléconsultation' }}
+                {{ estEnCours(r, 'teleconsultation') ? l.t('Envoi…', 'جارٍ الإرسال…') : l.t('Proposer une téléconsultation', 'اقتراح استشارة عن بُعد') }}
               </button>
-              <button *ngIf="estConfirme(r)" type="button" (click)="demanderAnnulation(r)" [disabled]="enCours() !== null"
+              <button *ngIf="peutDeplacer(r)" type="button" class="bouton-secondaire deplacer-btn" (click)="aDeplacer.set(r.id)" [disabled]="enCours() !== null">{{ l.t('Déplacer', 'نقل') }}</button>
+              <button *ngIf="peutAnnulerCabinet(r)" type="button" (click)="demanderAnnulation(r)" [disabled]="enCours() !== null"
                       style="padding:11px 18px;background:#fff;color:var(--red);border:1.5px solid var(--red-l);border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
-                Annuler
+                {{ l.t('Annuler', 'إلغاء') }}
               </button>
               <a *ngIf="peutRedigerOrdonnance(r)" class="bouton-secondaire" routerLink="/medecin/ordonnance/nouvelle"
-                 [queryParams]="{ patientId: r.patientId, rendezVousId: r.id }">Rédiger une ordonnance</a>
+                 [queryParams]="{ patientId: r.patientId, rendezVousId: r.id }">{{ l.t('Rédiger une ordonnance', 'كتابة وصفة') }}</a>
             </div>
+            <app-deplacer-rendez-vous *ngIf="aDeplacer() === r.id" [rendezVous]="r" [arabe]="l.ar()" [avertirPatient]="true" [lister]="listerCreneaux" [deplacer]="deplacerFn"
+              (deplace)="apresDeplacement($event)" (annule)="aDeplacer.set(null)" />
           </li>
         </ul>
       </section>
 
       <p *ngIf="!charge() && !erreur() && rendezVous().length === 0">
-        Aucun rendez-vous pour le moment.
-        <a routerLink="/medecin/disponibilites" style="color:var(--blue)">Ouvrir des créneaux</a>
+        {{ l.t('Aucun rendez-vous pour le moment.', 'لا توجد مواعيد حاليًا.') }}
+        <a routerLink="/medecin/disponibilites" style="color:var(--blue)">{{ l.t('Ouvrir des créneaux', 'فتح مواعيد') }}</a>
       </p>
       <p *ngIf="!charge() && rendezVous().length > 0 && jours().length === 0" style="color:var(--text3)">
-        {{ vue() === 'avenir' ? 'Aucun rendez-vous à venir.' : 'Aucun rendez-vous passé.' }}
-        <a *ngIf="vue() === 'avenir'" routerLink="/medecin/disponibilites" style="color:var(--blue)">Ouvrir des créneaux</a>
+        {{ vue() === 'avenir' ? l.t('Aucun rendez-vous à venir.', 'لا توجد مواعيد قادمة.') : l.t('Aucun rendez-vous passé.', 'لا توجد مواعيد سابقة.') }}
+        <a *ngIf="vue() === 'avenir'" routerLink="/medecin/disponibilites" style="color:var(--blue)">{{ l.t('Ouvrir des créneaux', 'فتح مواعيد') }}</a>
       </p>
     </main>
   `
@@ -116,6 +128,8 @@ export class AgendaMedecinComponent implements OnInit {
   private service = inject(MedecinService);
   private patients = inject(PatientsService);
   private teleconsultations = inject(TeleconsultationService);
+  private locale = inject(LOCALE_ID);
+  l = inject(LangueService);
 
   rendezVous = signal<RendezVous[]>([]);
   repertoire = signal<RepertoirePatients>(new Map());
@@ -139,6 +153,29 @@ export class AgendaMedecinComponent implements OnInit {
   absentAConfirmer = signal<string | null>(null);
   absent = signal<RendezVous | null>(null);
   erreur = signal('');
+  /** Rendez-vous dont le panneau « Déplacer » est ouvert, et message apres deplacement. */
+  aDeplacer = signal<string | null>(null);
+  deplace = signal('');
+
+  peutDeplacer(r: RendezVous): boolean {
+    return estConfirme(r) && Date.parse(r.debut) > Date.now();
+  }
+
+  listerCreneaux = (): Observable<Creneau[]> => this.service.creneaux();
+
+  deplacerFn = (rdv: RendezVous, creneauId: string) => this.service.deplacerRendezVous(rdv.id, creneauId);
+
+  apresDeplacement(creneau: Creneau) {
+    // Le patient n'est prévenu que pour un rendez-vous pris sur la plateforme, pas par téléphone.
+    const rdv = this.rendezVous().find((r) => r.id === this.aDeplacer());
+    this.aDeplacer.set(null);
+    const prevenu = rdv?.source !== 'TELEPHONE';
+    const date = this.dateLongue(creneau.debut);
+    this.deplace.set(
+      this.l.t(`Rendez-vous déplacé au ${date}${prevenu ? ' : le patient est prévenu.' : '.'}`, `تم نقل الموعد إلى ${date}${prevenu ? ': تم إعلام المريض.' : '.'}`),
+    );
+    this.charger();
+  }
 
   ngOnInit() {
     this.charger();
@@ -160,16 +197,21 @@ export class AgendaMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette page est réservée aux médecins.');
+          this.erreur.set(this.l.t('Cette page est réservée aux médecins.', 'هذه الصفحة مخصصة للأطباء.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "Impossible de charger l'agenda.");
+          this.erreur.set(e.error?.erreur ?? this.l.t("Impossible de charger l'agenda.", 'تعذّر تحميل المواعيد.'));
         }
       },
     });
   }
 
+  /** Date et heure d'un rendez-vous : jour en lettres en francais, forme numerique en arabe (la locale de l'application est le francais). */
+  dateLongue(iso: string): string {
+    return this.l.ar() ? formatDate(iso, 'dd/MM/yyyy HH:mm', this.locale) : formatDate(iso, 'EEEE d MMMM à HH:mm', this.locale);
+  }
+
   nom(patientId: string): string {
-    return nomPatient(this.repertoire(), patientId);
+    return nomPatient(this.repertoire(), patientId, this.l.ar());
   }
 
   telephone(patientId: string): string {
@@ -178,6 +220,10 @@ export class AgendaMedecinComponent implements OnInit {
 
   /** CONFIRME ou RESERVE : actions proposees (voir agenda-utils). */
   estConfirme = estConfirme;
+
+  peutAnnulerCabinet(r: RendezVous): boolean {
+    return peutAnnulerCabinet(r, Date.now());
+  }
 
   peutHonorer(r: RendezVous): boolean {
     return peutHonorer(r, Date.now());
@@ -213,9 +259,9 @@ export class AgendaMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 409) {
-          this.charger(e.error?.erreur ?? "Ce rendez-vous ne peut pas encore être marqué honoré.");
+          this.charger(e.error?.erreur ?? this.l.t('Ce rendez-vous ne peut pas encore être marqué honoré.', 'لا يمكن تسجيل حضور المريض لهذا الموعد بعد.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'La mise à jour du rendez-vous a échoué, veuillez réessayer.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('La mise à jour du rendez-vous a échoué, veuillez réessayer.', 'فشل تحديث الموعد، يرجى المحاولة مرة أخرى.'));
         }
       },
     });
@@ -247,9 +293,9 @@ export class AgendaMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 409) {
-          this.charger(e.error?.erreur ?? "Ce rendez-vous ne peut pas être marqué absent.");
+          this.charger(e.error?.erreur ?? this.l.t('Ce rendez-vous ne peut pas être marqué absent.', 'لا يمكن تسجيل غياب المريض عن هذا الموعد.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'La mise à jour du rendez-vous a échoué, veuillez réessayer.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('La mise à jour du rendez-vous a échoué, veuillez réessayer.', 'فشل تحديث الموعد، يرجى المحاولة مرة أخرى.'));
         }
       },
     });
@@ -272,11 +318,11 @@ export class AgendaMedecinComponent implements OnInit {
         this.enCours.set(null);
         this.aConfirmer.set(null);
         if (e.status === 409) {
-          this.charger(e.error?.erreur ?? "Ce rendez-vous n'est plus confirmé.");
+          this.charger(e.error?.erreur ?? this.l.t("Ce rendez-vous n'est plus confirmé.", 'لم يعد هذا الموعد مؤكدًا.'));
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'annulation a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.l.t("L'annulation a échoué, veuillez réessayer.", 'فشل الإلغاء، يرجى المحاولة مرة أخرى.'));
         }
       },
     });
@@ -293,11 +339,11 @@ export class AgendaMedecinComponent implements OnInit {
       error: (e: HttpErrorResponse) => {
         this.enCours.set(null);
         if (e.status === 409) {
-          this.erreur.set(e.error?.erreur ?? 'Une téléconsultation est déjà proposée sur ce rendez-vous.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Une téléconsultation est déjà proposée sur ce rendez-vous.', 'تم اقتراح استشارة عن بُعد على هذا الموعد من قبل.'));
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else {
-          this.erreur.set(e.error?.erreur ?? 'La proposition de téléconsultation a échoué, veuillez réessayer.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('La proposition de téléconsultation a échoué, veuillez réessayer.', 'فشل اقتراح الاستشارة عن بُعد، يرجى المحاولة مرة أخرى.'));
         }
       },
     });
@@ -309,7 +355,7 @@ export class AgendaMedecinComponent implements OnInit {
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutRendezVous(statut);
+    return this.l.ar() ? libelleStatutRendezVousAr(statut) : libelleStatutRendezVous(statut);
   }
 
   private demarrer(rdv: RendezVous, action: string) {
@@ -319,5 +365,6 @@ export class AgendaMedecinComponent implements OnInit {
     this.annule.set(null);
     this.honore.set(null);
     this.absent.set(null);
+    this.deplace.set('');
   }
 }

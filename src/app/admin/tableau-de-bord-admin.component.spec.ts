@@ -13,7 +13,7 @@ describe('TableauDeBordAdminComponent', () => {
 
   beforeEach(() => {
     service = jasmine.createSpyObj<AdminService>('AdminService', ['statistiques', 'executerRappels']);
-    service.statistiques.and.returnValue(of({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1 }));
+    service.statistiques.and.returnValue(of({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1, avisSignales: 4 }));
     auth = { seConnecter: jasmine.createSpy('seConnecter') };
     TestBed.configureTestingModule({
       imports: [TableauDeBordAdminComponent],
@@ -36,26 +36,29 @@ describe('TableauDeBordAdminComponent', () => {
   }
 
   it('affiche les trois compteurs et le lien vers les candidatures', () => {
-    service.statistiques.and.returnValue(of({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1 }));
+    service.statistiques.and.returnValue(of({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1, avisSignales: 4 }));
     fixture.detectChanges();
 
     const tuiles: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
-    expect(tuiles.length).toBe(3);
+    expect(tuiles.length).toBe(4);
     expect(tuiles[0].textContent).toContain('Candidatures en attente');
     expect(tuiles[0].querySelector('strong')?.textContent?.trim()).toBe('2');
     expect(tuiles[1].textContent).toContain('Candidatures validées');
     expect(tuiles[1].querySelector('strong')?.textContent?.trim()).toBe('5');
     expect(tuiles[2].textContent).toContain('Candidatures refusées');
     expect(tuiles[2].querySelector('strong')?.textContent?.trim()).toBe('1');
+    expect(tuiles[3].textContent).toContain('Avis signalés');
+    expect(tuiles[3].querySelector('strong')?.textContent?.trim()).toBe('4');
     expect(fixture.nativeElement.querySelector('a[href="/admin/candidatures"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/admin/avis"]')?.textContent).toContain('Modérer les avis');
   });
 
   it('affiche zero dans chaque tuile quand il n y a aucune candidature', () => {
-    service.statistiques.and.returnValue(of({ candidaturesEnAttente: 0, candidaturesValidees: 0, candidaturesRefusees: 0 }));
+    service.statistiques.and.returnValue(of({ candidaturesEnAttente: 0, candidaturesValidees: 0, candidaturesRefusees: 0, avisSignales: 0 }));
     fixture.detectChanges();
 
     const valeurs = Array.from(fixture.nativeElement.querySelectorAll('li strong')).map((e) => (e as HTMLElement).textContent?.trim());
-    expect(valeurs).toEqual(['0', '0', '0']);
+    expect(valeurs).toEqual(['0', '0', '0', '0']);
   });
 
   it("indique que la page est reservee a l'administrateur sur un 403", () => {
@@ -107,6 +110,6 @@ describe('TableauDeBordAdminComponent', () => {
 
     expect(texte()).toContain('Envoi impossible.');
     expect(texte()).not.toContain('envoyé');
-    expect(fixture.nativeElement.querySelectorAll('li').length).toBe(3);
+    expect(fixture.nativeElement.querySelectorAll('li').length).toBe(4);
   });
 });

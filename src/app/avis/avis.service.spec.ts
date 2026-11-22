@@ -140,6 +140,11 @@ describe('AvisService', () => {
   });
 
   describe('formaterMoyenne', () => {
+    it('se lit en arabe comme dans l\'appli', () => {
+      expect(formaterMoyenne(4.5, 12, true)).toBe('4,5 / 5 (12 رأي)');
+      expect(formaterMoyenne(null, 0, true)).toBe('لا توجد آراء حاليًا');
+    });
+
     it('affiche la moyenne avec une virgule, sur 5, et le nombre d avis', () => {
       expect(formaterMoyenne(4.5, 12)).toBe('4,5 / 5 (12 avis)');
       expect(formaterMoyenne(5, 1)).toBe('5,0 / 5 (1 avis)');

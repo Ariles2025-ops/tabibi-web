@@ -72,6 +72,7 @@ export const routes: Routes = [
     children: [
       { path: '', loadComponent: () => import('./admin/tableau-de-bord-admin.component').then((m) => m.TableauDeBordAdminComponent), pathMatch: 'full' },
       { path: 'candidatures', loadComponent: () => import('./admin/candidatures-admin.component').then((m) => m.CandidaturesAdminComponent) },
+      { path: 'demandes', loadComponent: () => import('./admin/demandes-admin.component').then((m) => m.DemandesAdminComponent) },
       { path: 'avis', loadComponent: () => import('./admin/moderation-avis.component').then((m) => m.ModerationAvisComponent) },
     ],
   },
@@ -101,6 +102,8 @@ export const routes: Routes = [
   { path: 'ar/specialites/:specialite/:wilaya/:commune', loadComponent: () => import('./seo/annuaire-seo.component').then((m) => m.AnnuaireSeoComponent), data: { langue: 'ar' } },
   { path: 'ar/wilayas', loadComponent: () => import('./pages/wilayas-index.component').then((m) => m.WilayasIndexComponent), data: { langue: 'ar' } },
   { path: 'ar/wilayas/:wilaya', loadComponent: () => import('./seo/annuaire-seo.component').then((m) => m.AnnuaireSeoComponent), data: { langue: 'ar' } },
+  { path: 'ar/praticien', loadComponent: () => import('./praticien/praticien.component').then((m) => m.PraticienComponent), data: { langue: 'ar' } },
+  { path: 'ar/verifier', loadComponent: () => import('./ordonnances/verifier-ordonnance.component').then((m) => m.VerifierOrdonnanceComponent), data: { langue: 'ar' } },
   { path: 'ar/aide', loadComponent: () => import('./pages/aide.component').then((m) => m.AideComponent), data: { langue: 'ar' } },
   { path: 'ar/a-propos', loadComponent: () => import('./pages/a-propos.component').then((m) => m.AProposComponent), data: { langue: 'ar' } },
   { path: 'ar/supprimer-mon-compte', loadComponent: () => import('./pages/supprimer-compte.component').then((m) => m.SupprimerCompteComponent), data: { langue: 'ar' } },

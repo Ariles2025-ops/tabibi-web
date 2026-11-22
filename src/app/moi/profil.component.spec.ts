@@ -6,6 +6,7 @@ import localeFr from '@angular/common/locales/fr';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { LangueService } from '../partage/langue.service';
 import { ProfilComponent } from './profil.component';
 import { Profil, ProfilService } from './profil.service';
 
@@ -124,6 +125,25 @@ describe('ProfilComponent', () => {
     expect(texte()).toContain('Dernière mise à jour le 18 septembre 2026');
   });
 
+  it('profil sans date de mise a jour lisible : « Profil non enregistré » (FR/AR), comme l\'appli, jamais « mise à jour le » vide', async () => {
+    service.monProfil.and.returnValue(of({ ...PROFIL, misAJourLe: null } as unknown as Profil));
+    await afficher();
+    expect(texte()).toContain('Profil non enregistré');
+    expect(texte()).not.toContain('Dernière mise à jour');
+  });
+
+  it('profil à date de mise à jour illisible : « الملف غير محفوظ » en arabe', async () => {
+    TestBed.inject(LangueService).definir(true);
+    try {
+      service.monProfil.and.returnValue(of({ ...PROFIL, misAJourLe: 'pas-une-date' }));
+      await afficher();
+      expect(texte()).toContain('الملف غير محفوظ');
+      expect(texte()).not.toContain('آخر تحديث');
+    } finally {
+      TestBed.inject(LangueService).definir(false);
+    }
+  });
+
   it('refuse cote client un profil invalide (nom trop court, telephone mal forme) sans appeler l API', async () => {
     await afficher();
 
@@ -196,5 +216,42 @@ describe('ProfilComponent', () => {
 
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.monProfil).not.toHaveBeenCalled();
+  });
+
+  describe('en arabe (comme l\'appli)', () => {
+    beforeEach(() => TestBed.inject(LangueService).definir(true));
+    afterEach(() => TestBed.inject(LangueService).definir(false));
+
+    it('affiche le formulaire en arabe, de droite a gauche, avec les wilayas en arabe', async () => {
+      service.monProfil.and.returnValue(of(PROFIL));
+      await afficher();
+
+      const t = texte();
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      for (const mot of ['ملفي الشخصي', 'الاسم الكامل *', 'الهاتف', 'تاريخ الميلاد', 'الولاية', 'اللغة المفضلة', 'حفظ', 'العودة إلى حسابي',
+        'هذه المعلومات لا يراها إلا أنت والأطباء الذين تستشيرهم.', 'آخر تحديث في 18/09/2026']) {
+        expect(t).toContain(mot);
+      }
+      expect(t).toContain('16 — الجزائر');
+      for (const motFrancais of ['Mon profil', 'Nom complet', 'Enregistrer', 'Dernière mise à jour']) {
+        expect(t).not.toContain(motFrancais);
+      }
+    });
+
+    it('refuse un profil invalide avec un motif en arabe et confirme l\'enregistrement en arabe', async () => {
+      await afficher();
+
+      await saisir({ nomComplet: '' });
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('أدخل اسمك الكامل.');
+      expect(service.enregistrer).not.toHaveBeenCalled();
+
+      service.enregistrer.and.returnValue(of(PROFIL));
+      await saisir({ nomComplet: 'Amina Belkacem' });
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('تم حفظ الملف الشخصي.');
+    });
   });
 });

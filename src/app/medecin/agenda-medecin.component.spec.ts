@@ -6,6 +6,7 @@ import localeFr from '@angular/common/locales/fr';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { LangueService } from '../partage/langue.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { Teleconsultation, TeleconsultationService } from '../teleconsultation/teleconsultation.service';
 import { AgendaMedecinComponent } from './agenda-medecin.component';
@@ -47,6 +48,7 @@ describe('AgendaMedecinComponent', () => {
   let teleconsultations: jasmine.SpyObj<TeleconsultationService>;
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
     medecinService = jasmine.createSpyObj<MedecinService>('MedecinService', ['agenda', 'honorer', 'annulerRendezVous', 'marquerAbsent']);
     medecinService.agenda.and.returnValue(of([CONFIRME, HONORE]));
@@ -133,6 +135,13 @@ describe('AgendaMedecinComponent', () => {
     expect(medecinService.honorer).toHaveBeenCalledWith('r3');
     expect(texte()).toContain('marqué honoré');
     expect(medecinService.agenda).toHaveBeenCalledTimes(2);
+  });
+
+  it('pas de bouton « Annuler » sur un rendez-vous passe (le serveur le refuse)', () => {
+    medecinService.agenda.and.returnValue(of([COMMENCE]));
+    fixture.detectChanges();
+
+    expect(boutonsAnnuler().length).toBe(0);
   });
 
   it('planifie la teleconsultation puis affiche une confirmation avec la date du rendez-vous', () => {
@@ -264,5 +273,76 @@ describe('AgendaMedecinComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Proposer une téléconsultation');
+  });
+  describe('message apres deplacement', () => {
+    const CRENEAU = { id: 'c9', medecinId: 'm1', debut: '2027-01-05T10:00:00Z', dureeMinutes: 30, disponible: false };
+
+    async function deplacer(rdv: RendezVous): Promise<string> {
+      medecinService.agenda.and.returnValue(of([rdv]));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const c = fixture.componentInstance;
+      c.aDeplacer.set(rdv.id);
+      c.apresDeplacement(CRENEAU);
+      return c.deplace();
+    }
+
+    it('rendez-vous pris sur la plateforme : le patient est prévenu', async () => {
+      expect(await deplacer(CONFIRME)).toContain('le patient est prévenu');
+    });
+
+    it('rendez-vous pris par téléphone : ne dit pas que le patient est prévenu', async () => {
+      const message = await deplacer({ ...CONFIRME, source: 'TELEPHONE', nomPatient: 'Amine B.' });
+      expect(message).toContain('Rendez-vous déplacé au');
+      expect(message).not.toContain('prévenu');
+    });
+  });
+
+  describe('en arabe, comme dans l\'appli', () => {
+    afterEach(() => localStorage.removeItem('tabibi.langue'));
+
+    it('libelles, statut, sens RTL et sélecteur de langue', async () => {
+      TestBed.inject(LangueService).definir(true);
+      const arabe = fixture;
+      arabe.detectChanges();
+      await arabe.whenStable();
+      arabe.detectChanges();
+
+      const racine: HTMLElement = arabe.nativeElement;
+      expect(racine.querySelector('main')!.getAttribute('dir')).toBe('rtl');
+      expect(racine.querySelector('h1')!.textContent).toContain('المواعيد');
+      expect(racine.textContent).toContain('القادمة (1)');
+      expect(racine.textContent).toContain('السابقة (1)');
+      expect(racine.textContent).toContain('مؤكد');
+      expect(racine.textContent).toContain('Yasmine Benali');
+      expect(racine.textContent).toContain('نقل');
+      expect(racine.textContent).toContain('إلغاء');
+      expect(racine.textContent).toContain('كتابة وصفة');
+      expect(racine.textContent).not.toContain('Confirmé');
+      expect(racine.textContent).not.toContain('Déplacer');
+      expect(racine.querySelector('app-selecteur-langue')).not.toBeNull();
+    });
+
+    it('un patient absent du répertoire s\'affiche « مريض », jamais « Patient » en français', async () => {
+      TestBed.inject(LangueService).definir(true);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(fixture.componentInstance.nom('inconnu')).toBe('مريض inconnu');
+    });
+
+    it('messages d\'action en arabe (annulation, déplacement, erreur)', async () => {
+      TestBed.inject(LangueService).definir(true);
+      const arabe = fixture;
+      const c = arabe.componentInstance;
+      arabe.detectChanges();
+      await arabe.whenStable();
+      c.apresDeplacement({ id: 'c9', medecinId: 'm1', debut: '2027-01-05T10:00:00Z', dureeMinutes: 30, disponible: false });
+      expect(c.deplace()).toContain('تم نقل الموعد إلى');
+      expect(c.deplace()).toContain('تم إعلام المريض');
+      medecinService.agenda.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500, error: {} })));
+      c.charger();
+      arabe.detectChanges();
+      expect(arabe.nativeElement.querySelector('[role="alert"]').textContent).toContain('تعذّر تحميل المواعيد.');
+    });
   });
 });

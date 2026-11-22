@@ -46,6 +46,11 @@ export class RendezVousService {
     return this.http.get<RendezVous[]>(`${this.base}/api/rendezvous/mes`);
   }
 
+  /** Deplace le rendez-vous vers un autre creneau du meme medecin (409 si le creneau vient d'etre pris). Le nouveau rendez-vous a un nouvel identifiant. */
+  deplacer(id: string, nouveauCreneauId: string): Observable<RendezVous> {
+    return this.http.post<RendezVous>(`${this.base}/api/rendezvous/${id}/deplacer`, { nouveauCreneauId });
+  }
+
   annuler(id: string): Observable<void> {
     return this.http.post<void>(`${this.base}/api/rendezvous/${id}/annuler`, null);
   }

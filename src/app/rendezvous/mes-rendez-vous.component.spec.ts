@@ -6,6 +6,7 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
+import { LangueService } from '../partage/langue.service';
 import { Avis, AvisService } from '../avis/avis.service';
 import { MesRendezVousComponent } from './mes-rendez-vous.component';
 import { RendezVous, RendezVousService } from './rendezvous.service';
@@ -72,7 +73,8 @@ describe('MesRendezVousComponent (avis)', () => {
     const items = lignes();
     expect(items.length).toBe(3);
     expect(items[0].textContent).not.toContain('Donner mon avis');
-    expect(items[0].querySelector('button')?.textContent).toContain('Annuler');
+    expect(items[0].querySelector('button.mr-btn--danger')?.textContent).toContain('Annuler');
+    expect(items[0].querySelector('button.deplacer-btn')?.textContent).toContain('Déplacer');
     expect(items[1].querySelector('a[href="/avis/nouveau/r2"]')?.textContent).toContain('Donner mon avis');
     expect(items[1].textContent).not.toContain('Avis donné');
     expect(items[2].textContent).toContain('Avis donné');
@@ -150,5 +152,81 @@ describe('MesRendezVousComponent (avis)', () => {
     const statut = fixture.nativeElement.querySelector('li.mr-carte--passe .mr-statut') as HTMLElement;
     expect(statut.textContent?.trim()).toBe('Terminé');
     expect(fixture.nativeElement.textContent).not.toContain('Honoré');
+  });
+});
+
+/** Mes rendez-vous en arabe, comme « مواعيدي » dans l'appli (sans toucher a la langue memorisee du navigateur). */
+describe('MesRendezVousComponent (arabe)', () => {
+  let fixture: ComponentFixture<MesRendezVousComponent>;
+  let rendezVous: jasmine.SpyObj<RendezVousService>;
+
+  beforeEach(() => {
+    registerLocaleData(localeFr);
+    rendezVous = jasmine.createSpyObj<RendezVousService>('RendezVousService', ['mes', 'annuler']);
+    rendezVous.mes.and.returnValue(of([
+      CONFIRME,
+      { ...CONFIRME, id: 'r2', debut: '2020-01-06T09:00:00Z', statut: 'HONORE' },
+      { ...CONFIRME, id: 'r4', debut: '2020-02-06T09:00:00Z', statut: 'ABSENT' },
+      { ...CONFIRME, id: 'r5', debut: '2020-03-06T09:00:00Z', statut: 'ANNULE' },
+    ]));
+    const avis = jasmine.createSpyObj<AvisService>('AvisService', ['mes']);
+    avis.mes.and.returnValue(of([]));
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin']);
+    annuaire.medecin.and.returnValue(of(MEDECIN));
+    TestBed.configureTestingModule({
+      imports: [MesRendezVousComponent],
+      providers: [
+        provideRouter([]),
+        { provide: RendezVousService, useValue: rendezVous },
+        { provide: AvisService, useValue: avis },
+        { provide: AnnuaireService, useValue: annuaire },
+        { provide: AuthService, useValue: { pret: () => Promise.resolve(), estConnecte: () => true, seConnecter: () => undefined } },
+        { provide: LOCALE_ID, useValue: 'fr' },
+      ],
+    });
+    TestBed.inject(LangueService).ar.set(true);
+    fixture = TestBed.createComponent(MesRendezVousComponent);
+  });
+
+  afterEach(() => TestBed.inject(LangueService).ar.set(false));
+
+  async function afficher() {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  it('affiche titres, boutons et statuts en arabe, de droite a gauche, sans francais', async () => {
+    await afficher();
+    const texte = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    const main = fixture.nativeElement.querySelector('main') as HTMLElement;
+
+    expect(main.getAttribute('dir')).toBe('rtl');
+    expect(texte).toContain('مواعيدي');
+    expect(texte).toContain('القادمة');
+    expect(texte).toContain('السابقة');
+    expect(texte).toContain('إلغاء');
+    expect(texte).toContain('نقل');
+    expect(texte).toContain('أبدِ رأيك');
+    expect(texte).toContain('منتهٍ');
+    expect(texte).toContain('لم يتم الحضور');
+    expect(texte).toContain('ملغى');
+    for (const fr of ['Mes rendez-vous', 'À venir', 'Passés', 'Annuler', 'Déplacer', 'Terminé', 'Non honoré', 'Annulé']) {
+      expect(texte).not.toContain(fr);
+    }
+  });
+
+  it('demande la confirmation et annonce l annulation en arabe', async () => {
+    rendezVous.annuler.and.returnValue(of(void 0));
+    await afficher();
+    const boutons = () => Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    boutons().find((b) => b.textContent?.trim() === 'إلغاء')!.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('إلغاء هذا الموعد؟');
+
+    boutons().find((b) => b.textContent?.trim() === 'نعم، إلغاء')!.click();
+    fixture.detectChanges();
+    expect(rendezVous.annuler).toHaveBeenCalledWith('r1');
+    expect(fixture.nativeElement.textContent).toContain('تم إلغاء الموعد.');
   });
 });

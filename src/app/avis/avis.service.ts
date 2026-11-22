@@ -64,9 +64,9 @@ export function libelleStatutAvis(statut: string | null | undefined): string {
 }
 
 /** « 4,5 / 5 (12 avis) » au format francais (virgule decimale), ou « Aucun avis pour le moment ». */
-export function formaterMoyenne(moyenne: number | null, nombre: number): string {
-  if (moyenne === null || nombre === 0) return 'Aucun avis pour le moment';
-  return `${moyenne.toFixed(1).replace('.', ',')} / 5 (${nombre} avis)`;
+export function formaterMoyenne(moyenne: number | null, nombre: number, arabe = false): string {
+  if (moyenne === null || nombre === 0) return arabe ? 'لا توجد آراء حاليًا' : 'Aucun avis pour le moment';
+  return `${moyenne.toFixed(1).replace('.', ',')} / 5 (${nombre} ${arabe ? 'رأي' : 'avis'})`;
 }
 
 /**

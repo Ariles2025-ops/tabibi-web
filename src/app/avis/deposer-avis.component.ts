@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { RendezVous, RendezVousService } from '../rendezvous/rendezvous.service';
 import { AvisService, LONGUEUR_MAX_COMMENTAIRE, NOTE_MAX, NOTE_MIN } from './avis.service';
 
@@ -19,51 +21,54 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
  */
 @Component({
     selector: 'app-deposer-avis',
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, SelecteurLangueComponent],
     template: `
-    <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <p style="margin:0 0 16px"><a routerLink="/mes-rendez-vous" style="color:var(--vert)">Retour à mes rendez-vous</a></p>
-      <h1 style="color:var(--vert);margin:0 0 8px">Donner mon avis</h1>
+    <main style="max-width:720px;margin:32px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px">
+        <a routerLink="/mes-rendez-vous" style="color:var(--vert)">{{ l.t('Retour à mes rendez-vous', 'العودة إلى مواعيدي') }}</a>
+        <app-selecteur-langue />
+      </div>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ l.t('Donner mon avis', 'أبدِ رأيك') }}</h1>
 
 
       <ng-container *ngIf="connecte()">
         <p *ngIf="rendezVous() as r" style="color:var(--text3);margin:0 0 20px">
-          Rendez-vous du {{ r.debut | date:'EEEE d MMMM y à HH:mm' }}<ng-container *ngIf="nomMedecin()"> avec {{ nomMedecin() }}</ng-container>.
+          <ng-container *ngIf="!l.ar()">Rendez-vous du {{ r.debut | date:'EEEE d MMMM y à HH:mm' }}<ng-container *ngIf="nomMedecin()"> avec {{ nomMedecin() }}</ng-container>.</ng-container>
+          <ng-container *ngIf="l.ar()">موعد بتاريخ <span dir="ltr">{{ r.debut | date:'dd/MM/yyyy HH:mm' }}</span><ng-container *ngIf="nomMedecin()"> مع {{ nomMedecin() }}</ng-container>.</ng-container>
         </p>
 
         <p *ngIf="succes()" style="color:var(--vert)">
-          {{ succes() }} <a routerLink="/mes-avis" style="color:var(--vert)">Voir mes avis</a>
+          {{ succes() }} <a routerLink="/mes-avis" style="color:var(--vert)">{{ l.t('Voir mes avis', 'عرض آرائي') }}</a>
         </p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <p *ngIf="nonHonore()" role="alert" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin:0">
-          Vous pourrez donner votre avis une fois la consultation effectuée : le médecin doit d'abord indiquer que
-          ce rendez-vous a bien eu lieu.
+          {{ l.t("Vous pourrez donner votre avis une fois la consultation effectuée : le médecin doit d'abord indiquer que ce rendez-vous a bien eu lieu.", 'يمكنك إبداء رأيك بعد إجراء الاستشارة: يجب أن يشير الطبيب أولًا إلى أن هذا الموعد قد تم فعلًا.') }}
         </p>
 
         <form *ngIf="!succes() && !nonHonore()" (ngSubmit)="deposer()" style="display:grid;gap:16px">
           <fieldset style="border:0;padding:0;margin:0">
-            <legend style="color:var(--text3);font-size:.9rem;margin:0 0 2px">Votre note *</legend>
-            <p class="aide-note" style="margin:0 0 6px;color:var(--text3);font-size:.85rem">1 = insatisfait, 5 = excellent</p>
+            <legend style="color:var(--text3);font-size:.9rem;margin:0 0 2px">{{ l.t('Votre note', 'تقييمك') }} *</legend>
+            <p class="aide-note" style="margin:0 0 6px;color:var(--text3);font-size:.85rem">{{ l.t('1 = insatisfait, 5 = excellent', '1 = غير راضٍ، 5 = ممتاز') }}</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <label *ngFor="let n of notes" class="note" [class.note-choisie]="note === n" [attr.aria-label]="'Note ' + n + ' sur 5'">
+              <label *ngFor="let n of notes" class="note" [class.note-choisie]="note === n" [attr.aria-label]="l.ar() ? 'التقييم ' + n + ' من 5' : 'Note ' + n + ' sur 5'">
                 <input type="radio" name="note" [value]="n" [(ngModel)]="note">{{ n }}
               </label>
-              <span style="color:var(--text3);font-size:.9rem;margin-left:4px">{{ note !== null ? note + ' / 5' : 'Choisissez une note de 1 à 5' }}</span>
+              <span style="color:var(--text3);font-size:.9rem;margin-left:4px"><span [attr.dir]="l.ar() ? 'ltr' : null">{{ note !== null ? note + ' / 5' : l.t('Choisissez une note de 1 à 5', 'اختر تقييمًا من 1 إلى 5') }}</span></span>
             </div>
           </fieldset>
 
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Commentaire (facultatif)
-            <textarea class="champ" [(ngModel)]="commentaire" name="commentaire" rows="4" placeholder="Accueil, écoute, explications..." style="color:var(--tbi-ink);font-size:1rem;resize:vertical"></textarea>
+            {{ l.t('Commentaire (facultatif)', 'تعليق (اختياري)') }}
+            <textarea class="champ" [(ngModel)]="commentaire" name="commentaire" rows="4" [placeholder]="l.t('Accueil, écoute, explications...', 'الاستقبال، الإصغاء، الشرح...')" style="color:var(--tbi-ink);font-size:1rem;resize:vertical"></textarea>
             <span [style.color]="commentaireTropLong() ? '#b3261e' : 'var(--text3)'">{{ commentaire.length }} / {{ maxCommentaire }}</span>
           </label>
 
-          <p class="avis-anonyme" style="margin:0;color:var(--text3);font-size:.9rem">Votre avis est publié anonymement sur la fiche du praticien.</p>
+          <p class="avis-anonyme" style="margin:0;color:var(--text3);font-size:.9rem">{{ l.t('Votre avis est publié anonymement sur la fiche du praticien.', 'يُنشر رأيك دون ذكر اسمك في صفحة الطبيب.') }}</p>
 
           <div>
             <button type="submit" class="bouton" [disabled]="enCours() || commentaireTropLong()">
-              {{ enCours() ? 'Envoi…' : 'Envoyer mon avis' }}
+              {{ enCours() ? l.t('Envoi…', 'جارٍ الإرسال…') : l.t('Envoyer mon avis', 'إرسال رأيي') }}
             </button>
           </div>
         </form>
@@ -77,6 +82,7 @@ export class DeposerAvisComponent implements OnInit {
   private service = inject(AvisService);
   private rendezVousService = inject(RendezVousService);
   private annuaire = inject(AnnuaireService);
+  l = inject(LangueService);
 
   private rendezVousId = '';
   /** null tant que l'etat de connexion n'est pas connu. */
@@ -108,11 +114,11 @@ export class DeposerAvisComponent implements OnInit {
   deposer() {
     this.succes.set('');
     if (this.note === null) {
-      this.erreur.set('Choisissez une note de 1 à 5.');
+      this.erreur.set(this.l.t('Choisissez une note de 1 à 5.', 'اختر تقييمًا من 1 إلى 5.'));
       return;
     }
     if (this.commentaireTropLong()) {
-      this.erreur.set(`Le commentaire ne peut pas dépasser ${LONGUEUR_MAX_COMMENTAIRE} caractères.`);
+      this.erreur.set(this.l.t(`Le commentaire ne peut pas dépasser ${LONGUEUR_MAX_COMMENTAIRE} caractères.`, `لا يمكن أن يتجاوز التعليق ${LONGUEUR_MAX_COMMENTAIRE} حرفًا.`));
       return;
     }
     const commentaire = this.commentaire.trim();
@@ -121,20 +127,20 @@ export class DeposerAvisComponent implements OnInit {
     this.service.deposer(this.rendezVousId, this.note, commentaire || null).subscribe({
       next: () => {
         this.enCours.set(false);
-        this.succes.set('Merci pour votre avis.');
+        this.succes.set(this.l.t('Merci pour votre avis.', 'شكرًا على رأيك.'));
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 409) {
-          this.erreur.set(e.error?.erreur ?? 'Vous avez déjà donné votre avis pour ce rendez-vous.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Vous avez déjà donné votre avis pour ce rendez-vous.', 'لقد أبديت رأيك في هذا الموعد من قبل.'));
         } else if (e.status === 403) {
-          this.erreur.set(e.error?.erreur ?? 'Seul le patient du rendez-vous peut donner son avis.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Seul le patient du rendez-vous peut donner son avis.', 'يمكن لمريض هذا الموعد فقط إبداء رأيه.'));
         } else if (e.status === 404) {
-          this.erreur.set('Rendez-vous introuvable.');
+          this.erreur.set(this.l.t('Rendez-vous introuvable.', 'الموعد غير موجود.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'envoi de l'avis a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.l.t("L'envoi de l'avis a échoué, veuillez réessayer.", 'تعذّر إرسال الرأي، يرجى المحاولة مرة أخرى.'));
         }
       },
     });

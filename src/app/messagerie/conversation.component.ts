@@ -8,6 +8,8 @@ import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { PatientsService } from '../medecin/patients.service';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { Conversation, LONGUEUR_MAX_MESSAGE, Message, MessagerieService, abregerIdentifiant } from './messagerie.service';
 
 /** Intervalle de relecture du fil tant que la page est ouverte. */
@@ -21,35 +23,54 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
  */
 @Component({
     selector: 'app-conversation',
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, SelecteurLangueComponent],
     template: `
-    <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <p style="margin:0 0 16px"><a routerLink="/messagerie" style="color:var(--vert)">Retour à la messagerie</a></p>
-      <h1 style="color:var(--vert);margin:0 0 16px">{{ interlocuteur() ?? 'Conversation' }}</h1>
+    <main style="max-width:720px;margin:32px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <p style="margin:0 0 16px"><a routerLink="/messagerie" style="color:var(--vert)">{{ l.t('Retour à la messagerie', 'العودة إلى الرسائل') }}</a></p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h1 style="color:var(--vert);margin:0 0 16px">{{ interlocuteur() ?? l.t('Conversation', 'محادثة') }}</h1>
+        <app-selecteur-langue />
+      </div>
 
 
       <ng-container *ngIf="connecte()">
-        <p *ngIf="charge()">Chargement…</p>
+        <p *ngIf="charge()">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
         <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
         <ol style="list-style:none;padding:0;margin:0 0 16px;display:grid;gap:8px">
           <li *ngFor="let m of messages()" [class.message-moi]="estDeMoi(m)" [class.message-autre]="!estDeMoi(m)">
             <p style="margin:0;white-space:pre-wrap">{{ m.contenu }}</p>
             <span style="display:block;margin:4px 0 0;color:var(--text3);font-size:.85rem">
-              {{ m.envoyeLe | date:'d MMMM à HH:mm' }}<ng-container *ngIf="estDeMoi(m) && m.luLe"> · lu</ng-container>
+              <ng-container *ngIf="!m.envoyeLe">{{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-container>
+              <ng-container *ngIf="m.envoyeLe && !l.ar()">{{ m.envoyeLe | date:'d MMMM à HH:mm' }}</ng-container>
+              <span *ngIf="m.envoyeLe && l.ar()" dir="ltr">{{ m.envoyeLe | date:'dd/MM/yyyy HH:mm' }}</span>
+              <ng-container *ngIf="estDeMoi(m) && m.luLe"> · {{ l.t('lu', 'مقروءة') }}</ng-container>
             </span>
           </li>
         </ol>
-        <p *ngIf="accessible() && messages().length === 0">Aucun message pour le moment. Écrivez le premier.</p>
+        <p *ngIf="accessible() && messages().length === 0">{{ l.t('Aucun message pour le moment. Écrivez le premier.', 'لا توجد رسائل حاليًا. اكتب أول رسالة.') }}</p>
 
-        <form *ngIf="accessible()" (ngSubmit)="envoyer()" style="display:grid;gap:8px">
+        <p *ngIf="accessible() && conversation()?.fermee" data-testid="conversation-fermee" style="color:var(--text3)">
+          {{ moiPatient() ? l.t('Le médecin a fermé cette conversation.', 'أغلق الطبيب هذه المحادثة.') : l.t('Cette conversation est fermée.', 'هذه المحادثة مغلقة.') }}
+        </p>
+        <p *ngIf="peutFermer()">
+          <button type="button" class="bouton" data-testid="fermer-conversation" [disabled]="fermetureEnCours()" (click)="fermer()">
+            {{ l.t('Fermer la conversation', 'إغلاق المحادثة') }}
+          </button>
+        </p>
+        <p *ngIf="interdit()" data-testid="envoi-interdit" style="color:#b3261e">
+          {{ l.t('Vous ne pouvez plus écrire à ce médecin : prenez un nouveau rendez-vous.', 'لا يمكنك الكتابة إلى هذا الطبيب بعد الآن: احجز موعدًا جديدًا.') }}
+          <a *ngIf="conversation() as c" [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">{{ l.t('Prendre rendez-vous', 'حجز موعد') }}</a>
+        </p>
+
+        <form *ngIf="accessible() && !conversation()?.fermee && !interdit()" (ngSubmit)="envoyer()" style="display:grid;gap:8px">
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Votre message
+            {{ l.t('Votre message', 'رسالتك') }}
             <textarea class="champ" [(ngModel)]="contenu" name="contenu" rows="3" style="color:var(--tbi-ink);font-size:1rem;resize:vertical"></textarea>
           </label>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <span [style.color]="tropLong() ? '#b3261e' : 'var(--text3)'" style="font-size:.9rem">{{ contenu.length }} / {{ max }}</span>
-            <button type="submit" class="bouton" [disabled]="!peutEnvoyer()">{{ enCours() ? 'Envoi…' : 'Envoyer' }}</button>
+            <button type="submit" class="bouton" [disabled]="!peutEnvoyer()">{{ enCours() ? l.t('Envoi…', 'جارٍ الإرسال…') : l.t('Envoyer', 'إرسال') }}</button>
           </div>
         </form>
       </ng-container>
@@ -57,6 +78,7 @@ const INTERVALLE_RAFRAICHISSEMENT_MS = 30_000;
   `
 })
 export class ConversationComponent implements OnInit, OnDestroy {
+  l = inject(LangueService);
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
@@ -88,14 +110,53 @@ export class ConversationComponent implements OnInit, OnDestroy {
   charge = signal(false);
   enCours = signal(false);
   erreur = signal('');
+  /** Vrai quand l'envoi a ete refuse (403) faute de rendez-vous recent : le champ est remplace par une invitation a reprendre rendez-vous. */
+  interdit = signal(false);
+  /** Vrai pendant l'appel de fermeture : protege contre le double clic. */
+  fermetureEnCours = signal(false);
 
   /** Libelle de l'autre participant : le medecin si je suis le patient, sinon « Patient » et un identifiant abrege. */
   interlocuteur = computed(() => {
     const c = this.conversation();
     if (!c) return null;
-    if (this.moi() === c.patientId) return this.nomMedecin() ?? 'Médecin';
-    return this.nomPatient() ?? `Patient ${abregerIdentifiant(c.patientId)}`;
+    if (this.moi() === c.patientId) return this.nomMedecin() ?? this.l.t('Médecin', 'طبيب');
+    return this.nomPatient() ?? `${this.l.t('Patient', 'مريض')} ${abregerIdentifiant(c.patientId)}`;
   });
+
+  /** Le bouton « Fermer la conversation » n'est propose qu'au medecin, tant que la conversation est ouverte. */
+  peutFermer(): boolean {
+    const c = this.conversation();
+    return this.accessible() && !!c && !c.fermee && this.moi() === c.medecinId;
+  }
+
+  /** Ferme la conversation apres confirmation (POST .../fermer) ; le champ de saisie disparait ensuite. */
+  fermer() {
+    const c = this.conversation();
+    if (!c || this.fermetureEnCours()) return;
+    const message = this.l.t(
+      'Fermer cette conversation ? Le patient ne pourra plus vous écrire.',
+      'إغلاق هذه المحادثة؟ لن يتمكن المريض من مراسلتك بعد الآن.',
+    );
+    if (!window.confirm(message)) return;
+    this.fermetureEnCours.set(true);
+    this.erreur.set('');
+    this.service.fermer(c.id).subscribe({
+      next: () => {
+        this.fermetureEnCours.set(false);
+        this.conversation.set({ ...c, fermee: true });
+      },
+      error: (e: HttpErrorResponse) => {
+        this.fermetureEnCours.set(false);
+        if (e.status === 401) this.auth.seConnecter();
+        else this.erreur.set(e.error?.erreur ?? this.l.t('La fermeture de la conversation a échoué, veuillez réessayer.', 'فشل إغلاق المحادثة، يُرجى المحاولة مرة أخرى.'));
+      },
+    });
+  }
+
+  /** Vrai si je suis le patient de la conversation. */
+  moiPatient(): boolean {
+    return this.moi() !== null && this.moi() === this.conversation()?.patientId;
+  }
 
   async ngOnInit() {
     await this.auth.pret();
@@ -126,6 +187,7 @@ export class ConversationComponent implements OnInit, OnDestroy {
     this.accessible.set(false);
     this.contenu = '';
     this.erreur.set('');
+    this.interdit.set(false);
     this.chargerConversation();
     this.charger();
     this.arreterRafraichissement();
@@ -151,11 +213,11 @@ export class ConversationComponent implements OnInit, OnDestroy {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette conversation ne vous concerne pas.');
+          this.erreur.set(this.l.t('Cette conversation ne vous concerne pas.', 'هذه المحادثة لا تخصّك.'));
         } else if (e.status === 404) {
-          this.erreur.set('Conversation introuvable.');
+          this.erreur.set(this.l.t('Conversation introuvable.', 'المحادثة غير موجودة.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger la conversation.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Impossible de charger la conversation.', 'تعذّر تحميل المحادثة.'));
         }
       },
     });
@@ -177,11 +239,17 @@ export class ConversationComponent implements OnInit, OnDestroy {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Cette conversation ne vous concerne pas.');
+          // La lecture a reussi : la conversation me concerne, c'est l'envoi qui est refuse (rendez-vous trop ancien).
+          if (this.moiPatient()) this.interdit.set(true);
+          else this.erreur.set(this.l.t("Vous n'avez pas le droit d'écrire dans cette conversation.", 'ليس لديك صلاحية الكتابة في هذه المحادثة.'));
+        } else if (e.status === 409) {
+          const c = this.conversation();
+          if (c) this.conversation.set({ ...c, fermee: true });
+          else this.erreur.set(this.l.t('Cette conversation est fermée.', 'هذه المحادثة مغلقة.'));
         } else if (e.status === 400) {
-          this.erreur.set(e.error?.erreur ?? `Le message est vide ou dépasse ${LONGUEUR_MAX_MESSAGE} caractères.`);
+          this.erreur.set(e.error?.erreur ?? this.l.t(`Le message est vide ou dépasse ${LONGUEUR_MAX_MESSAGE} caractères.`, `الرسالة فارغة أو تتجاوز ${LONGUEUR_MAX_MESSAGE} حرف.`));
         } else {
-          this.erreur.set(e.error?.erreur ?? "L'envoi du message a échoué, veuillez réessayer.");
+          this.erreur.set(e.error?.erreur ?? this.l.t("L'envoi du message a échoué, veuillez réessayer.", 'فشل إرسال الرسالة، يُرجى المحاولة مرة أخرى.'));
         }
       },
     });

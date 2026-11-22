@@ -32,7 +32,7 @@ import { referencerPage } from '../seo/page-seo';
           <li><b>{{ nbWilayas }}</b><span>{{ ar ? 'ولاية' : 'wilayas couvertes' }}</span></li>
         </ul>
         <p>{{ ar ? 'الناشر: HADEV Studio.' : 'Éditeur : HADEV Studio.' }}
-          {{ ar ? 'للتواصل:' : 'Contact :' }} <a href="mailto:contact@tabibi.doctor">contact&#64;tabibi.doctor</a></p>
+          {{ ar ? 'للتواصل:' : 'Contact :' }} <a href="mailto:contact@ndawik.com">contact&#64;ndawik.com</a></p>
       </section>
 
       <section class="pg-bloc" id="presse">

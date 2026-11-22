@@ -4,6 +4,7 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { of } from 'rxjs';
 import { Router, provideRouter } from '@angular/router';
+import { LangueService } from '../partage/langue.service';
 import { AuthService } from '../auth/auth.service';
 import { MesNotificationsComponent } from './mes-notifications.component';
 import { Notification, NotificationService } from './notification.service';
@@ -197,5 +198,63 @@ describe('MesNotificationsComponent', () => {
     lignes()[0].click();
     lignes()[1].click();
     expect(navigation).toHaveBeenCalledOnceWith('/mes-ordonnances');
+  });
+
+  describe('en arabe (comme l\'appli)', () => {
+    afterEach(() => TestBed.inject(LangueService).definir(false));
+
+    it('traduit titre, boutons, date et lien « Voir », en RTL, sans texte français', async () => {
+      TestBed.inject(LangueService).definir(true);
+      service.mesNotifications.and.returnValue(of([{ ...NON_LUE, lien: '/mes-rendez-vous' }]));
+      await afficher();
+
+      const texte: string = fixture.nativeElement.textContent;
+      expect(texte).toContain('إشعاراتي');
+      expect(texte).toContain('تعليم الكل كمقروء');
+      expect(texte).toContain('تعليم كمقروء');
+      expect(texte).toContain('عرض');
+      expect(texte).toContain('18/09/2026');
+      expect(texte).not.toContain('Mes notifications');
+      expect(texte).not.toContain('Marquer comme lue');
+      expect(texte).not.toContain('Voir');
+      expect(texte).not.toContain('septembre');
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+    });
+
+    it('traduit l\'état vide et la confirmation « Tout marquer comme lu »', async () => {
+      TestBed.inject(LangueService).definir(true);
+      service.mesNotifications.and.returnValue(of([]));
+      await afficher();
+      expect(fixture.nativeElement.textContent).toContain('لا توجد إشعارات حاليًا.');
+
+      service.mesNotifications.and.returnValue(of([NON_LUE]));
+      service.toutMarquerLu.and.returnValue(of(2));
+      fixture.componentInstance.charger();
+      fixture.detectChanges();
+      bouton('تعليم الكل كمقروء')!.click();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('تم تعليم 2 إشعار(ات) كمقروءة');
+    });
+  });
+
+  it('une notification sans date lisible affiche « date inconnue » et passe en fin de liste, comme dans l appli', async () => {
+    service.mesNotifications.and.returnValue(of([{ ...LUE, id: 'n3', creeLe: 'pas une date' }, LUE, NON_LUE]));
+    await afficher();
+    const items = lignes();
+    expect(items.length).toBe(3);
+    expect(items[2].textContent).toContain('date inconnue');
+    expect(items[0].textContent).not.toContain('date inconnue');
+    expect(items[1].textContent).not.toContain('date inconnue');
+  });
+
+  it('en arabe, une notification sans date affiche « تاريخ غير معروف »', async () => {
+    service.mesNotifications.and.returnValue(of([{ ...LUE, creeLe: '' }]));
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      await afficher();
+      expect(fixture.nativeElement.textContent).toContain('تاريخ غير معروف');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
   });
 });

@@ -3,14 +3,16 @@ import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import localeFr from '@angular/common/locales/fr';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { PatientsService } from '../medecin/patients.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
+import { LangueService } from '../partage/langue.service';
 import { EspaceSecretaireComponent } from './espace-secretaire.component';
 import { Rattachement, SecretaireService } from './secretaire.service';
+import { instantAlger, valeurDateHeureLocale } from '../medecin/agenda-utils';
 
 const CABINET_1: Rattachement = { id: 'ra1', medecinId: 'm1', secretaireId: 's1', creeLe: '2026-09-01T10:00:00Z' };
 const CABINET_2: Rattachement = { id: 'ra2', medecinId: 'm2', secretaireId: 's1', creeLe: '2026-09-10T10:00:00Z' };
@@ -82,6 +84,30 @@ describe('EspaceSecretaireComponent', () => {
     fixture.detectChanges();
   }
 
+  it("arrivee depuis l'acceptation d'une invitation : confirme « Invitation acceptée » (FR), comme l'appli", async () => {
+    spyOn(TestBed.inject(Router), 'getCurrentNavigation').and.returnValue({ extras: { state: { invitationAcceptee: true } } } as never);
+    fixture = TestBed.createComponent(EspaceSecretaireComponent);
+    await afficher();
+    expect(texte()).toContain('Invitation acceptée : votre espace secrétaire est ouvert.');
+  });
+
+  it("arrivee depuis l'acceptation d'une invitation : confirme en arabe", async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      spyOn(TestBed.inject(Router), 'getCurrentNavigation').and.returnValue({ extras: { state: { invitationAcceptee: true } } } as never);
+      fixture = TestBed.createComponent(EspaceSecretaireComponent);
+      await afficher();
+      expect(texte()).toContain('تم قبول الدعوة: تم فتح فضاء السكرتارية.');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
+  });
+
+  it("navigation ordinaire : aucune confirmation d'invitation", async () => {
+    await afficher();
+    expect(texte()).not.toContain('Invitation acceptée');
+  });
+
   function texte(): string {
     return fixture.nativeElement.textContent;
   }
@@ -106,14 +132,12 @@ describe('EspaceSecretaireComponent', () => {
     await afficher();
   }
 
-  /** Date locale dans un an, au format du champ datetime-local, et son equivalent ISO 8601 UTC. */
+  /** Date (heure d'Algerie) dans un an, au format du champ datetime-local, et son equivalent ISO 8601 UTC. */
   function dansUnAn(): { local: string; iso: string } {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() + 1);
-    d.setHours(9, 30, 0, 0);
-    const deux = (n: number) => String(n).padStart(2, '0');
-    const local = `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}T09:30`;
-    return { local, iso: d.toISOString() };
+    // Jour d'Algerie (UTC+1) dans un an ; l'heure saisie est interpretee en heure d'Algerie.
+    const jour = valeurDateHeureLocale(new Date()).slice(0, 10);
+    const date = `${Number(jour.slice(0, 4)) + 1}${jour.slice(4)}`;
+    return { local: `${date}T09:30`, iso: new Date(instantAlger(date, '09:30')).toISOString() };
   }
 
   it('choisit d office l unique cabinet et affiche les rendez-vous a venir avec le nom du patient', async () => {
@@ -129,7 +153,7 @@ describe('EspaceSecretaireComponent', () => {
     expect(items[0].textContent).toContain('0770112233');
     expect(items[0].textContent).not.toContain('11111111');
     expect(bouton('Marquer honoré')).toBeDefined();
-    expect(bouton('Annuler')).toBeDefined();
+    expect(bouton('Annuler')).toBeUndefined();
 
     bouton('Passés')!.click();
     await afficher();
@@ -200,8 +224,16 @@ describe('EspaceSecretaireComponent', () => {
     expect(service.agenda).toHaveBeenCalledTimes(2);
   });
 
+  it('pas de bouton « Annuler » sur un rendez-vous deja commence (le serveur le refuse)', async () => {
+    await afficher();
+
+    expect(lignes().length).toBe(1);
+    expect(bouton('Annuler')).toBeUndefined();
+  });
+
   it('annule un rendez-vous apres confirmation dans la page ; le patient est prevenu', async () => {
-    service.annuler.and.returnValue(of({ ...CONFIRME, statut: 'ANNULE' }));
+    service.agenda.and.returnValue(of([FUTUR]));
+    service.annuler.and.returnValue(of({ ...FUTUR, statut: 'ANNULE' }));
     await afficher();
 
     bouton('Annuler')!.click();
@@ -216,13 +248,13 @@ describe('EspaceSecretaireComponent', () => {
     bouton('Oui')!.click();
     await afficher();
 
-    expect(service.annuler).toHaveBeenCalledWith('r1');
+    expect(service.annuler).toHaveBeenCalledWith('r3');
     expect(texte()).toContain('annulé : le patient est prévenu.');
     expect(service.agenda).toHaveBeenCalledTimes(2);
   });
 
   it('rendez-vous pris par telephone : ne dit pas que le patient est prevenu', async () => {
-    const TEL: RendezVous = { ...CONFIRME, source: 'TELEPHONE', nomPatient: 'Karim Ziani' };
+    const TEL: RendezVous = { ...FUTUR, source: 'TELEPHONE', nomPatient: 'Karim Ziani' };
     service.agenda.and.returnValue(of([TEL]));
     service.annuler.and.returnValue(of({ ...TEL, statut: 'ANNULE' }));
     await afficher();
@@ -234,7 +266,7 @@ describe('EspaceSecretaireComponent', () => {
     bouton('Oui')!.click();
     await afficher();
 
-    expect(service.annuler).toHaveBeenCalledWith('r1');
+    expect(service.annuler).toHaveBeenCalledWith('r3');
     expect(texte()).toContain('annulé : le créneau est de nouveau proposé.');
     expect(texte()).not.toContain('le patient est prévenu.');
   });
@@ -346,5 +378,64 @@ describe('EspaceSecretaireComponent', () => {
     await afficher();
     expect(fixture.nativeElement.querySelector('app-rdv-telephone form')).not.toBeNull();
     expect(texte()).toContain('Nom du patient');
+  });
+  describe('en arabe', () => {
+    beforeEach(() => TestBed.inject(LangueService).ar.set(true));
+    afterEach(() => TestBed.inject(LangueService).ar.set(false));
+
+    it("reste en arabe (plus de retour force au francais), de droite a gauche, avec le selecteur de langue", async () => {
+      await afficher();
+      const main: HTMLElement = fixture.nativeElement.querySelector('main');
+      expect(TestBed.inject(LangueService).ar()).toBeTrue();
+      expect(main.getAttribute('dir')).toBe('rtl');
+      expect(main.getAttribute('lang')).toBe('ar');
+      expect(fixture.nativeElement.querySelector('app-selecteur-langue')).not.toBeNull();
+      expect(texte()).toContain('فضاء السكرتارية');
+      expect(texte()).not.toContain('Espace secrétaire');
+    });
+
+    it("affiche l'agenda, les statuts et les actions en arabe, sans francais", async () => {
+      await afficher();
+      expect(texte()).toContain('القادمة');
+      expect(texte()).toContain('السابقة');
+      expect(texte()).toContain('تسجيل الحضور');
+      expect(texte()).toContain('المريض غائب');
+      expect(texte()).toContain('مؤكد');
+      for (const fr of ['Marquer honoré', 'Patient absent', 'À venir', 'Passés', 'Créneaux', 'Chargement']) {
+        expect(texte()).not.toContain(fr);
+      }
+    });
+
+    it("annonce l'annulation et les erreurs en arabe", async () => {
+      service.annuler.and.returnValue(of(FUTUR));
+      service.agenda.and.returnValue(of([FUTUR]));
+      await afficher();
+      bouton('إلغاء')!.click();
+      await afficher();
+      expect(texte()).toContain('إلغاء هذا الموعد؟');
+      expect(texte()).toContain('سيتم إعلام المريض.');
+      bouton('نعم')!.click();
+      await afficher();
+      expect(texte()).toContain('تم إلغاء الموعد في');
+      expect(texte()).toContain('تم إعلام المريض.');
+    });
+
+    it("ouvre le panneau « Deplacer » en arabe (pas de francais)", async () => {
+      service.agenda.and.returnValue(of([FUTUR]));
+      await afficher();
+      bouton('نقل')!.click();
+      await afficher();
+      const panneau: HTMLElement = fixture.nativeElement.querySelector('app-deplacer-rendez-vous');
+      expect(panneau).not.toBeNull();
+      expect(panneau.textContent).toContain('اختر موعدًا جديدًا');
+      expect(panneau.textContent).not.toContain('Choisissez');
+      expect(panneau.querySelector('[role="group"]')!.getAttribute('aria-label')).toBe('نقل الموعد');
+    });
+
+    it("refuse en arabe un compte qui n'est pas secretaire (403)", async () => {
+      service.mesMedecins.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      await afficher();
+      expect(texte()).toContain('هذه الصفحة مخصصة للسكرتارية.');
+    });
   });
 });

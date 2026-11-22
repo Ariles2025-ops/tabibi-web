@@ -4,12 +4,13 @@ import { registerLocaleData } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import localeFr from '@angular/common/locales/fr';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { PatientsService } from '../medecin/patients.service';
 import { Moi } from '../moi/moi.service';
+import { LangueService } from '../partage/langue.service';
 import { ConversationComponent } from './conversation.component';
 import { Conversation, Message, MessagerieService } from './messagerie.service';
 
@@ -23,6 +24,7 @@ const CONVERSATION: Conversation = {
   creeLe: '2026-09-18T10:00:00Z',
   dernierMessageLe: '2026-09-18T10:05:00Z',
   nonLus: 1,
+  fermee: false,
 };
 
 const DU_PATIENT: Message = {
@@ -66,7 +68,7 @@ describe('ConversationComponent', () => {
     registerLocaleData(localeFr);
     profil = { sujet: PATIENT, nom: 'patient.demo', roles: ['PATIENT'] };
     estMedecin = signal(false);
-    service = jasmine.createSpyObj<MessagerieService>('MessagerieService', ['mesConversations', 'messages', 'envoyer']);
+    service = jasmine.createSpyObj<MessagerieService>('MessagerieService', ['mesConversations', 'messages', 'envoyer', 'fermer']);
     service.mesConversations.and.returnValue(of([CONVERSATION]));
     service.messages.and.returnValue(of([DU_PATIENT, DU_MEDECIN]));
     annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin']);
@@ -142,6 +144,15 @@ describe('ConversationComponent', () => {
     expect(items[1].textContent).not.toContain('· lu');
     expect(texte()).toContain('0 / 2000');
     expect(boutonEnvoyer().disabled).toBeTrue();
+
+    fixture.destroy();
+  }));
+
+  it('écrit « date inconnue » (comme l appli) pour un message sans date d envoi', fakeAsync(() => {
+    service.messages.and.returnValue(of([{ ...DU_MEDECIN, envoyeLe: '' }]));
+    afficher();
+
+    expect(bulles()[0].textContent).toContain('date inconnue');
 
     fixture.destroy();
   }));
@@ -244,6 +255,89 @@ describe('ConversationComponent', () => {
     fixture.destroy();
   }));
 
+  it('remplace le champ par une phrase claire quand le medecin a ferme la conversation', fakeAsync(() => {
+    service.mesConversations.and.returnValue(of([{ ...CONVERSATION, fermee: true }]));
+    afficher();
+
+    expect(texte()).toContain('Le médecin a fermé cette conversation.');
+    expect(zone()).toBeNull();
+
+    fixture.destroy();
+  }));
+
+  it('le medecin ferme la conversation apres confirmation, une seule fois malgre le double clic', fakeAsync(() => {
+    profil = { sujet: MEDECIN_ID, nom: 'dr.demo', roles: ['MEDECIN'] };
+    estMedecin.set(true);
+    const sujet = new Subject<unknown>();
+    service.fermer.and.returnValue(sujet);
+    spyOn(window, 'confirm').and.returnValue(true);
+    afficher();
+
+    const bouton = (): HTMLButtonElement => fixture.nativeElement.querySelector('[data-testid="fermer-conversation"]');
+    bouton().click();
+    afficher();
+    bouton().click();
+    expect(service.fermer).toHaveBeenCalledOnceWith('c1');
+
+    sujet.next({});
+    sujet.complete();
+    afficher();
+
+    expect(bouton()).toBeNull();
+    expect(texte()).toContain('Cette conversation est fermée.');
+    expect(zone()).toBeNull();
+
+    fixture.destroy();
+  }));
+
+  it('ne ferme rien si le medecin refuse la confirmation, et le patient n a pas le bouton', fakeAsync(() => {
+    profil = { sujet: MEDECIN_ID, nom: 'dr.demo', roles: ['MEDECIN'] };
+    estMedecin.set(true);
+    spyOn(window, 'confirm').and.returnValue(false);
+    afficher();
+    fixture.nativeElement.querySelector('[data-testid="fermer-conversation"]').click();
+    expect(service.fermer).not.toHaveBeenCalled();
+    fixture.destroy();
+
+    profil = { sujet: PATIENT, nom: 'patient.demo', roles: ['PATIENT'] };
+    estMedecin.set(false);
+    fixture = TestBed.createComponent(ConversationComponent);
+    afficher();
+    expect(fixture.nativeElement.querySelector('[data-testid="fermer-conversation"]')).toBeNull();
+    fixture.destroy();
+  }));
+
+  it('sur un 409 a l envoi, affiche la conversation fermee en retirant le champ', fakeAsync(() => {
+    service.envoyer.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Conversation fermee.' } })));
+    afficher();
+
+    saisir('Bonjour');
+    boutonEnvoyer().click();
+    afficher();
+
+    expect(texte()).toContain('Le médecin a fermé cette conversation.');
+    expect(texte()).not.toContain('Conversation fermee.');
+    expect(zone()).toBeNull();
+
+    fixture.destroy();
+  }));
+
+  it('sur un 403 a l envoi, invite le patient a reprendre rendez-vous (et non « ne vous concerne pas »)', fakeAsync(() => {
+    service.envoyer.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403, error: { erreur: 'Vous ne pouvez plus ecrire a ce medecin.' } })));
+    afficher();
+
+    saisir('Bonjour');
+    boutonEnvoyer().click();
+    afficher();
+
+    expect(texte()).toContain('prenez un nouveau rendez-vous');
+    expect(texte()).not.toContain('ne vous concerne pas');
+    expect(fixture.nativeElement.querySelector('[data-testid="envoi-interdit"] a').getAttribute('href')).toBe('/medecins/' + MEDECIN_ID);
+    expect(zone()).toBeNull();
+
+    fixture.destroy();
+  }));
+
   it('relit le fil toutes les 30 secondes tant que la page est ouverte, et s arrete a la destruction', fakeAsync(() => {
     afficher();
     expect(service.messages).toHaveBeenCalledTimes(1);
@@ -284,5 +378,28 @@ describe('ConversationComponent', () => {
     expect(service.messages).not.toHaveBeenCalled();
 
     fixture.destroy();
+  }));
+
+  it('affiche le fil en arabe (de droite a gauche) avec les memes mots que l appli', fakeAsync(() => {
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('العودة إلى الرسائل');
+      expect(texte()).toContain('رسالتك');
+      expect(texte()).toContain('إرسال');
+      expect(texte()).not.toContain('Envoyer');
+      expect(texte()).not.toContain('Retour à la messagerie');
+
+      service.messages.and.returnValue(of([]));
+      fixture.destroy();
+      fixture = TestBed.createComponent(ConversationComponent);
+      afficher();
+      expect(texte()).toContain('لا توجد رسائل حاليًا. اكتب أول رسالة.');
+      fixture.destroy();
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
   }));
 });

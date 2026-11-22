@@ -1,15 +1,16 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
+import { LangueService } from '../partage/langue.service';
 
 /** Affichee quand le profil (/api/moi) n'a pas pu etre lu : evite de renvoyer le professionnel a l'accueil sans explication. */
 @Component({
     selector: 'app-compte-indisponible',
     template: `
-    <main class="pg" role="alert">
-      <h1>Impossible de vérifier votre compte</h1>
-      <p class="pg-intro">Vérifiez votre connexion et réessayez.</p>
-      <button type="button" class="bouton" (click)="reessayer()">Réessayer</button>
+    <main class="pg" role="alert" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <h1>{{ l.t('Impossible de vérifier votre compte', 'تعذّر التحقق من حسابك') }}</h1>
+      <p class="pg-intro">{{ l.t('Vérifiez votre connexion et réessayez.', 'تحقّق من اتصالك بالإنترنت ثم أعد المحاولة.') }}</p>
+      <button type="button" class="bouton" (click)="reessayer()">{{ l.t('Réessayer', 'إعادة المحاولة') }}</button>
     </main>
   `,
     styles: [`
@@ -23,9 +24,10 @@ export class CompteIndisponibleComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private title = inject(Title);
   private meta = inject(Meta);
+  l = inject(LangueService);
 
   ngOnInit() {
-    this.title.setTitle('Compte indisponible | Ndawik');
+    this.title.setTitle(this.l.t('Compte indisponible | Ndawik', 'الحساب غير متاح | نداويك'));
     this.meta.updateTag({ name: 'robots', content: 'noindex' });
   }
 

@@ -4,10 +4,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
-import { Candidature, DemandeCandidature, libelleStatutCandidature } from '../admin/admin.service';
+import { Candidature, DemandeCandidature, libelleStatutCandidature, libelleStatutCandidatureAr } from '../admin/admin.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { SPECIALITES_SEO, WILAYAS_SEO } from '../seo/referentiel-seo';
+import { LangueService } from '../partage/langue.service';
+import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { MedecinService } from './medecin.service';
 
 /** Champs du formulaire, vides ou prerempli depuis une candidature refusee. */
@@ -21,19 +23,21 @@ function formulaireVide(): DemandeCandidature {
  */
 @Component({
     selector: 'app-candidature-medecin',
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, SelecteurLangueComponent],
     template: `
-    <main style="max-width:720px;margin:32px auto;padding:0 16px">
-      <h1 style="color:var(--vert);margin:0 0 8px">{{ ficheReclamee ? 'Réclamer ma fiche' : 'Ma candidature' }}</h1>
+    <main style="max-width:720px;margin:32px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h1 style="color:var(--vert);margin:0 0 8px">{{ ficheReclamee ? l.t('Réclamer ma fiche', 'المطالبة بملفي') : l.t('Ma candidature', 'ترشحي') }}</h1>
+        <app-selecteur-langue />
+      </div>
       <p *ngIf="!ficheReclamee" style="color:var(--text3);margin:0 0 20px">
-        Pour figurer sur Ndawik, déposez votre candidature : elle est examinée par un administrateur.
+        {{ l.t('Pour figurer sur Ndawik, déposez votre candidature : elle est examinée par un administrateur.', 'لتظهر على نداويك، أودع ترشحك: سيفحصه مسؤول.') }}
       </p>
       <p *ngIf="ficheReclamee" style="color:var(--text3);margin:0 0 20px">
-        Vérifiez les informations de votre fiche et ajoutez votre numéro d'inscription à l'ordre :
-        un administrateur confirme que c'est bien vous avant de vous la confier.
+        {{ l.t("Vérifiez les informations de votre fiche et ajoutez votre numéro d'inscription à l'ordre : un administrateur confirme que c'est bien vous avant de vous la confier.", 'تحقّق من معلومات ملفك وأضف رقم تسجيلك في الهيئة: يتأكد مسؤول أنك أنت صاحبه قبل أن يسلّمه لك.') }}
       </p>
 
-      <p *ngIf="charge()">Chargement…</p>
+      <p *ngIf="charge()">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
       <p *ngIf="succes()" style="color:var(--vert)">{{ succes() }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
@@ -41,64 +45,64 @@ function formulaireVide(): DemandeCandidature {
         <strong>{{ c.nomComplet }}</strong>
         <span style="color:var(--text3)"> · {{ libelleStatut(c.statut) }}</span><br>
         <span style="color:var(--text3)">
-          {{ c.specialiteFr || c.specialiteSlug }} · {{ c.ville || 'Ville non précisée' }} ({{ c.wilayaFr || c.wilayaCode }})
-          · N° d'ordre {{ c.numeroOrdre }}<ng-container *ngIf="c.telephone"> · {{ c.telephone }}</ng-container>
+          {{ nomSpecialite(c) }} · {{ c.ville || l.t('Ville non précisée', 'المدينة غير محددة') }} ({{ nomWilaya(c) }})
+          · {{ l.t("N° d'ordre", 'رقم التسجيل') }} {{ c.numeroOrdre }}<ng-container *ngIf="c.telephone"> · {{ c.telephone }}</ng-container>
         </span><br>
         <span style="color:var(--text3);font-size:.9rem">
-          Déposée le {{ c.deposeeLe | date:'d MMMM yyyy à HH:mm' }}<ng-container *ngIf="c.traiteeLe"> · traitée le {{ c.traiteeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container>
+          {{ l.t('Déposée le', 'أُودع في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ c.deposeeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span><ng-container *ngIf="c.traiteeLe"> · {{ l.t('traitée le', 'عولج في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ c.traiteeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span></ng-container>
         </span>
-        <p *ngIf="c.statut === 'EN_ATTENTE'" style="margin:10px 0 0">Votre candidature est en cours d'examen.</p>
+        <p *ngIf="c.statut === 'EN_ATTENTE'" style="margin:10px 0 0">{{ l.t("Votre candidature est en cours d'examen.", 'ترشحك قيد الفحص.') }}</p>
         <div *ngIf="c.statut === 'VALIDEE'" style="margin:10px 0 0">
           <p style="margin:0 0 10px;color:var(--vert)">
-            Votre candidature a été validée : vous figurez sur Ndawik.
-            <a [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">Voir ma fiche</a>
+            {{ l.t('Votre candidature a été validée : vous figurez sur Ndawik.', 'تم قبول ترشحك: أنت تظهر على نداويك.') }}
+            <a [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">{{ l.t('Voir ma fiche', 'عرض ملفي') }}</a>
           </p>
-          <a class="bouton" routerLink="/medecin/agenda">Ouvrir mon agenda</a>
+          <a class="bouton" routerLink="/medecin/agenda">{{ l.t('Ouvrir mon agenda', 'فتح جدول مواعيدي') }}</a>
         </div>
         <p *ngIf="c.statut === 'REFUSEE'" style="margin:10px 0 0;color:#b3261e">
-          Votre candidature a été refusée<ng-container *ngIf="c.motifRefus"> · Motif : {{ c.motifRefus }}</ng-container>.
-          Vous pouvez en déposer une nouvelle ci-dessous.
+          {{ l.t('Votre candidature a été refusée', 'تم رفض ترشحك') }}<ng-container *ngIf="c.motifRefus"> · {{ l.t('Motif', 'السبب') }} : {{ c.motifRefus }}</ng-container>.
+          {{ l.t('Vous pouvez en déposer une nouvelle ci-dessous.', 'يمكنك إيداع ترشح جديد أدناه.') }}
         </p>
       </section>
 
       <form *ngIf="formulaireVisible()" (ngSubmit)="deposer()" #f="ngForm" style="display:grid;gap:12px">
-        <h2 *ngIf="candidature()" style="font-size:1.1rem;margin:0">Nouvelle candidature</h2>
+        <h2 *ngIf="candidature()" style="font-size:1.1rem;margin:0">{{ l.t('Nouvelle candidature', 'ترشح جديد') }}</h2>
         <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Nom complet *
-            <input class="champ" [(ngModel)]="demande.nomComplet" name="nomComplet" required placeholder="Ex. Dr Amina Belkacem" style="color:var(--tbi-ink);font-size:1rem">
+            {{ l.t('Nom complet', 'الاسم الكامل') }} *
+            <input class="champ" [(ngModel)]="demande.nomComplet" name="nomComplet" required [placeholder]="l.t('Ex. Dr Amina Belkacem', 'مثال: د. أمينة بلقاسم')" style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Numéro d'inscription à l'ordre *
+            {{ l.t("Numéro d'inscription à l'ordre", 'رقم التسجيل في الهيئة') }} *
             <input class="champ" [(ngModel)]="demande.numeroOrdre" name="numeroOrdre" required style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Spécialité *
+            {{ l.t('Spécialité', 'التخصص') }} *
             <select class="champ" [(ngModel)]="demande.specialiteSlug" name="specialiteSlug" required style="color:var(--tbi-ink);font-size:1rem">
-              <option value="">Choisissez votre spécialité</option>
-              <option *ngFor="let sp of specialites" [value]="sp.slug">{{ sp.nom }}</option>
+              <option value="">{{ l.t('Choisissez votre spécialité', 'اختر تخصصك') }}</option>
+              <option *ngFor="let sp of specialites" [value]="sp.slug">{{ l.ar() ? sp.nomAr : sp.nom }}</option>
             </select>
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Wilaya *
+            {{ l.t('Wilaya', 'الولاية') }} *
             <select class="champ" [(ngModel)]="demande.wilayaCode" name="wilayaCode" required style="color:var(--tbi-ink);font-size:1rem">
-              <option value="">Choisissez votre wilaya</option>
-              <option *ngFor="let w of wilayas" [value]="w.code">{{ w.code }} · {{ w.nom }}</option>
+              <option value="">{{ l.t('Choisissez votre wilaya', 'اختر ولايتك') }}</option>
+              <option *ngFor="let w of wilayas" [value]="w.code">{{ w.code }} · {{ l.ar() ? w.nomAr : w.nom }}</option>
             </select>
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Ville
+            {{ l.t('Ville', 'المدينة') }}
             <input class="champ" [(ngModel)]="demande.ville" name="ville" style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            Téléphone
-            <input class="champ" [(ngModel)]="demande.telephone" name="telephone" type="tel" placeholder="Ex. 0550 00 00 00" style="color:var(--tbi-ink);font-size:1rem">
+            {{ l.t('Téléphone', 'الهاتف') }}
+            <input class="champ" [(ngModel)]="demande.telephone" name="telephone" type="tel" [placeholder]="l.t('Ex. 0550 00 00 00', 'مثال: 0550 00 00 00')" [attr.dir]="l.ar() ? 'ltr' : null" style="color:var(--tbi-ink);font-size:1rem">
           </label>
         </div>
-        <p style="color:var(--text3);font-size:.9rem;margin:0">* Champs obligatoires.</p>
+        <p style="color:var(--text3);font-size:.9rem;margin:0">{{ l.t('* Champs obligatoires.', '* حقول إلزامية.') }}</p>
         <div>
           <button type="submit" class="bouton" [disabled]="enCours()">
-            {{ enCours() ? 'Envoi…' : (ficheReclamee ? 'Réclamer ma fiche' : 'Déposer ma candidature') }}
+            {{ enCours() ? l.t('Envoi…', 'جارٍ الإرسال…') : (ficheReclamee ? l.t('Réclamer ma fiche', 'المطالبة بملفي') : l.t('Déposer ma candidature', 'إيداع ترشحي')) }}
           </button>
         </div>
       </form>
@@ -111,6 +115,7 @@ export class CandidatureMedecinComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private annuaire = inject(AnnuaireService);
   private roles = inject(RoleService);
+  l = inject(LangueService);
 
   /** Listes du referentiel (slugs et codes exacts) : une specialite saisie a la main ne s'afficherait nulle part. */
   readonly specialites = SPECIALITES_SEO.filter((sp) => sp.slug !== 'pharmacie')
@@ -154,7 +159,7 @@ export class CandidatureMedecinComponent implements OnInit {
       },
       error: () => {
         this.ficheReclamee = null;
-        this.erreur.set("La fiche à réclamer est introuvable : vous pouvez déposer une candidature.");
+        this.erreur.set(this.l.t('La fiche à réclamer est introuvable : vous pouvez déposer une candidature.', 'الملف المطلوب غير موجود: يمكنك إيداع ترشح.'));
       },
     });
   }
@@ -176,9 +181,9 @@ export class CandidatureMedecinComponent implements OnInit {
         } else if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set('Accès refusé. Connectez-vous pour envoyer votre demande.');
+          this.erreur.set(this.l.t('Accès refusé. Connectez-vous pour envoyer votre demande.', 'تم رفض الوصول. سجّل الدخول لإرسال طلبك.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Impossible de charger votre candidature.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Impossible de charger votre candidature.', 'تعذّر تحميل ترشحك.'));
         }
       },
     });
@@ -200,7 +205,7 @@ export class CandidatureMedecinComponent implements OnInit {
     };
     this.succes.set('');
     if (!demande.nomComplet || !demande.specialiteSlug || !demande.wilayaCode || !demande.numeroOrdre) {
-      this.erreur.set("Renseignez le nom complet, la spécialité, la wilaya et le numéro d'inscription à l'ordre.");
+      this.erreur.set(this.l.t("Renseignez le nom complet, la spécialité, la wilaya et le numéro d'inscription à l'ordre.", 'أدخل الاسم الكامل والتخصص والولاية ورقم التسجيل في الهيئة.'));
       return;
     }
     this.erreur.set('');
@@ -209,29 +214,40 @@ export class CandidatureMedecinComponent implements OnInit {
       next: (c) => {
         this.enCours.set(false);
         this.afficher(c);
-        this.succes.set('Candidature déposée : elle sera examinée par un administrateur.');
+        this.succes.set(this.l.t('Candidature déposée : elle sera examinée par un administrateur.', 'تم إيداع الترشح: سيفحصه مسؤول.'));
       },
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set("Accès refusé. Votre demande n'a pas pu être envoyée.");
+          this.erreur.set(this.l.t("Accès refusé. Votre demande n'a pas pu être envoyée.", 'تم رفض الوصول. تعذّر إرسال طلبك.'));
         } else if (e.status === 409) {
           // Une candidature est deja en attente ou validee : on l'affiche avec le motif renvoye.
-          this.erreur.set(e.error?.erreur ?? 'Une candidature est déjà en attente ou validée.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Une candidature est déjà en attente ou validée.', 'يوجد ترشح قيد الانتظار أو معتمد بالفعل.'));
           this.service.maCandidature().subscribe({ next: (c) => this.afficher(c), error: () => undefined });
         } else if (e.status === 400) {
-          this.erreur.set(e.error?.erreur ?? 'La candidature est incomplète.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('La candidature est incomplète.', 'الترشح غير مكتمل.'));
         } else {
-          this.erreur.set(e.error?.erreur ?? 'Le dépôt de la candidature a échoué, veuillez réessayer.');
+          this.erreur.set(e.error?.erreur ?? this.l.t('Le dépôt de la candidature a échoué, veuillez réessayer.', 'فشل إيداع الترشح، يرجى إعادة المحاولة.'));
         }
       },
     });
   }
 
   libelleStatut(statut: string): string {
-    return libelleStatutCandidature(statut);
+    return this.l.ar() ? libelleStatutCandidatureAr(statut) : libelleStatutCandidature(statut);
+  }
+
+  /** Specialite de la candidature, en arabe si l'interface l'est (referentiel), sinon libelle francais. */
+  nomSpecialite(c: Candidature): string {
+    const sp = SPECIALITES_SEO.find((s) => s.slug === c.specialiteSlug);
+    return this.l.ar() && sp ? sp.nomAr : c.specialiteFr || c.specialiteSlug;
+  }
+
+  nomWilaya(c: Candidature): string {
+    const w = WILAYAS_SEO.find((x) => x.code === c.wilayaCode);
+    return this.l.ar() && w ? w.nomAr : c.wilayaFr || c.wilayaCode;
   }
 
   /** Affiche la candidature ; le formulaire (prerempli) n'est propose que si elle a ete refusee. */
