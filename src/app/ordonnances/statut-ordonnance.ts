@@ -25,3 +25,8 @@ export function libelleStatutOrdonnanceAr(statut: string | null | undefined): st
   if (!statut) return '';
   return LIBELLES_STATUT_ORDONNANCE_AR[statut.trim().toUpperCase()] ?? libelleStatutGeneriqueAr(statut);
 }
+
+/** Vrai si le statut vaut `valeur` (ex. 'ANNULEE'), sans tenir compte de la casse ni des espaces, comme l'appli. */
+export function estStatutOrdonnance(statut: string | null | undefined, valeur: string): boolean {
+  return (statut ?? '').trim().toUpperCase() === valeur;
+}

@@ -109,4 +109,11 @@ describe('MesOrdonnancesComponent', () => {
       TestBed.inject(LangueService).ar.set(false);
     }
   });
+
+  it('affiche le motif d\'annulation même si le statut est en minuscules, comme l\'appli', async () => {
+    service.mes.and.returnValue(of([{ ...ANNULEE, statut: 'annulee' }]));
+    await afficher();
+
+    expect(fixture.nativeElement.textContent).toContain('Annulée par le médecin : Erreur de dosage');
+  });
 });

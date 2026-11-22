@@ -7,7 +7,7 @@ import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { AuthService } from '../auth/auth.service';
 import { Ordonnance } from '../ordonnances/ordonnance.service';
-import { libelleStatutOrdonnance } from '../ordonnances/statut-ordonnance';
+import { estStatutOrdonnance, libelleStatutOrdonnance } from '../ordonnances/statut-ordonnance';
 import { BadgeStatutOrdonnanceComponent } from '../ordonnances/badge-statut-ordonnance.component';
 import { MedecinService } from './medecin.service';
 import { PatientsService, RepertoirePatients, nomPatient } from './patients.service';
@@ -38,13 +38,13 @@ import { instantLisible } from '../partage/dates-lisibles';
               <span style="color:var(--text3)"><span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.emiseLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span></span>
               <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
                 <app-badge-statut-ordonnance [statut]="o.statut" [arabe]="l.ar()" />
-                <span *ngIf="o.statut === 'ANNULEE' && o.motifAnnulation" style="color:var(--text3);font-size:13px">{{ l.t('Motif :', 'السبب:') }} {{ o.motifAnnulation }}</span>
-                <span *ngIf="o.statut === 'DELIVREE' && dateLisible(o.delivreeLe)" style="color:var(--text3);font-size:13px">{{ l.t('le', 'في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.delivreeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></span>
+                <span *ngIf="est(o.statut, 'ANNULEE') && o.motifAnnulation" style="color:var(--text3);font-size:13px">{{ l.t('Motif :', 'السبب:') }} {{ o.motifAnnulation }}</span>
+                <span *ngIf="est(o.statut, 'DELIVREE') && dateLisible(o.delivreeLe)" style="color:var(--text3);font-size:13px">{{ l.t('le', 'في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.delivreeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></span>
               </span>
             </span>
             <code style="font-size:1rem;letter-spacing:.1em;color:var(--blue-d);background:var(--blue-l);border-radius:999px;padding:4px 12px">{{ o.codeVerification }}</code>
           </a>
-          <div *ngIf="o.statut === 'EMISE'" style="padding:0 16px 14px">
+          <div *ngIf="est(o.statut, 'EMISE')" style="padding:0 16px 14px">
             <button *ngIf="aAnnuler() !== o.id" type="button" class="bouton-secondaire" (click)="demanderAnnulation(o)"
                     [disabled]="enCours() !== null" style="color:var(--red)">{{ l.t('Annuler', 'إلغاء') }}</button>
             <div *ngIf="aAnnuler() === o.id" class="confirmation-annulation"
@@ -111,6 +111,8 @@ export class OrdonnancesRedigeesComponent implements OnInit {
   nom(patientId: string): string {
     return nomPatient(this.repertoire(), patientId, this.l.ar());
   }
+
+  readonly est = estStatutOrdonnance;
 
   libelleStatut(statut: string): string {
     return libelleStatutOrdonnance(statut);

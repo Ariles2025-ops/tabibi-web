@@ -8,6 +8,7 @@ import { AuthService } from '../auth/auth.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { RendezVous, RendezVousService } from '../rendezvous/rendezvous.service';
+import { estHonore } from '../rendezvous/statut-rendez-vous';
 import { AvisService, LONGUEUR_MAX_COMMENTAIRE, NOTE_MAX, NOTE_MIN } from './avis.service';
 
 /** Notes proposees, de 1 a 5. */
@@ -149,7 +150,7 @@ export class DeposerAvisComponent implements OnInit {
   /** Vrai si le rendez-vous est retrouve et n'est pas encore honore : l'avis n'est pas encore possible. */
   nonHonore(): boolean {
     const r = this.rendezVous();
-    return r !== null && r.statut !== 'HONORE';
+    return r !== null && !estHonore(r.statut);
   }
 
   commentaireTropLong(): boolean {

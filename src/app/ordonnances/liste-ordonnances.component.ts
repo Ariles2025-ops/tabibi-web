@@ -2,7 +2,7 @@ import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Ordonnance } from './ordonnance.service';
-import { libelleStatutOrdonnance } from './statut-ordonnance';
+import { estStatutOrdonnance, libelleStatutOrdonnance } from './statut-ordonnance';
 import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.component';
 import { instantLisible } from '../partage/dates-lisibles';
 import { libelleMedecin } from '../messagerie/messagerie.service';
@@ -23,8 +23,8 @@ import { libelleMedecin } from '../messagerie/messagerie.service';
             </span>
             <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
               <app-badge-statut-ordonnance [statut]="o.statut" [arabe]="arabe()" />
-              <span *ngIf="o.statut === 'ANNULEE'" class="info-statut" style="color:var(--red);font-size:13px">{{ arabe() ? 'ألغاها الطبيب' : 'Annulée par le médecin' }}<ng-container *ngIf="o.motifAnnulation"> : {{ o.motifAnnulation }}</ng-container></span>
-              <span *ngIf="o.statut === 'DELIVREE'" class="info-statut" style="color:var(--text2);font-size:13px">{{ arabe() ? 'صُرفت في الصيدلية' : 'Délivrée en pharmacie' }}<ng-container *ngIf="dateLisible(o.delivreeLe)">{{ arabe() ? ' في ' : ' le ' }}<span [attr.dir]="arabe() ? 'ltr' : null">{{ o.delivreeLe | date:(arabe() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></ng-container></span>
+              <span *ngIf="est(o.statut, 'ANNULEE')" class="info-statut" style="color:var(--red);font-size:13px">{{ arabe() ? 'ألغاها الطبيب' : 'Annulée par le médecin' }}<ng-container *ngIf="o.motifAnnulation"> : {{ o.motifAnnulation }}</ng-container></span>
+              <span *ngIf="est(o.statut, 'DELIVREE')" class="info-statut" style="color:var(--text2);font-size:13px">{{ arabe() ? 'صُرفت في الصيدلية' : 'Délivrée en pharmacie' }}<ng-container *ngIf="dateLisible(o.delivreeLe)">{{ arabe() ? ' في ' : ' le ' }}<span [attr.dir]="arabe() ? 'ltr' : null">{{ o.delivreeLe | date:(arabe() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></ng-container></span>
             </span>
           </span>
           <code style="font-size:1rem;letter-spacing:.1em;color:var(--blue-d);background:var(--blue-l);border-radius:999px;padding:4px 12px">{{ o.codeVerification }}</code>
@@ -44,6 +44,8 @@ export class ListeOrdonnancesComponent {
   arabe = input(false);
   /** Nom des praticiens par identifiant (liste du patient) ; null : non affiche. */
   nomsMedecins = input<Partial<Record<string, string>> | null>(null);
+
+  readonly est = estStatutOrdonnance;
 
   libelleStatut(statut: string): string {
     return libelleStatutOrdonnance(statut);
