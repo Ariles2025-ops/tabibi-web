@@ -1,4 +1,4 @@
-import { libelleStatutOrdonnance } from './statut-ordonnance';
+import { estStatutOrdonnance, libelleStatutOrdonnance } from './statut-ordonnance';
 
 describe('libelleStatutOrdonnance', () => {
   it('traduit les statuts connus, sans tenir compte de la casse ni des espaces', () => {
@@ -9,5 +9,14 @@ describe('libelleStatutOrdonnance', () => {
 
   it('rend rien pour un statut absent', () => {
     expect(libelleStatutOrdonnance(null)).toBe('');
+  });
+});
+
+describe('estStatutOrdonnance', () => {
+  it('compare sans tenir compte de la casse ni des espaces', () => {
+    expect(estStatutOrdonnance('annulee', 'ANNULEE')).toBeTrue();
+    expect(estStatutOrdonnance(' Emise ', 'EMISE')).toBeTrue();
+    expect(estStatutOrdonnance('EMISE', 'ANNULEE')).toBeFalse();
+    expect(estStatutOrdonnance(null, 'EMISE')).toBeFalse();
   });
 });
