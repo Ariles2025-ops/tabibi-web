@@ -64,7 +64,10 @@ export class SyntheseAvisComponent implements OnChanges {
     this.erreur.set('');
     this.service.synthese(this.medecinId()).subscribe({
       next: (s) => this.synthese.set(s),
-      error: (e: HttpErrorResponse) => this.erreur.set(e.error?.erreur ?? (this.arabe() ? 'تعذّر تحميل الآراء.' : 'Impossible de charger les avis.')),
+      // Comme l'appli : « Avis indisponibles pour le moment. » ; en arabe, jamais le message français de l'API.
+      error: (e: HttpErrorResponse) => this.erreur.set(this.arabe()
+        ? 'الآراء غير متاحة حاليًا.'
+        : (e.error?.erreur ?? 'Avis indisponibles pour le moment.')),
     });
   }
 }
