@@ -259,7 +259,10 @@ export class CandidatureMedecinComponent implements OnInit {
     }
     const refusee = c.statut === 'REFUSEE';
     this.formulaireVisible.set(refusee);
-    if (refusee) {
+    if (refusee && this.ficheReclamee) {
+      // Reclamation : l'identite vient de la fiche ; on ne reprend que les champs absents de la fiche.
+      this.demande = { ...this.demande, numeroOrdre: c.numeroOrdre, telephone: c.telephone ?? '' };
+    } else if (refusee) {
       this.demande = {
         nomComplet: c.nomComplet,
         specialiteSlug: c.specialiteSlug,
