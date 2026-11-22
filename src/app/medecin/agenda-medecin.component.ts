@@ -9,7 +9,7 @@ import { AuthService } from '../auth/auth.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { RendezVous } from '../rendezvous/rendezvous.service';
-import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from '../rendezvous/statut-rendez-vous';
+import { estAbsent, estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from '../rendezvous/statut-rendez-vous';
 import { TeleconsultationService } from '../teleconsultation/teleconsultation.service';
 import { VISIO_ACTIVE } from '../lancement';
 import { ActionEnCours, estConfirme, peutAnnulerCabinet, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
@@ -62,7 +62,7 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
               style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <strong style="color:var(--ink)"><i class="fa fa-clock fa-xs" style="color:var(--blue)"></i> {{ r.debut | date:'HH:mm' }}</strong>
-              <span class="badge-statut" [style.background]="r.statut === 'ABSENT' ? 'var(--red-l)' : 'var(--blue-l)'" [style.color]="r.statut === 'ABSENT' ? 'var(--red)' : 'var(--blue-d)'"
+              <span class="badge-statut" [style.background]="estAbsent(r.statut) ? 'var(--red-l)' : 'var(--blue-l)'" [style.color]="estAbsent(r.statut) ? 'var(--red)' : 'var(--blue-d)'"
                     style="display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span><br>
               <span style="color:var(--text2)"><i class="fa fa-user fa-xs"></i> {{ r.nomPatient || nom(r.patientId) }}</span>
               <a *ngIf="r.telephonePatient || telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">
@@ -220,6 +220,7 @@ export class AgendaMedecinComponent implements OnInit {
 
   /** CONFIRME ou RESERVE : actions proposees (voir agenda-utils). */
   estConfirme = estConfirme;
+  estAbsent = estAbsent;
 
   peutAnnulerCabinet(r: RendezVous): boolean {
     return peutAnnulerCabinet(r, Date.now());
