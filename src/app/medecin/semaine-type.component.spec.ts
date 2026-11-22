@@ -49,7 +49,7 @@ describe('SemaineTypeComponent', () => {
     const corps: SemaineType = appel.calls.mostRecent().args[0];
     expect(corps).toEqual({ jours: ['LUNDI', 'MERCREDI'], debut: '09:00', fin: '12:30', dureeMinutes: 20, aPartirDu: '2026-11-23', nombreSemaines: 4 });
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('12 créneaux créés, 2 ignorés');
+    expect(fixture.nativeElement.textContent).toContain('12 créneaux créés ; 2 ignorés (horaire déjà passé ou créneau déjà ouvert à ce moment).');
   });
 
   it('affiche le resultat en arabe quand la langue est l arabe', async () => {
