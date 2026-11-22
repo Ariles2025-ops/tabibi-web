@@ -5,6 +5,7 @@ import { catchError, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { RoleService } from '../auth/role.service';
 import { instantLisible } from '../partage/dates-lisibles';
 import { LangueService } from '../partage/langue.service';
 import { WILAYAS_SEO } from '../seo/referentiel-seo';
@@ -42,7 +43,10 @@ function formulaireVide(): DemandeProfil {
     <main style="max-width:640px;margin:32px auto;padding:0 16px" [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
       <p style="margin:0 0 16px"><a routerLink="/moi" style="color:var(--vert)">{{ l.t('Retour à mon compte', 'العودة إلى حسابي') }}</a></p>
       <h1 style="color:var(--vert);margin:0 0 8px">{{ l.t('Mon profil', 'ملفي الشخصي') }}</h1>
-      <p style="color:var(--text3);margin:0 0 20px">
+      <p *ngIf="estPharmacie()" class="profil-intro-pharmacie" style="color:var(--text3);margin:0 0 20px">
+        {{ l.t('Le nom de votre pharmacie est montré aux patients dans vos réponses ; la wilaya sert à afficher les demandes de votre zone. Seul le nom de la pharmacie est obligatoire.', 'يظهر اسم صيدليتك للمرضى في ردودك ؛ وتُستعمل الولاية لعرض الطلبات الواردة من منطقتك. اسم الصيدلية وحده إجباري.') }}
+      </p>
+      <p *ngIf="!estPharmacie()" style="color:var(--text3);margin:0 0 20px">
         {{ l.t('Ces informations servent aux praticiens et aux rappels de rendez-vous. Seul le nom complet est obligatoire.', 'تُستعمل هذه المعلومات من طرف الأطباء ولتذكيرات المواعيد. الاسم الكامل وحده إجباري.') }}
       </p>
 
@@ -53,9 +57,9 @@ function formulaireVide(): DemandeProfil {
 
         <form *ngIf="!charge() && !erreurChargement()" (ngSubmit)="enregistrer()" style="display:grid;gap:12px">
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
-            {{ l.t('Nom complet *', 'الاسم الكامل *') }}
+            {{ estPharmacie() ? l.t('Nom de la pharmacie *', 'اسم الصيدلية *') : l.t('Nom complet *', 'الاسم الكامل *') }}
             <input class="champ" [(ngModel)]="formulaire.nomComplet" name="nomComplet" required [maxlength]="longueurMaxNom"
-                   [placeholder]="l.t('Ex. Amina Belkacem', 'مثال: أمينة بلقاسم')" style="color:var(--tbi-ink);font-size:1rem">
+                   [placeholder]="estPharmacie() ? l.t('Ex. Pharmacie El Amel', 'مثال: صيدلية الأمل') : l.t('Ex. Amina Belkacem', 'مثال: أمينة بلقاسم')" style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
             <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
@@ -63,7 +67,7 @@ function formulaireVide(): DemandeProfil {
               <input class="champ" [(ngModel)]="formulaire.telephone" name="telephone" type="tel" placeholder="0550 12 34 56" dir="ltr"
                      style="color:var(--tbi-ink);font-size:1rem">
             </label>
-            <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
+            <label *ngIf="!estPharmacie()" style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
               {{ l.t('Date de naissance', 'تاريخ الميلاد') }}
               <input class="champ" [(ngModel)]="formulaire.dateNaissance" name="dateNaissance" type="date" [max]="hier" [min]="dateMin"
                      style="color:var(--tbi-ink);font-size:1rem">
@@ -84,7 +88,7 @@ function formulaireVide(): DemandeProfil {
             </label>
           </div>
           <p style="color:var(--text3);font-size:.9rem;margin:0">{{ l.t('* Champ obligatoire.', '* حقل إجباري.') }}</p>
-          <p class="profil-confidentialite" style="color:var(--text3);font-size:.9rem;margin:0">{{ l.t('Ces informations ne sont visibles que de vous et des praticiens que vous consultez.', 'هذه المعلومات لا يراها إلا أنت والأطباء الذين تستشيرهم.') }}</p>
+          <p *ngIf="!estPharmacie()" class="profil-confidentialite" style="color:var(--text3);font-size:.9rem;margin:0">{{ l.t('Ces informations ne sont visibles que de vous et des praticiens que vous consultez.', 'هذه المعلومات لا يراها إلا أنت والأطباء الذين تستشيرهم.') }}</p>
           <p *ngIf="succes()" style="color:var(--vert);margin:0">{{ succes() }}</p>
           <p *ngIf="erreur()" style="color:#b3261e;margin:0">{{ erreur() }}</p>
           <div>
@@ -107,6 +111,9 @@ export class ProfilComponent implements OnInit {
   private auth = inject(AuthService);
   private service = inject(ProfilService);
   private http = inject(HttpClient);
+  private roles = inject(RoleService);
+  /** Role PHARMACIE : textes et champs adaptes (nom affiche aux patients, pas de date de naissance). */
+  estPharmacie = this.roles.estPharmacie;
 
   /** null tant que l'etat de connexion n'est pas connu. */
   connecte = signal<boolean | null>(null);
@@ -138,6 +145,7 @@ export class ProfilComponent implements OnInit {
       .get<{ wilayas?: { code: string; nom: string }[] }>('/assets/referentiel.json')
       .pipe(catchError(() => of({ wilayas: [] })))
       .subscribe((ref) => this.wilayas.set(ref?.wilayas ?? []));
+    void this.roles.charger();
     await this.auth.pret();
     const connecte = this.auth.estConnecte();
     this.connecte.set(connecte);
