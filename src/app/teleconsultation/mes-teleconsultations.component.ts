@@ -40,7 +40,7 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
           <li *ngFor="let t of teleconsultations()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
               <div>
-                <strong *ngIf="dateLisible(datesRendezVous()[t.rendezVousId]) && datesRendezVous()[t.rendezVousId] as debut">{{ l.t('Rendez-vous du', 'موعد يوم') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ debut | date:formatDate() }}</span></strong>
+                <strong *ngIf="dateLisible(datesRendezVous()[t.rendezVousId]) && datesRendezVous()[t.rendezVousId] as debut">{{ l.t('Rendez-vous le', 'الموعد في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ debut | date:formatDate() }}</span></strong>
                 <strong *ngIf="!dateLisible(datesRendezVous()[t.rendezVousId]) && dateLisible(t.creeLe)">{{ l.t('Téléconsultation proposée le', 'استشارة عن بُعد اقتُرحت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ t.creeLe | date:formatDate() }}</span></strong>
                 <strong *ngIf="!dateLisible(datesRendezVous()[t.rendezVousId]) && !dateLisible(t.creeLe)">{{ l.t('Téléconsultation · date inconnue', 'استشارة عن بُعد · تاريخ غير معروف') }}</strong>
                 <br>
@@ -54,7 +54,7 @@ const RETARD_MS = 2 * 60 * 60 * 1000;
                 </a>
                 <span *ngIf="fenetre(t) !== 'ouverte'" style="display:grid;gap:4px;justify-items:end">
                   <button type="button" class="bouton" disabled>{{ l.t('Rejoindre la téléconsultation', 'الانضمام إلى الاستشارة عن بُعد') }}</button>
-                  <small style="color:var(--text3)">{{ fenetre(t) === 'avant' ? l.t('Disponible 15 min avant le rendez-vous', 'متاحة قبل الموعد بـ 15 دقيقة') : l.t('Le créneau de cette téléconsultation est passé', 'انقضى موعد هذه الاستشارة عن بُعد') }}</small>
+                  <small style="color:var(--text3)">{{ fenetre(t) === 'avant' ? l.t('Disponible 15 min avant le rendez-vous', 'متاحة قبل الموعد بـ 15 دقيقة') : l.t('Le créneau de ce rendez-vous est passé', 'انتهى وقت هذا الموعد') }}</small>
                 </span>
               </ng-container>
             </div>
@@ -129,7 +129,7 @@ export class MesTeleconsultationsComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.l.t('Cette page est réservée aux patients.', 'هذه الصفحة مخصصة للمرضى.'));
+          this.erreur.set(this.l.t('Cette page est réservée aux patients.', 'هذه الصفحة مخصّصة للمرضى.'));
         } else {
           this.erreur.set(e.error?.erreur ?? this.l.t('Impossible de charger vos téléconsultations.', 'تعذّر تحميل استشاراتك عن بُعد.'));
         }

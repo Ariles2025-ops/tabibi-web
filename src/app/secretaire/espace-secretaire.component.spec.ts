@@ -435,7 +435,7 @@ describe('EspaceSecretaireComponent', () => {
     it("refuse en arabe un compte qui n'est pas secretaire (403)", async () => {
       service.mesMedecins.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
       await afficher();
-      expect(texte()).toContain('هذه الصفحة مخصصة للسكرتارية.');
+      expect(texte()).toContain('هذه الصفحة مخصّصة للسكرتارية.');
     });
   });
 });
