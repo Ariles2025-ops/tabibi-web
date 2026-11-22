@@ -72,4 +72,26 @@ describe('VerifierOrdonnanceComponent', () => {
     expect(el.textContent).toContain('منتهية الصلاحية');
     expect(el.textContent).not.toContain('Expirée');
   });
+
+  it('version arabe : « صرف » (comme l\'appli et l\'espace pharmacie), jamais « تسليم »', async () => {
+    for (const statut of ['DELIVREE', 'ANNULEE', 'EXPIREE']) {
+      TestBed.resetTestingModule();
+      const service = jasmine.createSpyObj<OrdonnanceService>('OrdonnanceService', ['verifier']);
+      service.verifier.and.returnValue(of({ valide: true, emiseLe: '2026-01-18T10:00:00Z', statut, delivreeLe: '2026-01-20T10:00:00Z' }));
+      TestBed.configureTestingModule({
+        imports: [VerifierOrdonnanceComponent],
+        providers: [provideRouter([]), { provide: OrdonnanceService, useValue: service },
+          { provide: ActivatedRoute, useValue: { snapshot: { data: { langue: 'ar' } }, queryParamMap: of({ get: () => null }) } }],
+      });
+      const fixture = TestBed.createComponent(VerifierOrdonnanceComponent);
+      fixture.componentInstance.code = 'AB12CD34';
+      fixture.componentInstance.verifier();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const texte = (fixture.nativeElement as HTMLElement).textContent ?? '';
+      expect(texte).toContain('لا تصرفها');
+      expect(texte).not.toMatch(/تسليم|سُلّمت/);
+    }
+  });
 });
