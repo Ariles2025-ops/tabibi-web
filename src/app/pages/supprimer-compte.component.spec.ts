@@ -58,6 +58,20 @@ describe('Suppression de compte : libelles identiques a l\'appli', () => {
     expect(page.querySelector('a[href="/supprimer-mon-compte"]')?.textContent).toContain('Français');
   });
 
+  it('la page décrit ce que fait l\'API : rendez-vous à venir annulés, passés conservés sans lien, note des avis, médecins', () => {
+    const fr = pageSuppression().textContent ?? '';
+    expect(fr).toContain('Vos rendez-vous à venir sont annulés');
+    expect(fr).toContain("Vos rendez-vous passés, sans aucun lien avec vous, dans l'agenda du médecin");
+    expect(fr).toContain('La note (sans commentaire) de vos avis');
+    expect(fr).toContain('votre fiche publique est retirée');
+    TestBed.resetTestingModule();
+    const ar = pageSuppression('ar').textContent ?? '';
+    expect(ar).toContain('تُلغى مواعيدك القادمة');
+    expect(ar).toContain('مواعيدك السابقة، دون أي صلة بك، في أجندة الطبيب');
+    expect(ar).toContain('دون التعليق');
+    expect(ar).toContain('تُسحب بطاقتك العامة');
+  });
+
   it('la page française propose le lien vers la version arabe', () => {
     const page = pageSuppression();
     expect(page.querySelector('a[href="/ar/supprimer-mon-compte"]')).not.toBeNull();

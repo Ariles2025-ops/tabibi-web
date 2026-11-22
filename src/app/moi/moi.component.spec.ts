@@ -286,7 +286,16 @@ describe('MoiComponent', () => {
   it('annonce la conservation légale des ordonnances, comme la page de suppression et l\'appli', async () => {
     await afficher();
 
-    expect(texte()).toContain('Seules les ordonnances et le journal de sécurité sont conservés le temps exigé par la loi');
+    expect(texte()).toContain('Les ordonnances et le journal de sécurité sont conservés le temps exigé par la loi');
+  });
+
+  it('dit que les rendez-vous passés et la note des avis sont conservés, et que les rendez-vous à venir sont annulés', async () => {
+    await afficher();
+
+    expect(texte()).toContain('vos rendez-vous à venir sont annulés');
+    expect(texte()).toContain("Vos rendez-vous passés restent, sans aucun lien avec vous, dans l'agenda du médecin");
+    expect(texte()).toContain('la note (sans commentaire) de vos avis est conservée');
+    expect(texte()).not.toContain('(profil, rendez-vous,');
   });
 
   describe('en arabe (comme l\'appli)', () => {
