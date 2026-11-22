@@ -152,6 +152,14 @@ describe('MoiComponent', () => {
     for (const l of ['/messagerie', '/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).not.toBeNull();
   });
 
+  it('propose « Mes avis », « Mes listes d\'attente » et Dawini aux rôles professionnels aussi, comme « Mon compte » de l\'appli', async () => {
+    for (const role of ['MEDECIN', 'SECRETAIRE', 'PHARMACIE', 'ADMIN']) {
+      moi.set({ ...PROFIL, roles: [role] });
+      await afficher();
+      for (const l of ['/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).withContext(role + ' ' + l).not.toBeNull();
+    }
+  });
+
   it('nomme l\'entrée Dawini « Dawini (pharmacies) » / « داويني (الصيدليات) », comme « Mon compte » de l\'appli', async () => {
     moi.set({ ...PROFIL, roles: ['PATIENT'] });
     await afficher();
