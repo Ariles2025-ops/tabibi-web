@@ -38,8 +38,8 @@ import { InscriptionAttente, ListeAttenteService, instantInscription, trierParIn
             <div>
               <a [routerLink]="['/medecins', i.medecinId]" style="color:var(--vert);font-weight:600">{{ noms()[i.medecinId] ?? libelleMedecin(i.medecinId, l.ar()) }}</a><br>
               <span style="color:var(--text3)" *ngIf="!date(i)">{{ l.t("Date d'inscription inconnue", 'تاريخ التسجيل غير معروف') }}</span>
-              <span style="color:var(--text3)" *ngIf="date(i) && !l.ar()">Inscrit le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
-              <span style="color:var(--text3)" *ngIf="date(i) && l.ar()">التسجيل في <span dir="ltr">{{ i.inscritLe | date:'dd/MM/yyyy HH:mm' }}</span></span>
+              <span style="color:var(--text3)" *ngIf="date(i) && !l.ar()">Inscription le {{ i.inscritLe | date:'d MMMM yyyy à HH:mm' }}</span>
+              <span style="color:var(--text3)" *ngIf="date(i) && l.ar()">سُجّل في <span dir="ltr">{{ i.inscritLe | date:'dd/MM/yyyy HH:mm' }}</span></span>
             </div>
             <button *ngIf="aConfirmer() !== i.id" type="button" (click)="aConfirmer.set(i.id)" [disabled]="enCours() !== null"
                     style="padding:10px 16px;background:#fff;color:#b3261e;border:1px solid #b3261e;border-radius:8px;font:inherit;cursor:pointer">
