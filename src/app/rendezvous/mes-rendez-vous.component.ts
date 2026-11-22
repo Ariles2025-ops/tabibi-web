@@ -11,7 +11,7 @@ import { DeplacerRendezVousComponent } from './deplacer-rendez-vous.component';
 import { LangueService } from '../partage/langue.service';
 import { libelleMedecin } from '../messagerie/messagerie.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
-import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from './statut-rendez-vous';
+import { estAbsent, estAnnule, estConfirme, estHonore, libelleStatutRendezVous, libelleStatutRendezVousAr } from './statut-rendez-vous';
 
 @Component({
     selector: 'app-mes-rendez-vous',
@@ -58,7 +58,7 @@ import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from '.
                   <span class="mr-quand" *ngIf="!l.ar()"><span class="mr-cap">{{ r.debut | date:'EEEE d MMMM' }}</span> à {{ r.debut | date:'HH:mm' }}</span>
                   <span class="mr-quand" *ngIf="l.ar()" dir="ltr">{{ r.debut | date:'dd/MM/yyyy HH:mm' }}</span>
                   <a [routerLink]="['/medecins', r.medecinId]" class="mr-doc">{{ noms()[r.medecinId] ?? libelleMedecin(r.medecinId, l.ar()) }}</a>
-                  <span class="mr-statut" [class.mr-statut--ok]="r.statut === 'CONFIRME' || r.statut === 'RESERVE'">{{ libelleStatut(r.statut) }}</span>
+                  <span class="mr-statut" [class.mr-statut--ok]="estConfirme(r.statut)">{{ libelleStatut(r.statut) }}</span>
                 </div>
                 <div class="mr-actions">
                   <ng-container *ngIf="aConfirmer() !== r.id">
@@ -94,11 +94,11 @@ import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from '.
                   <span class="mr-quand" *ngIf="!l.ar()"><span class="mr-cap">{{ r.debut | date:'EEEE d MMMM y' }}</span> à {{ r.debut | date:'HH:mm' }}</span>
                   <span class="mr-quand" *ngIf="l.ar()" dir="ltr">{{ r.debut | date:'dd/MM/yyyy HH:mm' }}</span>
                   <a [routerLink]="['/medecins', r.medecinId]" class="mr-doc">{{ noms()[r.medecinId] ?? libelleMedecin(r.medecinId, l.ar()) }}</a>
-                  <span class="mr-statut" [class.mr-statut--annule]="estAnnule(r.statut) || r.statut === 'ABSENT'">{{ libelleStatutPasse(r) }}</span>
+                  <span class="mr-statut" [class.mr-statut--annule]="estAnnule(r.statut) || estAbsent(r.statut)">{{ libelleStatutPasse(r) }}</span>
                 </div>
                 <div class="mr-actions">
-                  <a *ngIf="r.statut === 'HONORE' && !avisDonne(r)" class="mr-btn mr-btn--sec" [routerLink]="['/avis/nouveau', r.id]"><i class="fa fa-star fa-xs"></i> {{ l.t('Donner mon avis', 'أبدِ رأيك') }}</a>
-                  <span *ngIf="r.statut === 'HONORE' && avisDonne(r)" class="mr-avis-ok"><i class="fa fa-circle-check fa-xs"></i> {{ l.t('Avis donné', 'تم تقديم الرأي') }}</span>
+                  <a *ngIf="estHonore(r.statut) && !avisDonne(r)" class="mr-btn mr-btn--sec" [routerLink]="['/avis/nouveau', r.id]"><i class="fa fa-star fa-xs"></i> {{ l.t('Donner mon avis', 'أبدِ رأيك') }}</a>
+                  <span *ngIf="estHonore(r.statut) && avisDonne(r)" class="mr-avis-ok"><i class="fa fa-circle-check fa-xs"></i> {{ l.t('Avis donné', 'تم تقديم الرأي') }}</span>
                   <a [routerLink]="['/medecins', r.medecinId]" class="mr-btn mr-btn--sec">{{ l.t('Reprendre rendez-vous', 'احجز موعدًا جديدًا') }}</a>
                 </div>
               </li>
@@ -279,16 +279,21 @@ export class MesRendezVousComponent implements OnInit {
   }
 
   private estAVenir(rdv: RendezVous): boolean {
-    return !estAnnule(rdv.statut) && rdv.statut !== 'HONORE' && rdv.statut !== 'ABSENT' && Date.parse(rdv.debut) >= Date.now();
+    // Comme l'appli : une date illisible n'exclut pas le rendez-vous des « À venir ».
+    const debut = Date.parse(rdv.debut);
+    return this.peutAnnuler(rdv) && (Number.isNaN(debut) || debut >= Date.now());
   }
 
   /** Un rendez-vous deja annule, honore ou marque absent (consultation passee) ne s'annule plus. */
   peutAnnuler(rdv: RendezVous): boolean {
-    return !estAnnule(rdv.statut) && rdv.statut !== 'HONORE' && rdv.statut !== 'ABSENT';
+    return !estAnnule(rdv.statut) && !estHonore(rdv.statut) && !estAbsent(rdv.statut);
   }
 
   /** Utilisable dans le gabarit. */
   readonly estAnnule = estAnnule;
+  readonly estConfirme = estConfirme;
+  readonly estAbsent = estAbsent;
+  readonly estHonore = estHonore;
 
   libelleStatut(statut: string): string {
     return this.l.ar() ? libelleStatutRendezVousAr(statut) : libelleStatutRendezVous(statut);
@@ -299,8 +304,8 @@ export class MesRendezVousComponent implements OnInit {
    * « Non honoré » pour ABSENT (libelle neutre). Les agendas medecin / secretaire gardent « Honoré » / « Absent ».
    */
   libelleStatutPasse(rdv: RendezVous): string {
-    if (rdv.statut === 'CONFIRME' || rdv.statut === 'RESERVE' || rdv.statut === 'HONORE') return this.l.t('Terminé', 'منتهٍ');
-    if (rdv.statut === 'ABSENT') return this.l.t('Non honoré', 'لم يتم الحضور');
+    if (estConfirme(rdv.statut) || estHonore(rdv.statut)) return this.l.t('Terminé', 'منتهٍ');
+    if (estAbsent(rdv.statut)) return this.l.t('Non honoré', 'لم يتم الحضور');
     return this.libelleStatut(rdv.statut);
   }
 
@@ -320,7 +325,7 @@ export class MesRendezVousComponent implements OnInit {
 
   /** Lit mes avis (s'il y a au moins un rendez-vous honore) pour ne proposer « Donner mon avis » qu'une fois. */
   private chargerAvis(liste: RendezVous[]) {
-    if (!liste.some((r) => r.statut === 'HONORE')) return;
+    if (!liste.some((r) => estHonore(r.statut))) return;
     this.avis.mes().subscribe({
       next: (avis) => this.rendezVousNotes.set(new Set(avis.map((a) => a.rendezVousId))),
       error: () => undefined,
