@@ -31,6 +31,13 @@ export interface Candidature {
   ficheReclameeNom?: string | null;
   /** Nombre d'autres candidatures portant le meme numero d'ordre. */
   doublonsNumeroOrdre?: number;
+  /** Vrai si le medecin d'une candidature validee est suspendu (fiche retiree) ; absent = non suspendu. */
+  suspendu?: boolean;
+}
+
+/** Reponse de la suspension d'un medecin ; le nombre de rendez-vous annules est donne s'il est connu. */
+export interface ResultatSuspension {
+  rendezVousAnnules?: number;
 }
 
 /** Donnees du depot d'une candidature (POST /api/medecin/candidature, role MEDECIN). */
@@ -139,6 +146,16 @@ export class AdminService {
   /** Refus motive : le medecin est prevenu du motif (400 sans motif, 404, 409 si deja traitee). */
   refuser(id: string, motif: string): Observable<Candidature> {
     return this.http.post<Candidature>(`${this.base}/api/admin/candidatures/${id}/refuser`, { motif });
+  }
+
+  /** Suspend le medecin (motif obligatoire, ses rendez-vous a venir sont annules ; 400 sans motif, 404, 409). */
+  suspendre(medecinId: string, motif: string): Observable<ResultatSuspension | null> {
+    return this.http.post<ResultatSuspension | null>(`${this.base}/api/admin/medecins/${medecinId}/suspendre`, { motif });
+  }
+
+  /** Retablit un medecin suspendu (404 si inconnu). */
+  retablir(medecinId: string): Observable<unknown> {
+    return this.http.post<unknown>(`${this.base}/api/admin/medecins/${medecinId}/retablir`, null);
   }
 
   /** Demandes praticien deposees depuis le site, filtrees par statut si demande. */
