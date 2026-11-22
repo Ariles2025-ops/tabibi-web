@@ -113,8 +113,11 @@ export class MoiComponent implements OnInit {
       libelle: VISIO_ACTIVE ? t('Téléconsultations', 'الاستشارات عن بُعد') : t('Téléconsultation', 'الاستشارة عن بُعد'),
       badge: VISIO_ACTIVE ? undefined : t('Bientôt', 'قريبًا'),
     };
+    // Comme « Mon espace » de l'appli : un compte à plusieurs rôles professionnels retrouve chacun de ses espaces
+    // (médecin, secrétaire, pharmacie), pas seulement le premier.
+    const espaces: Raccourci[] = [];
     if (r.includes('MEDECIN')) {
-      return [
+      espaces.push(
         { lien: '/medecin/agenda', libelle: t('Mon agenda', 'المواعيد') },
         { lien: '/medecin/disponibilites', libelle: t('Disponibilités', 'الأوقات المتاحة') },
         // Comme « Mon espace » de l'appli : ordonnances rédigées, liste d'attente, avis et secrétaires du médecin.
@@ -124,16 +127,24 @@ export class MoiComponent implements OnInit {
         { lien: '/medecin/secretaires', libelle: t('Mes secrétaires', 'سكرتيراتي') },
         // Comme « Ma fiche » de « Mon espace » dans l'appli : visible seulement si la route de l'API existe (sonde faite par le menu).
         ...(this.apiDisponible.ficheMedecin() ? [{ lien: '/medecin/ma-fiche', libelle: t('Ma fiche', 'صفحتي') }] : []),
+      );
+    }
+    if (r.includes('SECRETAIRE')) espaces.push({ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') });
+    if (r.includes('PHARMACIE')) espaces.push({ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') });
+    if (r.includes('ADMIN')) espaces.push({ lien: '/admin', libelle: t('Administration', 'الإدارة') });
+    if (espaces.length > 0) {
+      return [
+        ...espaces,
         messagerie,
         visio,
         verifier,
+        // Comme « Cabinet » de « Mon espace » dans l'appli : les invitations de cabinet sont ouvertes à tous les rôles.
+        invitations,
+        ...(r.includes('MEDECIN') || !(r.includes('SECRETAIRE') || r.includes('PHARMACIE')) ? [] : [candidature]),
         profil,
         notifications,
       ];
     }
-    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, messagerie, visio, verifier, candidature, profil, notifications];
-    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, messagerie, visio, verifier, candidature, profil, notifications];
-    if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: t('Administration', 'الإدارة') }, messagerie, visio, verifier, profil, notifications];
     // Patient : « Mon activité » et « Services » de « Mon compte » de l'appli (messagerie, avis, listes d'attente, Dawini).
     return [
       profil,

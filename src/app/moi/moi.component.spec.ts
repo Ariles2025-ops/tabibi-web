@@ -105,6 +105,27 @@ describe('MoiComponent', () => {
     expect(lien('/mes-rendez-vous')).toBeNull();
   });
 
+  it('un compte à plusieurs rôles professionnels retrouve chacun de ses espaces, comme « Mon espace » de l\'appli', async () => {
+    moi.set({ ...PROFIL, roles: ['PATIENT', 'MEDECIN', 'SECRETAIRE', 'PHARMACIE', 'ADMIN'] });
+    await afficher();
+    for (const l of ['/medecin/agenda', '/secretaire', '/pharmacie', '/admin', '/messagerie', '/verifier', '/invitations']) expect(lien(l)).not.toBeNull();
+    expect(lien('/medecin/candidature')).toBeNull(); // déjà médecin
+    expect(lien('/mes-rendez-vous')).toBeNull();
+
+    moi.set({ ...PROFIL, roles: ['SECRETAIRE', 'PHARMACIE'] });
+    await afficher();
+    for (const l of ['/secretaire', '/pharmacie', '/medecin/candidature']) expect(lien(l)).not.toBeNull();
+    expect(lien('/medecin/agenda')).toBeNull();
+  });
+
+  it('propose « Invitations de cabinet » à tous les rôles, comme l\'appli', async () => {
+    for (const role of ['MEDECIN', 'SECRETAIRE', 'PHARMACIE', 'ADMIN', 'PATIENT']) {
+      moi.set({ ...PROFIL, roles: [role] });
+      await afficher();
+      expect(lien('/invitations')).withContext(role).not.toBeNull();
+    }
+  });
+
   it('propose « Ma fiche » au médecin seulement quand la route de l\'API existe, comme « Mon espace » de l\'appli', async () => {
     const api = TestBed.inject(ApiDisponibleService);
     moi.set({ ...PROFIL, roles: ['MEDECIN'] });
