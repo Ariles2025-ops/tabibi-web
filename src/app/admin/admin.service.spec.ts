@@ -80,6 +80,19 @@ describe('AdminService', () => {
     expect(recu?.motifRefus).toBe('Numéro d’ordre invalide');
   });
 
+  it('suspend par POST /api/admin/medecins/{id}/suspendre avec { motif } puis rétablit', () => {
+    service.suspendre('m1', 'Fiche litigieuse').subscribe();
+    const a = http.expectOne(`${BASE}/api/admin/medecins/m1/suspendre`);
+    expect(a.request.method).toBe('POST');
+    expect(a.request.body).toEqual({ motif: 'Fiche litigieuse' });
+    a.flush(null);
+
+    service.retablir('m1').subscribe();
+    const b = http.expectOne(`${BASE}/api/admin/medecins/m1/retablir`);
+    expect(b.request.method).toBe('POST');
+    b.flush(null);
+  });
+
   it('lit les statistiques sur GET /api/admin/statistiques', () => {
     let recu: StatistiquesAdministration | undefined;
     service.statistiques().subscribe((s) => (recu = s));

@@ -44,7 +44,7 @@ describe('CandidaturesAdminComponent', () => {
 
   beforeEach(() => {
     registerLocaleData(localeFr);
-    service = jasmine.createSpyObj<AdminService>('AdminService', ['candidatures', 'valider', 'refuser']);
+    service = jasmine.createSpyObj<AdminService>('AdminService', ['candidatures', 'valider', 'refuser', 'suspendre', 'retablir']);
     service.candidatures.and.returnValue(of([EN_ATTENTE]));
 
     TestBed.configureTestingModule({
@@ -98,6 +98,42 @@ describe('CandidaturesAdminComponent', () => {
     expect(bouton('Valider')!.disabled).toBeFalse();
     // Le motif est obligatoire : « Refuser » reste desactive tant qu'il est vide.
     expect(bouton('Refuser')!.disabled).toBeTrue();
+  });
+
+  it('suspend un médecin validé : motif obligatoire, confirmation, puis appel avec medecinId', async () => {
+    const validee: Candidature = { ...EN_ATTENTE, statut: 'VALIDEE', traiteeLe: '2026-09-18T12:00:00Z', suspendu: false };
+    service.candidatures.and.returnValue(of([validee]));
+    service.suspendre.and.returnValue(of(null));
+    await afficher();
+
+    expect(bouton('Suspendre')!.disabled).toBeTrue();
+    await saisirMotif('Fiche litigieuse');
+    bouton('Suspendre')!.click();
+    await afficher();
+    expect(texte()).toContain('ses rendez-vous à venir seront annulés');
+
+    service.candidatures.and.returnValue(of([{ ...validee, suspendu: true }]));
+    bouton('Oui, suspendre')!.click();
+    await afficher();
+
+    expect(service.suspendre).toHaveBeenCalledWith('m1', 'Fiche litigieuse');
+    expect(texte()).toContain('Suspendu');
+    expect(bouton('Rétablir')).toBeDefined();
+  });
+
+  it('rétablit un médecin suspendu après confirmation', async () => {
+    const suspendue: Candidature = { ...EN_ATTENTE, statut: 'VALIDEE', suspendu: true };
+    service.candidatures.and.returnValue(of([suspendue]));
+    service.retablir.and.returnValue(of(null));
+    await afficher();
+
+    expect(texte()).toContain('Suspendu');
+    bouton('Rétablir')!.click();
+    await afficher();
+    bouton('Oui, rétablir')!.click();
+    await afficher();
+
+    expect(service.retablir).toHaveBeenCalledWith('m1');
   });
 
   it('filtre par statut : les refusees affichent le motif, sans bouton', async () => {
