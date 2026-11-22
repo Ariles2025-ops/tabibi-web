@@ -115,6 +115,11 @@ export class MoiComponent implements OnInit {
     };
     // Comme « Mon espace » de l'appli : un compte à plusieurs rôles professionnels retrouve chacun de ses espaces
     // (médecin, secrétaire, pharmacie), pas seulement le premier.
+    // Comme « Mon activité » et « Services » de « Mon compte » de l'appli : un professionnel est aussi patient, il garde
+    // ses avis, ses listes d'attente et Dawini (la page existe sur le site mais n'était proposée qu'aux patients).
+    const mesAvis = { lien: '/mes-avis', libelle: t('Mes avis', 'آرائي') };
+    const listesAttente = { lien: '/liste-attente', libelle: t("Mes listes d'attente", 'قوائم الانتظار') };
+    const dawini = { lien: '/dawini', libelle: t('Dawini (pharmacies)', 'داويني (الصيدليات)') };
     const espaces: Raccourci[] = [];
     if (r.includes('MEDECIN')) {
       espaces.push(
@@ -137,6 +142,9 @@ export class MoiComponent implements OnInit {
         ...espaces,
         messagerie,
         visio,
+        mesAvis,
+        listesAttente,
+        dawini,
         verifier,
         // Comme « Cabinet » de « Mon espace » dans l'appli : les invitations de cabinet sont ouvertes à tous les rôles.
         invitations,
@@ -152,9 +160,9 @@ export class MoiComponent implements OnInit {
       { lien: '/mes-ordonnances', libelle: t('Mes ordonnances', 'وصفاتي الطبية') },
       messagerie,
       visio,
-      { lien: '/mes-avis', libelle: t('Mes avis', 'آرائي') },
-      { lien: '/liste-attente', libelle: t("Mes listes d'attente", 'قوائم الانتظار') },
-      { lien: '/dawini', libelle: t('Dawini (pharmacies)', 'داويني (الصيدليات)') },
+      mesAvis,
+      listesAttente,
+      dawini,
       verifier,
       invitations,
       candidature,
