@@ -165,7 +165,7 @@ export class ReponsesDemandeComponent implements OnInit {
   }
 
   prix(prixDa: number | null): string {
-    return formaterPrix(prixDa);
+    return formaterPrix(prixDa, this.l.ar());
   }
 
   /** Retrouve la demande dans mes demandes (statut, bouton de cloture) ; a defaut, seules les reponses s'affichent. */

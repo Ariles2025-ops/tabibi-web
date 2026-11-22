@@ -221,6 +221,8 @@ describe('ReponsesDemandeComponent', () => {
       expect(items[0].textContent).toContain('غير متوفر');
       expect(items[1].textContent).toContain('متوفر');
       expect(items[1].textContent).not.toContain('Disponible ·');
+      expect(items[1].textContent).toContain('1 250 دج');
+      expect(items[1].textContent).not.toContain('DA');
       expect(texte()).not.toContain('Indisponible');
       const bouton = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.includes('إغلاق الطلب'));
       expect(bouton).toBeDefined();
