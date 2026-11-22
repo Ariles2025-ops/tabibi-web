@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { Meta } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AnnuaireSeoComponent, dePlace } from './annuaire-seo.component';
@@ -10,10 +11,10 @@ describe('AnnuaireSeoComponent', () => {
   let reponse: { status: jasmine.Spy };
   let annuaire: jasmine.SpyObj<AnnuaireService>;
 
-  function creer(params: Record<string, string>) {
+  function creer(params: Record<string, string>, liste: Medecin[] = []) {
     reponse = { status: jasmine.createSpy('status') };
     annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
-    annuaire.rechercher.and.returnValue(of([]));
+    annuaire.rechercher.and.returnValue(of(liste));
     annuaire.communes.and.returnValue(of([]));
     TestBed.configureTestingModule({
       imports: [AnnuaireSeoComponent],
@@ -40,6 +41,14 @@ describe('AnnuaireSeoComponent', () => {
     creer({ specialite: 'cardiologue', wilaya: 'alger' });
     expect(reponse.status).not.toHaveBeenCalled();
     expect(annuaire.rechercher).toHaveBeenCalledWith('cardiologue', '16', undefined, undefined);
+  });
+
+  it('page specialite x wilaya sans praticien : noindex, follow ; avec praticien : index, follow', () => {
+    creer({ specialite: 'hematologue', wilaya: 'tamanrasset' });
+    expect(TestBed.inject(Meta).getTag('name="robots"')?.content).toBe('noindex, follow');
+    TestBed.resetTestingModule();
+    creer({ specialite: 'cardiologue', wilaya: 'alger' }, [{ id: '1', nomComplet: 'Dr A' } as unknown as Medecin]);
+    expect(TestBed.inject(Meta).getTag('name="robots"')?.content).toBe('index, follow');
   });
 
   it('page wilaya : lien « Pharmacies à Alger », pharmacies absentes du maillage des specialites', () => {

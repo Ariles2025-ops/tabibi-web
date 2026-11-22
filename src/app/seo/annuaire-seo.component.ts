@@ -372,6 +372,10 @@ export class AnnuaireSeoComponent implements OnInit {
         next: ([liste, communes]) => {
           if (avecCommunes) this.appliquerCommunes(liste, communes, s!, w!, chemin);
           else this.medecins.set(liste);
+          // Page specialite x wilaya sans aucun praticien : pas indexable (et absente du plan du site).
+          if (s && w && !this.communeSlug && !this.introuvable && liste.length === 0) {
+            this.meta.updateTag({ name: 'robots', content: 'noindex, follow' });
+          }
           this.charge.set(false);
           this.donneesStructurees(this.cheminLd);
         },
