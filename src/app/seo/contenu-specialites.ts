@@ -594,4 +594,84 @@ export const CONTENU_SPECIALITES: Record<string, { fr: ContenuSpecialite; ar: Co
       ],
     },
   },
+  orthodontiste: {
+    fr: {
+      apropos: 'Un orthodontiste est un professionnel de la santé dentaire spécialiste de l\'alignement et de l\'organisation des dents et de la maxillo-facial. Il est conseillé de consulter un orthodontiste lorsque les dents ne sont pas correctement alignées ou lorsque des problèmes de mordante persistent.',
+      faq: [
+        { q: 'Quelles sont les raisons pour lesquelles on doit consulter un orthodontiste ?', r: 'On doit consulter un orthodontiste si les dents sont espacées, superposées, ou si la mordante est incorrecte. Cela peut également être nécessaire pour corriger des problèmes de croissance de la mâchoire.' },
+        { q: 'Quels sont les signes d\'une mordante incorrecte ?', r: 'Une mordante incorrecte peut se manifester par des douleurs à la tête ou au visage, des difficultés pour mâcher ou boire, et une mauvaise apparence dentaire, comme des dents qui pointent vers l\'intérieur ou l\'extérieur.' },
+      ],
+    },
+    ar: {
+      apropos: 'أخصائي تقويم الأسنان هو مهني طبي متخصص في تقويم وتوجيه أوجه الأسنان واللثة لدى المرضى من جميع الأعمار. يُنصح بالاستشارة معه عند ظهور مشاكل في ترتيب الأسنان أو في وظيفتها أو في شكلها.',
+      faq: [
+        { q: 'متى يمكن أن أستشير أخصائي تقويم الأسنان؟', r: 'يمكن الاستشارة معه عند ظهور مشاكل في ترتيب الأسنان أو في وظيفتها أو في شكلها. يمكن أيضاً التوجه إليه لإجراء تقويم أسنان مبكر للأطفال بين 6 و 12 عامًا.' },
+        { q: 'ما هي الأجهزة التي يستخدمها أخصائي تقويم الأسنان؟', r: 'يستخدم أخصائي تقويم الأسنان أجهزة مثل الألواح والأسلاك والجسور لضبط وتحريك الأسنان. كما يستخدم الأجهزة الرقمية والبرامج الكمبيوترية لتحليل وتصميم خطط العلاج.' },
+      ],
+    },
+  },
+  pneumologue: {
+    fr: {
+      apropos: 'Le pneumologue est un médecin spécialisé dans le diagnostic, le traitement et la prévention des maladies respiratoires. Il est recommandé de consulter un pneumologue en cas de troubles respiratoires persistants ou récurrents.',
+      faq: [
+        { q: 'Quels sont les symptômes qui devraient m\'inciter à consulter un pneumologue ?', r: 'Il est prudent de consulter un pneumologue si vous souffrez de toux persistante, d\'oppression thoracique, d\'essoufflement, de fièvre récurrente ou de sifflement respiratoire.' },
+        { q: 'Quelles sont les principales maladies traitées par un pneumologue ?', r: 'Un pneumologue traite diverses maladies comme l\'asthme, la bronchite chronique, la pneumonie, l\'emphysème, ainsi que des problèmes de santé liés aux poumons tels que le tabagisme.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الأمراض الصدرية هو متخصص يعالج الأمراض التي تصيب الجهاز التنفسي، مثل الأور叹和你提到的“الأور叹”，看起来像是输入错误。假设你想表达的是关于呼吸系统疾病的医生，以下是你要求的格式内容： APROPOS: طبيب الأمراض الصدرية هو متخصص فيDiagnosis and treatment of diseases related to the respiratory system such as asthma and pneumonia. يُستشار هذا الطبيب عندما يواجه الشخص مشاكل في الجهاز التنفسي مثل صعوبة التنفس أو التهاب الحلق المستمر.',
+      faq: [
+        { q: 'هل يمكن لهذا الطبيب تشخيص أمراض الجهاز التنفسي فقط؟', r: 'لا، يمكنه أيضاً تقديم المشورة حول الوقاية من الأمراض التنفسية والتعليم حول كيفية العناية بالجهاز التنفسي.' },
+        { q: 'ما الذي يجب أن أفعله إذا لاحظت أعراض مثل السعال المستمر أو صعوبة التنفس؟', r: 'يجب استشارة طبيب الأمراض الصدرية إذا ظلت الأعراض لفترة طويلة أو إذا كانت تؤثر على جودة حياتك اليومية.' },
+      ],
+    },
+  },
+  podologue: {
+    fr: {
+      apropos: 'Le podologue est un professionnel de santé spécialisé dans le diagnostic et le traitement des troubles de la marche et des pieds. Il est conseillé de consulter un podologue en cas de douleurs aux pieds, de blessures ou lorsqu\'on souhaite améliorer la posture et la mobilité.',
+      faq: [
+        { q: 'Quels sont les symptômes qui justifient de consulter un podologue?', r: 'Vous devriez consulter un podologue si vous éprouvez des douleurs, des engourdissements ou des modifications anormales dans l\'apparence de vos pieds.' },
+        { q: 'Peut-on consulter un podologue pour des problèmes de marche?', r: 'Oui, un podologue peut aider à corriger et à améliorer les problèmes de marche, qu\'ils soient dus à une mauvaise posture ou à des conditions comme l\'arthrite.' },
+      ],
+    },
+    ar: {
+      apropos: 'هو أخصائي أمراض القدم متخصص في التشخيص والعلاج للأمراض التي تصيب القدمين والركبتين. يُنصح بالاستعانة بهذا النوع من الأطباء عند الشعور بألم أو إصابة في القدمين أو الركبتين.',
+      faq: [
+        { q: 'هل يمكن أن أ去看阿拉伯文翻译结果： 关于：他是足病专科医生，专门治疗脚和膝盖的疾病。当出现脚或膝盖疼痛或受伤时，建议咨询此类医生。 Q1:我可以预约此类医生吗？', r: '当然可以，您可以通过诊所或医院的预约系统进行预约。 R2: 也可以直接联系医生或医疗机构进行咨询和预约。' },
+        { q: '这类医生能治疗哪些常见问题？ R1: 他们可以治疗脚踝扭伤、足底筋膜炎、足跟痛、脚趾变形等问题。', r: '也可以直接联系医生或医疗机构进行咨询和预约。 Q2:这类医生能治疗哪些常见问题？ R1: 他们可以治疗脚踝扭伤、足底筋膜炎、足跟痛、脚趾变形等问题。 R2: 此外，他们还能处理与关节相关的各种疾病，如膝盖炎等。' },
+      ],
+    },
+  },
+  rhumatologue: {
+    fr: {
+      apropos: 'Un rhumatologue est un médecin spécialisé dans le diagnostic et le traitement des maladies touchant les articulations, les muscles et les os. Il est conseillé de consulter ce spécialiste lorsqu\'on éprouve des douleurs articulaires persistantes ou des limitations de mouvement.',
+      faq: [
+        { q: 'Quels sont les symptômes courants qui pourraient indiquer le besoin de consulter un rhumatologue ?', r: 'Des douleurs articulaires récurrentes, une raideur matinale pouvant durer plus de 30 minutes et des nodules sous la peau sont des signes fréquents à ne pas ignorer.' },
+        { q: 'Peut-on consulter un rhumatologue sans prescription médicale ?', r: 'En Algérie, il est généralement possible de consulter un rhumatologue directement, sans prescription, pour un premier avis, mais un rendez-vous médical peut être nécessaire pour certains cas nécessitant un diagnostic plus approfondi.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الروماتيزم هو متخصص يتعامل مع أمراض العظام والعضلات والألياف التيسية، مثل الروماتيزم والتهاب المفاصل. يجب استشارة هذا الطبيب عند الشعور بألم مستمر في العظام أو الأوتار أو التهاب في المفاصل.',
+      faq: [
+        { q: 'هل يمكن لطبيب الروماتيزم مساعدتي في علاج التهاب المفاصل؟', r: 'نعم، يمكن له مساعدتك في تشخيص وعلاج التهاب المفاصل. يتضمن العلاج عادة استخدام الأدوية والعلاجات التكميلية والتمارين الرياضية.' },
+        { q: 'كيف يمكنني الوقاية من أمراض الروماتيزم؟', r: 'الوقاية تشمل الحفاظ على وزن صحي، تناول طعام صحي، القيام بالتمارين الرياضية بانتظام، والابتعاد عن التدخين.' },
+      ],
+    },
+  },
+  'sage-femme': {
+    fr: {
+      apropos: 'La sage-femme joue un rôle essentiel dans le processus d\'accouchement et dans la prise en charge des femmes enceintes. Elle est consultée dès la confirmation de la grossesse jusqu\'au suivi post-natal.',
+      faq: [
+        { q: 'Quelle est la fonction principale d\'une sage-femme durant la grossesse?', r: 'La sage-femme évalue l\'état de santé de la future mère et de son fœtus, et offre des conseils sur la nutrition et le bien-être.' },
+        { q: 'Peut-on consulter une sage-femme si on n\'est pas enceinte?', r: 'Bien que la sage-femme soit principalement spécialisée dans le suivi des femmes enceintes, elle peut aussi conseiller sur la santé féminine en général et assister lors de certains examens gynécologiques.' },
+      ],
+    },
+    ar: {
+      apropos: 'تقدم القابلة خدماتها في مرحلة الحمل والولادة، وتعتبر عنصراً أساسياً في الرعاية الصحية الأولية. يجب استشارة القابلة خلال الحمل وفترة ما بعد الولادة لضمان صحة الأم والطفل.',
+      faq: [
+        { q: 'هل يمكن القابلة تشخيص مشاكل الحمل؟', r: 'لا، القابلة تستند إلى المساعدات الطبية لتشخيص أي مشاكل قد تواجه الحمل. R2: واجهة القابلة تشمل الرعاية التمريضية والدعم النفسي لامرأة الحمل.' },
+        { q: 'كيف يمكنني تحديد موعد مع القابلة؟ R1: يمكنك التواصل مع المستشفى أو المركز الصحي للحصول على مزيد من المعلومات حول كيفية تحديد المواعيد.', r: 'واجهة القابلة تشمل الرعاية التمريضية والدعم النفسي لامرأة الحمل. Q2: كيف يمكنني تحديد موعد مع القابلة؟ R1: يمكنك التواصل مع المستشفى أو المركز الصحي للحصول على مزيد من المعلومات حول كيفية تحديد المواعيد. R2: عادةً ما تكون المواعيد متاحة على مستوى الخدمات الصحية المحلية وفقًا للإمكانيات المتاحة.' },
+      ],
+    },
+  },
 };
