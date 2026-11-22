@@ -235,6 +235,20 @@ describe('CandidatureMedecinComponent', () => {
     expect(depot.ville).toBe('Hydra');
   });
 
+  it('reclamation avec derniere candidature refusee : le formulaire garde l identite de la fiche', async () => {
+    annuaire.medecin.and.returnValue(of({
+      id: 'f1', nomComplet: 'BELKACEM Amina', specialiteSlug: 'cardiologue', specialiteFr: 'Cardiologue',
+      wilayaCode: '16', wilayaFr: 'Alger', ville: 'Hydra',
+    }));
+    service.maCandidature.and.returnValue(of({ ...REFUSEE, nomComplet: 'Ancien Nom', specialiteSlug: 'dentiste', specialiteFr: 'Dentiste', ville: 'Oran', wilayaCode: '31' }));
+    TestBed.inject(ActivatedRoute).snapshot.queryParams = { fiche: 'f1' };
+    await afficher();
+
+    expect(champ('nomComplet').value).toBe('BELKACEM Amina');
+    expect(champ('specialiteSlug').value).toBe('cardiologue');
+    expect(champ('numeroOrdre').value).toBe('ORD-123');
+  });
+
   describe('en arabe', () => {
     beforeEach(() => TestBed.inject(LangueService).definir(true));
     afterEach(() => localStorage.removeItem('tabibi.langue'));
