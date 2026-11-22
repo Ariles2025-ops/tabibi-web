@@ -149,6 +149,13 @@ describe('ReponsesDemandeComponent', () => {
     expect(texte()).not.toContain('clôturée le');
   });
 
+  it('propose la cloture meme si l API renvoie le statut en minuscules, comme l appli', async () => {
+    service.mesBesoins.and.returnValue(of([{ ...OUVERTE, statut: ' ouvert ' }]));
+    await afficher();
+
+    expect(boutonCloturer()).toBeDefined();
+  });
+
   it('cloture la demande, confirme et retire le bouton', async () => {
     service.cloturer.and.returnValue(of(CLOTUREE));
     await afficher();

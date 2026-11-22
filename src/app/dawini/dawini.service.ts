@@ -54,6 +54,11 @@ export interface DemandeReponse {
   commentaire?: string | null;
 }
 
+/** Demande ouverte (statut lu sans tenir compte de la casse ni des espaces, comme `estOuvert` de l'appli). */
+export function estOuvert(besoin: Pick<Besoin, 'statut'>): boolean {
+  return (besoin.statut ?? '').trim().toUpperCase() === 'OUVERT';
+}
+
 /** Libelles francais des statuts de besoin connus ; un statut inconnu est affiche tel quel. */
 const LIBELLES_STATUT_BESOIN: Partial<Record<string, string>> = {
   OUVERT: 'Ouverte',
