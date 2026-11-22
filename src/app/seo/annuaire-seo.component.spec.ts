@@ -251,6 +251,32 @@ describe('AnnuaireSeoComponent', () => {
     }
   });
 
+  it('page commune : le nombre annonce est le total de l\'API communes, pas la taille de la page', () => {
+    TestBed.resetTestingModule();
+    reponse = { status: jasmine.createSpy('status') };
+    annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
+    const gens = Array.from({ length: 50 }, (_, i) => ({ id: `c${i}`, nomComplet: `Dr C${i}`, specialiteSlug: 'cardiologue', specialiteFr: 'Cardiologue', wilayaCode: '19', wilayaFr: 'Sétif', ville: 'Ain Arnat' })) as Medecin[];
+    annuaire.rechercher.and.returnValue(of(gens));
+    annuaire.communes.and.returnValue(of([{ slug: 'ain-arnat', nom: 'Ain Arnat', nombre: 120 }] as any));
+    TestBed.configureTestingModule({
+      imports: [AnnuaireSeoComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { data: {} }, paramMap: of(convertToParamMap({ specialite: 'cardiologue', wilaya: 'setif', commune: 'ain-arnat' })) } },
+        { provide: AnnuaireService, useValue: annuaire },
+        { provide: REPONSE_HTTP, useValue: reponse },
+      ],
+    });
+    const f = TestBed.createComponent(AnnuaireSeoComponent);
+    f.detectChanges();
+    const c = f.componentInstance;
+    expect(c.medecins().length).toBe(50);
+    expect(c.totalAffiche()).toBe(120);
+    expect(c.intro).toContain('120');
+    expect(c.intro).not.toContain('50 ');
+    expect((c as any).description).toContain('120');
+  });
+
   it('elide « de » devant une wilaya commencant par une voyelle (d\'Alger, d\'Oran, de Blida)', () => {
     expect(dePlace('Alger')).toBe("d'Alger");
     expect(dePlace('Oran')).toBe("d'Oran");
