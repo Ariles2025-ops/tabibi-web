@@ -68,6 +68,12 @@ describe('erreurApiInterceptor', () => {
       expect(erreur('/api/c', { erreur: 'Créneau indisponible.' }, { status: 409, statusText: 'C' }).error.erreur).toBe('هذا الموعد لم يعد متاحًا.');
     });
 
+    it('rendez-vous à venir : même texte arabe avec ou sans accent, comme l’appli', () => {
+      const attendu = 'لديك بالفعل موعد قادم مع هذا الطبيب: ألغِه لاختيار موعد آخر.';
+      expect(erreur('/api/h', { erreur: 'Vous avez déjà un rendez-vous à venir avec ce médecin.' }, { status: 409, statusText: 'C' }).error.erreur).toBe(attendu);
+      expect(erreur('/api/i', { erreur: 'Vous avez deja un rendez-vous a venir avec ce medecin.' }, { status: 409, statusText: 'C' }).error.erreur).toBe(attendu);
+    });
+
     it('autre 409 : texte générique arabe, jamais le français', () => {
       expect(erreur('/api/d', { erreur: 'Avis déjà signalé.' }, { status: 409, statusText: 'C' }).error.erreur).toBe('تعذّر الإجراء: تغيّر الوضع في الأثناء');
     });
