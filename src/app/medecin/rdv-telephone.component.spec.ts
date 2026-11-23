@@ -4,6 +4,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { ApiDisponibleService } from '../partage/api-disponible.service';
+import { LangueService } from '../partage/langue.service';
 import { RdvTelephoneComponent } from './rdv-telephone.component';
 
 describe('RdvTelephoneComponent', () => {
@@ -55,6 +56,17 @@ describe('RdvTelephoneComponent', () => {
     c.telephone = '0550123456';
     c.envoyer();
     expect(c.erreur()).toBe('Ce créneau vient d’être pris.');
+  });
+
+  it('signale un creneau deja pris (409) en arabe avec les mots de l appli', () => {
+    TestBed.inject(LangueService).definir(true);
+    appel.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+    const c = fixture.componentInstance;
+    c.nom = 'Amine';
+    c.telephone = '0550123456';
+    c.envoyer();
+    expect(c.erreur()).toBe('هذا الموعد حُجز للتوّ.');
+    localStorage.removeItem('tabibi.langue');
   });
 
   it('se masque sans erreur sur un 404', () => {
