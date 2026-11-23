@@ -103,15 +103,15 @@ import { DemandePraticienService } from './demande-praticien.service';
           <p style="text-align:center;color:var(--text3);margin:0 0 22px;font-size:14px">{{ t('Vous préférez être accompagné ? Envoyez-nous vos informations, notre équipe vous recontacte.', 'تفضّل المرافقة؟ أرسل لنا معلوماتك وسيتصل بك فريقنا.') }}</p>
 
           <div *ngIf="!envoye()" class="prat-form">
-            <label class="pf"><span>{{ t('Nom complet *', 'الاسم الكامل *') }}</span><input class="champ" [(ngModel)]="nom" name="nom" [placeholder]="t('Dr Amina Belkacem', 'د. أمينة بلقاسم')"></label>
-            <label class="pf"><span>{{ t('Spécialité *', 'التخصص *') }}</span><input class="champ" [(ngModel)]="specialite" name="spec" [placeholder]="t('Cardiologue, généraliste…', 'طبيب قلب، طبيب عام…')"></label>
-            <label class="pf"><span>{{ t('Wilaya *', 'الولاية *') }}</span><input class="champ" [(ngModel)]="wilaya" name="wil" [placeholder]="t('Alger, Oran…', 'الجزائر، وهران…')"></label>
-            <label class="pf"><span>{{ t('Ville / commune', 'المدينة / البلدية') }}</span><input class="champ" [(ngModel)]="ville" name="ville" [placeholder]="t('Hydra, Bab El Oued…', 'حيدرة، باب الوادي…')"></label>
-            <label class="pf"><span>{{ t("N° d'inscription à l'ordre *", 'رقم التسجيل في الهيئة *') }}</span><input class="champ" [(ngModel)]="numeroOrdre" name="ord" [placeholder]="t('Votre numéro d’ordre', 'رقم تسجيلك في الهيئة')"></label>
+            <label class="pf"><span>{{ t('Nom complet *', 'الاسم الكامل *') }}</span><input class="champ" [(ngModel)]="nom" name="nom" maxlength="160" [placeholder]="t('Dr Amina Belkacem', 'د. أمينة بلقاسم')"></label>
+            <label class="pf"><span>{{ t('Spécialité *', 'التخصص *') }}</span><input class="champ" [(ngModel)]="specialite" name="spec" maxlength="120" [placeholder]="t('Cardiologue, généraliste…', 'طبيب قلب، طبيب عام…')"></label>
+            <label class="pf"><span>{{ t('Wilaya *', 'الولاية *') }}</span><input class="champ" [(ngModel)]="wilaya" name="wil" maxlength="60" [placeholder]="t('Alger, Oran…', 'الجزائر، وهران…')"></label>
+            <label class="pf"><span>{{ t('Ville / commune', 'المدينة / البلدية') }}</span><input class="champ" [(ngModel)]="ville" name="ville" maxlength="80" [placeholder]="t('Hydra, Bab El Oued…', 'حيدرة، باب الوادي…')"></label>
+            <label class="pf"><span>{{ t("N° d'inscription à l'ordre *", 'رقم التسجيل في الهيئة *') }}</span><input class="champ" [(ngModel)]="numeroOrdre" name="ord" maxlength="40" [placeholder]="t('Votre numéro d’ordre', 'رقم تسجيلك في الهيئة')"></label>
             <label class="pf"><span>{{ t('Téléphone *', 'الهاتف *') }}</span><input class="champ" [(ngModel)]="telephone" name="tel" inputmode="tel" placeholder="05 50 12 34 56"></label>
-            <label class="pf"><span>{{ t('E-mail *', 'البريد الإلكتروني *') }}</span><input class="champ" [(ngModel)]="email" name="email" type="email" inputmode="email" placeholder="vous@exemple.com"></label>
+            <label class="pf"><span>{{ t('E-mail *', 'البريد الإلكتروني *') }}</span><input class="champ" [(ngModel)]="email" name="email" maxlength="160" type="email" inputmode="email" placeholder="vous@exemple.com"></label>
             <input class="prat-piege" [(ngModel)]="siteWeb" name="siteWeb" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
-            <label class="pf pf--full"><span>{{ t('Message (facultatif)', 'رسالة (اختيارية)') }}</span><textarea class="champ" [(ngModel)]="message" name="msg" rows="3" [placeholder]="t('Horaires, cabinet, précisions…', 'المواعيد، العيادة، تفاصيل…')"></textarea></label>
+            <label class="pf pf--full"><span>{{ t('Message (facultatif)', 'رسالة (اختيارية)') }}</span><textarea class="champ" [(ngModel)]="message" name="msg" rows="3" maxlength="2000" [placeholder]="t('Horaires, cabinet, précisions…', 'المواعيد، العيادة، تفاصيل…')"></textarea><small class="prat-compteur" style="color:var(--text3);font-size:12px">{{ message.length }}/2000</small></label>
             <div class="pf--full">
               <p *ngIf="erreur()" class="prat-erreur" role="alert" style="color:#D21010;font-size:13px;margin:0 0 10px">{{ erreur() }}
                 <button *ngIf="echecEnvoi()" type="button" class="prat-lien prat-mailto" (click)="envoyerParMail()">{{ t('Envoyer par e-mail', 'إرسال عبر البريد الإلكتروني') }}</button></p>
@@ -321,7 +321,7 @@ export class PraticienComponent {
         this.erreur.set(e.status === 429
           ? this.t('Trop de demandes envoyées. Réessayez plus tard ou écrivez-nous par e-mail.', 'تم إرسال طلبات كثيرة. أعد المحاولة لاحقًا أو راسلنا عبر البريد الإلكتروني.')
           : e.status === 400
-            ? this.t('Vérifiez vos informations (téléphone et e-mail valides) puis réessayez.', 'تحقق من معلوماتك (هاتف وبريد إلكتروني صالحان) ثم أعد المحاولة.')
+            ? this.t('Vérifiez vos informations : champs obligatoires remplis, téléphone et e-mail valides, textes pas trop longs.', 'تحقق من معلوماتك: الحقول الإلزامية معبأة، الهاتف والبريد الإلكتروني صالحان، والنصوص غير طويلة جدًا.')
             : this.t("Votre demande n'a pas pu être envoyée. Réessayez, ou envoyez-la par e-mail :", 'تعذّر إرسال طلبك. أعد المحاولة أو أرسله عبر البريد الإلكتروني:'));
       },
     });
