@@ -152,11 +152,20 @@ describe('MoiComponent', () => {
     for (const l of ['/messagerie', '/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).not.toBeNull();
   });
 
-  it('propose « Mes avis », « Mes listes d\'attente » et Dawini aux rôles professionnels aussi, comme « Mon compte » de l\'appli', async () => {
-    for (const role of ['MEDECIN', 'SECRETAIRE', 'PHARMACIE', 'ADMIN']) {
+  it('ne propose pas « Mes avis », « Mes listes d\'attente » ni Dawini à un compte médecin, secrétaire ou pharmacie sans rôle PATIENT, comme « Mon compte » de l\'appli', async () => {
+    for (const role of ['MEDECIN', 'SECRETAIRE', 'PHARMACIE']) {
       moi.set({ ...PROFIL, roles: [role] });
       await afficher();
-      for (const l of ['/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).withContext(role + ' ' + l).not.toBeNull();
+      for (const l of ['/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).withContext(role + ' ' + l).toBeNull();
+      expect(lien('/messagerie')).withContext(role).not.toBeNull();
+    }
+  });
+
+  it('propose « Mes avis », « Mes listes d\'attente » et Dawini à un professionnel qui a aussi le rôle PATIENT, et à un administrateur', async () => {
+    for (const roles of [['MEDECIN', 'PATIENT'], ['SECRETAIRE', 'PATIENT'], ['PHARMACIE', 'PATIENT'], ['ADMIN']]) {
+      moi.set({ ...PROFIL, roles });
+      await afficher();
+      for (const l of ['/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).withContext(roles.join() + ' ' + l).not.toBeNull();
     }
   });
 

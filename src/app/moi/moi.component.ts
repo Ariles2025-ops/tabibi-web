@@ -115,8 +115,10 @@ export class MoiComponent implements OnInit {
     };
     // Comme « Mon espace » de l'appli : un compte à plusieurs rôles professionnels retrouve chacun de ses espaces
     // (médecin, secrétaire, pharmacie), pas seulement le premier.
-    // Comme « Mon activité » et « Services » de « Mon compte » de l'appli : un professionnel est aussi patient, il garde
-    // ses avis, ses listes d'attente et Dawini (la page existe sur le site mais n'était proposée qu'aux patients).
+    // Comme « Mon activité » et « Services » de « Mon compte » de l'appli (comptePro) : un compte médecin, secrétaire ou
+    // pharmacie sans rôle PATIENT n'a pas « Mes avis », « Mes listes d'attente » ni Dawini (ces pages lui répondraient
+    // « réservée aux patients ») ; avec le rôle PATIENT en plus, il les garde.
+    const comptePro = ['MEDECIN', 'SECRETAIRE', 'PHARMACIE'].some((x) => r.includes(x)) && !r.includes('PATIENT');
     const mesAvis = { lien: '/mes-avis', libelle: t('Mes avis', 'آرائي') };
     const listesAttente = { lien: '/liste-attente', libelle: t("Mes listes d'attente", 'قوائم الانتظار') };
     const dawini = { lien: '/dawini', libelle: t('Dawini (pharmacies)', 'داويني (الصيدليات)') };
@@ -142,9 +144,7 @@ export class MoiComponent implements OnInit {
         ...espaces,
         messagerie,
         visio,
-        mesAvis,
-        listesAttente,
-        dawini,
+        ...(comptePro ? [] : [mesAvis, listesAttente, dawini]),
         verifier,
         // Comme « Cabinet » de « Mon espace » dans l'appli : les invitations de cabinet sont ouvertes à tous les rôles.
         invitations,
