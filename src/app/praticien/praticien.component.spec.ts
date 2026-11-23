@@ -39,6 +39,17 @@ describe('PraticienComponent (envoi de la demande)', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('nous vous recontactons sous 48 h');
   });
 
+  it('limites de l API appliquees a la saisie, compteur et erreur 400 juste', () => {
+    const el = fixture.nativeElement as HTMLElement;
+    const max = (n: string) => el.querySelector(`[name="${n}"]`)?.getAttribute('maxlength');
+    expect([max('nom'), max('spec'), max('wil'), max('ville'), max('ord'), max('email'), max('msg')])
+      .toEqual(['160', '120', '60', '80', '40', '160', '2000']);
+    expect(el.querySelector('.prat-compteur')?.textContent).toContain('/2000');
+    comp.envoyer();
+    http.expectOne((r) => r.url.endsWith('/api/public/demandes-praticien')).flush({}, { status: 400, statusText: 'KO' });
+    expect(comp.erreur()).toContain('textes pas trop longs');
+  });
+
   it('echec : message d erreur et proposition du mailto en secours', () => {
     comp.envoyer();
     http.expectOne((r) => r.url.endsWith('/api/public/demandes-praticien')).flush({}, { status: 500, statusText: 'KO' });
