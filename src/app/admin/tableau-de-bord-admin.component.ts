@@ -36,10 +36,15 @@ import { AdminService, StatistiquesAdministration, libelleRappels } from './admi
           <span style="display:block;color:var(--text3);font-size:.9rem">Avis signalés</span>
           <strong style="display:block;font-size:2rem;font-weight:800;color:var(--blue)">{{ s.avisSignales }}</strong>
         </li>
+        <li *ngIf="s.demandesNouvelles !== undefined" style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px">
+          <span style="display:block;color:var(--text3);font-size:.9rem">Demandes praticien nouvelles</span>
+          <strong style="display:block;font-size:2rem;font-weight:800;color:var(--blue)">{{ s.demandesNouvelles }}</strong>
+        </li>
       </ul>
 
       <p style="margin:24px 0 0">
         <a class="bouton" routerLink="/admin/candidatures">Examiner les candidatures</a>
+        <a class="bouton" routerLink="/admin/demandes" style="margin-inline-start:8px">Voir les demandes praticien</a>
         <a class="bouton" routerLink="/admin/avis" style="margin-inline-start:8px">Modérer les avis</a>
       </p>
 

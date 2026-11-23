@@ -80,6 +80,8 @@ export interface StatistiquesAdministration {
   candidaturesRefusees: number;
   /** Nombre d'avis signalés en attente de modération. */
   avisSignales: number;
+  /** Demandes praticien au statut NOUVELLE ; absent tant que l'API ne le renvoie pas. */
+  demandesNouvelles?: number;
 }
 
 /** Libelles francais des statuts de candidature connus ; un statut inconnu est affiche tel quel. */
