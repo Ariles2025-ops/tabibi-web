@@ -319,6 +319,16 @@ describe('EspacePharmacieComponent', () => {
     expect(texte()).not.toContain('Marquer comme délivrée');
   });
 
+  it('un code inconnu (404) affiche le même message que la page publique et l\'appli, sans proposer la délivrance', async () => {
+    ordonnances.verifier.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+    await afficher();
+    await saisir('codeOrdonnance', 'ZZ99ZZ99');
+    fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+    await afficher();
+    expect(texte()).toContain('Code inconnu : aucune ordonnance ne correspond à ce code.');
+    expect(texte()).not.toContain('Marquer comme délivrée');
+  });
+
   it('un code deja delivre reste un refus (rouge), contrairement a la delivrance qui vient d\'avoir lieu', async () => {
     ordonnances.verifier.and.returnValue(of({ valide: false, emiseLe: '2026-09-18T10:00:00Z', statut: 'DELIVREE', delivreeLe: '2026-09-19T09:30:00Z' }));
     await afficher();
@@ -413,6 +423,16 @@ describe('EspacePharmacieComponent', () => {
       expect(service.repondre).toHaveBeenCalled();
       expect(texte()).toContain('تم إرسال الرد بخصوص «Amoxicilline 1 g»: المريض مُبلَّغ.');
       expect(texte()).not.toContain('le patient est prévenu');
+    });
+
+    it('traduit le code inconnu comme l\'appli', async () => {
+      ordonnances.verifier.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+      await afficher();
+      await saisir('codeOrdonnance', 'ZZ99ZZ99');
+      fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+      await afficher();
+      expect(texte()).toContain('رمز غير معروف: لا توجد أي وصفة تطابق هذا الرمز.');
+      expect(texte()).not.toContain('Code inconnu');
     });
 
     it('traduit la verification d\'une ordonnance', async () => {

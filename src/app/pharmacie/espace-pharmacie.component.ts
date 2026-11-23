@@ -179,7 +179,7 @@ function formulaireVide(): FormulaireReponse {
                   {{ delivranceEnCours() ? l.t('Enregistrement…', 'جارٍ الحفظ…') : l.t('Marquer comme délivrée', 'تسجيل الصرف') }}
                 </button>
               </ng-container>
-              <p *ngIf="!v.valide" style="color:var(--red);font-weight:600;margin:0">{{ l.t('Code inconnu.', 'رمز غير معروف.') }}</p>
+              <p *ngIf="!v.valide" style="color:var(--red);font-weight:600;margin:0">{{ l.t('Code inconnu : aucune ordonnance ne correspond à ce code.', 'رمز غير معروف: لا توجد أي وصفة تطابق هذا الرمز.') }}</p>
             </ng-container>
           </ng-container>
         </div>
