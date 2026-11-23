@@ -245,6 +245,29 @@ describe('AnnuaireSeoComponent', () => {
     expect(f.nativeElement.textContent).not.toContain('Médecin');
   });
 
+  it('lien « Vous êtes praticien ? » de la FAQ : /ar/praticien en arabe, /praticien en français (#277)', () => {
+    for (const [langue, href] of [['ar', '/ar/praticien'], [undefined, '/praticien']] as const) {
+      TestBed.resetTestingModule();
+      reponse = { status: jasmine.createSpy('status') };
+      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
+      annuaire.communes.and.returnValue(of([]));
+      annuaire.rechercher.and.returnValue(of<Medecin[]>([]));
+      TestBed.configureTestingModule({
+        imports: [AnnuaireSeoComponent],
+        providers: [
+          provideRouter([]),
+          { provide: ActivatedRoute, useValue: { snapshot: { data: langue ? { langue } : {} }, paramMap: of(convertToParamMap({ wilaya: 'adrar' })) } },
+          { provide: AnnuaireService, useValue: annuaire },
+          { provide: REPONSE_HTTP, useValue: reponse },
+        ],
+      });
+      const f = TestBed.createComponent(AnnuaireSeoComponent);
+      f.detectChanges();
+      const liens = Array.from(f.nativeElement.querySelectorAll('details a')) as HTMLAnchorElement[];
+      expect(liens.some((a) => a.getAttribute('href') === href)).toBeTrue();
+    }
+  });
+
   it('page commune : cible et question FAQ avec « avec » / « مع » (FR et AR)', () => {
     const cas = [
       { langue: undefined, cible: 'avec un cardiologue à Sétif', q: 'Comment prendre rendez-vous avec un cardiologue à Sétif ?' },
