@@ -192,4 +192,17 @@ describe('MesListesAttenteComponent', () => {
 
     expect(texte()).toContain('تاريخ التسجيل غير معروف');
   });
+
+  it("liste vide : le lien « Trouver un praticien » a le même libellé arabe que l'appli (« ابحث عن ممارس »)", async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      service.mes.and.returnValue(of([]));
+      await afficher();
+
+      expect(texte()).toContain('ابحث عن ممارس');
+      expect(texte()).not.toContain('ابحث عن طبيب');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
+  });
 });

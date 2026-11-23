@@ -219,7 +219,7 @@ const GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=dz.tabibi.app
           <div class="doc-footer">
             <span *ngIf="m.reservable" class="badge-reservable" style="display:inline-flex;align-items:center;gap:6px;background:var(--green-l);color:var(--green);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px"><i class="fa fa-calendar-check fa-xs" aria-hidden="true"></i>{{ t('Réservable en ligne', 'الحجز متاح عبر الإنترنت') }}</span>
             <span *ngIf="!m.reservable"></span>
-            <span class="btn btn-sm doc-btn-ghost"><i class="fa fa-arrow-right"></i> {{ t('Voir la fiche', 'عرض الصفحة') }}</span>
+            <span class="btn btn-sm doc-btn-ghost"><i class="fa fa-arrow-right"></i> {{ t('Voir la fiche', 'عرض الملف') }}</span>
           </div>
         </article>
       </div>

@@ -186,7 +186,7 @@ describe('MesConversationsComponent', () => {
       fixture = TestBed.createComponent(MesConversationsComponent);
       await afficher();
       expect(texte()).toContain('لا توجد محادثات حاليًا.');
-      expect(texte()).toContain('ابحث عن طبيب');
+      expect(texte()).toContain('ابحث عن ممارس');
     } finally {
       TestBed.inject(LangueService).ar.set(false);
     }
