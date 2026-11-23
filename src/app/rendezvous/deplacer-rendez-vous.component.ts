@@ -8,6 +8,9 @@ import { RendezVous } from './rendezvous.service';
 /** Message affiche quand le nouveau creneau vient d'etre pris (409). */
 export const MESSAGE_CRENEAU_PRIS = "Ce créneau vient d'être pris. Votre rendez-vous n'a pas changé : choisissez un autre créneau.";
 const MESSAGE_CRENEAU_PRIS_AR = 'هذا الموعد حُجز للتوّ. لم يتغيّر موعدك: اختر موعدًا آخر.';
+/** Meme message cote cabinet (medecin, secretaire) : ce n'est pas « votre » rendez-vous, comme dans l'appli. */
+export const MESSAGE_CRENEAU_PRIS_CABINET = "Ce créneau vient d'être pris. Le rendez-vous n'a pas changé : choisissez un autre créneau.";
+const MESSAGE_CRENEAU_PRIS_CABINET_AR = 'هذا الموعد حُجز للتوّ. لم يتغيّر الموعد: اختر موعدًا آخر.';
 
 /**
  * Deplacement d'un rendez-vous : liste des creneaux libres du meme medecin, choix d'un creneau puis confirmation.
@@ -101,7 +104,12 @@ export class DeplacerRendezVousComponent implements OnInit {
         this.enCours.set(false);
         this.choisi.set(null);
         if (e.status === 409) {
-          this.erreur.set(this.arabe() ? MESSAGE_CRENEAU_PRIS_AR : MESSAGE_CRENEAU_PRIS);
+          const cabinet = this.avertirPatient();
+          this.erreur.set(
+            this.arabe()
+              ? (cabinet ? MESSAGE_CRENEAU_PRIS_CABINET_AR : MESSAGE_CRENEAU_PRIS_AR)
+              : (cabinet ? MESSAGE_CRENEAU_PRIS_CABINET : MESSAGE_CRENEAU_PRIS),
+          );
           this.libres.update((l) => l.filter((c) => c.id !== creneau.id));
         } else {
           this.erreur.set(e.error?.erreur ?? this.t('Le déplacement a échoué, veuillez réessayer.', 'فشل النقل، يرجى المحاولة مرة أخرى.'));
