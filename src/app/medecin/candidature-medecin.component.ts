@@ -51,15 +51,15 @@ function formulaireVide(): DemandeCandidature {
         <span style="color:var(--text3);font-size:.9rem">
           {{ l.t('Déposée le', 'أُودع في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ c.deposeeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span><ng-container *ngIf="c.traiteeLe"> · {{ l.t('traitée le', 'عولج في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ c.traiteeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span></ng-container>
         </span>
-        <p *ngIf="c.statut === 'EN_ATTENTE'" style="margin:10px 0 0">{{ l.t("Votre candidature est en cours d'examen.", 'ترشحك قيد الفحص.') }}</p>
-        <div *ngIf="c.statut === 'VALIDEE'" style="margin:10px 0 0">
+        <p *ngIf="statutDe(c) === 'EN_ATTENTE'" style="margin:10px 0 0">{{ l.t("Votre candidature est en cours d'examen.", 'ترشحك قيد الفحص.') }}</p>
+        <div *ngIf="statutDe(c) === 'VALIDEE'" style="margin:10px 0 0">
           <p style="margin:0 0 10px;color:var(--vert)">
             {{ l.t('Votre candidature a été validée : vous figurez sur Ndawik.', 'تم قبول ترشحك: أنت تظهر على نداويك.') }}
             <a [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">{{ l.t('Voir ma fiche', 'عرض ملفي') }}</a>
           </p>
           <a class="bouton" routerLink="/medecin/agenda">{{ l.t('Ouvrir mon agenda', 'فتح جدول مواعيدي') }}</a>
         </div>
-        <p *ngIf="c.statut === 'REFUSEE'" style="margin:10px 0 0;color:#b3261e">
+        <p *ngIf="statutDe(c) === 'REFUSEE'" style="margin:10px 0 0;color:#b3261e">
           {{ l.t('Votre candidature a été refusée', 'تم رفض ترشحك') }}<ng-container *ngIf="c.motifRefus"> · {{ l.t('Motif', 'السبب') }} : {{ c.motifRefus }}</ng-container>.
           {{ l.t('Vous pouvez en déposer une nouvelle ci-dessous.', 'يمكنك إيداع ترشح جديد أدناه.') }}
         </p>
@@ -235,6 +235,11 @@ export class CandidatureMedecinComponent implements OnInit {
     });
   }
 
+  /** Statut lu sans tenir compte de la casse ni des espaces, comme l'appli (`toUpperCase()`). */
+  statutDe(c: Candidature): string {
+    return (c.statut ?? '').toString().trim().toUpperCase();
+  }
+
   libelleStatut(statut: string): string {
     return this.l.ar() ? libelleStatutCandidatureAr(statut) : libelleStatutCandidature(statut);
   }
@@ -253,11 +258,11 @@ export class CandidatureMedecinComponent implements OnInit {
   /** Affiche la candidature ; le formulaire (prerempli) n'est propose que si elle a ete refusee. */
   private afficher(c: Candidature) {
     this.candidature.set(c);
-    if (c.statut === 'VALIDEE') {
+    if (this.statutDe(c) === 'VALIDEE') {
       // Le role MEDECIN vient d'etre accorde : on relit le jeton puis le profil pour ouvrir l'espace medecin.
       this.auth.actualiserRoles().then(() => this.roles.recharger());
     }
-    const refusee = c.statut === 'REFUSEE';
+    const refusee = this.statutDe(c) === 'REFUSEE';
     this.formulaireVisible.set(refusee);
     if (refusee && this.ficheReclamee) {
       // Reclamation : l'identite vient de la fiche ; on ne reprend que les champs absents de la fiche.
