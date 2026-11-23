@@ -313,7 +313,22 @@ describe('EspacePharmacieComponent', () => {
 
     expect(ordonnances.delivrer).toHaveBeenCalledWith('AB12CD34');
     expect(texte()).toContain('Ordonnance marquée comme délivrée.');
+    expect(texte()).toContain('Ordonnance délivrée le');
+    expect(texte()).not.toContain('Déjà délivrée');
+    expect(texte()).not.toContain('ne pas délivrer');
+    expect(texte()).not.toContain('Marquer comme délivrée');
+  });
+
+  it('un code deja delivre reste un refus (rouge), contrairement a la delivrance qui vient d\'avoir lieu', async () => {
+    ordonnances.verifier.and.returnValue(of({ valide: false, emiseLe: '2026-09-18T10:00:00Z', statut: 'DELIVREE', delivreeLe: '2026-09-19T09:30:00Z' }));
+    await afficher();
+
+    await saisir('codeOrdonnance', 'ab12cd34');
+    fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+    await afficher();
+
     expect(texte()).toContain('Déjà délivrée');
+    expect(texte()).toContain('ne pas délivrer une nouvelle fois');
     expect(texte()).not.toContain('Marquer comme délivrée');
   });
 
