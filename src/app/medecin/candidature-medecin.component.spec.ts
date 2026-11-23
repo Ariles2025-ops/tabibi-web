@@ -147,6 +147,21 @@ describe('CandidatureMedecinComponent', () => {
     expect(formulaire()).toBeNull();
   });
 
+  it('lit le statut sans tenir compte de la casse, comme l\'appli', async () => {
+    service.maCandidature.and.returnValue(of({ ...EN_ATTENTE, statut: ' en_attente ' }));
+    await afficher();
+
+    expect(texte()).toContain("Votre candidature est en cours d'examen.");
+  });
+
+  it('refusee en minuscules : motif et formulaire de nouvelle candidature', async () => {
+    service.maCandidature.and.returnValue(of({ ...REFUSEE, statut: 'refusee' }));
+    await afficher();
+
+    expect(texte()).toContain('Votre candidature a été refusée');
+    expect(formulaire()).not.toBeNull();
+  });
+
   it('affiche une candidature validee avec le lien vers la fiche, sans formulaire', async () => {
     service.maCandidature.and.returnValue(of(VALIDEE));
     await afficher();
