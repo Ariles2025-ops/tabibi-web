@@ -103,7 +103,7 @@ export class MoiComponent implements OnInit {
     const invitations = { lien: '/invitations', libelle: t('Invitations de cabinet', 'دعوات العيادات') };
     // Comme « Ma candidature de médecin » du profil de l'appli : un compte non médecin peut déposer ou suivre sa candidature.
     const candidature = { lien: '/medecin/candidature', libelle: t('Ma candidature de médecin', 'ترشحي كطبيب') };
-    // Comme « Messagerie » de « Mon compte » dans l'appli, ouverte à tous les rôles.
+    // L'API (GET /api/conversations) réserve la messagerie aux rôles PATIENT et MEDECIN : pas de lien vers une impasse (403) pour les autres.
     const messagerie = { lien: '/messagerie', libelle: t('Messagerie', 'الرسائل') };
     // Comme « Vérifier une ordonnance » de « Mon compte » dans l'appli, ouvert à tous les rôles.
     const verifier = { lien: '/verifier', libelle: t('Vérifier une ordonnance', 'التحقق من وصفة طبية') };
@@ -142,7 +142,7 @@ export class MoiComponent implements OnInit {
     if (espaces.length > 0) {
       return [
         ...espaces,
-        messagerie,
+        ...(r.includes('PATIENT') || r.includes('MEDECIN') ? [messagerie] : []),
         visio,
         ...(comptePro ? [] : [mesAvis, listesAttente, dawini]),
         verifier,

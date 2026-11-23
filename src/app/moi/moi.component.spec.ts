@@ -157,7 +157,9 @@ describe('MoiComponent', () => {
       moi.set({ ...PROFIL, roles: [role] });
       await afficher();
       for (const l of ['/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).withContext(role + ' ' + l).toBeNull();
-      expect(lien('/messagerie')).withContext(role).not.toBeNull();
+      // La messagerie est réservée par l'API aux patients et aux médecins.
+      if (role === 'MEDECIN') expect(lien('/messagerie')).withContext(role).not.toBeNull();
+      else expect(lien('/messagerie')).withContext(role).toBeNull();
     }
   });
 
@@ -191,11 +193,14 @@ describe('MoiComponent', () => {
     }
   });
 
-  it('propose la messagerie à la secrétaire, à la pharmacie et à l\'administrateur, comme « Mon compte » de l\'appli', async () => {
+  it('ne propose pas la messagerie à la secrétaire, à la pharmacie ni à l\'administrateur seuls (l\'API la refuse), mais la garde avec le rôle PATIENT', async () => {
     for (const role of ['SECRETAIRE', 'PHARMACIE', 'ADMIN']) {
+      moi.set({ ...PROFIL, roles: [role] });
+      await afficher();
+      expect(lien('/messagerie')).withContext(role).toBeNull();
       moi.set({ ...PROFIL, roles: ['PATIENT', role] });
       await afficher();
-      expect(lien('/messagerie')).not.toBeNull();
+      expect(lien('/messagerie')).withContext('PATIENT+' + role).not.toBeNull();
     }
   });
 
