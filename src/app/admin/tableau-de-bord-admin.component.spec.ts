@@ -53,6 +53,22 @@ describe('TableauDeBordAdminComponent', () => {
     expect(fixture.nativeElement.querySelector('a[href="/admin/avis"]')?.textContent).toContain('Modérer les avis');
   });
 
+  it('affiche le compteur de demandes praticien nouvelles et le lien vers elles', () => {
+    service.statistiques.and.returnValue(of({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1, avisSignales: 4, demandesNouvelles: 3 }));
+    fixture.detectChanges();
+
+    const tuiles: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(tuiles.length).toBe(5);
+    expect(tuiles[4].textContent).toContain('Demandes praticien nouvelles');
+    expect(tuiles[4].querySelector('strong')?.textContent?.trim()).toBe('3');
+  });
+
+  it('propose toujours le lien vers les demandes praticien, meme sans compteur', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('a[href="/admin/demandes"]')?.textContent).toContain('Voir les demandes praticien');
+  });
+
   it('affiche zero dans chaque tuile quand il n y a aucune candidature', () => {
     service.statistiques.and.returnValue(of({ candidaturesEnAttente: 0, candidaturesValidees: 0, candidaturesRefusees: 0, avisSignales: 0 }));
     fixture.detectChanges();
