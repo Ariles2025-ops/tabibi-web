@@ -85,7 +85,7 @@ import { SelecteurLangueComponent } from '../partage/selecteur-langue.component'
             <ng-container *ngIf="!selection() && joursCreneaux().length">
               <div class="fm-nav">
                 <button type="button" class="fm-nav-btn" (click)="page.set(page() - 1)" [disabled]="page() === 0" [attr.aria-label]="l.t('Jours précédents', 'الأيام السابقة')"><i class="fa" [class.fa-chevron-left]="!l.ar()" [class.fa-chevron-right]="l.ar()"></i></button>
-                <span class="fm-nav-lbl">{{ l.t('Choisissez un horaire', 'اختر موعدًا') }}</span>
+                <span class="fm-nav-lbl">{{ l.t('Choisissez un créneau', 'اختر موعدًا') }}</span>
                 <button type="button" class="fm-nav-btn" (click)="page.set(page() + 1)" [disabled]="!pageSuivante()" [attr.aria-label]="l.t('Jours suivants', 'الأيام التالية')"><i class="fa" [class.fa-chevron-right]="!l.ar()" [class.fa-chevron-left]="l.ar()"></i></button>
               </div>
               <div class="fm-jours">

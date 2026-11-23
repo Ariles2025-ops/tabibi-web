@@ -58,7 +58,7 @@ import { InscriptionAttente, ListeAttenteService, instantInscription, trierParIn
         </ul>
         <p *ngIf="!charge() && !erreur() && inscriptions().length === 0">
           {{ l.t("Vous n'êtes inscrit sur aucune liste d'attente. Inscrivez-vous depuis la fiche d'un médecin : vous serez notifié dès qu'un créneau se libère.", 'لست مسجّلًا في أي قائمة انتظار. سجّل من صفحة الطبيب، وسيتم إشعارك فور توفر موعد.') }}
-          <a routerLink="/" style="color:var(--vert)">{{ l.t('Trouver un praticien', 'ابحث عن طبيب') }}</a>
+          <a routerLink="/" style="color:var(--vert)">{{ l.t('Trouver un praticien', 'ابحث عن ممارس') }}</a>
         </p>
       </ng-container>
     </main>
