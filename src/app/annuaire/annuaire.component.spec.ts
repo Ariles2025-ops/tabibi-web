@@ -4,7 +4,7 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { ACCUEIL_AR } from '../seo/marque';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AuthService } from '../auth/auth.service';
 import { AnnuaireService, Medecin } from './annuaire.service';
 import { AnnuaireComponent } from './annuaire.component';
@@ -215,6 +215,36 @@ describe('AnnuaireComponent : accueil arabe', () => {
     expect(play.href).toBe('https://play.google.com/store/apps/details?id=dz.tabibi.app');
     expect(play.target).toBe('_blank');
     expect(main.querySelector('.hero-stores .store--bientot')!.getAttribute('aria-disabled')).toBe('true');
+  });
+});
+
+describe('AnnuaireComponent : tri des specialites', () => {
+  it('trie les specialites par libelle sans tenir compte des accents (Pédiatre avant Psychiatre)', () => {
+    TestBed.configureTestingModule({
+      imports: [AnnuaireComponent],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: { estConnecte: () => false, pret: () => Promise.resolve() } },
+        { provide: AnnuaireService, useValue: {} },
+      ],
+    });
+    TestBed.inject(ActivatedRoute).snapshot.data = {};
+    const fixture = TestBed.createComponent(AnnuaireComponent);
+    fixture.detectChanges();
+    TestBed.inject(HttpTestingController).expectOne('/assets/referentiel.json').flush({
+      wilayas: [],
+      specialites: [
+        { slug: 'psychiatre', nom: 'Psychiatre' },
+        { slug: 'pediatre', nom: 'Pédiatre' },
+        { slug: 'nutritionniste', nom: 'Nutritionniste' },
+        { slug: 'nephrologue', nom: 'Néphrologue' },
+      ],
+    });
+    expect(fixture.componentInstance.specialites().map((s) => s.nom)).toEqual([
+      'Néphrologue', 'Nutritionniste', 'Pédiatre', 'Psychiatre',
+    ]);
   });
 });
 

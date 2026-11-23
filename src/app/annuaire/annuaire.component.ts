@@ -520,7 +520,13 @@ export class AnnuaireComponent implements OnInit, OnDestroy {
       .pipe(catchError(() => of<Referentiel>({ wilayas: [], specialites: [] })))
       .subscribe((ref) => {
         this.wilayas.set(ref?.wilayas ?? []);
-        this.specialites.set(ref?.specialites ?? []);
+        // Tri alphabetique du libelle affiche, selon la langue de la page (accents ignores en francais).
+        const langue = this.ar() ? 'ar' : 'fr';
+        this.specialites.set(
+          [...(ref?.specialites ?? [])].sort((a, b) =>
+            this.nomSpecialite(a.slug, a.nom).localeCompare(this.nomSpecialite(b.slug, b.nom), langue),
+          ),
+        );
       });
     // Pas de chargement par defaut : l'accueil n'affiche aucun medecin tant qu'on ne cherche pas.
     // Etat de connexion : determine si les resultats sont visibles ou floutes.
