@@ -351,8 +351,15 @@ export class AgendaMedecinComponent implements OnInit {
   }
 
   /** Ordonnance possible sauf rendez-vous annule (ANNULE ou ANNULEE), patient absent ou rendez-vous pris par telephone (sans compte patient). */
-  peutRedigerOrdonnance(r: { statut: string; source?: string | null }): boolean {
-    return !estAnnule(r.statut) && r.statut !== 'ABSENT' && r.source !== 'TELEPHONE';
+  peutRedigerOrdonnance(r: { statut: string; source?: string | null; patientId?: string | null }): boolean {
+    // Comme `peutRedigerOrdonnance` de l'appli : statut et source lus sans tenir compte de la casse ni des espaces,
+    // et pas de lien sans patient (l'appli exige aussi un patientId).
+    return (
+      !estAnnule((r.statut ?? '').trim()) &&
+      !estAbsent(r.statut) &&
+      (r.source ?? '').trim().toUpperCase() !== 'TELEPHONE' &&
+      !!(r.patientId ?? '').toString().trim()
+    );
   }
 
   libelleStatut(statut: string): string {
