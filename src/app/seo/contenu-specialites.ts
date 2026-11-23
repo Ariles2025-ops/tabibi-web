@@ -674,4 +674,36 @@ export const CONTENU_SPECIALITES: Record<string, { fr: ContenuSpecialite; ar: Co
       ],
     },
   },
+  pharmacie: {
+    fr: {
+      apropos: 'La pharmacie joue un rôle crucial dans la prévention, le diagnostic initial et le suivi des maladies sous la supervision médicale. Elle est conseillée pour tout besoin en médicaments, que ce soit pour une prise en charge d\'une maladie existante ou pour la prévention de futurs problèmes de santé.',
+      faq: [
+        { q: 'Quelles sont les heures d\'ouverture d\'une pharmacie en Algérie ?', r: 'En Algérie, les pharmacies sont généralement ouvertes de 8h à 21h, du lundi au vendredi, et de 8h à 13h le samedi. Certaines restent ouvertes toute la nuit dans les zones urbaines et de forte population.' },
+        { q: 'Quels types de médicaments peut-on acheter sans ordonnance ?', r: 'En Algérie, les médicaments sur ordonnance ne peuvent être achetés qu\'après consultation d\'un médecin. Cependant, certains médicaments sur prescription peuvent être accessibles avec une ordonnance valide, tandis que d\'autres produits non处方药如感冒药、止痛药等可以在药店直接购买，但需注意不要超出推荐剂量。' },
+      ],
+    },
+    ar: {
+      apropos: 'صيدلية هي مؤسسة طبية تُقدم الأدوية وتقديم المشورة العامة حول الأدوية. يجب استشارة الصيدلية عند الحاجة إلى إعداد أو توضيح الوصفات الطبية أو عند البحث عن معلومات عامة حول الأدوية.',
+      faq: [
+        { q: 'هل يمكنني الحصول على معلومات عامة حول الأدوية من الصيدلية؟', r: 'نعم، يمكنك طلب معلومات عامة حول الأدوية وفوائدها وأعراض побّاعتها من الصيدلية.' },
+        { q: 'كيف يمكنني معرفة ما إذا كانت الأدوية التي أنقلها من الخارج صالحة للمستعمل؟', r: 'يجب استشارة الصيدلية للتحقق من صحة الأدوية المستوردة وإمكانية استخدامها بشكل آمن.' },
+      ],
+    },
+  },
+  urologue: {
+    fr: {
+      apropos: 'Un urologue est un médecin spécialisé dans la santé des reins, du système urinaire et des voies génitales chez les hommes et les femmes. Il est conseillé de consulter un urologue en cas de problèmes tels que l\'incontinence urinaire, les infections urinaires, la lithiase rénale ou la dysfonction érectile.',
+      faq: [
+        { q: 'Quels sont les symptômes courants qui nécessitent une consultation avec un urologue ?', r: 'Des douleurs récurrentes à l\'urination, une augmentation de la fréquence urinaire nocturne, des incontinences urinaires, et les troubles de l\'érection peuvent indiquer la nécessité d\'une consultation.' },
+        { q: 'Comment peut-on prévenir les problèmes d\'urologie ?', r: 'Une alimentation équilibrée, une hygiène personnelle correcte, une bonne hydratation et une activité physique régulière contribuent à prévenir de nombreux problèmes urologiques.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب المسالك البولية هو متخصص في تشخيص وعلاج أمراض الجهاز البولي.u0004当他换行时，使用u0004标签保持格式。这意味着在转换为其他格式时，换行会被保留。以下是根据您的要求编写的阿拉伯语内容： APROPOS: طبيب المسالك البولية هو متخصص في تشخيص وعلاج أمراض الجهاز البولي. يُشجّع على استشارة هذا الطبيب عند الشك بأي مشاكل في الجهاز البولي أو عند الإصابة بأعراض مثل التشنجات البولية أو الفيضان البولي. u0004',
+      faq: [
+        { q: 'ما هي الأعراض الشائعة التي تشير إلى الحاجة لزيارة طبيب المسالك البولية؟', r: 'الأعراض الشائعة تشمل التشنجات البولية، الفيضان البولي، وجود الدم في البول، وجع البطن والظهر. u0004' },
+        { q: 'كم من الوقت يحتاج المريض عادةً للانتظار قبل مشاهدة طبيب المسالك البولية؟', r: 'الوقت المطلوب للانتظار يمكن أن يختلف حسب الحاجة، ولكن يُشجّع على الاتصال بالمكتب الطبي للحصول على معلومات دقيقة حول ترتيب المواعيد.' },
+      ],
+    },
+  },
 };
