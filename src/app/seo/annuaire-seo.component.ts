@@ -151,7 +151,7 @@ import {
         <details><summary>{{ t.q1(cible) }}</summary><p>{{ t.r1 }}</p></details>
         <details><summary>{{ t.q2 }}</summary><p>{{ t.r2 }}</p></details>
         <details><summary>{{ t.q3 }}</summary>
-          <p>{{ t.r3 }} <a routerLink="/praticien">{{ t.praticien }}</a></p></details>
+          <p>{{ t.r3 }} <a [routerLink]="p + '/praticien'">{{ t.praticien }}</a></p></details>
       </section>
     </main>
   `,
