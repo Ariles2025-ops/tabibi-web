@@ -63,9 +63,9 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
             <div>
               <strong style="color:var(--ink)"><i class="fa fa-clock fa-xs" style="color:var(--blue)"></i> {{ r.debut | date:'HH:mm' }}</strong>
               <span class="badge-statut" [style.background]="estAbsent(r.statut) ? 'var(--red-l)' : 'var(--blue-l)'" [style.color]="estAbsent(r.statut) ? 'var(--red)' : 'var(--blue-d)'"
-                    style="display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span><br>
+                    style="display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-inline-start:6px">{{ libelleStatut(r.statut) }}</span><br>
               <span style="color:var(--text2)"><i class="fa fa-user fa-xs"></i> {{ r.nomPatient || nom(r.patientId) }}</span>
-              <a *ngIf="r.telephonePatient || telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">
+              <a *ngIf="r.telephonePatient || telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-inline-start:8px;text-decoration:none">
                 <i class="fa fa-phone fa-xs"></i> {{ tel }}
               </a>
             </div>

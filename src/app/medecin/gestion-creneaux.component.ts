@@ -131,8 +131,8 @@ const SERIE_MAX = 48;
           <span>
             <strong style="color:var(--ink)">{{ c.debut | date:'HH:mm':'+0100' }}</strong>
             <span style="color:var(--text3)"> · {{ c.dureeMinutes }} min</span>
-            <span *ngIf="c.disponible" style="display:inline-block;margin-left:8px;background:var(--blue-l);color:var(--blue-d);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600">{{ langue.t('Libre', 'متاح') }}</span>
-            <span *ngIf="!c.disponible" style="display:inline-block;margin-left:8px;background:var(--red-l);color:var(--red);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600">{{ langue.t('Réservé', 'محجوز') }}</span>
+            <span *ngIf="c.disponible" style="display:inline-block;margin-inline-start:8px;background:var(--blue-l);color:var(--blue-d);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600">{{ langue.t('Libre', 'متاح') }}</span>
+            <span *ngIf="!c.disponible" style="display:inline-block;margin-inline-start:8px;background:var(--red-l);color:var(--red);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600">{{ langue.t('Réservé', 'محجوز') }}</span>
           </span>
           <ng-container *ngIf="c.disponible">
             <span *ngIf="aConfirmer() === c.id" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">

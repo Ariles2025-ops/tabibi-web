@@ -46,3 +46,23 @@ describe('GestionCreneauxComponent : RDV pris au téléphone', () => {
     expect(fixture.nativeElement.textContent).toContain('تم تسجيل الموعد.');
   });
 });
+
+describe('GestionCreneauxComponent : mise en page arabe', () => {
+  it('espace les pastilles « Libre » / « Réservé » avec une marge logique (valable en arabe), pas margin-left', () => {
+    TestBed.configureTestingModule({
+      imports: [GestionCreneauxComponent],
+      providers: [provideRouter([]), { provide: AuthService, useValue: { seConnecter: () => undefined } }],
+    });
+    const f = TestBed.createComponent(GestionCreneauxComponent);
+    const creneaux = [
+      { id: 'c1', medecinId: 'm1', debut: '2099-01-05T09:00:00Z', dureeMinutes: 30, disponible: true },
+      { id: 'c2', medecinId: 'm1', debut: '2099-01-05T10:00:00Z', dureeMinutes: 30, disponible: false },
+    ];
+    const source: SourceCreneaux = { lister: () => of(creneaux), ouvrir: () => of(), supprimer: () => of(undefined) };
+    f.componentRef.setInput('source', source);
+    f.detectChanges();
+    const html: string = f.nativeElement.innerHTML;
+    expect(html).toContain('margin-inline-start');
+    expect(html).not.toContain('margin-left');
+  });
+});
