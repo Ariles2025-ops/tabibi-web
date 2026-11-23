@@ -63,7 +63,7 @@ export function messageConflit(e: HttpErrorResponse, langue: LangueService): str
   if (e.status !== 409 || !langue.ar() || typeof texte !== 'string' || !texte.trim()) return null;
   if (/[\u0600-\u06FF]/.test(texte)) return null;
   const m = texte.toLowerCase();
-  if (m.includes('rendez-vous à venir')) return 'لديك بالفعل موعد قادم مع هذا الطبيب: ألغِه لاختيار موعد آخر.';
+  if (m.includes('rendez-vous à venir') || m.includes('rendez-vous a venir')) return 'لديك بالفعل موعد قادم مع هذا الطبيب: ألغِه لاختيار موعد آخر.';
   if (m.includes('chevauche')) return 'هذا الموعد يتداخل مع موعد آخر لديك.';
   if (m.includes('déjà passé') || m.includes('deja passe')) return 'هذا الموعد قد مضى بالفعل.';
   if (m.includes('pris') || m.includes('réservé')) return 'هذا الموعد حُجز للتوّ.';
