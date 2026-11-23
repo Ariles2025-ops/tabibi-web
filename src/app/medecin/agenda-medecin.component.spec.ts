@@ -216,6 +216,16 @@ describe('AgendaMedecinComponent', () => {
     expect(texte()).not.toContain('Rédiger une ordonnance');
   });
 
+  it('statut « absent » ou source « telephone » en minuscules, ou sans patient : pas de « Rédiger une ordonnance » (comme l appli)', () => {
+    medecinService.agenda.and.returnValue(of([
+      { ...CONFIRME, statut: 'absent' },
+      { ...CONFIRME, id: 'r8', source: 'telephone' },
+      { ...CONFIRME, id: 'r7', patientId: '' },
+    ]));
+    fixture.detectChanges();
+    expect(texte()).not.toContain('Rédiger une ordonnance');
+  });
+
   it('un RDV en ligne garde « Rédiger une ordonnance »', () => {
     fixture.detectChanges();
     expect(texte()).toContain('Rédiger une ordonnance');
