@@ -35,7 +35,7 @@ import { MedecinService } from './medecin.service';
         <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
           {{ l.t('Adresse e-mail du compte Ndawik de votre secrétaire', 'البريد الإلكتروني لحساب سكرتيرتك على نداويك') }}
           <input class="champ" type="email" dir="ltr" [(ngModel)]="email" name="email" required autocomplete="off"
-                 placeholder="Ex. secretaire@exemple.dz" style="color:var(--ink);font-size:1rem">
+                 [attr.placeholder]="l.t('Ex. secretaire@exemple.dz', 'مثال: secretaire@exemple.dz')" style="color:var(--ink);font-size:1rem">
         </label>
         <p style="margin:0;color:var(--text3);font-size:.9rem">
           {{ l.t('La secrétaire doit avoir créé son compte Ndawik. Elle reçoit une invitation à accepter depuis ses notifications.', 'يجب أن تكون السكرتيرة قد أنشأت حسابها على نداويك. ستتلقى دعوة لقبولها.') }}

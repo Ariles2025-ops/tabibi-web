@@ -238,6 +238,12 @@ describe('SecretairesComponent', () => {
       expect(t).not.toContain('Rattachée');
     });
 
+    it('met l\'exemple d\'e-mail en arabe (« مثال: ») et non « Ex. »', async () => {
+      await afficher();
+      const champ: HTMLInputElement = fixture.nativeElement.querySelector('input[name="email"]');
+      expect(champ.placeholder).toBe('مثال: secretaire@exemple.dz');
+    });
+
     it('confirme le retrait en arabe puis annonce le resultat en arabe', async () => {
       service.retirerSecretaire.and.returnValue(of(void 0));
       await afficher();
