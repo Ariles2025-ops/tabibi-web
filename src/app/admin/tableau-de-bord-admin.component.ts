@@ -32,17 +32,27 @@ import { AdminService, StatistiquesAdministration, libelleRappels } from './admi
           <span style="display:block;color:var(--text3);font-size:.9rem">Candidatures refusées</span>
           <strong style="display:block;font-size:2rem;font-weight:800;color:var(--blue)">{{ s.candidaturesRefusees }}</strong>
         </li>
+        <li style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px">
+          <span style="display:block;color:var(--text3);font-size:.9rem">Avis signalés</span>
+          <strong style="display:block;font-size:2rem;font-weight:800;color:var(--blue)">{{ s.avisSignales }}</strong>
+        </li>
+        <li *ngIf="s.demandesNouvelles !== undefined" style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px">
+          <span style="display:block;color:var(--text3);font-size:.9rem">Demandes praticien nouvelles</span>
+          <strong style="display:block;font-size:2rem;font-weight:800;color:var(--blue)">{{ s.demandesNouvelles }}</strong>
+        </li>
       </ul>
 
       <p style="margin:24px 0 0">
         <a class="bouton" routerLink="/admin/candidatures">Examiner les candidatures</a>
+        <a class="bouton" routerLink="/admin/demandes" style="margin-inline-start:8px">Voir les demandes praticien</a>
+        <a class="bouton" routerLink="/admin/avis" style="margin-inline-start:8px">Modérer les avis</a>
       </p>
 
       <section style="background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:16px 18px;margin:32px 0 0">
         <h2 style="font-size:1.1rem;margin:0 0 6px">Rappels de rendez-vous</h2>
         <p style="color:var(--text3);margin:0 0 12px">
-          Les patients reçoivent un rappel la veille de chaque rendez-vous confirmé (envoi automatique toutes les
-          heures, un seul rappel par rendez-vous). Lancez l'envoi maintenant pour vérifier ou rattraper une exécution.
+          Les patients reçoivent un rappel dans les 24 heures qui précèdent chaque rendez-vous confirmé (envoi
+          automatique toutes les heures, un seul rappel par rendez-vous). Lancez l'envoi maintenant pour vérifier ou rattraper une exécution.
         </p>
         <button type="button" class="bouton-secondaire" (click)="executerRappels()" [disabled]="rappelsEnCours()">
           {{ rappelsEnCours() ? 'Envoi…' : 'Exécuter les rappels maintenant' }}

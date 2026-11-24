@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { PLATFORM_ID } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { ConfigService } from '../config/config.service';
 import { AuthService } from './auth.service';
@@ -10,10 +10,24 @@ describe('AuthService', () => {
   beforeEach(() => localStorage.setItem('tabibi.equipe', '1'));
   afterEach(() => localStorage.removeItem('tabibi.equipe'));
 
-  it('pre-lancement : sans acces equipe, « Se connecter » mene a /bientot', async () => {
+  it('phase de test : sans acces equipe, la connexion est ouverte mais pas l\'inscription', async () => {
     localStorage.removeItem('tabibi.equipe');
-    const { connexionFermee } = await import('../lancement');
-    expect(connexionFermee()).toBeTrue();
+    const { connexionFermee, inscriptionFermee } = await import('../lancement');
+    expect(connexionFermee()).toBeFalse();
+    expect(inscriptionFermee()).toBeTrue();
+  });
+
+  it('phase de test sans acces equipe : « Créer un compte » mene a /bientot, sans passer par Keycloak', async () => {
+    localStorage.removeItem('tabibi.equipe');
+    const auth = configurer('browser');
+    const router = TestBed.inject(Router);
+    spyOn(router, 'navigateByUrl').and.resolveTo(true);
+
+    expect(auth.inscriptionOuverte()).toBeFalse();
+    await auth.sInscrireParEmail('/');
+
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/bientot');
+    expect(oauth.initCodeFlow).not.toHaveBeenCalled();
   });
 
   let oauth: jasmine.SpyObj<OAuthService>;

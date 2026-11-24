@@ -40,6 +40,22 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     expect(description()).not.toContain('rendez-vous');
   });
 
+  it('fiche pharmacie : pas de « Paiement au cabinet », libelles « Pharmacies »', () => {
+    const ph = { ...dentiste, nomComplet: 'Pharmacie Centrale', specialiteSlug: 'pharmacie', specialiteFr: 'Pharmacie' };
+    const el = creer('fr', ph, [{ ...ph, id: 'autre' }]);
+    expect(el.textContent).not.toContain('Paiement');
+    expect(el.textContent).not.toContain('Au cabinet');
+    expect(el.querySelector('.pp-fil')?.textContent).toContain('Pharmacies');
+    expect(el.querySelector('.pp-fil')?.textContent).not.toContain('Médecins');
+    expect(el.textContent).toContain('Autres pharmacies');
+    expect(el.textContent).not.toContain('Autres praticiens');
+  });
+
+  it('fiche medecin : ligne « Paiement » conservee', () => {
+    const el = creer('fr', dentiste);
+    expect(el.textContent).toContain('Au cabinet');
+  });
+
   it('reservable connu par la liste : badge, bouton et description de reservation', () => {
     const el = creer('fr', dentiste, [{ ...dentiste, reservable: true }]);
     expect(el.querySelector('.pp-resa')).toBeTruthy();
@@ -65,7 +81,7 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
   });
 
   it('fiche absente : titre de l onglet dans la langue de la page (FR et AR)', () => {
-    for (const [langue, attendu] of [['fr', 'Praticien introuvable | Tabibi'], ['ar', 'الطبيب غير موجود | طبيبي']] as const) {
+    for (const [langue, attendu] of [['fr', 'Praticien introuvable | Ndawik'], ['ar', 'الطبيب غير موجود | نداويك']] as const) {
       TestBed.resetTestingModule();
       const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'rechercher']);
       TestBed.configureTestingModule({
@@ -97,7 +113,7 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     expect(f.name).toBe('Dr Amine Benali');
     expect(f.medicalSpecialty).toBe('Dentiste');
     expect(f.inLanguage).toBe('fr');
-    expect(f.url).toBe('https://tabibi.doctor/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/dr-amine-benali');
+    expect(f.url).toBe('https://ndawik.com/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/dr-amine-benali');
     expect(f.address.addressRegion).toBe('Oran');
     const fil = ld('ld-fil');
     expect(fil['@type']).toBe('BreadcrumbList');
@@ -112,7 +128,7 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
     const f = ld('ld-praticien');
     expect(f['@type']).toBe('Physician');
     expect(f.inLanguage).toBe('ar');
-    expect(f.url).toContain('https://tabibi.doctor/ar/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/');
+    expect(f.url).toContain('https://ndawik.com/ar/praticiens/3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48/');
     expect(f.address.addressRegion).toBe('وهران');
     expect(ld('ld-fil').itemListElement[0].name).toBe('الرئيسية');
     expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(f.url);

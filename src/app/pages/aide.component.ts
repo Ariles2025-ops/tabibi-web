@@ -8,22 +8,22 @@ interface Question { q: string; r: string; lien?: { texte: string; vers: string 
 
 const FR: Question[] = [
   { q: 'Comment prendre rendez-vous ?', r: "Recherchez un praticien par nom, spécialité ou wilaya, ouvrez sa fiche et choisissez un créneau libre. La prise de rendez-vous en ligne ouvre très bientôt : la plateforme est déjà consultable." },
-  { q: 'Tabibi est-il payant ?', r: "Non, Tabibi est gratuit pour les patients. La consultation se règle au cabinet, en espèces ou avec la carte Chifa selon le praticien. Aucun prépaiement n'est demandé." },
+  { q: 'Ndawik est-il payant ?', r: "Non, Ndawik est gratuit pour les patients. La consultation se règle au cabinet, en espèces ou avec la carte Chifa selon le praticien. Aucun prépaiement n'est demandé." },
   { q: 'Comment annuler un rendez-vous ?', r: 'Depuis « Mes rendez-vous », annulez le rendez-vous : le créneau est libéré pour un autre patient.' },
   { q: 'Comment me connecter ?', r: 'Par téléphone (code SMS) ou par e-mail et mot de passe.' },
-  { q: 'Je suis praticien, comment rejoindre Tabibi ?', r: "Retrouvez votre fiche ou déposez votre candidature avec votre numéro d'inscription à l'Ordre. Notre équipe le vérifie avant d'activer votre compte.", lien: { texte: 'Vous êtes praticien ?', vers: '/praticien' } },
-  { q: 'Comment supprimer mon compte ?', r: "Dans l'application : « Mon profil » ; sur le site : « Mon compte ». Choisissez « Supprimer mon compte », ou écrivez-nous à contact@tabibi.doctor.", lien: { texte: 'Supprimer mon compte', vers: '/supprimer-mon-compte' } },
-  { q: 'Comment vous contacter ?', r: 'Écrivez-nous à contact@tabibi.doctor : nous répondons sous 48 heures ouvrées.' },
+  { q: 'Je suis praticien, comment rejoindre Ndawik ?', r: "Retrouvez votre fiche ou déposez votre candidature avec votre numéro d'inscription à l'Ordre. Notre équipe le vérifie avant d'activer votre compte.", lien: { texte: 'Vous êtes praticien ?', vers: '/praticien' } },
+  { q: 'Comment supprimer mon compte ?', r: "Dans l'application : « Mon profil » ; sur le site : « Mon compte ». Choisissez « Supprimer mon compte », ou écrivez-nous à contact@ndawik.com.", lien: { texte: 'Supprimer mon compte', vers: '/supprimer-mon-compte' } },
+  { q: 'Comment vous contacter ?', r: 'Écrivez-nous à contact@ndawik.com : nous répondons sous 48 heures ouvrées.' },
 ];
 
 const AR: Question[] = [
   { q: 'كيف أحجز موعدًا؟', r: 'ابحث عن طبيب بالاسم أو التخصص أو الولاية، افتح صفحته واختر موعدًا متاحًا. حجز المواعيد عبر الإنترنت متاح قريبًا جدًا، ويمكنك البحث عن طبيب من الآن.' },
-  { q: 'هل طبيبي مجاني؟', r: 'نعم، طبيبي مجاني للمرضى. تُدفع الاستشارة في العيادة نقدًا أو ببطاقة الشفاء حسب الطبيب، دون أي دفع مسبق.' },
+  { q: 'هل نداويك مجاني؟', r: 'نعم، نداويك مجاني للمرضى. تُدفع الاستشارة في العيادة نقدًا أو ببطاقة الشفاء حسب الطبيب، دون أي دفع مسبق.' },
   { q: 'كيف ألغي موعدًا؟', r: 'من صفحة «مواعيدي» ألغِ الموعد ليصبح متاحًا لمريض آخر.' },
   { q: 'كيف أسجّل الدخول؟', r: 'برقم الهاتف (رمز عبر رسالة قصيرة) أو بالبريد الإلكتروني وكلمة المرور.' },
-  { q: 'أنا طبيب، كيف أنضم إلى طبيبي؟', r: 'ابحث عن صفحتك أو قدّم طلبك مع رقم تسجيلك في عمادة الأطباء. يتحقق فريقنا منه قبل تفعيل حسابك.', lien: { texte: 'هل أنت طبيب؟', vers: '/praticien' } },
-  { q: 'كيف أحذف حسابي؟', r: 'في التطبيق من «ملفي الشخصي»، وفي الموقع من «حسابي»، اختر «حذف حسابي»، أو راسلنا على contact@tabibi.doctor.', lien: { texte: 'حذف الحساب', vers: '/supprimer-mon-compte' } },
-  { q: 'كيف أتواصل معكم؟', r: 'راسلنا على contact@tabibi.doctor، نرد خلال 48 ساعة عمل.' },
+  { q: 'أنا طبيب، كيف أنضم إلى نداويك؟', r: 'ابحث عن صفحتك أو قدّم طلبك مع رقم تسجيلك في عمادة الأطباء. يتحقق فريقنا منه قبل تفعيل حسابك.', lien: { texte: 'هل أنت طبيب؟', vers: '/praticien' } },
+  { q: 'كيف أحذف حسابي؟', r: 'في التطبيق من «ملفي الشخصي»، وفي الموقع من «حسابي»، اختر «حذف حسابي»، أو راسلنا على contact@ndawik.com.', lien: { texte: 'حذف حسابي', vers: '/ar/supprimer-mon-compte' } },
+  { q: 'كيف أتواصل معكم؟', r: 'راسلنا على contact@ndawik.com، نرد خلال 48 ساعة عمل.' },
 ];
 
 /** Centre d'aide public (/aide et /ar/aide) : questions frequentes courtes et contact. */
@@ -44,7 +44,7 @@ const AR: Question[] = [
           <p>{{ f.r }} <a *ngIf="f.lien" [routerLink]="f.lien.vers">{{ f.lien.texte }}</a></p>
         </details>
       </section>
-      <a class="bouton" href="mailto:contact@tabibi.doctor">{{ ar ? 'اتصل بنا' : 'Nous contacter' }}</a>
+      <a class="bouton" href="mailto:contact@ndawik.com">{{ ar ? 'اتصل بنا' : 'Nous contacter' }}</a>
     </main>
   `,
     styles: [`
@@ -75,8 +75,8 @@ export class AideComponent implements OnInit {
     referencerPage(this.document, this.title, this.meta, {
       titre: this.ar ? 'مركز المساعدة' : "Centre d'aide",
       description: this.ar
-        ? 'مساعدة طبيبي: حجز موعد، الإلغاء، تسجيل الدخول، حذف الحساب والتواصل معنا.'
-        : "Aide Tabibi : prendre ou annuler un rendez-vous, se connecter, rejoindre Tabibi en tant que praticien, supprimer son compte, nous contacter.",
+        ? 'مساعدة نداويك: حجز موعد، الإلغاء، تسجيل الدخول، حذف الحساب والتواصل معنا.'
+        : "Aide Ndawik : prendre ou annuler un rendez-vous, se connecter, rejoindre Ndawik en tant que praticien, supprimer son compte, nous contacter.",
       chemin: '/aide',
       ar: this.ar,
     });

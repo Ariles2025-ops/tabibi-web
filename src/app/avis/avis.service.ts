@@ -30,6 +30,12 @@ export interface AvisPublic {
   note: number;
   commentaire: string | null;
   deposeLe: string;
+  /**
+   * true quand l'avis est deja signale. ATTENTION : l'API ne renvoie pas encore ce champ
+   * (AvisPublicVue = id, note, commentaire, deposeLe) ; il est prevu cote backend (PR coordonnee,
+   * reserve au medecin concerne). Tant qu'il est absent, seul l'etat en memoire s'applique.
+   */
+  signale?: boolean;
 }
 
 /** Synthese publique d'un medecin (GET /api/medecins/{id}/avis) : moyenne null s'il n'a aucun avis publie. */
@@ -58,9 +64,9 @@ export function libelleStatutAvis(statut: string | null | undefined): string {
 }
 
 /** « 4,5 / 5 (12 avis) » au format francais (virgule decimale), ou « Aucun avis pour le moment ». */
-export function formaterMoyenne(moyenne: number | null, nombre: number): string {
-  if (moyenne === null || nombre === 0) return 'Aucun avis pour le moment';
-  return `${moyenne.toFixed(1).replace('.', ',')} / 5 (${nombre} avis)`;
+export function formaterMoyenne(moyenne: number | null, nombre: number, arabe = false): string {
+  if (moyenne === null || nombre === 0) return arabe ? 'لا توجد آراء حاليًا' : 'Aucun avis pour le moment';
+  return `${moyenne.toFixed(1).replace('.', ',')} / 5 (${nombre} ${arabe ? 'رأي' : 'avis'})`;
 }
 
 /**

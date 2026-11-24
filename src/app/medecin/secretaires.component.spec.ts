@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { Rattachement } from '../secretaire/secretaire.service';
+import { LangueService } from '../partage/langue.service';
 import { MedecinService } from './medecin.service';
 import { SecretairesComponent } from './secretaires.component';
 
@@ -29,6 +30,7 @@ describe('SecretairesComponent', () => {
   let service: jasmine.SpyObj<MedecinService>;
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<MedecinService>('MedecinService', ['secretaires', 'rattacherSecretaire', 'retirerSecretaire']);
     service.secretaires.and.returnValue(of([RATTACHEMENT, ANCIEN]));
@@ -79,7 +81,7 @@ describe('SecretairesComponent', () => {
   it('liste les secretaires rattachees, les plus anciens rattachements d abord, avec l explication du champ', async () => {
     await afficher();
 
-    expect(texte()).toContain('Adresse e-mail du compte Tabibi de votre secrétaire');
+    expect(texte()).toContain('Adresse e-mail du compte Ndawik de votre secrétaire');
     expect(texte()).toContain("Elle reçoit une invitation à accepter depuis ses notifications.");
     expect(fixture.nativeElement.querySelector('input[name="email"]').getAttribute('type')).toBe('email');
     const items = lignes();
@@ -101,7 +103,7 @@ describe('SecretairesComponent', () => {
     await afficher();
 
     expect(service.rattacherSecretaire).not.toHaveBeenCalled();
-    expect(texte()).toContain("Indiquez l'adresse e-mail du compte Tabibi de votre secrétaire.");
+    expect(texte()).toContain("Indiquez l'adresse e-mail du compte Ndawik de votre secrétaire.");
   });
 
   it('rattache la secretaire par e-mail (nettoye), confirme, vide le champ et recharge', async () => {
@@ -134,7 +136,7 @@ describe('SecretairesComponent', () => {
 
   it('affiche le { erreur } d un 400 (aucun compte avec cet e-mail) sans recharger', async () => {
     service.rattacherSecretaire.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: "Aucun compte Tabibi n'utilise cette adresse e-mail : nadia@exemple.dz" } })),
+      throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: "Aucun compte Ndawik n'utilise cette adresse e-mail : nadia@exemple.dz" } })),
     );
     await afficher();
 
@@ -142,7 +144,7 @@ describe('SecretairesComponent', () => {
     soumettre();
     await afficher();
 
-    expect(texte()).toContain("Aucun compte Tabibi n'utilise cette adresse e-mail : nadia@exemple.dz");
+    expect(texte()).toContain("Aucun compte Ndawik n'utilise cette adresse e-mail : nadia@exemple.dz");
     expect(service.secretaires).toHaveBeenCalledTimes(1);
   });
 
@@ -167,6 +169,42 @@ describe('SecretairesComponent', () => {
     expect(service.secretaires).toHaveBeenCalledTimes(2);
   });
 
+  it("une invitation en attente s'annule (« Annuler l'invitation »), au lieu de « Retirer cette secrétaire » comme dans l'appli", async () => {
+    const EN_ATTENTE: Rattachement = { ...RATTACHEMENT, id: 'ra2', accepte: false };
+    service.secretaires.and.returnValue(of([EN_ATTENTE]));
+    service.retirerSecretaire.and.returnValue(of(void 0));
+    await afficher();
+
+    expect(bouton(lignes()[0], 'Retirer')).toBeUndefined();
+    bouton(lignes()[0], "Annuler l'invitation")!.click();
+    await afficher();
+    expect(lignes()[0].textContent).toContain('Annuler cette invitation ?');
+    expect(lignes()[0].textContent).not.toContain('Retirer cette secrétaire');
+    bouton(lignes()[0], 'Oui')!.click();
+    await afficher();
+
+    expect(service.retirerSecretaire).toHaveBeenCalledWith('ra2');
+    expect(texte()).toContain('Invitation annulée.');
+  });
+
+  it('une date de rattachement absente ou illisible n\'est pas affichee et passe en fin de liste, comme dans l\'appli', async () => {
+    const SANS_DATE = { ...ANCIEN, id: 'ra3', secretaireNom: 'Sans Date', secretaireEmail: 'sd@exemple.dz', creeLe: '' } as Rattachement;
+    const ILLISIBLE = { ...ANCIEN, id: 'ra4', secretaireNom: 'Illisible', secretaireEmail: 'il@exemple.dz', creeLe: 'pas-une-date' } as Rattachement;
+    const EN_ATTENTE = { ...ANCIEN, id: 'ra5', secretaireNom: 'Attente', secretaireEmail: 'at@exemple.dz', creeLe: 'nimporte', accepte: false } as Rattachement;
+    service.secretaires.and.returnValue(of([SANS_DATE, RATTACHEMENT, ILLISIBLE, EN_ATTENTE]));
+    await afficher();
+    const l = lignes();
+    expect(l[0].textContent).toContain('Nadia Saidi');
+    expect(l[0].textContent).toContain('Rattachée le');
+    for (const ligne of l.slice(1)) {
+      expect(ligne.textContent).not.toContain('Rattachée le');
+      expect(ligne.textContent).not.toContain('Invitée le');
+    }
+    expect(l[3].textContent).toContain('Pas encore acceptée');
+    expect(texte()).not.toContain('null');
+    expect(texte()).not.toContain('Invalid');
+  });
+
   it('affiche un etat vide et le message reserve aux medecins sur un 403', async () => {
     service.secretaires.and.returnValue(of([]));
     await afficher();
@@ -176,5 +214,72 @@ describe('SecretairesComponent', () => {
     fixture = TestBed.createComponent(SecretairesComponent);
     await afficher();
     expect(texte()).toContain('Cette page est réservée aux médecins.');
+  });
+  describe('en arabe (comme dans l\'appli)', () => {
+    beforeEach(() => TestBed.inject(LangueService).ar.set(true));
+
+    it('affiche l\'ecran de droite a gauche, avec les memes mots que l\'appli et sans francais', async () => {
+      const EN_ATTENTE: Rattachement = { ...RATTACHEMENT, id: 'ra2', accepte: false };
+      service.secretaires.and.returnValue(of([RATTACHEMENT, EN_ATTENTE, ANCIEN]));
+      await afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      const t = texte();
+      expect(t).toContain('سكرتيراتي');
+      expect(t).toContain('السكرتيرات المرتبطات');
+      expect(t).toContain('دعوة هذه السكرتيرة');
+      expect(t).toContain('انضمت في');
+      expect(t).toContain('قيد الانتظار');
+      expect(t).toContain('إزالة');
+      expect(t).toContain('إلغاء الدعوة');
+      expect(t).toContain('سكرتيرة 66666666');
+      expect(t).not.toContain('Secrétaire');
+      expect(t).not.toContain('Retirer');
+      expect(t).not.toContain('Rattachée');
+    });
+
+    it('met l\'exemple d\'e-mail en arabe (« مثال: ») et non « Ex. »', async () => {
+      await afficher();
+      const champ: HTMLInputElement = fixture.nativeElement.querySelector('input[name="email"]');
+      expect(champ.placeholder).toBe('مثال: secretaire@exemple.dz');
+    });
+
+    it('confirme le retrait en arabe puis annonce le resultat en arabe', async () => {
+      service.retirerSecretaire.and.returnValue(of(void 0));
+      await afficher();
+      bouton(lignes()[0], 'إزالة')!.click();
+      await afficher();
+      expect(lignes()[0].textContent).toContain('إزالة هذه السكرتيرة؟');
+      bouton(lignes()[0], 'نعم')!.click();
+      await afficher();
+      expect(service.retirerSecretaire).toHaveBeenCalledWith('ra0');
+      expect(texte()).toContain('تمت إزالة السكرتيرة وتم إعلامها.');
+    });
+
+    it('refuse une adresse invalide et annonce l\'invitation envoyee en arabe', async () => {
+      service.rattacherSecretaire.and.returnValue(of(RATTACHEMENT));
+      await afficher();
+      await saisir('pas-un-email');
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('أدخل البريد الإلكتروني لحساب سكرتيرتك على نداويك.');
+      expect(service.rattacherSecretaire).not.toHaveBeenCalled();
+
+      await saisir(EMAIL);
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('تم إرسال الدعوة: ستصل سكرتيرتك إلى مواعيدك بمجرد قبولها.');
+    });
+
+    it('affiche l\'etat vide et le message reserve aux medecins en arabe', async () => {
+      service.secretaires.and.returnValue(of([]));
+      await afficher();
+      expect(texte()).toContain('لا توجد سكرتيرة مرتبطة حاليًا.');
+
+      service.secretaires.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      fixture = TestBed.createComponent(SecretairesComponent);
+      await afficher();
+      expect(texte()).toContain('هذه الصفحة مخصّصة للأطباء.');
+    });
   });
 });

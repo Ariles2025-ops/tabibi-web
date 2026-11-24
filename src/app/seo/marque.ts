@@ -3,24 +3,23 @@ import { liensLangues } from './referentiel-seo';
 import { poserLangueDocument } from './page-seo';
 
 /** Adresse du site (absolue, sans « / » final). */
-export const SITE = 'https://tabibi.doctor';
+export const SITE = 'https://ndawik.com';
 
 /**
- * Lien Google Play de l'appli Tabibi DZ, ajoute dans `sameAs` de l'Organization des qu'il est renseigne.
- * A COMPLETER : coller ici l'adresse de la fiche Play Store (https://play.google.com/store/apps/details?id=…).
+ * Lien Google Play de l'appli Ndawik, ajoute dans `sameAs` de l'Organization des qu'il est renseigne.
  * D'autres profils (Facebook, Instagram, LinkedIn…) peuvent etre ajoutes dans AUTRES_PROFILS.
  */
-export const LIEN_GOOGLE_PLAY = '';
+export const LIEN_GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=dz.tabibi.app';
 export const AUTRES_PROFILS: string[] = [];
 
-/** Titres et descriptions de l'accueil : la marque (Tabibi Doctor / Tabibi DZ / طبيبي) et « tabibi.doctor » y figurent. */
+/** Titres et descriptions de l'accueil : la marque (Ndawik / نداويك) et l'ancien nom Tabibi y figurent. */
 export const ACCUEIL_FR = {
-  titre: 'Tabibi Doctor (Tabibi DZ) : trouvez un médecin et prenez rendez-vous en Algérie',
-  description: 'Tabibi Doctor (tabibi.doctor), aussi appelé Tabibi DZ : la plateforme médicale qui réunit plus de 75 000 médecins, cliniques et pharmacies en Algérie. Trouvez un praticien par spécialité et par wilaya, et prenez rendez-vous en quelques clics.',
+  titre: 'Ndawik : trouvez un médecin et prenez rendez-vous en Algérie',
+  description: 'Ndawik (anciennement Tabibi) : la plateforme médicale qui réunit plus de 75 000 médecins, cliniques et pharmacies en Algérie. Trouvez un praticien par spécialité et par wilaya, et prenez rendez-vous en quelques clics.',
 };
 export const ACCUEIL_AR = {
-  titre: 'طبيبي Tabibi Doctor (Tabibi DZ): احجز موعدك مع طبيب في الجزائر',
-  description: 'طبيبي Tabibi Doctor (tabibi.doctor)، المعروف أيضًا باسم Tabibi DZ: احجز موعدك مع طبيب في الجزائر. أكثر من 75 000 طبيب في الولايات الـ69، حسب التخصص والولاية. الدفع في العيادة.',
+  titre: 'نداويك: احجز موعدك مع طبيب في الجزائر',
+  description: 'نداويك (Tabibi سابقًا): احجز موعدك مع طبيب في الجزائر. أكثر من 75 000 طبيب في الولايات الـ69، حسب التخصص والولاية. الدفع في العيادة.',
 };
 
 /** JSON-LD Organization : identite de la marque pour les moteurs de recherche. */
@@ -30,10 +29,10 @@ export function organisationJsonLd(): object {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     '@id': `${SITE}/#organisation`,
-    name: 'Tabibi Doctor',
-    alternateName: ['Tabibi DZ', 'Tabibi Algérie', 'طبيبي'],
+    name: 'Ndawik',
+    alternateName: ['Tabibi', 'Tabibi Doctor', 'Tabibi DZ', 'نداويك'],
     url: `${SITE}/`,
-    logo: `${SITE}/assets/img/logo-tabibi.svg`,
+    logo: `${SITE}/icon-512.png`,
     areaServed: { '@type': 'Country', name: 'Algérie' },
     ...(sameAs.length ? { sameAs } : {}),
   };
@@ -45,8 +44,8 @@ export function siteWebJsonLd(): object {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     '@id': `${SITE}/#site`,
-    name: 'Tabibi Doctor',
-    alternateName: ['Tabibi DZ', 'Tabibi Algérie', 'طبيبي'],
+    name: 'Ndawik',
+    alternateName: ['Tabibi', 'Tabibi Doctor', 'Tabibi DZ', 'نداويك'],
     url: `${SITE}/`,
     inLanguage: ['fr', 'ar'],
     publisher: { '@id': `${SITE}/#organisation` },

@@ -6,6 +6,7 @@ import localeFr from '@angular/common/locales/fr';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { LangueService } from '../partage/langue.service';
 import { Besoin, DawiniService, Reponse } from './dawini.service';
 import { ReponsesDemandeComponent } from './reponses-demande.component';
 
@@ -52,6 +53,7 @@ describe('ReponsesDemandeComponent', () => {
   let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy };
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<DawiniService>('DawiniService', ['mesBesoins', 'reponses', 'cloturer']);
     service.mesBesoins.and.returnValue(of([OUVERTE]));
@@ -120,6 +122,40 @@ describe('ReponsesDemandeComponent', () => {
     expect(boutonCloturer()).toBeDefined();
   });
 
+  it('une reponse sans date lisible affiche « date inconnue » et passe en fin de liste, sans erreur (comme l\'appli)', async () => {
+    service.reponses.and.returnValue(of([
+      { ...DISPONIBLE, id: 'rp3', nomPharmacie: 'Pharmacie Sans Date', repondueLe: 'xx' },
+      DISPONIBLE,
+      INDISPONIBLE,
+    ]));
+    await afficher();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.map((li) => li.textContent)).toEqual([
+      jasmine.stringContaining('Pharmacie du Centre'),
+      jasmine.stringContaining('Pharmacie El Amel'),
+      jasmine.stringContaining('Pharmacie Sans Date'),
+    ]);
+    expect(items[2].textContent).toContain('date inconnue');
+    expect(items[0].textContent).not.toContain('date inconnue');
+  });
+
+  it('une demande sans date de publication lisible affiche « date inconnue », et une clôture illisible est omise', async () => {
+    service.mesBesoins.and.returnValue(of([{ ...CLOTUREE, publieLe: 'pas une date', clotureLe: 'xx' }]));
+    await afficher();
+
+    expect(texte()).toContain('date inconnue');
+    expect(texte()).not.toContain('publiée le');
+    expect(texte()).not.toContain('clôturée le');
+  });
+
+  it('propose la cloture meme si l API renvoie le statut en minuscules, comme l appli', async () => {
+    service.mesBesoins.and.returnValue(of([{ ...OUVERTE, statut: ' ouvert ' }]));
+    await afficher();
+
+    expect(boutonCloturer()).toBeDefined();
+  });
+
   it('cloture la demande, confirme et retire le bouton', async () => {
     service.cloturer.and.returnValue(of(CLOTUREE));
     await afficher();
@@ -177,5 +213,31 @@ describe('ReponsesDemandeComponent', () => {
     await afficher();
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.reponses).toHaveBeenCalledTimes(1);
+  });
+
+  it('s affiche en arabe (comme l\'appli) : statut, disponibilité, clôture et confirmation', async () => {
+    const langue = TestBed.inject(LangueService);
+    langue.ar.set(true);
+    try {
+      await afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('مفتوح · الجزائر');
+      expect(texte()).toContain('ردود الصيدليات');
+      const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+      expect(items[0].textContent).toContain('غير متوفر');
+      expect(items[1].textContent).toContain('متوفر');
+      expect(items[1].textContent).not.toContain('Disponible ·');
+      expect(items[1].textContent).toContain('1 250 دج');
+      expect(items[1].textContent).not.toContain('DA');
+      expect(texte()).not.toContain('Indisponible');
+      const bouton = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.includes('إغلاق الطلب'));
+      expect(bouton).toBeDefined();
+      bouton!.click();
+      await afficher();
+      expect(texte()).toContain('نعم، أغلق');
+    } finally {
+      langue.ar.set(false);
+    }
   });
 });

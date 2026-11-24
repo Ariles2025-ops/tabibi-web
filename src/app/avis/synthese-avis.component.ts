@@ -2,6 +2,7 @@ import { Component, OnChanges, computed, inject, input, signal } from '@angular/
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AvisPublic, AvisService, SyntheseAvis, formaterMoyenne } from './avis.service';
+import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
 
 /** Nombre de derniers avis affiches sous la moyenne. */
 const NOMBRE_DERNIERS_AVIS = 5;
@@ -16,14 +17,14 @@ const NOMBRE_DERNIERS_AVIS = 5;
     imports: [CommonModule],
     template: `
     <section>
-      <h2 style="font-size:1.1rem;margin:0 0 8px">Avis des patients</h2>
+      <h2 style="font-size:1.1rem;margin:0 0 8px">{{ arabe() ? 'آراء المرضى' : 'Avis des patients' }}</h2>
       <p *ngIf="synthese()" style="margin:0 0 12px"><strong>{{ libelle() }}</strong></p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:8px">
         <li *ngFor="let a of derniers()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px 14px">
           <strong>{{ a.note }} / 5</strong>
-          <span style="color:var(--text3)"> · {{ a.deposeLe | date:'d MMMM yyyy' }}</span>
+          <span style="color:var(--text3)"> · <ng-container *ngIf="dateLisible(a.deposeLe) && !arabe()">{{ a.deposeLe | date:'d MMMM yyyy' }}</ng-container><span *ngIf="dateLisible(a.deposeLe) && arabe()" dir="ltr">{{ a.deposeLe | date:'dd/MM/yyyy' }}</span><ng-container *ngIf="!dateLisible(a.deposeLe)">{{ arabe() ? 'تاريخ غير معروف' : 'date inconnue' }}</ng-container></span>
           <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
         </li>
       </ul>
@@ -34,20 +35,25 @@ export class SyntheseAvisComponent implements OnChanges {
   private service = inject(AvisService);
 
   medecinId = input.required<string>();
+  /** Affichage en arabe (fiche du praticien) ; francais par defaut. */
+  arabe = input(false);
   synthese = signal<SyntheseAvis | null>(null);
   erreur = signal('');
 
   libelle = computed(() => {
     const s = this.synthese();
-    return s ? formaterMoyenne(s.moyenne, s.nombre) : '';
+    return s ? formaterMoyenne(s.moyenne, s.nombre, this.arabe()) : '';
   });
 
   /** Les derniers avis publies, les plus recents d'abord. */
   derniers = computed<AvisPublic[]>(() => {
     const s = this.synthese();
     if (!s) return [];
-    return [...s.avis].sort((a, b) => Date.parse(b.deposeLe) - Date.parse(a.deposeLe)).slice(0, NOMBRE_DERNIERS_AVIS);
+    return trierParDateRecenteDabord(s.avis, (a) => a.deposeLe).slice(0, NOMBRE_DERNIERS_AVIS);
   });
+
+  /** Vrai si la date est lisible (sinon « date inconnue », comme dans l'appli). */
+  dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
 
   ngOnChanges() {
     this.charger();
@@ -58,7 +64,10 @@ export class SyntheseAvisComponent implements OnChanges {
     this.erreur.set('');
     this.service.synthese(this.medecinId()).subscribe({
       next: (s) => this.synthese.set(s),
-      error: (e: HttpErrorResponse) => this.erreur.set(e.error?.erreur ?? 'Impossible de charger les avis.'),
+      // Comme l'appli : « Avis indisponibles pour le moment. » ; en arabe, jamais le message français de l'API.
+      error: (e: HttpErrorResponse) => this.erreur.set(this.arabe()
+        ? 'الآراء غير متاحة حاليًا.'
+        : (e.error?.erreur ?? 'Avis indisponibles pour le moment.')),
     });
   }
 }

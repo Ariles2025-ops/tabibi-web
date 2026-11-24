@@ -4,7 +4,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { libelleLangue } from '../fiche-medecin/fiche-infos';
-import { SPECIALITES_SEO, liensLangues, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
+import { SLUG_PHARMACIE, SPECIALITES_SEO, liensLangues, lienPraticien, slugifier, wilayaParCode } from './referentiel-seo';
 import { poserLangueDocument } from './page-seo';
 import { StatutHttpService } from './statut-http';
 import { ecrireJsonLd, fil, typeSchemaOrg } from './donnees-structurees';
@@ -34,7 +34,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         <div class="pp-haut">
           <nav class="pp-fil" [attr.aria-label]="ar ? 'مسار التصفح' : 'Fil d’Ariane'">
             <a [routerLink]="ar ? '/ar' : '/'" class="pp-accueil">{{ ar ? 'الرئيسية' : 'Accueil' }}</a><span>›</span>
-            <a [routerLink]="p + '/specialites'">{{ ar ? 'الأطباء' : 'Médecins' }}</a>
+            <a [routerLink]="p + '/specialites'">{{ pharmacie ? (ar ? 'الصيدليات' : 'Pharmacies') : (ar ? 'الأطباء' : 'Médecins') }}</a>
             <ng-container *ngIf="specialiteConnue"><span>›</span>
               <a [routerLink]="[p + '/specialites', m.specialiteSlug]">{{ specialite }}</a></ng-container>
             <ng-container *ngIf="specialiteConnue && wilayaSlug"><span>›</span>
@@ -53,8 +53,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             </div>
           </div>
           <div class="pp-action">
-            <a class="bouton pp-btn" [routerLink]="['/medecins', m.id]">{{ reservable() ? (ar ? 'احجز موعدًا' : 'Prendre rendez-vous') : (ar ? 'عرض الصفحة' : 'Voir la fiche') }}</a>
-            <small *ngIf="reservable()">{{ ar ? 'المواعيد المتاحة والحجز بحساب طبيبي مجاني. الدفع في العيادة.' : 'Disponibilités et réservation avec un compte Tabibi gratuit. Paiement au cabinet.' }}</small>
+            <a class="bouton pp-btn" [routerLink]="['/medecins', m.id]">{{ reservable() ? (ar ? 'احجز موعدًا' : 'Prendre rendez-vous') : (ar ? 'عرض الملف' : 'Voir la fiche') }}</a>
+            <small *ngIf="reservable()">{{ ar ? 'المواعيد المتاحة والحجز بحساب نداويك مجاني. الدفع في العيادة.' : 'Disponibilités et réservation avec un compte Ndawik gratuit. Paiement au cabinet.' }}</small>
           </div>
         </section>
 
@@ -67,8 +67,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             <div *ngIf="m.adresse"><dt>{{ ar ? 'العنوان' : 'Adresse' }}</dt><dd dir="auto">{{ m.adresse }}</dd></div>
             <div *ngIf="m.telephoneCabinet"><dt>{{ ar ? 'هاتف العيادة' : 'Téléphone' }}</dt><dd dir="ltr"><a [href]="'tel:' + m.telephoneCabinet">{{ m.telephoneCabinet }}</a></dd></div>
             <div *ngIf="m.horaires"><dt>{{ ar ? 'أوقات العمل' : 'Horaires' }}</dt><dd dir="auto">{{ m.horaires }}</dd></div>
-            <div *ngIf="m.langues?.length"><dt>{{ ar ? 'اللغات' : 'Langues' }}</dt><dd>{{ langues(m.langues) }}</dd></div>
-            <div><dt>{{ ar ? 'الدفع' : 'Paiement' }}</dt><dd>{{ ar ? 'في العيادة (نقدًا أو ببطاقة الشفاء حسب الطبيب)' : 'Au cabinet (espèces ou carte Chifa selon le praticien)' }}</dd></div>
+            <div *ngIf="m.langues?.length"><dt>{{ ar ? 'اللغات المتحدَّث بها' : 'Langues parlées' }}</dt><dd>{{ langues(m.langues) }}</dd></div>
+            <div *ngIf="!pharmacie"><dt>{{ ar ? 'الدفع' : 'Paiement' }}</dt><dd>{{ ar ? 'في العيادة (نقدًا أو ببطاقة الشفاء حسب الطبيب)' : 'Au cabinet (espèces ou carte Chifa selon le praticien)' }}</dd></div>
           </dl>
         </section>
 
@@ -78,7 +78,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         </section>
 
         <section class="pp-bloc" *ngIf="confreres().length">
-          <h2>{{ ar ? 'أطباء آخرون' : 'Autres praticiens' }} : {{ specialite }}<ng-container *ngIf="wilaya"> {{ ar ? 'في' : 'à' }} {{ wilaya }}</ng-container></h2>
+          <h2>{{ pharmacie ? (ar ? 'صيدليات أخرى' : 'Autres pharmacies') : (ar ? 'أطباء آخرون' : 'Autres praticiens') }} : {{ specialite }}<ng-container *ngIf="wilaya"> {{ ar ? 'في' : 'à' }} {{ wilaya }}</ng-container></h2>
           <ul class="pp-confreres">
             <li *ngFor="let c of confreres()">
               <a [routerLink]="lien(c)"><strong dir="auto">{{ c.nomComplet }}</strong><small dir="auto">{{ ar ? wilaya : (c.ville || c.wilayaFr) }}</small></a>
@@ -110,11 +110,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     .pp-fil a { color:var(--vert); text-decoration:none; font-weight:600; }
     .pp-carte { display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow:var(--s2); padding:24px; margin-bottom:28px; }
     .pp-id { display:flex; gap:16px; align-items:center; min-width:0; flex:1 1 320px; }
-    .pp-ava { flex:none; width:72px; height:72px; border-radius:20px; background:#E7F1EC; color:var(--vert); font-weight:800; font-size:24px; display:grid; place-items:center; }
+    .pp-ava { flex:none; width:72px; height:72px; border-radius:20px; background:var(--tbi-mint); color:var(--vert); font-weight:800; font-size:24px; display:grid; place-items:center; }
     .pp-id__txt { min-width:0; }
     .pp-id h1 { margin:0 0 4px; font-size:clamp(1.4rem,3vw,1.9rem); font-weight:800; letter-spacing:-.02em; overflow-wrap:anywhere; }
     .pp-id p { margin:0; color:var(--text3); }
-    .pp-resa { display:inline-block; margin-top:8px; font-size:12px; font-weight:700; color:var(--vert); background:#E7F1EC; padding:3px 10px; border-radius:999px; }
+    .pp-resa { display:inline-block; margin-top:8px; font-size:12px; font-weight:700; color:var(--vert); background:var(--tbi-mint); padding:3px 10px; border-radius:999px; }
     .pp-action { display:flex; flex-direction:column; gap:8px; align-items:flex-start; max-width:300px; }
     .pp-btn { text-decoration:none; }
     .pp-action small { color:var(--text3); font-size:12px; line-height:1.4; }
@@ -148,6 +148,8 @@ export class PraticienPublicComponent implements OnInit {
   confreres = signal<Medecin[]>([]);
   charge = signal(true);
   specialiteConnue = false;
+  /** Fiche d'une pharmacie : ni consultation ni cabinet (pas de ligne « Paiement »). */
+  pharmacie = false;
   /** Langue de la page (donnee de route) : prefixe '' en francais, '/ar' en arabe. */
   ar = false;
   p = '';
@@ -175,7 +177,7 @@ export class PraticienPublicComponent implements OnInit {
 
   /** Titre de l'onglet d'une fiche absente, dans la langue de la page (comme la page 404). */
   private titreIntrouvable(): string {
-    return this.ar ? 'الطبيب غير موجود | طبيبي' : 'Praticien introuvable | Tabibi';
+    return this.ar ? 'الطبيب غير موجود | نداويك' : 'Praticien introuvable | Ndawik';
   }
 
   private charger(id: string) {
@@ -199,6 +201,7 @@ export class PraticienPublicComponent implements OnInit {
         const spec = SPECIALITES_SEO.find((s) => s.slug === m.specialiteSlug);
         const wil = wilayaParCode(m.wilayaCode);
         this.specialiteConnue = !!spec;
+        this.pharmacie = m.specialiteSlug === SLUG_PHARMACIE;
         this.wilayaSlug = wil?.slug ?? null;
         this.specialite = spec ? (this.ar ? spec.nomAr : spec.nom) : m.specialiteFr;
         this.wilaya = wil ? (this.ar ? wil.nomAr : wil.nom) : (m.wilayaFr || '');
@@ -232,15 +235,15 @@ export class PraticienPublicComponent implements OnInit {
     const ou = this.lieu ? (this.ar ? ` في ${this.lieu}` : ` à ${this.lieu}`) : '';
     const titre = `${m.nomComplet} — ${this.specialite}${ou}`;
     const description = this.ar
-      ? `${m.nomComplet}، ${this.specialite}${ou}. اطّلع على صفحة الطبيب${this.reservable() ? ' واحجز موعدك عبر الإنترنت مع طبيبي. الدفع في العيادة.' : ' على طبيبي.'}`
-      : `${m.nomComplet}, ${this.specialite}${ou}. Consultez la fiche sur Tabibi.${this.reservable() ? ' Prenez rendez-vous en ligne. Paiement au cabinet.' : ''}`;
+      ? `${m.nomComplet}، ${this.specialite}${ou}. اطّلع على صفحة الطبيب${this.reservable() ? ' واحجز موعدك عبر الإنترنت مع نداويك. الدفع في العيادة.' : ' على نداويك.'}`
+      : `${m.nomComplet}, ${this.specialite}${ou}. Consultez la fiche sur Ndawik.${this.reservable() ? ' Prenez rendez-vous en ligne. Paiement au cabinet.' : ''}`;
     const chemin = `/praticiens/${m.id}/${slugifier(m.nomComplet)}`;
-    const url = `https://tabibi.doctor${this.p}${chemin}`;
+    const url = `https://ndawik.com${this.p}${chemin}`;
     this.lienAutreLangue = (this.ar ? '' : '/ar') + chemin;
     liensLangues(this.document, chemin);
     poserLangueDocument(this.document, this.ar);
     this.meta.updateTag({ property: 'og:locale', content: this.ar ? 'ar_DZ' : 'fr_DZ' });
-    this.title.setTitle(`${titre} | Tabibi`);
+    this.title.setTitle(`${titre} | Ndawik`);
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ name: 'robots', content: 'index, follow' });
     this.meta.updateTag({ property: 'og:title', content: titre });
@@ -256,7 +259,7 @@ export class PraticienPublicComponent implements OnInit {
     canonique.setAttribute('href', url);
 
     // Donnees structurees schema.org : fiche (Physician / Dentist / Pharmacy) et fil d'Ariane.
-    const racine = 'https://tabibi.doctor';
+    const racine = 'https://ndawik.com';
     const donnees = {
       '@context': 'https://schema.org',
       '@type': typeSchemaOrg(m.specialiteSlug),

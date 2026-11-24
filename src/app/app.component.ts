@@ -2,11 +2,13 @@ import { Component, OnInit, computed, effect, inject, signal } from '@angular/co
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './auth/auth.service';
+import { LangueService } from './partage/langue.service';
 import { RoleService } from './auth/role.service';
 import { ClocheNotificationsComponent } from './notifications/cloche-notifications.component';
 import { ApiDisponibleService } from './partage/api-disponible.service';
-import { PRELANCEMENT, VISIO_ACTIVE } from './lancement';
+import { PRELANCEMENT, VISIO_ACTIVE, inscriptionFermee } from './lancement';
 import { estPageFrancaiseSeule, remettreDocumentFrancais } from './seo/page-seo';
+import { consommerCompteSupprime } from './moi/compte-supprime';
 import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
 
 @Component({
@@ -18,68 +20,75 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
       <strong>{{ ar() ? 'الإطلاق قريبًا' : 'Lancement prochainement' }}</strong>
       <span class="lancement-bandeau__txt">{{ ar() ? '— حجز المواعيد عبر الإنترنت متاح قريبًا جدًا. منصة طبية: ابحث عن طبيب من الآن.' : "— la prise de rendez-vous en ligne ouvre très bientôt. Trouvez déjà un médecin sur la plateforme." }}</span>
     </div>
+    <div class="compte-supprime" *ngIf="compteSupprime()" role="status" [attr.dir]="l.ar() ? 'rtl' : null"
+         style="background:#E7F3EF;color:#0F7560;font-weight:600;padding:10px 16px;text-align:center">
+      {{ l.t('Votre compte a été supprimé.', 'تم حذف حسابك.') }}
+      <button type="button" (click)="compteSupprime.set(false)" style="margin-inline-start:12px;background:none;border:0;color:inherit;cursor:pointer;font-weight:600"
+              [attr.aria-label]="l.t('Fermer', 'إغلاق')">✕</button>
+    </div>
     <div class="shell">
       <aside class="side">
-        <a class="side__brand" [routerLink]="ar() ? '/ar' : '/'">tabibi<i>.</i></a>
+        <a class="side__brand" [routerLink]="ar() ? '/ar' : '/'"><img class="marque" src="assets/img/marque-blanche.svg" alt="" width="26" height="26">ndawik</a>
         <!-- Telephone : bouton « 3 barres » qui ouvre tout le menu -->
         <button type="button" class="side__burger" (click)="menuOuvert.set(!menuOuvert())"
-                [attr.aria-expanded]="menuOuvert()" aria-controls="menu-principal" [attr.aria-label]="menuOuvert() ? 'Fermer le menu' : 'Ouvrir le menu'">
+                [attr.aria-expanded]="menuOuvert()" aria-controls="menu-principal" [attr.aria-label]="menuOuvert() ? l.t('Fermer le menu', 'إغلاق القائمة') : l.t('Ouvrir le menu', 'فتح القائمة')">
           <i class="fa" [class.fa-bars]="!menuOuvert()" [class.fa-xmark]="menuOuvert()" aria-hidden="true"></i>
         </button>
         <nav class="side__nav" id="menu-principal" [class.ouvert]="menuOuvert()">
           <a class="side__home" [routerLink]="ar() ? '/ar' : '/'" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">{{ ar() ? 'الرئيسية' : 'Accueil' }}</a>
-          <a *ngIf="estPatient()" routerLink="/mes-rendez-vous" routerLinkActive="actif">Mes rendez-vous</a>
-          <a *ngIf="estPatient()" routerLink="/mes-ordonnances" routerLinkActive="actif">Mes ordonnances</a>
-          <a *ngIf="estPatient()" routerLink="/teleconsultations" routerLinkActive="actif">Mes téléconsultations<span *ngIf="!visio" class="pastille-bientot">Bientôt</span></a>
-          <a *ngIf="estPatient()" routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
-          <a *ngIf="estPatient()" routerLink="/mes-avis" routerLinkActive="actif">Mes avis</a>
-          <a *ngIf="estPatient()" routerLink="/dawini" routerLinkActive="actif">Dawini</a>
-          <a *ngIf="estPatient()" routerLink="/liste-attente" routerLinkActive="actif">Mes listes d'attente</a>
-          <a *ngIf="estPatient()" routerLink="/invitations" routerLinkActive="actif">Invitations de cabinet</a>
+          <a *ngIf="estPatient()" routerLink="/mes-rendez-vous" routerLinkActive="actif">{{ l.t('Mes rendez-vous', 'مواعيدي') }}</a>
+          <a *ngIf="estPatient()" routerLink="/mes-ordonnances" routerLinkActive="actif">{{ l.t('Mes ordonnances', 'وصفاتي الطبية') }}</a>
+          <a *ngIf="estPatient()" routerLink="/teleconsultations" routerLinkActive="actif">{{ l.t('Mes téléconsultations', 'استشاراتي عن بُعد') }}<span *ngIf="!visio" class="pastille-bientot">{{ l.t('Bientôt', 'قريبًا') }}</span></a>
+          <a *ngIf="estPatient()" routerLink="/messagerie" routerLinkActive="actif">{{ l.t('Messagerie', 'الرسائل') }}</a>
+          <a *ngIf="estPatient()" routerLink="/mes-avis" routerLinkActive="actif">{{ l.t('Mes avis', 'آرائي') }}</a>
+          <a *ngIf="estPatient()" routerLink="/dawini" routerLinkActive="actif">{{ l.t('Dawini', 'داويني') }}</a>
+          <a *ngIf="estPatient()" routerLink="/liste-attente" routerLinkActive="actif">{{ l.t("Mes listes d'attente", 'قوائم الانتظار') }}</a>
+          <a *ngIf="estPatient()" routerLink="/invitations" routerLinkActive="actif">{{ l.t('Invitations de cabinet', 'دعوات العيادات') }}</a>
 
           <div *ngIf="estMedecin()" class="side__group">
-            <div class="side__grouptitle">Espace médecin</div>
-            <a routerLink="/medecin/agenda" routerLinkActive="actif">Agenda</a>
-            <a routerLink="/medecin/disponibilites" routerLinkActive="actif">Disponibilités</a>
-            <a *ngIf="apiDisponible.ficheMedecin()" routerLink="/medecin/ma-fiche" routerLinkActive="actif">Ma fiche</a>
-            <a routerLink="/medecin/ordonnances" routerLinkActive="actif">Mes ordonnances rédigées</a>
-            <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">Téléconsultations<span *ngIf="!visio" class="pastille-bientot">Bientôt</span></a>
-            <a routerLink="/messagerie" routerLinkActive="actif">Messagerie</a>
-            <a routerLink="/medecin/avis" routerLinkActive="actif">Avis des patients</a>
-            <a routerLink="/medecin/liste-attente" routerLinkActive="actif">Liste d'attente</a>
-            <a routerLink="/medecin/secretaires" routerLinkActive="actif">Mes secrétaires</a>
+            <div class="side__grouptitle">{{ l.t('Espace médecin', 'فضاء الطبيب') }}</div>
+            <a routerLink="/medecin/agenda" routerLinkActive="actif">{{ l.t('Agenda', 'المواعيد') }}</a>
+            <a routerLink="/medecin/disponibilites" routerLinkActive="actif">{{ l.t('Disponibilités', 'الأوقات المتاحة') }}</a>
+            <a *ngIf="apiDisponible.ficheMedecin()" routerLink="/medecin/ma-fiche" routerLinkActive="actif">{{ l.t('Ma fiche', 'صفحتي') }}</a>
+            <a routerLink="/medecin/ordonnances" routerLinkActive="actif">{{ l.t('Mes ordonnances rédigées', 'وصفاتي التي حررتها') }}</a>
+            <a routerLink="/medecin/teleconsultations" routerLinkActive="actif">{{ l.t('Téléconsultations', 'الاستشارات عن بُعد') }}<span *ngIf="!visio" class="pastille-bientot">{{ l.t('Bientôt', 'قريبًا') }}</span></a>
+            <a routerLink="/messagerie" routerLinkActive="actif">{{ l.t('Messagerie', 'الرسائل') }}</a>
+            <a routerLink="/medecin/avis" routerLinkActive="actif">{{ l.t('Avis des patients', 'آراء المرضى') }}</a>
+            <a routerLink="/medecin/liste-attente" routerLinkActive="actif">{{ l.t("Liste d'attente", 'قائمة الانتظار') }}</a>
+            <a routerLink="/medecin/secretaires" routerLinkActive="actif">{{ l.t('Mes secrétaires', 'سكرتيراتي') }}</a>
           </div>
 
           <div *ngIf="estSecretaire()" class="side__group">
-            <div class="side__grouptitle">Espace secrétaire</div>
-            <a routerLink="/secretaire" routerLinkActive="actif">Agenda du cabinet</a>
-            <a routerLink="/invitations" routerLinkActive="actif">Invitations de cabinet</a>
+            <div class="side__grouptitle">{{ l.t('Espace secrétaire', 'فضاء السكرتارية') }}</div>
+            <a routerLink="/secretaire" routerLinkActive="actif">{{ l.t('Agenda du cabinet', 'مواعيد العيادة') }}</a>
+            <a routerLink="/invitations" routerLinkActive="actif">{{ l.t('Invitations de cabinet', 'دعوات العيادات') }}</a>
           </div>
 
           <div *ngIf="estPharmacie()" class="side__group">
-            <div class="side__grouptitle">Espace pharmacie</div>
-            <a routerLink="/pharmacie" routerLinkActive="actif">Demandes de médicaments</a>
+            <div class="side__grouptitle">{{ l.t('Espace pharmacie', 'فضاء الصيدلية') }}</div>
+            <a routerLink="/pharmacie" routerLinkActive="actif">{{ l.t('Demandes de médicaments', 'طلبات الأدوية') }}</a>
           </div>
 
           <div *ngIf="estAdmin()" class="side__group">
             <div class="side__grouptitle">Administration</div>
             <a routerLink="/admin" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Tableau de bord</a>
             <a routerLink="/admin/candidatures" routerLinkActive="actif">Candidatures</a>
+            <a routerLink="/admin/demandes" routerLinkActive="actif">Demandes praticien</a>
             <a routerLink="/admin/avis" routerLinkActive="actif">Modération des avis</a>
           </div>
 
           <div class="side__account">
             <ng-container *ngIf="!connecte()">
-              <a class="side__pro" routerLink="/praticien">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
+              <a class="side__pro" [routerLink]="pre() + '/praticien'">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
               <a class="side__help" [routerLink]="pre() + '/aide'">{{ ar() ? 'المساعدة' : "Centre d'aide" }}</a>
               <a class="side__help" [routerLink]="ar() ? '/' : '/ar'" [attr.lang]="ar() ? 'fr' : 'ar'">{{ ar() ? 'Français' : 'العربية' }}</a>
               <a class="side__login" (click)="seConnecter()" tabindex="0" role="button">{{ ar() ? 'تسجيل الدخول' : 'Se connecter' }}</a>
-              <a class="side__signup" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ ar() ? 'إنشاء حساب' : 'Créer un compte' }}</a>
+              <a *ngIf="inscriptionOuverte()" class="side__signup" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ ar() ? 'إنشاء حساب' : 'Créer un compte' }}</a>
             </ng-container>
             <ng-container *ngIf="connecte()">
-              <a class="side__help" routerLink="/aide">Centre d'aide</a>
+              <a class="side__help" routerLink="/aide">{{ l.t("Centre d'aide", 'مركز المساعدة') }}</a>
               <app-cloche-notifications />
-              <a routerLink="/moi" routerLinkActive="actif">Mon compte</a>
+              <a routerLink="/moi" routerLinkActive="actif">{{ l.t('Mon compte', 'حسابي') }}</a>
             </ng-container>
           </div>
         </nav>
@@ -89,25 +98,42 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
         <router-outlet />
         <footer class="siteft" id="aide" [attr.dir]="ar() ? 'rtl' : null" [attr.lang]="ar() ? 'ar' : null">
           <div class="siteft__in">
+            <div class="siteft__appli">
+              <div class="siteft__appli-txt">
+                <b>{{ ar() ? 'حمّل تطبيق نداويك' : "Téléchargez l'appli Ndawik" }}</b>
+                <span>{{ ar() ? 'مواعيدك ورسائلك ووصفاتك في جيبك.' : 'Vos rendez-vous, messages et ordonnances dans votre poche.' }}</span>
+              </div>
+              <div class="siteft__stores">
+                <a class="store" href="https://play.google.com/store/apps/details?id=dz.tabibi.app" target="_blank" rel="noopener">
+                  <i class="fa-brands fa-google-play" aria-hidden="true"></i>
+                  <span><small>{{ ar() ? 'متوفر على' : 'Disponible sur' }}</small>Google Play</span>
+                </a>
+                <span class="store store--bientot" aria-disabled="true">
+                  <i class="fa-brands fa-apple" aria-hidden="true"></i>
+                  <span><small>{{ ar() ? 'قريبًا على' : 'Bientôt sur' }}</small>App Store</span>
+                </span>
+              </div>
+            </div>
             <div class="siteft__top">
               <div class="siteft__q">
                 <b>{{ ar() ? 'لديك سؤال؟' : 'Des questions ?' }}</b>
                 <span>{{ ar() ? 'اطّلع على المساعدة أو تواصل معنا.' : 'Consultez notre aide ou contactez-nous.' }}</span>
               </div>
-              <a class="siteft__contact" href="mailto:contact@tabibi.doctor">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
+              <a class="siteft__contact" href="mailto:contact@ndawik.com">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
             </div>
 
             <div class="siteft__cols">
               <div class="siteft__col">
-                <h2>{{ ar() ? 'طبيبي' : 'Tabibi' }}</h2>
+                <h2>{{ ar() ? 'نداويك' : 'Ndawik' }}</h2>
                 <a [routerLink]="pre() + '/aide'">{{ ar() ? 'مركز المساعدة' : "Centre d'aide" }}</a>
-                <a routerLink="/verifier">{{ ar() ? 'التحقق من وصفة طبية' : 'Vérifier une ordonnance' }}</a>
+                <a [routerLink]="pre() + '/a-propos'">{{ ar() ? 'عن نداويك' : 'À propos' }}</a>
+                <a [routerLink]="pre() + '/verifier'">{{ ar() ? 'التحقق من وصفة طبية' : 'Vérifier une ordonnance' }}</a>
                 <a href="/legal/mentions-legales.html">{{ ar() ? 'الإشعارات القانونية' : 'Mentions légales' }}</a>
                 <a href="/legal/cgu.html">{{ ar() ? 'شروط الاستخدام' : "Conditions d'utilisation" }}</a>
-                <a href="/legal/confidentialite.html">{{ ar() ? 'الخصوصية' : 'Confidentialité' }}</a>
-                <a routerLink="/supprimer-mon-compte">{{ ar() ? 'حذف الحساب' : 'Supprimer mon compte' }}</a>
-                <a href="mailto:contact@tabibi.doctor">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
-                <a routerLink="/praticien">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
+                <a href="/legal/confidentialite.html">{{ ar() ? 'سياسة الخصوصية' : 'Politique de confidentialité' }}</a>
+                <a [routerLink]="pre() + '/supprimer-mon-compte'">{{ ar() ? 'حذف حسابي' : 'Supprimer mon compte' }}</a>
+                <a href="mailto:contact@ndawik.com">{{ ar() ? 'اتصل بنا' : 'Nous contacter' }}</a>
+                <a [routerLink]="pre() + '/praticien'">{{ ar() ? 'هل أنت طبيب؟' : 'Vous êtes praticien ?' }}</a>
               </div>
               <div class="siteft__col">
                 <h2>{{ ar() ? 'التخصصات' : 'Spécialités' }}</h2>
@@ -115,15 +141,16 @@ import { SPECIALITES_SEO, WILAYAS_SEO } from './seo/referentiel-seo';
                 <a [routerLink]="pre() + '/specialites'" class="siteft__tout">{{ ar() ? 'جميع التخصصات ←' : 'Toutes les spécialités →' }}</a>
               </div>
               <div class="siteft__col">
-                <h2>{{ ar() ? 'الولايات' : 'Villes' }}</h2>
+                <h2>{{ ar() ? 'الولايات' : 'Wilayas' }}</h2>
                 <a *ngFor="let w of wilayasPied" [routerLink]="[pre() + '/wilayas', w.slug]">{{ ar() ? w.nomAr : w.nom }}</a>
                 <a [routerLink]="pre() + '/wilayas'" class="siteft__tout">{{ ar() ? 'جميع الولايات ←' : 'Toutes les wilayas →' }}</a>
               </div>
             </div>
 
             <div class="siteft__bottom">
-              <span class="siteft__logo">tabibi<i>.</i></span>
-              <span class="siteft__copy">{{ ar() ? '© 2026 طبيبي — جميع الحقوق محفوظة.' : '© 2026 Tabibi — Tous droits réservés.' }}</span>
+              <span class="siteft__logo"><img class="marque" src="assets/img/logo-ndawik.svg" alt="" width="26" height="26">ndawik</span>
+              <span class="siteft__copy">{{ ar() ? '© 2026 نداويك — جميع الحقوق محفوظة.' : '© 2026 Ndawik — Tous droits réservés.' }}</span>
+              <small class="siteft__ancien">{{ ar() ? 'نداويك (Tabibi سابقًا)' : 'Ndawik (anciennement Tabibi)' }}</small>
             </div>
           </div>
         </footer>
@@ -145,6 +172,8 @@ export class AppComponent implements OnInit {
   private router = inject(Router);
   private document = inject(DOCUMENT);
   apiDisponible = inject(ApiDisponibleService);
+  /** Langue des ecrans prives : le menu des connectes la suit (arabe choisi sur les ecrans patient). */
+  l = inject(LangueService);
 
   constructor() {
     // « Ma fiche » n'apparait que si la route de l'API existe deja en production.
@@ -155,6 +184,9 @@ export class AppComponent implements OnInit {
 
   /** Menu « 3 barres » ouvert (vue telephone) ; referme a chaque changement de page. */
   menuOuvert = signal(false);
+
+  /** Confirmation affichée au retour sur le site après la suppression du compte (comme l'appli). */
+  compteSupprime = signal(consommerCompteSupprime());
 
   /** Etat de connexion, connu une fois l'initialisation OIDC terminee (liens reserves aux connectes). */
   connecte = signal(false);
@@ -179,6 +211,7 @@ export class AppComponent implements OnInit {
 
   /** « Créer un compte » ouvre directement le formulaire d'inscription Keycloak. */
   sInscrire() { this.menuOuvert.set(false); this.auth.sInscrireParEmail(); }
+  inscriptionOuverte() { return !inscriptionFermee(); }
 
   /** Initialisation OIDC unique pour toute l'application (les pages attendent auth.pret()), puis roles. */
   async ngOnInit() {

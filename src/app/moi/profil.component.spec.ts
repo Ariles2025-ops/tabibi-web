@@ -5,7 +5,10 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import localeFr from '@angular/common/locales/fr';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { signal } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
+import { RoleService } from '../auth/role.service';
+import { LangueService } from '../partage/langue.service';
 import { ProfilComponent } from './profil.component';
 import { Profil, ProfilService } from './profil.service';
 
@@ -29,7 +32,10 @@ describe('ProfilComponent', () => {
   let service: jasmine.SpyObj<ProfilService>;
   let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy };
 
+  let pharmacie: ReturnType<typeof signal<boolean>>;
+
   beforeEach(() => {
+    pharmacie = signal(false);
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<ProfilService>('ProfilService', ['monProfil', 'enregistrer']);
     service.monProfil.and.returnValue(NON_RENSEIGNE());
@@ -41,6 +47,7 @@ describe('ProfilComponent', () => {
         provideRouter([]),
         { provide: ProfilService, useValue: service },
         { provide: AuthService, useValue: auth },
+        { provide: RoleService, useValue: { estPharmacie: pharmacie, charger: () => Promise.resolve(null) } },
         { provide: LOCALE_ID, useValue: 'fr' },
         { provide: HttpClient, useValue: { get: () => of(REFERENTIEL) } },
       ],
@@ -106,6 +113,12 @@ describe('ProfilComponent', () => {
     expect(texte()).not.toContain('Dernière mise à jour');
   });
 
+  it('rappelle, comme l\'appli, que ces informations ne sont visibles que du patient et de ses praticiens', async () => {
+    await afficher();
+
+    expect(texte()).toContain('Ces informations ne sont visibles que de vous et des praticiens que vous consultez.');
+  });
+
   it('preremplit le formulaire avec le profil enregistre', async () => {
     service.monProfil.and.returnValue(of(PROFIL));
     await afficher();
@@ -116,6 +129,25 @@ describe('ProfilComponent', () => {
     expect(champ('wilayaCode').value).toBe('16');
     expect(langue().value).toBe('ar');
     expect(texte()).toContain('Dernière mise à jour le 18 septembre 2026');
+  });
+
+  it('profil sans date de mise a jour lisible : « Profil non enregistré » (FR/AR), comme l\'appli, jamais « mise à jour le » vide', async () => {
+    service.monProfil.and.returnValue(of({ ...PROFIL, misAJourLe: null } as unknown as Profil));
+    await afficher();
+    expect(texte()).toContain('Profil non enregistré');
+    expect(texte()).not.toContain('Dernière mise à jour');
+  });
+
+  it('profil à date de mise à jour illisible : « الملف غير محفوظ » en arabe', async () => {
+    TestBed.inject(LangueService).definir(true);
+    try {
+      service.monProfil.and.returnValue(of({ ...PROFIL, misAJourLe: 'pas-une-date' }));
+      await afficher();
+      expect(texte()).toContain('الملف غير محفوظ');
+      expect(texte()).not.toContain('آخر تحديث');
+    } finally {
+      TestBed.inject(LangueService).definir(false);
+    }
   });
 
   it('refuse cote client un profil invalide (nom trop court, telephone mal forme) sans appeler l API', async () => {
@@ -190,5 +222,59 @@ describe('ProfilComponent', () => {
 
     expect(auth.seConnecter).toHaveBeenCalled();
     expect(service.monProfil).not.toHaveBeenCalled();
+  });
+
+  describe('en arabe (comme l\'appli)', () => {
+    beforeEach(() => TestBed.inject(LangueService).definir(true));
+    afterEach(() => TestBed.inject(LangueService).definir(false));
+
+    it('affiche le formulaire en arabe, de droite a gauche, avec les wilayas en arabe', async () => {
+      service.monProfil.and.returnValue(of(PROFIL));
+      await afficher();
+
+      const t = texte();
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      for (const mot of ['ملفي الشخصي', 'الاسم الكامل *', 'الهاتف', 'تاريخ الميلاد', 'الولاية', 'اللغة المفضلة', 'حفظ', 'العودة إلى حسابي',
+        'هذه المعلومات لا يراها إلا أنت والأطباء الذين تستشيرهم.', 'آخر تحديث في 18/09/2026']) {
+        expect(t).toContain(mot);
+      }
+      expect(t).toContain('16 — الجزائر');
+      for (const motFrancais of ['Mon profil', 'Nom complet', 'Enregistrer', 'Dernière mise à jour']) {
+        expect(t).not.toContain(motFrancais);
+      }
+    });
+
+    it('refuse un profil invalide avec un motif en arabe et confirme l\'enregistrement en arabe', async () => {
+      await afficher();
+
+      await saisir({ nomComplet: '' });
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('أدخل اسمك الكامل.');
+      expect(service.enregistrer).not.toHaveBeenCalled();
+
+      service.enregistrer.and.returnValue(of(PROFIL));
+      await saisir({ nomComplet: 'Amina Belkacem' });
+      soumettre();
+      await afficher();
+      expect(texte()).toContain('تم حفظ الملف الشخصي.');
+    });
+  });
+
+  it('pharmacie : libelle « Nom de la pharmacie », pas de date de naissance, ni mention « praticiens »', async () => {
+    pharmacie.set(true);
+    await afficher();
+    expect(texte()).toContain('Nom de la pharmacie');
+    expect(texte()).toContain('montré aux patients');
+    expect(texte()).not.toContain('Nom complet');
+    expect(texte()).not.toContain('praticiens');
+    expect(champ('dateNaissance')).toBeNull();
+  });
+
+  it('autres roles : textes et date de naissance inchanges', async () => {
+    await afficher();
+    expect(texte()).toContain('Nom complet');
+    expect(texte()).toContain('praticiens que vous consultez');
+    expect(champ('dateNaissance')).not.toBeNull();
   });
 });

@@ -3,6 +3,7 @@ import { PLATFORM_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { ClocheNotificationsComponent } from './cloche-notifications.component';
+import { LangueService } from '../partage/langue.service';
 import { NotificationService } from './notification.service';
 
 describe('ClocheNotificationsComponent', () => {
@@ -41,6 +42,18 @@ describe('ClocheNotificationsComponent', () => {
     expect(lien().textContent?.trim()).toBe('Notifications (3)');
     expect(lien().getAttribute('href')).toBe('/notifications');
     expect(lien().getAttribute('aria-label')).toBe('Notifications, 3 non lues');
+
+    fixture.destroy();
+  }));
+
+  it('affiche « الإشعارات » avec le compteur quand la langue est l arabe', fakeAsync(() => {
+    TestBed.inject(LangueService).ar.set(true);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    expect(lien().textContent?.trim()).toBe('الإشعارات (3)');
+    expect(lien().getAttribute('aria-label')).toBe('الإشعارات، 3 غير مقروءة');
 
     fixture.destroy();
   }));

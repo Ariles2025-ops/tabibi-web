@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { Conversation, LONGUEUR_MAX_MESSAGE, Message, MessagerieService, abregerIdentifiant } from './messagerie.service';
+import { Conversation, LONGUEUR_MAX_MESSAGE, Message, MessagerieService, abregerIdentifiant, derniereActivite, libelleMedecin, trierParActivite } from './messagerie.service';
 
 const BASE = 'http://localhost:8080';
 
@@ -12,6 +12,7 @@ const CONVERSATION: Conversation = {
   creeLe: '2026-09-18T10:00:00Z',
   dernierMessageLe: '2026-09-18T10:05:00Z',
   nonLus: 1,
+  fermee: false,
 };
 
 const MESSAGE: Message = {
@@ -83,6 +84,17 @@ describe('MessagerieService', () => {
     expect(recu).toEqual(MESSAGE);
   });
 
+  it('ferme une conversation par POST /api/conversations/{id}/fermer', () => {
+    let fini = false;
+    service.fermer('c1').subscribe(() => (fini = true));
+
+    const requete = http.expectOne(`${BASE}/api/conversations/c1/fermer`);
+    expect(requete.request.method).toBe('POST');
+    requete.flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(fini).toBeTrue();
+  });
+
   it('transmet le { erreur } d un 403 (aucun rendez-vous commun) et d un 400 (message vide)', () => {
     let statut = 0;
     let message = '';
@@ -113,5 +125,38 @@ describe('MessagerieService', () => {
     expect(LONGUEUR_MAX_MESSAGE).toBe(2000);
     expect(abregerIdentifiant('22222222-2222-2222-2222-222222222222')).toBe('22222222');
     expect(abregerIdentifiant('p1')).toBe('p1');
+  });
+});
+
+describe('libelleMedecin', () => {
+  it('repli d un praticien dont la fiche est indisponible : « Médecin » + identifiant abrégé, comme dans l appli', () => {
+    expect(libelleMedecin('33333333-3333-3333-3333-333333333333')).toBe('Médecin 33333333');
+    expect(libelleMedecin('33333333-3333-3333-3333-333333333333', true)).toBe('طبيب 33333333');
+  });
+
+  it('sans identifiant : « Médecin inconnu » / « طبيب غير معروف »', () => {
+    expect(libelleMedecin('')).toBe('Médecin inconnu');
+    expect(libelleMedecin(null, true)).toBe('طبيب غير معروف');
+  });
+});
+
+describe('trierParActivite', () => {
+  const c = (id: string, dernierMessageLe: string, creeLe: string): Conversation => ({ ...CONVERSATION, id, dernierMessageLe, creeLe });
+
+  it('prend le dernier message, sinon la date d ouverture, sinon rien', () => {
+    expect(derniereActivite(c('a', '2026-09-18T10:05:00Z', '2026-09-18T10:00:00Z'))).toBe(Date.parse('2026-09-18T10:05:00Z'));
+    expect(derniereActivite(c('a', '', '2026-09-18T10:00:00Z'))).toBe(Date.parse('2026-09-18T10:00:00Z'));
+    expect(derniereActivite(c('a', 'pas une date', ''))).toBeNull();
+  });
+
+  it('classe du plus récent au plus ancien, sans date en fin, sans modifier la liste d origine', () => {
+    const liste = [
+      c('sans-date', '', ''),
+      c('vieille', '2026-09-10T10:00:00Z', '2026-09-01T10:00:00Z'),
+      c('ouverte', '', '2026-09-15T10:00:00Z'),
+      c('recente', '2026-09-18T10:05:00Z', '2026-09-18T10:00:00Z'),
+    ];
+    expect(trierParActivite(liste).map((x) => x.id)).toEqual(['recente', 'ouverte', 'vieille', 'sans-date']);
+    expect(liste[0].id).toBe('sans-date');
   });
 });

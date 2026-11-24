@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
+import { LangueService } from '../partage/langue.service';
 import { Avis, AvisService } from './avis.service';
 import { MesAvisComponent } from './mes-avis.component';
 
@@ -94,5 +95,37 @@ describe('MesAvisComponent', () => {
     fixture = TestBed.createComponent(MesAvisComponent);
     await afficher();
     expect(texte()).toContain('Cette page est réservée aux patients.');
+  });
+
+  it('affiche la page en arabe (de droite a gauche) avec les memes mots que l appli', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      await afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('آرائي');
+      expect(texte()).toContain('أخفته الإدارة');
+      expect(texte()).toContain('منشور');
+      expect(texte()).not.toContain('Masqué par la modération');
+      expect(texte()).toContain('18/09/2026');
+
+      service.mes.and.returnValue(of([]));
+      fixture = TestBed.createComponent(MesAvisComponent);
+      await afficher();
+      expect(texte()).toContain('لا توجد آراء حاليًا.');
+      expect(texte()).toContain('مواعيدي');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
+  });
+
+  it('un avis sans date lisible affiche « date inconnue » et passe en fin de liste, comme dans l appli', async () => {
+    service.mes.and.returnValue(of([{ ...ANCIEN, id: 'a3', deposeLe: 'illisible' }, ANCIEN, RECENT]));
+    await afficher();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.length).toBe(3);
+    expect(items[0].textContent).toContain('18 septembre 2026');
+    expect(items[2].textContent).toContain('date inconnue');
   });
 });

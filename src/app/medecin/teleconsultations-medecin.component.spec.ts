@@ -8,6 +8,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { Teleconsultation, TeleconsultationService } from '../teleconsultation/teleconsultation.service';
+import { LangueService } from '../partage/langue.service';
 import { MedecinService } from './medecin.service';
 import { PatientsService } from './patients.service';
 import { TeleconsultationsMedecinComponent } from './teleconsultations-medecin.component';
@@ -185,5 +186,40 @@ describe('TeleconsultationsMedecinComponent', () => {
     expect(texte()).toContain('Aucune téléconsultation pour le moment.');
     expect(fixture.nativeElement.querySelector('a[href="/medecin/agenda"]')).not.toBeNull();
     expect(medecinService.agenda).not.toHaveBeenCalled();
+  });
+
+  describe('en arabe', () => {
+    beforeEach(() => {
+      TestBed.inject(LangueService).ar.set(true);
+    });
+
+    it('affiche la page en arabe, de droite a gauche, sans texte francais ni statut brut', () => {
+      fixture.detectChanges();
+
+      const t = texte();
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      expect(t).toContain('الاستشارات عن بُعد');
+      expect(t).toContain('موعد يوم');
+      expect(t).toContain('07/12/2026');
+      expect(t).toContain('مبرمجة');
+      expect(t).toContain('في انتظار موافقة المريض');
+      expect(t).toContain('بدء');
+      expect(t).not.toContain('Démarrer');
+      expect(t).not.toContain('Planifiée');
+      expect(t).not.toContain('Rendez-vous du');
+    });
+
+    it('traduit le message de liste vide et la confirmation d annulation', () => {
+      service.duMedecin.and.returnValue(of([]));
+      fixture.detectChanges();
+      expect(texte()).toContain('لا توجد استشارات عن بُعد حاليًا.');
+      expect(texte()).not.toContain('Aucune téléconsultation');
+    });
+
+    it('traduit le message d erreur 403', () => {
+      service.duMedecin.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      fixture.detectChanges();
+      expect(texte()).toContain('هذه الصفحة مخصّصة للأطباء.');
+    });
   });
 });

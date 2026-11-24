@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map, of } from 'rxjs';
 import { ConfigService } from '../config/config.service';
+import { abregerIdentifiant } from '../messagerie/messagerie.service';
 
 /** Patient connu d'un medecin (rendez-vous ou liste d'attente), tel que renvoye par l'API. */
 export interface PatientResume {
@@ -14,9 +15,15 @@ export interface PatientResume {
 /** Patients indexes par identifiant. */
 export type RepertoirePatients = Map<string, PatientResume>;
 
-/** Libelle affiche pour un patient : son nom, a defaut « Patient ». */
-export function nomPatient(repertoire: RepertoirePatients, patientId: string): string {
-  return repertoire.get(patientId)?.nomComplet?.trim() || 'Patient';
+/**
+ * Libelle affiche pour un patient : son nom ; a defaut « Patient » suivi de l'identifiant abrege (huit premiers
+ * caracteres), comme dans l'appli, pour distinguer deux patients dont le nom est inconnu.
+ */
+export function nomPatient(repertoire: RepertoirePatients, patientId: string, arabe = false): string {
+  const nom = repertoire.get(patientId)?.nomComplet?.trim();
+  if (nom) return nom;
+  const base = arabe ? 'مريض' : 'Patient';
+  return patientId ? `${base} ${abregerIdentifiant(patientId)}` : base;
 }
 
 /** Telephone du patient s'il est connu (chaine vide sinon). */

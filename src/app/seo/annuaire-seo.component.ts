@@ -80,12 +80,12 @@ import {
         <div class="seo-entete">
           <h2>{{ sousTitre }}</h2>
           <span *ngIf="!charge() && medecins().length" class="seo-nb">
-            {{ t.nombre(medecins().length) }}
+            {{ pharmacie ? t.nombrePharma(totalAffiche()) : t.nombre(totalAffiche()) }}
           </span>
         </div>
-        <p *ngIf="charge()" class="seo-muet">{{ t.chargement }}</p>
+        <p *ngIf="charge()" class="seo-muet">{{ pharmacie ? t.chargementPharma : t.chargement }}</p>
         <p *ngIf="!charge() && erreur()" class="seo-muet">{{ t.erreur }}</p>
-        <p *ngIf="!charge() && !erreur() && medecins().length === 0" class="seo-muet">{{ t.aucun }}</p>
+        <p *ngIf="!charge() && !erreur() && medecins().length === 0" class="seo-muet">{{ pharmacie ? t.aucunPharma : t.aucun }}</p>
         <ul class="seo-medecins">
           <li *ngFor="let m of medecins()">
             <a [routerLink]="lien(m)" class="seo-med">
@@ -151,7 +151,7 @@ import {
         <details><summary>{{ t.q1(cible) }}</summary><p>{{ t.r1 }}</p></details>
         <details><summary>{{ t.q2 }}</summary><p>{{ t.r2 }}</p></details>
         <details><summary>{{ t.q3 }}</summary>
-          <p>{{ t.r3 }} <a routerLink="/praticien">{{ t.praticien }}</a></p></details>
+          <p>{{ t.r3 }} <a [routerLink]="p + '/praticien'">{{ t.praticien }}</a></p></details>
       </section>
     </main>
   `,
@@ -172,11 +172,11 @@ import {
     .seo-medecins { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr)); gap:12px; }
     .seo-med { display:flex; align-items:center; gap:12px; padding:14px 16px; background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow:var(--s1); text-decoration:none; color:inherit; height:100%; box-sizing:border-box; flex-wrap:wrap; }
     .seo-med:hover { border-color:var(--vert); }
-    .seo-ava { flex:none; width:44px; height:44px; border-radius:14px; background:#E7F1EC; color:var(--vert); font-weight:800; display:grid; place-items:center; }
+    .seo-ava { flex:none; width:44px; height:44px; border-radius:14px; background:var(--tbi-mint); color:var(--vert); font-weight:800; display:grid; place-items:center; }
     .seo-med__txt { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
     .seo-med__txt strong { font-size:15px; overflow-wrap:anywhere; }
     .seo-med__txt small { color:var(--text3); font-size:13px; }
-    .seo-resa { font-size:12px; font-weight:700; color:var(--vert); background:#E7F1EC; padding:3px 10px; border-radius:999px; }
+    .seo-resa { font-size:12px; font-weight:700; color:var(--vert); background:var(--tbi-mint); padding:3px 10px; border-radius:999px; }
     .seo-note { color:var(--text3); font-size:13px; margin:14px 0 0; }
     .seo-apropos p { color:var(--text3); line-height:1.65; max-width:72ch; margin:0; }
     .seo-liens { display:flex; flex-wrap:wrap; gap:8px; }
@@ -185,7 +185,7 @@ import {
     .seo-carte { display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fff; border:1px solid var(--border); border-radius:14px; color:var(--ink); text-decoration:none; font-weight:600; font-size:14px; }
     .seo-carte:hover { border-color:var(--vert); color:var(--vert); }
     .seo-carte--seule { display:inline-flex; }
-    .seo-carte__ic { flex:none; width:32px; height:32px; border-radius:10px; background:#E7F1EC; color:var(--vert); display:grid; place-items:center; font-size:13px; }
+    .seo-carte__ic { flex:none; width:32px; height:32px; border-radius:10px; background:var(--tbi-mint); color:var(--vert); display:grid; place-items:center; font-size:13px; }
     .seo-colonnes { columns:4 180px; column-gap:24px; background:#fff; border:1px solid var(--border); border-radius:16px; padding:14px 18px; }
     .seo-colonnes a { display:flex; justify-content:space-between; gap:8px; break-inside:avoid; padding:7px 4px; border-bottom:1px solid #f0ece3; color:var(--ink); text-decoration:none; font-size:14px; }
     .seo-colonnes a:hover, .seo-colonnes a.actif { color:var(--vert); font-weight:700; }
@@ -221,6 +221,10 @@ export class AnnuaireSeoComponent implements OnInit {
   communeSlug = '';
   nomCommune = '';
   communesListe: Commune[] = [];
+  /** Vrai nombre de praticiens de la commune (0 hors page commune) ; la liste affichee est plafonnee par l'API. */
+  totalCommune = 0;
+
+  totalAffiche(): number { return this.totalCommune || this.medecins().length; }
   t2 = TEXTES_COMMUNE.fr;
 
   /** Langue de la page (donnee de route) : '' en francais, '/ar' en arabe. */
@@ -284,6 +288,7 @@ export class AnnuaireSeoComponent implements OnInit {
     this.communeSlug = communeSlug || '';
     this.nomCommune = '';
     this.communesListe = [];
+    this.totalCommune = 0;
     this.specialite = specSlug ? SPECIALITES_SEO.find((s) => s.slug === specSlug) ?? null : null;
     this.wilaya = wilSlug ? WILAYAS_SEO.find((w) => w.slug === wilSlug) ?? null : null;
     this.introuvable = (!!specSlug && !this.specialite) || (!!wilSlug && !this.wilaya)
@@ -344,13 +349,13 @@ export class AnnuaireSeoComponent implements OnInit {
     }
 
     this.lienAutreLangue = (this.ar ? '' : '/ar') + chemin;
-    this.title.setTitle(this.pharmacie || this.introuvable ? `${this.titre} | Tabibi` : `${this.titre} — ${t.suffixeTitre} | Tabibi`);
+    this.title.setTitle(this.pharmacie || this.introuvable ? `${this.titre} | Ndawik` : `${this.titre} — ${t.suffixeTitre} | Ndawik`);
     this.meta.updateTag({ name: 'description', content: description });
-    this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Tabibi` });
+    this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Ndawik` });
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ property: 'og:locale', content: this.ar ? 'ar_DZ' : 'fr_DZ' });
     this.meta.updateTag({ name: 'robots', content: this.introuvable ? 'noindex' : 'index, follow' });
-    this.lienCanonique(`https://tabibi.doctor${this.p}${chemin}`);
+    this.lienCanonique(`https://ndawik.com${this.p}${chemin}`);
     liensLangues(this.document, chemin);
     poserLangueDocument(this.document, this.ar);
     this.cheminLd = chemin;
@@ -372,6 +377,10 @@ export class AnnuaireSeoComponent implements OnInit {
         next: ([liste, communes]) => {
           if (avecCommunes) this.appliquerCommunes(liste, communes, s!, w!, chemin);
           else this.medecins.set(liste);
+          // Page specialite x wilaya sans aucun praticien : pas indexable (et absente du plan du site).
+          if (s && w && !this.communeSlug && !this.introuvable && liste.length === 0) {
+            this.meta.updateTag({ name: 'robots', content: 'noindex, follow' });
+          }
           this.charge.set(false);
           this.donneesStructurees(this.cheminLd);
         },
@@ -406,21 +415,24 @@ export class AnnuaireSeoComponent implements OnInit {
       nom: this.communesListe.find((c) => c.slug === this.communeSlug)?.nom || gens[0].ville.trim(),
     };
     this.nomCommune = commune.nom;
+    // L'API plafonne la liste (50 fiches) : le vrai total est le champ « nombre » de l'API communes.
+    const totalCommune = this.communesListe.find((c) => c.slug === this.communeSlug)?.medecins || gens.length;
+    this.totalCommune = Math.max(totalCommune, gens.length);
     this.medecins.set(gens);
     const ns = this.nomS(s), nw = this.nomW(w), t2 = this.t2;
     const chemCommune = `${chemin}/${commune.slug}`;
     this.titre = t2.titre(ns, commune.nom, nw);
     this.sousTitre = t2.sousTitre(ns, commune.nom);
     this.cible = t2.cible(ns, commune.nom, avecArticle(s));
-    this.intro = t2.intro(ns, commune.nom, nw, gens.length);
-    const description = t2.description(ns, commune.nom, nw, gens.length);
+    this.intro = t2.intro(ns, commune.nom, nw, this.totalCommune);
+    const description = t2.description(ns, commune.nom, nw, this.totalCommune);
     this.description = description;
-    this.title.setTitle(`${this.titre} — ${this.t.suffixeTitre} | Tabibi`);
+    this.title.setTitle(`${this.titre} — ${this.t.suffixeTitre} | Ndawik`);
     this.meta.updateTag({ name: 'description', content: description });
-    this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Tabibi` });
+    this.meta.updateTag({ property: 'og:title', content: `${this.titre} | Ndawik` });
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ name: 'robots', content: 'index, follow' });
-    this.lienCanonique(`https://tabibi.doctor${this.p}${chemCommune}`);
+    this.lienCanonique(`https://ndawik.com${this.p}${chemCommune}`);
     liensLangues(this.document, chemCommune);
     this.lienAutreLangue = (this.ar ? '' : '/ar') + chemCommune;
     this.donneesStructurees(chemin);
@@ -447,7 +459,7 @@ export class AnnuaireSeoComponent implements OnInit {
       if (this.index) this.ecrireFilSeul(chemin);
       return;
     }
-    const racine = `https://tabibi.doctor${this.p}`;
+    const racine = `https://ndawik.com${this.p}`;
     const etapes = this.etapesFil(chemin);
     const avecFaq = !this.pharmacie;
     ecrireJsonLd(this.document, 'ld-page', pageAnnuaire({
@@ -460,7 +472,7 @@ export class AnnuaireSeoComponent implements OnInit {
       etapes,
       praticiens: this.medecins().map((m) => ({
         nom: m.nomComplet,
-        url: `https://tabibi.doctor${this.lien(m).join('/')}`,
+        url: `https://ndawik.com${this.lien(m).join('/')}`,
         specialiteSlug: m.specialiteSlug,
         specialite: this.specialiteDe(m),
         ville: m.ville,
@@ -476,9 +488,9 @@ export class AnnuaireSeoComponent implements OnInit {
   }
 
   private etapesFil(chemin: string) {
-    const racine = `https://tabibi.doctor${this.p}`;
+    const racine = `https://ndawik.com${this.p}`;
     const etapes = [
-      { nom: this.t.accueil, url: `https://tabibi.doctor${this.p || '/'}` },
+      { nom: this.t.accueil, url: `https://ndawik.com${this.p || '/'}` },
       { nom: this.t.annuaire, url: `${racine}/specialites` },
     ];
     if (this.specialite) etapes.push({ nom: this.nomS(this.specialite), url: `${racine}/specialites/${this.specialite.slug}` });
@@ -520,29 +532,34 @@ function trierAvecPrincipales<T>(liste: T[], cle: (t: T) => string, principales:
   return [...tete, ...liste.filter((t) => !principales.includes(cle(t)))];
 }
 
+/** « de » + nom, avec élision devant une voyelle ou un h muet : « de Béjaïa », « d'Alger », « d'Oran ». */
+export function dePlace(nom: string): string {
+  return /^[AEIOUHÀÂÄÉÈÊËÎÏÔÖÙÛÜ]/i.test(nom.trim()) ? `d'${nom}` : `de ${nom}`;
+}
+
 /** Textes propres aux pages commune (FR / AR). */
 const TEXTES_COMMUNE = {
   fr: {
     titre: (s: string, c: string, w: string) => `${s} à ${c} (${w})`,
     sousTitre: (s: string, c: string) => `Praticiens : ${s} à ${c}`,
-    cible: (s: string, c: string, a: string) => `${a} à ${c}`,
+    cible: (s: string, c: string, a: string) => `avec ${a} à ${c}`,
     intro: (s: string, c: string, w: string, n: number) =>
-      `${n} praticiens (${s}) exercent à ${c}, dans la wilaya de ${w}. Consultez leur fiche, comparez et prenez rendez-vous en ligne avec Tabibi.`,
+      `${n} praticiens (${s}) exercent à ${c}, dans la wilaya ${dePlace(w)}. Consultez leur fiche, comparez et prenez rendez-vous en ligne avec Ndawik.`,
     description: (s: string, c: string, w: string, n: number) =>
-      `${s} à ${c} (${w}) : ${n} praticiens référencés sur Tabibi. Consultez les fiches et prenez rendez-vous en ligne.`,
-    communes: (s: string, w: string) => `${s} dans les communes de ${w}`,
+      `${s} à ${c} (${w}) : ${n} praticiens référencés sur Ndawik. Consultez les fiches et prenez rendez-vous en ligne.`,
+    communes: (s: string, w: string) => `${s} dans les communes ${dePlace(w)}`,
     voisines: (s: string, w: string) => `${s} dans les communes voisines (${w})`,
-    toute: (s: string, w: string) => `Voir tous les praticiens (${s}) de ${w}`,
+    toute: (s: string, w: string) => `Voir tous les praticiens (${s}) ${dePlace(w)}`,
     titreCommune: (s: string, c: string, w: string) => `${s} à ${c} (${w})`,
   },
   ar: {
     titre: (s: string, c: string, w: string) => `${s} في ${c} (${w})`,
     sousTitre: (s: string, c: string) => `الأطباء: ${s} في ${c}`,
-    cible: (s: string, c: string, _a: string) => `${s} في ${c}`,
+    cible: (s: string, c: string, _a: string) => `مع ${s} في ${c}`,
     intro: (s: string, c: string, w: string, n: number) =>
-      `${n} من الأطباء (${s}) يمارسون في ${c} بولاية ${w}. اطّلع على ملفاتهم واحجز موعدك عبر طبيبي.`,
+      `${n} من الأطباء (${s}) يمارسون في ${c} بولاية ${w}. اطّلع على ملفاتهم واحجز موعدك عبر نداويك.`,
     description: (s: string, c: string, w: string, n: number) =>
-      `${s} في ${c} (${w}): ${n} من الأطباء على طبيبي. اطّلع على الملفات واحجز موعدك عبر الإنترنت.`,
+      `${s} في ${c} (${w}): ${n} من الأطباء على نداويك. اطّلع على الملفات واحجز موعدك عبر الإنترنت.`,
     communes: (s: string, w: string) => `${s} في بلديات ${w}`,
     voisines: (s: string, w: string) => `${s} في البلديات المجاورة (${w})`,
     toute: (s: string, w: string) => `كل الأطباء (${s}) في ${w}`,

@@ -1,5 +1,5 @@
 import { Component, computed, input } from '@angular/core';
-import { libelleStatutOrdonnance } from './statut-ordonnance';
+import { libelleStatutOrdonnance, libelleStatutOrdonnanceAr } from './statut-ordonnance';
 
 /** Pastille du statut d'une ordonnance : Émise (vert), Annulée (rouge), Délivrée (gris). */
 @Component({
@@ -11,7 +11,9 @@ import { libelleStatutOrdonnance } from './statut-ordonnance';
 })
 export class BadgeStatutOrdonnanceComponent {
   statut = input<string | null | undefined>(null);
-  libelle = computed(() => libelleStatutOrdonnance(this.statut()));
+  /** Vrai : libelle en arabe (ecrans patient en arabe). */
+  arabe = input(false);
+  libelle = computed(() => (this.arabe() ? libelleStatutOrdonnanceAr(this.statut()) : libelleStatutOrdonnance(this.statut())));
   couleurs = computed(() => {
     switch (this.statut()) {
       case 'EMISE':

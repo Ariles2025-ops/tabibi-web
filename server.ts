@@ -73,8 +73,13 @@ export function app(): express.Express {
   const pageCsr = cheminCsr ? readFileSync(cheminCsr, 'utf-8') : '';
   // Noms de domaine autorises pour le rendu serveur (protection SSRF, CVE-2026-27739 corrigee dans Angular 19.2.21) :
   // le domaine du site, www, et les adresses locales (sondes de sante du conteneur). Liste etendue par TABIBI_SSR_HOTES.
-  const domaine = process.env['DOMAINE']?.trim() || 'tabibi.doctor';
-  const hotesAutorises = [domaine, `www.${domaine}`, 'localhost', '127.0.0.1',
+  // SITE_DOMAINE = adresse publique du site (canonical, sitemaps...). DOMAINE reste celui de l'API (api.DOMAINE) et de
+  // Keycloak (auth.DOMAINE) : il vaut tabibi.doctor en production et n'est pas utilise pour l'adresse du site.
+  const siteDomaine = process.env['SITE_DOMAINE']?.trim() || 'ndawik.com';
+  const domaine = process.env['DOMAINE']?.trim();
+  // Anciennes adresses (tabibi.doctor) gardees : le serveur de bord y fait une redirection 301 vers ndawik.com.
+  const hotesAutorises = [...new Set([siteDomaine, `www.${siteDomaine}`, ...(domaine ? [domaine, `www.${domaine}`] : []),
+    'ndawik.com', 'www.ndawik.com', 'tabibi.doctor', 'www.tabibi.doctor']), 'localhost', '127.0.0.1',
     ...(process.env['TABIBI_SSR_HOTES'] || '').split(',').map((h) => h.trim()).filter(Boolean)];
   const commonEngine = new CommonEngine({ allowedHosts: hotesAutorises });
   const entetes = entetesSecurite(configurationDepuisEnvironnement(process.env));
@@ -89,7 +94,7 @@ export function app(): express.Express {
 
   // Plans du site pour les moteurs de recherche : un index, les pages fixes (fichier du build) et une page publique
   // par praticien, tiree de l'API (GET /api/medecins/plan, 5 000 fiches par fichier) et gardee 12 h en memoire.
-  const site = 'https://' + (process.env['DOMAINE']?.trim() || 'tabibi.doctor');
+  const site = 'https://' + siteDomaine;
   const api = (configurationServeur(process.env).apiUrl || CONFIGURATION_PAR_DEFAUT.apiUrl).replace(/\/$/, '');
   const cachePlans = new Map<string, { xml: string; le: number }>();
   const DUREE_CACHE_MS = 12 * 3600 * 1000;
@@ -115,12 +120,38 @@ export function app(): express.Express {
   server.get('/sitemap.xml', (_req, res) => envoyerXml(res, 'index', async () => {
     const { total, taille } = await lirePlan(0);
     const pages = Math.ceil(total / taille);
-    const fichiers = ['sitemap-pages.xml', 'sitemap-pages-ar.xml', 'sitemap-communes.xml', 'sitemap-communes-ar.xml',
+    const fichiers = ['sitemap-pages.xml', 'sitemap-pages-ar.xml', 'sitemap-specialites.xml', 'sitemap-specialites-ar.xml', 'sitemap-communes.xml', 'sitemap-communes-ar.xml',
       ...Array.from({ length: pages }, (_, i) => `sitemap-praticiens-${i}.xml`),
       ...Array.from({ length: pages }, (_, i) => `sitemap-praticiens-ar-${i}.xml`)];
     return '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
       + fichiers.map((f) => `  <sitemap><loc>${site}/${f}</loc></sitemap>\n`).join('') + '</sitemapindex>\n';
   }));
+  // Pages specialite x wilaya : uniquement celles qui ont au moins un praticien (pas de page vide).
+  // Source : GET /api/medecins?specialite=&wilaya= (une requete par couple, resultat garde 12 h).
+  server.get(/^\/sitemap-specialites(-ar)?\.xml$/, (req, res) => {
+    const prefixe = (req.params as unknown as string[])[0] ? '/ar' : '';
+    return envoyerXml(res, `specialites${prefixe}`, async () => {
+      const couples = SPECIALITES_SEO.flatMap((sp) => WILAYAS_SEO.map((w) => ({ sp, w })));
+      const urls: string[] = [];
+      let prochain = 0, echecs = 0;
+      const ouvrier = async () => {
+        while (prochain < couples.length) {
+          const { sp, w } = couples[prochain++];
+          try {
+            const r = await fetch(`${api}/api/medecins?specialite=${encodeURIComponent(sp.slug)}&wilaya=${encodeURIComponent(w.code)}`);
+            if (!r.ok) throw new Error(`API ${r.status}`);
+            const lignes = (await r.json()) as unknown[];
+            if (Array.isArray(lignes) && lignes.length > 0) urls.push(`${sp.slug}/${w.slug}`);
+          } catch { echecs++; }
+        }
+      };
+      await Promise.all(Array.from({ length: 8 }, ouvrier));
+      if (echecs > couples.length / 2) throw new Error(`API medecins indisponible (${echecs}/${couples.length})`);
+      return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + urls.sort().map((u) => `  <url><loc>${site}${prefixe}/specialites/${u}</loc></url>\n`).join('')
+        + '</urlset>\n';
+    });
+  });
   // Pages specialite x wilaya x commune : uniquement les combinaisons d'au moins 3 praticiens (pas de page vide).
   // Source : GET /api/medecins/communes?specialite=&wilaya= -> [{ slug, nom, nombre }], une requete par couple
   // specialite x wilaya (resultat garde 12 h, requetes limitees en parallele).
@@ -172,6 +203,10 @@ export function app(): express.Express {
   // Anciennes adresses de l'ancien site, encore affichees par Google : 301 vers les pages actuelles (jamais de 404).
   server.get(/^(\/ar)?\/seo\/[^/]+\/?$/, (req, res) => res.redirect(301, redirectionSeo(req.path) || '/'));
   server.get('/index.html', (req, res) => res.redirect(301, redirectionIndex(req.query['specialty'], req.query['wilaya'])));
+  // Lien court à donner aux patients et médecins : ndawik.com/appli -> fiche Google Play.
+  // Liens courts a donner aux medecins (l'identifiant Play dz.tabibi.app ne peut pas changer) ; /ar/... ouvre la fiche en arabe.
+  server.get(/^(\/ar)?\/(appli|app|android|telecharger)\/?$/, (req, res) =>
+    res.redirect(302, 'https://play.google.com/store/apps/details?id=dz.tabibi.app' + (req.path.startsWith('/ar/') ? '&hl=ar' : '&hl=fr')));
   server.get(/^\/(about|blog)\/?$/, (_req, res) => res.redirect(301, '/'));
 
   // Fichiers du build (chemins avec extension) : bundles a empreinte en cache long, index et config jamais.

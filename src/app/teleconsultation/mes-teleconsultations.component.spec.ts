@@ -8,12 +8,13 @@ import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RendezVous, RendezVousService } from '../rendezvous/rendezvous.service';
+import { LangueService } from '../partage/langue.service';
 import { MesTeleconsultationsComponent } from './mes-teleconsultations.component';
 import { Teleconsultation, TeleconsultationService } from './teleconsultation.service';
 
 const CONSENTEMENT =
   "En rejoignant cette téléconsultation, vous acceptez qu'elle se déroule en vidéo via un service tiers (Jitsi Meet). " +
-  "Aucun enregistrement n'est réalisé par Tabibi.";
+  "Aucun enregistrement n'est réalisé par Ndawik.";
 
 const SANS_CONSENTEMENT: Teleconsultation = {
   id: 't1',
@@ -118,7 +119,7 @@ describe('MesTeleconsultationsComponent', () => {
     expect(texte()).not.toContain('Rejoindre la téléconsultation');
     expect(texte()).toContain('Planifiée');
     expect(texte()).toContain('Dr Amina Belkacem');
-    expect(texte()).toContain('Rendez-vous du');
+    expect(texte()).toContain('Rendez-vous le');
     expect(texte()).toContain('7 décembre 2026');
   });
 
@@ -140,6 +141,26 @@ describe('MesTeleconsultationsComponent', () => {
     expect(texte()).toContain('consentement donné le');
   });
 
+  it('confirme « Consentement enregistré » apres le consentement, comme l\'appli, et rien avant', async () => {
+    service.consentir.and.returnValue(of(CONSENTIE));
+    await afficher();
+    expect(texte()).not.toContain('Consentement enregistré');
+
+    bouton('Je donne mon consentement')!.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.consentement-enregistre')?.getAttribute('role')).toBe('status');
+    expect(texte()).toContain('Consentement enregistré');
+  });
+
+  it('un consentement refuse (500) n\'affiche pas la confirmation', async () => {
+    service.consentir.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    await afficher();
+    bouton('Je donne mon consentement')!.click();
+    fixture.detectChanges();
+    expect(texte()).not.toContain('Consentement enregistré');
+  });
+
   it('affiche directement le lien quand le consentement est deja donne, mais pas une fois terminee', async () => {
     service.mes.and.returnValue(of([{ ...CONSENTIE, id: 't2', statut: 'TERMINEE' }, CONSENTIE]));
     rendezVous.mes.and.returnValue(of([rendezVousImminent()]));
@@ -149,6 +170,29 @@ describe('MesTeleconsultationsComponent', () => {
     expect(liens.length).toBe(1);
     expect(texte()).not.toContain(CONSENTEMENT);
     expect(texte()).toContain('Terminée');
+  });
+
+  it('explique l etat comme l appli : terminee, annulee, ou lien de salle pas encore disponible', async () => {
+    service.mes.and.returnValue(
+      of([
+        { ...CONSENTIE, id: 't2', statut: 'TERMINEE' },
+        { ...CONSENTIE, id: 't3', statut: 'ANNULEE' },
+        { ...CONSENTIE, id: 't4', lienSalle: null },
+      ]),
+    );
+    await afficher();
+
+    expect(texte()).toContain('Cette téléconsultation est terminée.');
+    expect(texte()).toContain('Cette téléconsultation a été annulée.');
+    expect(texte()).toContain('Le lien de la salle sera disponible prochainement.');
+  });
+
+  it('n ajoute pas de texte d etat quand le consentement est attendu ou la salle accessible', async () => {
+    service.mes.and.returnValue(of([SANS_CONSENTEMENT, CONSENTIE]));
+    rendezVous.mes.and.returnValue(of([rendezVousImminent()]));
+    await afficher();
+
+    expect(fixture.nativeElement.querySelector('.texte-etat')).toBeNull();
   });
 
   it('desactive « Rejoindre » hors de la fenetre (15 min avant a 2 h apres) avec une indication', async () => {
@@ -163,7 +207,7 @@ describe('MesTeleconsultationsComponent', () => {
     fixture.componentInstance.charger();
     fixture.detectChanges();
     expect(lienSalle()).toBeNull();
-    expect(texte()).toContain('Le créneau de cette téléconsultation est passé');
+    expect(texte()).toContain('Le créneau de ce rendez-vous est passé');
   });
 
   it('affiche le motif { erreur } d un 409 au consentement et recharge la liste', async () => {
@@ -187,6 +231,47 @@ describe('MesTeleconsultationsComponent', () => {
     expect(rendezVous.mes).not.toHaveBeenCalled();
   });
 
+  it('date de proposition et de consentement illisibles : « date inconnue », jamais « null » ni erreur', async () => {
+    service.mes.and.returnValue(of([{ ...CONSENTIE, creeLe: 'pas-une-date', consentementPatientLe: 'n importe quoi' }]));
+    rendezVous.mes.and.returnValue(of([]));
+    await afficher();
+
+    expect(texte()).toContain('Téléconsultation · date inconnue');
+    expect(texte()).not.toContain('consentement donné le');
+    expect(texte()).not.toContain('null');
+  });
+
+  it('date inconnue en arabe', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    service.mes.and.returnValue(of([{ ...SANS_CONSENTEMENT, creeLe: '' }]));
+    rendezVous.mes.and.returnValue(of([]));
+    await afficher();
+
+    expect(texte()).toContain('استشارة عن بُعد · تاريخ غير معروف');
+    TestBed.inject(LangueService).ar.set(false);
+  });
+
+  it('un rendez-vous à la date illisible retombe sur la date de proposition', async () => {
+    rendezVous.mes.and.returnValue(of([{ ...RENDEZ_VOUS, debut: 'x' }]));
+    await afficher();
+
+    expect(texte()).toContain('Téléconsultation proposée le');
+    expect(texte()).not.toContain('Rendez-vous le');
+  });
+
+  it('classe les téléconsultations sans date lisible en fin de liste', async () => {
+    service.mes.and.returnValue(
+      of([
+        { ...SANS_CONSENTEMENT, id: 'sans-date', creeLe: '' },
+        { ...SANS_CONSENTEMENT, id: 'ancienne', creeLe: '2026-01-01T10:00:00Z' },
+        { ...SANS_CONSENTEMENT, id: 'recente', creeLe: '2026-09-01T10:00:00Z' },
+      ]),
+    );
+    await afficher();
+
+    expect(fixture.componentInstance.teleconsultations().map((t) => t.id)).toEqual(['recente', 'ancienne', 'sans-date']);
+  });
+
   it('redirige vers la connexion si l utilisateur n est pas connecte', async () => {
     auth.estConnecte = () => false;
     await afficher();
@@ -200,5 +285,56 @@ describe('MesTeleconsultationsComponent', () => {
     await afficher();
 
     expect(texte()).toContain('Cette page est réservée aux patients.');
+  });
+
+  describe('en arabe (comme l\'appli)', () => {
+    beforeEach(() => TestBed.inject(LangueService).ar.set(true));
+    afterEach(() => TestBed.inject(LangueService).ar.set(false));
+
+    it('affiche titre, statut, consentement et bouton en arabe, de droite a gauche', async () => {
+      await afficher();
+
+      const main: HTMLElement = fixture.nativeElement.querySelector('main');
+      expect(main.getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('استشاراتي عن بُعد');
+      expect(texte()).toContain('مبرمجة');
+      expect(texte()).toContain('لا يقوم نداويك بأي تسجيل.');
+      expect(texte()).toContain('07/12/2026');
+      expect(bouton('أوافق')).toBeDefined();
+      expect(texte()).not.toContain('Je donne mon consentement');
+      expect(texte()).not.toContain('Planifiée');
+    });
+
+    it('confirme le consentement en arabe', async () => {
+      service.consentir.and.returnValue(of(CONSENTIE));
+      await afficher();
+      bouton('أوافق')!.click();
+      fixture.detectChanges();
+      expect(texte()).toContain('تم تسجيل موافقتك');
+      expect(texte()).not.toContain('Consentement enregistré');
+    });
+
+    it('explique en arabe qu\'une teleconsultation terminee ou annulee n\'a plus d\'action', async () => {
+      service.mes.and.returnValue(of([{ ...CONSENTIE, statut: 'TERMINEE' }]));
+      await afficher();
+      expect(texte()).toContain('انتهت هذه الاستشارة عن بُعد.');
+      expect(texte()).toContain('منتهية');
+
+      service.mes.and.returnValue(of([{ ...CONSENTIE, statut: 'ANNULEE' }]));
+      fixture.componentInstance.charger();
+      fixture.detectChanges();
+      expect(texte()).toContain('تم إلغاء هذه الاستشارة عن بُعد.');
+    });
+
+    it('affiche la liste vide et les erreurs en arabe', async () => {
+      service.mes.and.returnValue(of([]));
+      await afficher();
+      expect(texte()).toContain('لا توجد استشارات عن بُعد حاليًا.');
+
+      service.mes.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      fixture.componentInstance.charger();
+      fixture.detectChanges();
+      expect(texte()).toContain('تعذّر تحميل استشاراتك عن بُعد.');
+    });
   });
 });

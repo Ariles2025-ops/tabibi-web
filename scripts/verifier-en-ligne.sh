@@ -2,7 +2,7 @@
 # PORTE apres deploiement : echoue (exit 1) si le site en ligne n'est pas le commit attendu ou s'il est casse.
 # Usage : scripts/verifier-en-ligne.sh [sha-attendu]   (par defaut : git rev-parse --short HEAD)
 set -uo pipefail
-SITE="https://tabibi.doctor"
+SITE="${SITE:-https://ndawik.com}"
 ATTENDU="${1:-$(git rev-parse --short HEAD)}"
 cb="cb=$(date +%s)"
 echec=0
@@ -45,7 +45,12 @@ for page in fr ar; do
   case "$html" in *'rel="canonical"'*) ok "accueil $page : balise canonical" ;; *) ko "accueil $page sans balise canonical" ;; esac
   case "$html" in *'"@type":"Organization"'*) ok "accueil $page : JSON-LD Organization" ;; *) ko "accueil $page sans JSON-LD Organization" ;; esac
 done
-case "$accueil_fr" in *'Tabibi Doctor (Tabibi DZ)'*) ok "accueil FR : titre de marque" ;; *) ko "accueil FR sans « Tabibi Doctor (Tabibi DZ) »" ;; esac
+canon_fr="$(printf '%s' "$accueil_fr" | tr '\n' ' ' | grep -o '<link[^>]*rel="canonical"[^>]*>' | head -1)"
+case "$canon_fr" in *'href="'"$SITE"'/"'*) ok "accueil FR : canonical = $SITE/" ;; *) ko "accueil FR : le canonical doit etre $SITE/ (trouve : ${canon_fr:-aucun})" ;; esac
+titre_fr="$(printf '%s' "$accueil_fr" | tr '\n' ' ' | sed -n 's/.*<title[^>]*>\([^<]*\)<\/title>.*/\1/p')"
+titre_ar="$(printf '%s' "$accueil_ar" | tr '\n' ' ' | sed -n 's/.*<title[^>]*>\([^<]*\)<\/title>.*/\1/p')"
+case "$titre_fr" in *'Ndawik'*) ok "accueil FR : titre de marque (Ndawik)" ;; *) ko "accueil FR : le <title> doit contenir « Ndawik » (trouve : « ${titre_fr:-aucun <title>} »)" ;; esac
+case "$titre_ar" in *'نداويك'*) ok "accueil AR : titre de marque (نداويك)" ;; *) ko "accueil AR : le <title> doit contenir « نداويك » (trouve : « ${titre_ar:-aucun <title>} »)" ;; esac
 
 # 3c. Anti-copie : la liste complete des fiches n'est pas publique.
 code="$(curl -s -o /dev/null -w '%{http_code}' "https://api.tabibi.doctor/api/medecins/plan?$cb")"
@@ -63,7 +68,7 @@ done
 
 # 6. Pages publiques : suppression de compte et pages legales (URL de la Play Console), index des wilayas, aide, pharmacies.
 #    curl -L suit la redirection 301 des pages legales sans .html.
-for chemin in /supprimer-mon-compte /legal/confidentialite /legal/mentions-legales /legal/cgu /wilayas /aide /ar/aide /specialites/pharmacie/alger; do
+for chemin in /supprimer-mon-compte /legal/confidentialite /legal/mentions-legales /legal/cgu /wilayas /aide /ar/aide /ar/supprimer-mon-compte /specialites/pharmacie/alger; do
   code="$(curl -sL -o /dev/null -w '%{http_code}' "$SITE$chemin?$cb")"
   [ "$code" = "200" ] && ok "$chemin (200)" || ko "$chemin repond HTTP $code (200 attendu)"
 done

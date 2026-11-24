@@ -26,7 +26,12 @@ describe('PatientsService', () => {
     expect(recu!.get('p1')).toEqual(P1);
     expect(nomPatient(recu!, 'p1')).toBe('Yasmine Benali');
     expect(telephonePatient(recu!, 'p1')).toBe('0550123456');
-    expect(nomPatient(recu!, 'inconnu')).toBe('Patient');
+    expect(nomPatient(recu!, 'inconnu')).toBe('Patient inconnu');
+    expect(nomPatient(recu!, 'inconnu', true)).toBe('مريض inconnu');
+    // Sans nom connu : « Patient » + huit premiers caracteres de l'identifiant, comme dans l'appli.
+    expect(nomPatient(recu!, '11111111-2222-3333-4444-555555555555')).toBe('Patient 11111111');
+    expect(nomPatient(recu!, '11111111-2222-3333-4444-555555555555', true)).toBe('مريض 11111111');
+    expect(nomPatient(recu!, '')).toBe('Patient');
     expect(telephonePatient(recu!, 'inconnu')).toBe('');
   });
 

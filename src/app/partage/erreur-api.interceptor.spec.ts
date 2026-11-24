@@ -50,9 +50,49 @@ describe('erreurApiInterceptor', () => {
     expect(e.error.erreur).toBe('يواجه الخادم مشكلة. حاول لاحقًا.');
   });
 
+  it('400 en français : inchangé quand la langue est le français', () => {
+    expect(erreur('/api/k', { erreur: 'Données invalides' }, { status: 400, statusText: 'B' }).error.erreur).toBe('Données invalides');
+  });
+
   it('409 et 401 gardent le message de l’API', () => {
     expect(erreur('/api/a', { erreur: 'Créneau pris' }, { status: 409, statusText: 'C' }).error.erreur).toBe('Créneau pris');
     expect(erreur('/api/b', { erreur: 'Non' }, { status: 401, statusText: 'U' }).status).toBe(401);
+  });
+
+  describe('409 en arabe (comme traduireErreurServeur de l’appli)', () => {
+    beforeEach(() => langue.ar.set(true));
+
+    it('créneau pris, passé ou indisponible : texte arabe précis', () => {
+      expect(erreur('/api/a', { erreur: 'Ce créneau vient d\'être pris.' }, { status: 409, statusText: 'C' }).error.erreur).toBe('هذا الموعد حُجز للتوّ.');
+      expect(erreur('/api/b', { erreur: 'Ce créneau est déjà passé.' }, { status: 409, statusText: 'C' }).error.erreur).toBe('هذا الموعد قد مضى بالفعل.');
+      expect(erreur('/api/c', { erreur: 'Créneau indisponible.' }, { status: 409, statusText: 'C' }).error.erreur).toBe('هذا الموعد لم يعد متاحًا.');
+    });
+
+    it('rendez-vous à venir : même texte arabe avec ou sans accent, comme l’appli', () => {
+      const attendu = 'لديك بالفعل موعد قادم مع هذا الطبيب: ألغِه لاختيار موعد آخر.';
+      expect(erreur('/api/h', { erreur: 'Vous avez déjà un rendez-vous à venir avec ce médecin.' }, { status: 409, statusText: 'C' }).error.erreur).toBe(attendu);
+      expect(erreur('/api/i', { erreur: 'Vous avez deja un rendez-vous a venir avec ce medecin.' }, { status: 409, statusText: 'C' }).error.erreur).toBe(attendu);
+    });
+
+    it('autre 409 : texte générique arabe, jamais le français', () => {
+      expect(erreur('/api/d', { erreur: 'Avis déjà signalé.' }, { status: 409, statusText: 'C' }).error.erreur).toBe('تعذّر الإجراء: تغيّر الوضع في الأثناء');
+    });
+
+    it('400 et 403 en français : message retiré (repli arabe de l’écran), 404 : texte arabe générique', () => {
+      expect(erreur('/api/f', { erreur: 'Aucun compte Ndawik n\'utilise cette adresse e-mail.' }, { status: 400, statusText: 'B' }).error.erreur).toBeUndefined();
+      expect(erreur('/api/h', { erreur: 'Accès refusé' }, { status: 403, statusText: 'F' }).error.erreur).toBeUndefined();
+      expect(erreur('/api/i', { erreur: 'Introuvable' }, { status: 404, statusText: 'N' }).error.erreur).toBe('العنصر المطلوب غير موجود.');
+    });
+
+    it('400 « chevauche » : texte d’origine conservé pour que la série de créneaux ignore le créneau existant', () => {
+      expect(erreur('/api/c', { erreur: 'Créneaux qui se chevauchent' }, { status: 400, statusText: 'B' }).error.erreur).toBe('Créneaux qui se chevauchent');
+    });
+
+    it('409 sans message et message déjà en arabe : inchangés', () => {
+      expect(erreur('/api/e', null, { status: 409, statusText: 'C' }).error).toBeNull();
+      expect(erreur('/api/j', { erreur: 'موعد' }, { status: 400, statusText: 'B' }).error.erreur).toBe('موعد');
+      expect(erreur('/api/g', { erreur: 'موعد' }, { status: 409, statusText: 'C' }).error.erreur).toBe('موعد');
+    });
   });
 
   it('ne touche pas aux appels hors /api/', () => {

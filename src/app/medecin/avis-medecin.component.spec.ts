@@ -8,6 +8,7 @@ import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { AvisService, SyntheseAvis } from '../avis/avis.service';
 import { Moi } from '../moi/moi.service';
+import { LangueService } from '../partage/langue.service';
 import { AvisMedecinComponent } from './avis-medecin.component';
 
 const MEDECIN_ID = '33333333-3333-3333-3333-333333333333';
@@ -25,9 +26,12 @@ describe('AvisMedecinComponent', () => {
   let fixture: ComponentFixture<AvisMedecinComponent>;
   let service: jasmine.SpyObj<AvisService>;
   let profil: Moi | null;
+  let confirmation: jasmine.Spy;
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
+    confirmation = spyOn(window, 'confirm').and.returnValue(true); // « Signaler cet avis ? » accepte par defaut
     profil = { sujet: MEDECIN_ID, nom: 'medecin.demo', roles: ['MEDECIN'] };
     service = jasmine.createSpyObj<AvisService>('AvisService', ['synthese', 'signaler']);
     service.synthese.and.returnValue(of(SYNTHESE));
@@ -56,7 +60,7 @@ describe('AvisMedecinComponent', () => {
   }
 
   function boutonsSignaler(): HTMLButtonElement[] {
-    return Array.from(fixture.nativeElement.querySelectorAll('button'));
+    return Array.from(fixture.nativeElement.querySelectorAll('li button'));
   }
 
   it('lit mes avis publics avec mon identifiant et propose « Signaler » sur chacun', async () => {
@@ -72,6 +76,16 @@ describe('AvisMedecinComponent', () => {
     expect(boutonsSignaler()[0].textContent).toContain('Signaler');
   });
 
+  it('un avis sans date lisible affiche « date inconnue » et passe en fin de liste, comme dans l appli', async () => {
+    service.synthese.and.returnValue(of({ ...SYNTHESE, nombre: 3, avis: [{ id: 'a3', note: 3, commentaire: null, deposeLe: 'illisible' }, ...SYNTHESE.avis] }));
+    await afficher();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items.length).toBe(3);
+    expect(items[0].textContent).toContain('18 septembre 2026');
+    expect(items[2].textContent).toContain('date inconnue');
+  });
+
   it('signale un avis : il reste visible, marque « Signalé », sans bouton', async () => {
     service.signaler.and.returnValue(of({ id: 'a1', rendezVousId: 'r1', medecinId: MEDECIN_ID, note: 5, commentaire: 'Très bon accueil.', statut: 'SIGNALE', deposeLe: '2026-09-18T10:00:00Z' }));
     await afficher();
@@ -79,14 +93,27 @@ describe('AvisMedecinComponent', () => {
     boutonsSignaler()[0].click();
     await afficher();
 
+    expect(confirmation).toHaveBeenCalledWith(jasmine.stringContaining('Signaler cet avis ?'));
     expect(service.signaler).toHaveBeenCalledWith('a1');
-    expect(texte()).toContain("Avis signalé : il reste visible jusqu'à la décision de l'équipe Tabibi.");
+    expect(texte()).toContain("Avis signalé : il reste visible jusqu'à la décision de l'équipe Ndawik.");
     expect(texte()).not.toContain('retiré');
     const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
     expect(items.length).toBe(2);
     expect(items[0].textContent).toContain('Signalé');
     expect(items[0].querySelector('button')).toBeNull();
     expect(boutonsSignaler().length).toBe(1);
+  });
+
+  it('ne signale rien si le médecin refuse la confirmation', async () => {
+    confirmation.and.returnValue(false);
+    await afficher();
+
+    boutonsSignaler()[0].click();
+    await afficher();
+
+    expect(service.signaler).not.toHaveBeenCalled();
+    expect(boutonsSignaler().length).toBe(2);
+    expect(texte()).not.toContain('Avis signalé');
   });
 
   it('affiche le motif { erreur } d un 409 (deja signale) et marque l avis « Signalé »', async () => {
@@ -102,6 +129,16 @@ describe('AvisMedecinComponent', () => {
     expect(boutonsSignaler().length).toBe(1);
   });
 
+  it('après rechargement, un avis déjà signalé (signale: true) reste « Signalé » et sans bouton', async () => {
+    service.synthese.and.returnValue(of({ ...SYNTHESE, avis: SYNTHESE.avis.map((a) => (a.id === 'a1' ? { ...a, signale: true } : a)) }));
+    await afficher();
+
+    const items: HTMLLIElement[] = Array.from(fixture.nativeElement.querySelectorAll('li'));
+    expect(items[0].textContent).toContain('Signalé');
+    expect(items[0].querySelector('button')).toBeNull();
+    expect(boutonsSignaler().length).toBe(1);
+  });
+
   it('indique qu il n y a aucun avis et signale un profil illisible', async () => {
     service.synthese.and.returnValue(of({ moyenne: null, nombre: 0, avis: [] }));
     await afficher();
@@ -113,5 +150,20 @@ describe('AvisMedecinComponent', () => {
     await afficher();
     expect(texte()).toContain('Impossible de lire votre profil');
     expect(service.synthese).toHaveBeenCalledTimes(1);
+  });
+
+  it('s\'affiche en arabe (titre, moyenne, « Signaler ») quand la langue est l\'arabe, sans texte francais', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    await afficher();
+
+    expect(texte()).toContain('آراء المرضى');
+    expect(texte()).toContain('4,5 / 5 (2 رأي)');
+    expect(boutonsSignaler().some((b) => b.textContent?.trim() === 'إبلاغ')).toBeTrue();
+    expect(texte()).not.toContain('Signaler');
+    expect(texte()).not.toContain('Avis des patients');
+
+    boutonsSignaler()[0].click();
+    expect(confirmation).toHaveBeenCalledWith('الإبلاغ عن هذا الرأي؟ يبقى ظاهرًا حتى قرار فريق نداويك.');
+    expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
   });
 });

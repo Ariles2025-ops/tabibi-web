@@ -79,31 +79,47 @@ export function nettoyerProfil(saisie: DemandeProfil): DemandeProfil {
 
 /**
  * Validation cote client d'une demande deja nettoyee, coherente avec le backend (400 sinon) : renvoie le premier
- * motif en francais, ou null si tout est correct. `aujourdHui` est la date locale (injectable pour les tests).
+ * motif (en francais, ou en arabe si `arabe`, comme l'appli), ou null si tout est correct. `aujourdHui` est la date
+ * locale (injectable pour les tests).
  */
-export function validerProfil(demande: DemandeProfil, aujourdHui: Date = new Date()): string | null {
+export function validerProfil(demande: DemandeProfil, aujourdHui: Date = new Date(), arabe = false): string | null {
+  const t = (fr: string, ar: string) => (arabe ? ar : fr);
+  if (demande.nomComplet.length === 0) return t('Indiquez votre nom complet.', 'أدخل اسمك الكامل.');
   if (demande.nomComplet.length < LONGUEUR_MIN_NOM || demande.nomComplet.length > LONGUEUR_MAX_NOM) {
-    return `Le nom complet doit compter de ${LONGUEUR_MIN_NOM} à ${LONGUEUR_MAX_NOM} caractères.`;
+    return t(
+      `Le nom complet doit compter de ${LONGUEUR_MIN_NOM} à ${LONGUEUR_MAX_NOM} caractères.`,
+      `يجب أن يتكوّن الاسم الكامل من ${LONGUEUR_MIN_NOM} إلى ${LONGUEUR_MAX_NOM} حرفًا.`,
+    );
   }
   if (demande.telephone !== null && !TELEPHONE.test(demande.telephone)) {
-    return 'Le téléphone doit être un numéro algérien de 9 à 10 chiffres commençant par 0 (ex. 0550123456).';
+    return t(
+      'Le téléphone doit être un numéro algérien de 9 à 10 chiffres commençant par 0 (ex. 0550123456).',
+      'يجب أن يتكوّن رقم الهاتف من 9 إلى 10 أرقام وأن يبدأ بـ 0 (مثال: 0550123456).',
+    );
   }
   if (demande.dateNaissance !== null) {
     if (!DATE_ISO.test(demande.dateNaissance) || Number.isNaN(Date.parse(demande.dateNaissance))) {
-      return 'Indiquez une date de naissance valide.';
+      return t('Indiquez une date de naissance valide.', 'أدخل تاريخ ميلاد صالحًا.');
     }
     if (demande.dateNaissance >= dateLocaleIso(aujourdHui)) {
-      return 'La date de naissance doit être dans le passé.';
+      return t('La date de naissance doit être dans le passé.', 'يجب أن يكون تاريخ الميلاد في الماضي.');
     }
     if (Number(demande.dateNaissance.slice(0, 4)) <= ANNEE_NAISSANCE_MIN) {
-      return `La date de naissance doit être postérieure à ${ANNEE_NAISSANCE_MIN}.`;
+      return t(
+        `La date de naissance doit être postérieure à ${ANNEE_NAISSANCE_MIN}.`,
+        `يجب أن يكون تاريخ الميلاد بعد سنة ${ANNEE_NAISSANCE_MIN}.`,
+      );
     }
   }
   if (demande.wilayaCode !== null && demande.wilayaCode.length > LONGUEUR_MAX_WILAYA) {
-    return `Le code de wilaya ne peut pas dépasser ${LONGUEUR_MAX_WILAYA} caractères.`;
+    return t(
+      `Le code de wilaya ne peut pas dépasser ${LONGUEUR_MAX_WILAYA} caractères.`,
+      `لا يمكن أن يتجاوز رمز الولاية ${LONGUEUR_MAX_WILAYA} أحرف.`,
+    );
   }
   if (!LANGUES.some((l) => l.code === demande.langue)) {
-    return `La langue doit être l'une de : ${LANGUES.map((l) => l.code).join(', ')}.`;
+    const codes = LANGUES.map((l) => l.code).join(', ');
+    return t(`La langue doit être l'une de : ${codes}.`, `يجب أن تكون اللغة إحدى: ${codes}.`);
   }
   return null;
 }

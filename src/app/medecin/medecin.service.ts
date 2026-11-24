@@ -97,13 +97,18 @@ export class MedecinService {
     return this.http.post<RendezVous>(`${this.base}/api/medecin/rendezvous/${rendezVousId}/annuler`, null);
   }
 
+  /** Deplacement par le medecin vers un autre de ses creneaux libres (409 si le creneau est pris). */
+  deplacerRendezVous(rendezVousId: string, nouveauCreneauId: string): Observable<RendezVous> {
+    return this.http.post<RendezVous>(`${this.base}/api/medecin/rendezvous/${rendezVousId}/deplacer`, { nouveauCreneauId });
+  }
+
   /** Secretaires rattachees au cabinet du medecin connecte, les plus anciens rattachements d'abord. */
   secretaires(): Observable<Rattachement[]> {
     return this.http.get<Rattachement[]>(`${this.base}/api/medecin/secretaires`);
   }
 
   /**
-   * Rattache une secretaire par l'adresse e-mail de son compte Tabibi (201 ; 400 si aucun compte ou soi-meme,
+   * Rattache une secretaire par l'adresse e-mail de son compte Ndawik (201 ; 400 si aucun compte ou soi-meme,
    * 409 si deja rattachee) ; elle est prevenue.
    */
   rattacherSecretaire(email: string): Observable<Rattachement> {

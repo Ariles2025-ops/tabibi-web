@@ -9,6 +9,7 @@ import { Besoin, DawiniService, Reponse } from '../dawini/dawini.service';
 import { EspacePharmacieComponent } from './espace-pharmacie.component';
 import { Profil, ProfilService } from '../moi/profil.service';
 import { OrdonnanceService } from '../ordonnances/ordonnance.service';
+import { LangueService } from '../partage/langue.service';
 
 const PROFIL: Profil = {
   utilisateurId: 'ph1',
@@ -170,6 +171,21 @@ describe('EspacePharmacieComponent', () => {
     expect(formulaireReponse()!.querySelector('input[type="number"]')).not.toBeNull();
   });
 
+  it('une demande sans date lisible affiche « date inconnue » et passe en fin de liste (comme l\'appli)', async () => {
+    service.besoinsOuverts.and.returnValue(of([
+      { ...BESOIN, id: 'b9', medicament: 'Sans date', publieLe: 'pas une date' },
+      BESOIN,
+    ]));
+    await afficher();
+    await chercher('16');
+
+    const t = texte();
+    expect(t.indexOf('Amoxicilline 1 g')).toBeGreaterThan(-1);
+    expect(t.indexOf('Sans date')).toBeGreaterThan(t.indexOf('Amoxicilline 1 g'));
+    expect(t).toContain('date inconnue');
+    expect(t.match(/publiée le/g)?.length).toBe(1);
+  });
+
   it('sans profil, indique de renseigner le nom, desactive Repondre et n envoie rien', async () => {
     await afficher();
     await chercher('16');
@@ -182,6 +198,23 @@ describe('EspacePharmacieComponent', () => {
     repondre();
     await afficher();
     expect(service.repondre).not.toHaveBeenCalled();
+  });
+
+  it('profil en erreur 500 : message visible et « Réessayer » recharge le profil', async () => {
+    profils.monProfil.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    await afficher();
+
+    expect(fixture.nativeElement.querySelector('.profil-erreur')).not.toBeNull();
+    expect(texte()).toContain('Impossible de charger le profil');
+    expect(fixture.nativeElement.querySelector('.formulaire-profil')).toBeNull();
+
+    profils.monProfil.and.returnValue(of(PROFIL));
+    fixture.nativeElement.querySelector('.bouton-reessayer-profil').click();
+    await afficher();
+
+    expect(profils.monProfil).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('.profil-erreur')).toBeNull();
+    expect(formulaireReponse()!.textContent).toContain('Répondre au nom de : Pharmacie El Amel');
   });
 
   it('avec profil, affiche « Répondre au nom de », envoie le nom du profil et ne memorise rien', async () => {
@@ -280,7 +313,32 @@ describe('EspacePharmacieComponent', () => {
 
     expect(ordonnances.delivrer).toHaveBeenCalledWith('AB12CD34');
     expect(texte()).toContain('Ordonnance marquée comme délivrée.');
+    expect(texte()).toContain('Ordonnance délivrée le');
+    expect(texte()).not.toContain('Déjà délivrée');
+    expect(texte()).not.toContain('ne pas délivrer');
+    expect(texte()).not.toContain('Marquer comme délivrée');
+  });
+
+  it('un code inconnu (404) affiche le même message que la page publique et l\'appli, sans proposer la délivrance', async () => {
+    ordonnances.verifier.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+    await afficher();
+    await saisir('codeOrdonnance', 'ZZ99ZZ99');
+    fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+    await afficher();
+    expect(texte()).toContain('Code inconnu : aucune ordonnance ne correspond à ce code.');
+    expect(texte()).not.toContain('Marquer comme délivrée');
+  });
+
+  it('un code deja delivre reste un refus (rouge), contrairement a la delivrance qui vient d\'avoir lieu', async () => {
+    ordonnances.verifier.and.returnValue(of({ valide: false, emiseLe: '2026-09-18T10:00:00Z', statut: 'DELIVREE', delivreeLe: '2026-09-19T09:30:00Z' }));
+    await afficher();
+
+    await saisir('codeOrdonnance', 'ab12cd34');
+    fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+    await afficher();
+
     expect(texte()).toContain('Déjà délivrée');
+    expect(texte()).toContain('ne pas délivrer une nouvelle fois');
     expect(texte()).not.toContain('Marquer comme délivrée');
   });
 
@@ -311,6 +369,18 @@ describe('EspacePharmacieComponent', () => {
     expect(texte()).not.toContain('Marquer comme délivrée');
   });
 
+  it('une date d\'émission absente ou illisible n\'affiche ni « émise le » vide ni erreur, comme l\'appli', async () => {
+    ordonnances.verifier.and.returnValue(of({ valide: true, emiseLe: 'pas-une-date', statut: 'EMISE' }));
+    await afficher();
+    await saisir('codeOrdonnance', 'AB12CD34');
+    fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+    await afficher();
+
+    expect(texte()).toContain('Ordonnance valide.');
+    expect(texte()).not.toContain('émise le');
+    expect(texte()).toContain('Marquer comme délivrée');
+  });
+
   it('signale une ordonnance expiree sans proposer la delivrance', async () => {
     ordonnances.verifier.and.returnValue(of({ valide: true, emiseLe: '2026-01-18T10:00:00Z', statut: 'EXPIREE' }));
     await afficher();
@@ -321,5 +391,59 @@ describe('EspacePharmacieComponent', () => {
     expect(texte()).toContain('Expirée');
     expect(texte()).not.toContain('Marquer comme délivrée');
     expect(texte()).not.toContain('Ordonnance valide');
+  });
+
+  describe('en arabe (comme l\'appli)', () => {
+    beforeEach(() => TestBed.inject(LangueService).ar.set(true));
+
+    it('affiche l\'espace de droite a gauche, sans texte francais', async () => {
+      await afficher();
+      await chercher('16');
+
+      const main: HTMLElement = fixture.nativeElement.querySelector('main');
+      expect(main.getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('فضاء الصيدلية');
+      expect(texte()).toContain('الدواء متوفر');
+      expect(texte()).toContain('2 ردود');
+      expect(texte()).not.toContain('Espace pharmacie');
+      expect(texte()).not.toContain('réponses');
+      expect(texte()).not.toContain('Répondre');
+      expect(texte()).not.toContain('publiée le');
+      expect(texte()).not.toContain('null');
+    });
+
+    it('traduit l\'envoi de la reponse', async () => {
+      profils.monProfil.and.returnValue(of(PROFIL));
+      service.repondre.and.returnValue(of(REPONSE));
+      await afficher();
+
+      await cocherDisponible(true);
+      repondre();
+      await afficher();
+      expect(service.repondre).toHaveBeenCalled();
+      expect(texte()).toContain('تم إرسال الرد بخصوص «Amoxicilline 1 g»: المريض مُبلَّغ.');
+      expect(texte()).not.toContain('le patient est prévenu');
+    });
+
+    it('traduit le code inconnu comme l\'appli', async () => {
+      ordonnances.verifier.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+      await afficher();
+      await saisir('codeOrdonnance', 'ZZ99ZZ99');
+      fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+      await afficher();
+      expect(texte()).toContain('رمز غير معروف: لا توجد أي وصفة تطابق هذا الرمز.');
+      expect(texte()).not.toContain('Code inconnu');
+    });
+
+    it('traduit la verification d\'une ordonnance', async () => {
+      ordonnances.verifier.and.returnValue(of({ valide: true, emiseLe: '2026-09-18T10:00:00Z', statut: 'EXPIREE' }));
+      await afficher();
+      await saisir('codeOrdonnance', 'AB12CD34');
+      fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+      await afficher();
+
+      expect(texte()).toContain('منتهية الصلاحية');
+      expect(texte()).not.toContain('Expirée');
+    });
   });
 });

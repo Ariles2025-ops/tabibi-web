@@ -15,7 +15,7 @@ import { MedecinService } from './medecin.service';
 /**
  * « Ma fiche » (role MEDECIN) : adresse, telephone du cabinet, horaires, presentation et langues de la fiche
  * publique (GET / PUT /api/medecin/fiche). Le nom, la specialite et la wilaya passent par l'administration.
- * Tant que l'API repond 404, la page n'affiche rien et renvoie vers l'agenda.
+ * Tant que l'API repond 404 sans corps, la page n'affiche rien et renvoie vers l'agenda.
  */
 @Component({
   selector: 'app-ma-fiche',
@@ -27,11 +27,16 @@ import { MedecinService } from './medecin.service';
         <app-selecteur-langue />
       </div>
       <p style="color:var(--text3);margin:0 0 20px">
-        {{ l.t("Ces informations s'affichent sur votre fiche publique. Votre nom, votre spécialité et votre wilaya sont modifiés par l'équipe Tabibi.",
-               'تظهر هذه المعلومات في صفحتك العامة. يتم تعديل الاسم والتخصص والولاية من طرف فريق طبيبي.') }}
+        {{ l.t("Ces informations s'affichent sur votre fiche publique. Votre nom, votre spécialité et votre wilaya sont modifiés par l'équipe Ndawik.",
+               'تظهر هذه المعلومات في صفحتك العامة. يتم تعديل الاسم والتخصص والولاية من طرف فريق نداويك.') }}
       </p>
       <p *ngIf="charge()" style="color:var(--text3)">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
-      <form *ngIf="!charge()" (ngSubmit)="enregistrer()" style="display:grid;gap:14px;background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:20px">
+      <div *ngIf="erreurChargement()" role="alert" style="display:grid;gap:12px;justify-items:start">
+        <p style="color:var(--red);margin:0">{{ l.t("Impossible de charger votre fiche pour le moment. Vérifiez votre connexion puis réessayez.",
+          'تعذّر تحميل صفحتك حاليًا. تحقّق من اتصالك ثم حاول مجددًا.') }}</p>
+        <button type="button" class="bouton" (click)="charger()">{{ l.t('Réessayer', 'إعادة المحاولة') }}</button>
+      </div>
+      <form *ngIf="!charge() && !erreurChargement()" (ngSubmit)="enregistrer()" style="display:grid;gap:14px;background:#fff;border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--s1);padding:20px">
         <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
           {{ l.t('Adresse', 'العنوان') }}
           <input class="champ" [(ngModel)]="adresse" name="adresse" [maxlength]="adresseMax" style="color:var(--ink);font-size:1rem">
@@ -81,6 +86,7 @@ export class MaFicheComponent implements OnInit {
   /** Faux tant que la route de l'API n'a pas repondu : rien n'est affiche. */
   visible = signal(false);
   charge = signal(true);
+  erreurChargement = signal(false);
   envoi = signal(false);
   succes = signal(false);
   erreur = signal('');
@@ -91,6 +97,12 @@ export class MaFicheComponent implements OnInit {
   presentation = '';
 
   ngOnInit() {
+    this.charger();
+  }
+
+  charger() {
+    this.erreurChargement.set(false);
+    this.charge.set(true);
     this.service.maFiche().subscribe({
       next: (f) => {
         this.api.ficheMedecin.set(true);
@@ -100,10 +112,15 @@ export class MaFicheComponent implements OnInit {
       },
       error: (e: HttpErrorResponse) => {
         if (e.status === 401) this.auth.seConnecter();
-        else {
-          // 404 (route absente) ou autre echec : l'ecran reste cache, sans erreur visible.
+        else if (e.status === 404 && !e.error) {
+          // Route absente (API pas encore deployee) : l'ecran reste cache.
           this.api.ficheMedecin.set(false);
           void this.router.navigateByUrl('/medecin/agenda');
+        } else {
+          // 500, reseau coupe, « medecin introuvable »... : message + Reessayer, menu intact.
+          this.charge.set(false);
+          this.erreurChargement.set(true);
+          this.visible.set(true);
         }
       },
     });

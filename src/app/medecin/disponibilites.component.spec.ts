@@ -6,8 +6,10 @@ import localeFr from '@angular/common/locales/fr';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { LangueService } from '../partage/langue.service';
 import { DisponibilitesComponent } from './disponibilites.component';
 import { MedecinService } from './medecin.service';
+import { instantAlger, valeurDateHeureLocale } from './agenda-utils';
 
 describe('DisponibilitesComponent', () => {
   let fixture: ComponentFixture<DisponibilitesComponent>;
@@ -16,7 +18,9 @@ describe('DisponibilitesComponent', () => {
 
   beforeEach(() => {
     registerLocaleData(localeFr);
-    service = jasmine.createSpyObj<MedecinService>('MedecinService', ['ouvrirCreneau', 'creneaux', 'supprimerCreneau']);
+    service = jasmine.createSpyObj<MedecinService>('MedecinService', ['ouvrirCreneau', 'creneaux', 'supprimerCreneau', 'semaineType']);
+    // Par defaut : route « semaine type » absente (404) -> la serie s'ouvre creneau par creneau.
+    service.semaineType.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
     service.creneaux.and.returnValue(of([]));
     auth = { seConnecter: jasmine.createSpy('seConnecter') };
 
@@ -64,14 +68,12 @@ describe('DisponibilitesComponent', () => {
     return afficher();
   }
 
-  /** Date locale dans un an, au format du champ datetime-local, et son equivalent ISO 8601 UTC. */
+  /** Date (heure d'Algerie) dans un an, au format du champ datetime-local, et son equivalent ISO 8601 UTC. */
   function dansUnAn(): { local: string; iso: string } {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() + 1);
-    d.setHours(9, 30, 0, 0);
-    const deux = (n: number) => String(n).padStart(2, '0');
-    const local = `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}T09:30`;
-    return { local, iso: d.toISOString() };
+    // Jour d'Algerie (UTC+1) dans un an ; l'heure saisie est interpretee en heure d'Algerie.
+    const jour = valeurDateHeureLocale(new Date()).slice(0, 10);
+    const date = `${Number(jour.slice(0, 4)) + 1}${jour.slice(4)}`;
+    return { local: `${date}T09:30`, iso: new Date(instantAlger(date, '09:30')).toISOString() };
   }
 
   it('borne la duree du champ a 5..120 minutes, comme l API, et l explique dans le libelle', async () => {
@@ -129,14 +131,15 @@ describe('DisponibilitesComponent', () => {
     await afficher();
     const min = champ('debut').getAttribute('min')!;
     expect(min).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
-    expect(new Date(min).getTime()).toBeLessThanOrEqual(Date.now());
-    expect(new Date(min).getTime()).toBeGreaterThan(Date.now() - 5 * 60_000);
+    const [jour, heure] = min.split('T');
+    expect(instantAlger(jour, heure)).toBeLessThanOrEqual(Date.now());
+    expect(instantAlger(jour, heure)).toBeGreaterThan(Date.now() - 5 * 60_000);
   });
 
   describe('liste des creneaux a venir', () => {
-    const demain = new Date();
-    demain.setDate(demain.getDate() + 1);
-    demain.setHours(9, 0, 0, 0);
+    // Demain 09:00 en heure d'Algerie (UTC+1), quel que soit le fuseau du navigateur.
+    const jourDemain = valeurDateHeureLocale(new Date(Date.now() + 24 * 3600_000)).slice(0, 10);
+    const demain = new Date(instantAlger(jourDemain, '09:00'));
     const LIBRE = { id: 'c1', medecinId: 'm1', debut: demain.toISOString(), dureeMinutes: 30, disponible: true };
     const RESERVE = { ...LIBRE, id: 'c2', debut: new Date(demain.getTime() + 30 * 60_000).toISOString(), disponible: false };
 
@@ -178,6 +181,8 @@ describe('DisponibilitesComponent', () => {
 
       expect(service.supprimerCreneau).toHaveBeenCalledWith('c1');
       expect(service.creneaux).toHaveBeenCalledTimes(2);
+      // Comme « Créneau supprimé » dans l'appli : le médecin voit que la suppression a bien eu lieu.
+      expect(texte()).toContain('Créneau supprimé.');
     });
 
     it('affiche le { erreur } d un 409 (creneau reserve entre-temps)', async () => {
@@ -198,10 +203,7 @@ describe('DisponibilitesComponent', () => {
 
   describe('serie de creneaux', () => {
     function dateDansUnAn(): string {
-      const d = new Date();
-      d.setFullYear(d.getFullYear() + 1);
-      const deux = (n: number) => String(n).padStart(2, '0');
-      return `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}`;
+      return dansUnAn().local.slice(0, 10);
     }
 
     async function remplirSerie(date: string, de: string, a: string, duree: string) {
@@ -223,12 +225,67 @@ describe('DisponibilitesComponent', () => {
       await remplirSerie(date, '09:00', '10:30', '30');
 
       expect(service.ouvrirCreneau).toHaveBeenCalledTimes(3);
-      expect(service.ouvrirCreneau.calls.argsFor(0)).toEqual([new Date(`${date}T09:00`).toISOString(), 30]);
-      expect(service.ouvrirCreneau.calls.argsFor(2)).toEqual([new Date(`${date}T10:00`).toISOString(), 30]);
+      expect(service.ouvrirCreneau.calls.argsFor(0)).toEqual([new Date(instantAlger(date, '09:00')).toISOString(), 30]);
+      expect(service.ouvrirCreneau.calls.argsFor(2)).toEqual([new Date(instantAlger(date, '10:00')).toISOString(), 30]);
       expect(texte()).toContain('3 créneaux ouverts.');
     });
 
-    it('s arrete a la premiere erreur et l explique', async () => {
+    it('ouvre la serie en un seul appel (une seule alerte aux inscrits en liste d attente)', async () => {
+      service.semaineType.and.returnValue(of({ crees: 5, ignores: 1 }));
+      const date = dateDansUnAn();
+      await afficher();
+
+      await remplirSerie(date, '09:00', '12:00', '30');
+
+      expect(service.ouvrirCreneau).not.toHaveBeenCalled();
+      expect(service.semaineType).toHaveBeenCalledTimes(1);
+      const jour = ['DIMANCHE', 'LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI'][new Date(`${date}T00:00:00Z`).getUTCDay()];
+      expect(service.semaineType.calls.argsFor(0)[0]).toEqual({ jours: [jour], debut: '09:00', fin: '12:00', dureeMinutes: 30, aPartirDu: date, nombreSemaines: 1 });
+      expect(texte()).toContain('5 créneaux ouverts, 1 ignoré (déjà pris).');
+    });
+
+    it('affiche l erreur de l ouverture en un seul appel', async () => {
+      service.semaineType.and.returnValue(throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: 'Plage invalide' } })));
+      await afficher();
+
+      await remplirSerie(dateDansUnAn(), '09:00', '12:00', '30');
+
+      expect(service.ouvrirCreneau).not.toHaveBeenCalled();
+      expect(texte()).toContain('Plage invalide');
+    });
+
+    it('s arrete a une erreur autre qu un chevauchement et l explique', async () => {
+      let appels = 0;
+      service.ouvrirCreneau.and.callFake((debut: string, duree: number) =>
+        ++appels === 2
+          ? throwError(() => new HttpErrorResponse({ status: 500, error: { erreur: 'Erreur serveur.' } }))
+          : of({ id: debut, medecinId: 'm1', debut, dureeMinutes: duree, disponible: true }),
+      );
+      await afficher();
+
+      await remplirSerie(dateDansUnAn(), '09:00', '11:00', '30');
+
+      expect(service.ouvrirCreneau).toHaveBeenCalledTimes(2);
+      expect(texte()).toContain("1 créneau ouvert avant l'arrêt.");
+      expect(texte()).toContain('Arrêt au créneau de 09:30 : Erreur serveur.');
+    });
+
+    it('s arrete a un 400 qui n est pas un chevauchement et affiche son message', async () => {
+      let appels = 0;
+      service.ouvrirCreneau.and.callFake((debut: string, duree: number) =>
+        ++appels === 2
+          ? throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: "Le créneau ne peut pas être ouvert plus de 6 mois à l'avance." } }))
+          : of({ id: debut, medecinId: 'm1', debut, dureeMinutes: duree, disponible: true }),
+      );
+      await afficher();
+
+      await remplirSerie(dateDansUnAn(), '09:00', '11:00', '30');
+
+      expect(service.ouvrirCreneau).toHaveBeenCalledTimes(2);
+      expect(texte()).toContain("Arrêt au créneau de 09:30 : Le créneau ne peut pas être ouvert plus de 6 mois à l'avance.");
+    });
+
+    it('ignore un chevauchement (400), ouvre les suivants et resume', async () => {
       let appels = 0;
       service.ouvrirCreneau.and.callFake((debut: string, duree: number) =>
         ++appels === 2
@@ -239,9 +296,47 @@ describe('DisponibilitesComponent', () => {
 
       await remplirSerie(dateDansUnAn(), '09:00', '11:00', '30');
 
-      expect(service.ouvrirCreneau).toHaveBeenCalledTimes(2);
-      expect(texte()).toContain("1 créneau ouvert avant l'arrêt.");
-      expect(texte()).toContain('Arrêt au créneau de 09:30 : Ce créneau chevauche un créneau déjà ouvert à cette heure-là.');
+      expect(service.ouvrirCreneau).toHaveBeenCalledTimes(4);
+      expect(texte()).toContain('3 créneaux ouverts, 1 ignoré (déjà pris).');
+    });
+  });
+  describe('en arabe, comme dans l appli', () => {
+    const jourDemain = valeurDateHeureLocale(new Date(Date.now() + 24 * 3600_000)).slice(0, 10);
+    const demain = new Date(instantAlger(jourDemain, '09:00'));
+    const LIBRE = { id: 'c1', medecinId: 'm1', debut: demain.toISOString(), dureeMinutes: 30, disponible: true };
+    const RESERVE = { ...LIBRE, id: 'c2', debut: new Date(demain.getTime() + 30 * 60_000).toISOString(), disponible: false };
+
+    beforeEach(() => TestBed.inject(LangueService).ar.set(true));
+    afterEach(() => TestBed.inject(LangueService).ar.set(false));
+
+    it('affiche la page en arabe, de droite a gauche, sans texte francais', async () => {
+      service.creneaux.and.returnValue(of([LIBRE, RESERVE]));
+      await afficher();
+
+      expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+      const t = texte();
+      for (const ar of ['الأوقات المتاحة', 'موعد واحد', 'سلسلة مواعيد', 'فتح الموعد', 'متاح', 'محجوز', 'حذف']) expect(t).toContain(ar);
+      for (const fr of ['Disponibilités', 'Un créneau', 'Une série', 'Libre', 'Réservé', 'Supprimer', 'Créneaux à venir']) expect(t).not.toContain(fr);
+    });
+
+    it('confirme la suppression et le refus de duree en arabe', async () => {
+      service.creneaux.and.returnValue(of([LIBRE]));
+      service.supprimerCreneau.and.returnValue(of(undefined));
+      await afficher();
+
+      bouton('حذف')!.click();
+      await afficher();
+      expect(texte()).toContain('حذف هذا الموعد المتاح؟');
+      bouton('نعم')!.click();
+      await afficher();
+      expect(service.supprimerCreneau).toHaveBeenCalledWith('c1');
+      expect(texte()).toContain('تم حذف الموعد المتاح.');
+
+      await saisir('debut', dansUnAn().local);
+      await saisir('dureeMinutes', '180');
+      await envoyer();
+      expect(texte()).toContain('أدخل مدة بين 5 و120 دقيقة.');
+      expect(service.ouvrirCreneau).not.toHaveBeenCalled();
     });
   });
 });

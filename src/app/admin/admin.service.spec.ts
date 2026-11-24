@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { AdminService, Candidature, StatistiquesAdministration, libelleRappels, libelleStatutCandidature } from './admin.service';
+import { AdminService, Candidature, StatistiquesAdministration, libelleRappels, libelleStatutCandidature, libelleStatutCandidatureAr } from './admin.service';
 
 const BASE = 'http://localhost:8080';
 
@@ -80,15 +80,28 @@ describe('AdminService', () => {
     expect(recu?.motifRefus).toBe('Numéro d’ordre invalide');
   });
 
+  it('suspend par POST /api/admin/medecins/{id}/suspendre avec { motif } puis rétablit', () => {
+    service.suspendre('m1', 'Fiche litigieuse').subscribe();
+    const a = http.expectOne(`${BASE}/api/admin/medecins/m1/suspendre`);
+    expect(a.request.method).toBe('POST');
+    expect(a.request.body).toEqual({ motif: 'Fiche litigieuse' });
+    a.flush(null);
+
+    service.retablir('m1').subscribe();
+    const b = http.expectOne(`${BASE}/api/admin/medecins/m1/retablir`);
+    expect(b.request.method).toBe('POST');
+    b.flush(null);
+  });
+
   it('lit les statistiques sur GET /api/admin/statistiques', () => {
     let recu: StatistiquesAdministration | undefined;
     service.statistiques().subscribe((s) => (recu = s));
 
     const requete = http.expectOne(`${BASE}/api/admin/statistiques`);
     expect(requete.request.method).toBe('GET');
-    requete.flush({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1 });
+    requete.flush({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1, avisSignales: 3 });
 
-    expect(recu).toEqual({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1 });
+    expect(recu).toEqual({ candidaturesEnAttente: 2, candidaturesValidees: 5, candidaturesRefusees: 1, avisSignales: 3 });
   });
 
   it('execute les rappels par POST /api/admin/rappels/executer sans corps et renvoie le nombre', () => {
@@ -118,6 +131,15 @@ describe('AdminService', () => {
 
     expect(statut).toBe(409);
     expect(message).toBe('Seule une candidature en attente peut etre validee.');
+  });
+
+  describe('libelleStatutCandidatureAr', () => {
+    it('traduit les statuts connus comme l\'appli et ne montre jamais null', () => {
+      expect(libelleStatutCandidatureAr('EN_ATTENTE')).toBe('قيد الانتظار');
+      expect(libelleStatutCandidatureAr('VALIDEE')).toBe('مُعتمدة');
+      expect(libelleStatutCandidatureAr('REFUSEE')).toBe('مرفوضة');
+      expect(libelleStatutCandidatureAr(null)).toBe('');
+    });
   });
 
   describe('libelleStatutCandidature', () => {

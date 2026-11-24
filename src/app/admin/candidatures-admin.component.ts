@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { AdminService, Candidature, libelleStatutCandidature } from './admin.service';
@@ -27,7 +28,7 @@ const STATUTS_FILTRE = [
         <h1 style="color:var(--vert);margin:0">Candidatures</h1>
         <label style="display:flex;align-items:center;gap:8px;color:var(--text3);font-size:.9rem">
           Statut
-          <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:#10241F;font-size:1rem">
+          <select class="champ" [ngModel]="statut()" (ngModelChange)="filtrer($event)" name="statut" style="color:var(--tbi-ink);font-size:1rem">
             <option *ngFor="let s of statuts" [value]="s.valeur">{{ s.libelle }}</option>
           </select>
         </label>
@@ -42,7 +43,7 @@ const STATUTS_FILTRE = [
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
             <div>
               <strong>{{ c.nomComplet }}</strong>
-              <span style="color:var(--text3)"> · {{ libelleStatut(c.statut) }}</span>
+              <span style="color:var(--text3)"> · {{ c.statut === 'VALIDEE' && c.suspendu ? 'Suspendu' : libelleStatut(c.statut) }}</span>
               <span *ngIf="c.ficheReclamee" style="color:var(--vert)"> · Réclame la fiche :
                 <a [routerLink]="['/medecins', c.ficheReclamee]" style="color:var(--vert)">{{ c.ficheReclameeNom || 'fiche existante' }}</a></span><br>
               <span *ngIf="c.compteEmail" class="compte-email" style="color:var(--text2)"><i class="fa fa-envelope fa-xs" aria-hidden="true"></i> {{ c.compteEmail }}<br></span>
@@ -67,19 +68,31 @@ const STATUTS_FILTRE = [
           <form *ngIf="c.statut === 'EN_ATTENTE'" (ngSubmit)="refuser(c)"
                 style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 0">
             <input class="champ" [(ngModel)]="motifs[c.id]" [name]="'motif-' + c.id" placeholder="Motif du refus (obligatoire)"
-                   required style="flex:1;min-width:220px;color:#10241F;font-size:1rem">
+                   required style="flex:1;min-width:220px;color:var(--tbi-ink);font-size:1rem">
             <button type="submit" [disabled]="enCours() !== null || !motifRenseigne(c) || aConfirmer()?.id === c.id"
                     style="padding:11px 18px;background:#fff;color:#b3261e;border:1.5px solid #f0c9c6;border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
               Refuser
             </button>
           </form>
 
+          <button *ngIf="c.statut === 'VALIDEE' && c.suspendu" type="button" class="bouton" style="margin:12px 0 0"
+                  (click)="retablir(c)" [disabled]="enCours() !== null || aConfirmer()?.id === c.id">Rétablir</button>
+          <form *ngIf="c.statut === 'VALIDEE' && !c.suspendu" (ngSubmit)="suspendre(c)"
+                style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 0">
+            <input class="champ" [(ngModel)]="motifs[c.id]" [name]="'motif-suspension-' + c.id" placeholder="Motif de la suspension (obligatoire)"
+                   required style="flex:1;min-width:220px;color:var(--tbi-ink);font-size:1rem">
+            <button type="submit" [disabled]="enCours() !== null || !motifRenseigne(c) || aConfirmer()?.id === c.id"
+                    style="padding:11px 18px;background:#fff;color:#b3261e;border:1.5px solid #f0c9c6;border-radius:999px;font:inherit;font-weight:700;cursor:pointer">
+              Suspendre
+            </button>
+          </form>
+
           <div *ngIf="aConfirmer() as conf">
             <div *ngIf="conf.id === c.id" class="confirmation-candidature"
-                 [style.background]="conf.action === 'valider' ? 'var(--green-l)' : 'var(--red-l)'"
+                 [style.background]="conf.action === 'valider' || conf.action === 'retablir' ? 'var(--green-l)' : 'var(--red-l)'"
                  style="margin:12px 0 0;border-radius:var(--r12);padding:12px 14px;display:grid;gap:8px">
-              <strong [style.color]="conf.action === 'valider' ? 'var(--green)' : 'var(--red)'">
-                {{ conf.action === 'valider' ? 'Valider cette candidature ? Le praticien sera publié sur Tabibi.' : 'Refuser cette candidature ? Le praticien recevra le motif.' }}
+              <strong [style.color]="conf.action === 'valider' || conf.action === 'retablir' ? 'var(--green)' : 'var(--red)'">
+                {{ texteConfirmation(conf.action) }}
               </strong>
               <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;color:var(--ink);font-size:.95rem">
                 <dt style="color:var(--text3)">Nom</dt><dd style="margin:0">{{ c.nomComplet }}</dd>
@@ -87,13 +100,13 @@ const STATUTS_FILTRE = [
                 <dt style="color:var(--text3)">Wilaya</dt><dd style="margin:0">{{ c.wilayaFr || c.wilayaCode }}</dd>
                 <dt style="color:var(--text3)">N° d'ordre</dt><dd style="margin:0">{{ c.numeroOrdre }}</dd>
                 <dt style="color:var(--text3)">E-mail</dt><dd style="margin:0">{{ c.compteEmail || 'Non renseigné' }}</dd>
-                <ng-container *ngIf="conf.action === 'refuser'">
+                <ng-container *ngIf="conf.action === 'refuser' || conf.action === 'suspendre'">
                   <dt style="color:var(--text3)">Motif</dt><dd style="margin:0">{{ motifs[c.id] }}</dd>
                 </ng-container>
               </dl>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button type="button" class="bouton" (click)="confirmer(c)" [disabled]="enCours() !== null">
-                  {{ enCours() === c.id ? 'Enregistrement…' : (conf.action === 'valider' ? 'Oui, valider' : 'Oui, refuser') }}
+                  {{ enCours() === c.id ? 'Enregistrement…' : libelleOui(conf.action) }}
                 </button>
                 <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(null)" [disabled]="enCours() !== null">Non</button>
               </div>
@@ -119,7 +132,7 @@ export class CandidaturesAdminComponent implements OnInit {
   motifs: Record<string, string> = {};
   charge = signal(false);
   /** Decision en attente de confirmation (Oui / Non), ou null. */
-  aConfirmer = signal<{ id: string; action: 'valider' | 'refuser' } | null>(null);
+  aConfirmer = signal<{ id: string; action: 'valider' | 'refuser' | 'suspendre' | 'retablir' } | null>(null);
   /** Identifiant de la candidature en cours de traitement. */
   enCours = signal<string | null>(null);
   succes = signal('');
@@ -176,12 +189,48 @@ export class CandidaturesAdminComponent implements OnInit {
     this.aConfirmer.set({ id: c.id, action: 'refuser' });
   }
 
+  /** « Suspendre » : exige le motif puis ouvre la confirmation (les rendez-vous du medecin seront annules). */
+  suspendre(c: Candidature) {
+    if (!this.motifRenseigne(c)) {
+      this.erreur.set('Indiquez le motif de la suspension.');
+      return;
+    }
+    this.succes.set('');
+    this.erreur.set('');
+    this.aConfirmer.set({ id: c.id, action: 'suspendre' });
+  }
+
+  /** « Rétablir » : ouvre la confirmation. */
+  retablir(c: Candidature) {
+    this.succes.set('');
+    this.erreur.set('');
+    this.aConfirmer.set({ id: c.id, action: 'retablir' });
+  }
+
+  texteConfirmation(action: string): string {
+    switch (action) {
+      case 'valider': return 'Valider cette candidature ? Le praticien sera publié sur Ndawik.';
+      case 'suspendre': return 'Suspendre ce médecin ? Sa fiche sera retirée et ses rendez-vous à venir seront annulés.';
+      case 'retablir': return 'Rétablir ce médecin ? Sa fiche sera de nouveau publiée.';
+      default: return 'Refuser cette candidature ? Le praticien recevra le motif.';
+    }
+  }
+
+  libelleOui(action: string): string {
+    return { valider: 'Oui, valider', suspendre: 'Oui, suspendre', retablir: 'Oui, rétablir' }[action] ?? 'Oui, refuser';
+  }
+
   /** « Oui » du panneau de confirmation : envoie la decision. */
   confirmer(c: Candidature) {
     const conf = this.aConfirmer();
     if (!conf || conf.id !== c.id) return;
     if (conf.action === 'valider') {
-      this.traiter(c, this.service.valider(c.id), `Candidature de ${c.nomComplet} validée : le praticien figure désormais sur Tabibi.`);
+      this.traiter(c, this.service.valider(c.id), `Candidature de ${c.nomComplet} validée : le praticien figure désormais sur Ndawik.`);
+    } else if (conf.action === 'retablir') {
+      this.traiter(c, this.service.retablir(c.medecinId), `${c.nomComplet} est rétabli : sa fiche est de nouveau publiée.`);
+    } else if (conf.action === 'suspendre') {
+      const motif = (this.motifs[c.id] ?? '').trim();
+      this.traiter(c, this.service.suspendre(c.medecinId, motif), `${c.nomComplet} est suspendu ; ses rendez-vous à venir sont annulés.`);
     } else {
       const motif = (this.motifs[c.id] ?? '').trim();
       this.traiter(c, this.service.refuser(c.id, motif), `Candidature de ${c.nomComplet} refusée ; le praticien est prévenu du motif.`);
@@ -197,7 +246,7 @@ export class CandidaturesAdminComponent implements OnInit {
   }
 
   /** Applique une decision puis recharge la liste ; 409 / 404 (deja traitee, disparue) affichent le motif et rechargent. */
-  private traiter(c: Candidature, appel: ReturnType<AdminService['valider']>, message: string) {
+  private traiter(c: Candidature, appel: Observable<unknown>, message: string) {
     this.enCours.set(c.id);
     this.succes.set('');
     this.erreur.set('');

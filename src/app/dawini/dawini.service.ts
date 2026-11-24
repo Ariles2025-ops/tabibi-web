@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
 import { wilayaParCode } from '../seo/referentiel-seo';
-import { libelleStatutGenerique } from '../partage/statut-generique';
+import { libelleStatutGenerique, libelleStatutGeneriqueAr } from '../partage/statut-generique';
 
 /**
  * Besoin de medicament publie par un patient (Dawini). `patientId` vaut null dans la vue remise aux pharmacies ;
@@ -54,32 +54,57 @@ export interface DemandeReponse {
   commentaire?: string | null;
 }
 
+/** Demande ouverte (statut lu sans tenir compte de la casse ni des espaces, comme `estOuvert` de l'appli). */
+export function estOuvert(besoin: Pick<Besoin, 'statut'>): boolean {
+  return (besoin.statut ?? '').trim().toUpperCase() === 'OUVERT';
+}
+
 /** Libelles francais des statuts de besoin connus ; un statut inconnu est affiche tel quel. */
 const LIBELLES_STATUT_BESOIN: Partial<Record<string, string>> = {
   OUVERT: 'Ouverte',
   CLOTURE: 'Clôturée',
 };
 
-export function libelleStatutBesoin(statut: string | null | undefined): string {
+/** Memes statuts en arabe, comme dans l'appli. */
+const LIBELLES_STATUT_BESOIN_AR: Partial<Record<string, string>> = {
+  OUVERT: 'مفتوح',
+  CLOTURE: 'مغلق',
+};
+
+/** Statut d'un besoin en francais, ou en arabe si `arabe` (un statut inconnu garde la mise en forme generique). */
+export function libelleStatutBesoin(statut: string | null | undefined, arabe = false): string {
   if (!statut) return '';
-  return LIBELLES_STATUT_BESOIN[statut.trim().toUpperCase()] ?? libelleStatutGenerique(statut);
+  const cle = statut.trim().toUpperCase();
+  return (arabe ? (LIBELLES_STATUT_BESOIN_AR[cle] ?? libelleStatutGeneriqueAr(statut)) : undefined) ?? LIBELLES_STATUT_BESOIN[cle] ?? libelleStatutGenerique(statut);
 }
 
-/** « 850 DA », « 1 250 DA » (milliers separes par une espace) ; chaine vide si le prix n'est pas renseigne. */
-export function formaterPrix(prixDa: number | null | undefined): string {
-  if (prixDa === null || prixDa === undefined) return '';
-  return `${Math.trunc(prixDa).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} DA`;
+/**
+ * « 850 DA » / « 850 دج » (milliers separes par une espace) ; chaine vide si le prix n'est pas renseigne ou negatif,
+ * comme `formaterPrix` de l'appli (dawini.dart).
+ */
+export function formaterPrix(prixDa: number | null | undefined, arabe = false): string {
+  if (prixDa === null || prixDa === undefined || prixDa < 0) return '';
+  return `${Math.trunc(prixDa).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} ${arabe ? 'دج' : 'DA'}`;
 }
 
 /** « 0 réponse », « 1 réponse », « 3 réponses ». */
-export function libelleReponses(nombre: number): string {
+export function libelleReponses(nombre: number, arabe = false): string {
+  if (arabe) return `${nombre} ${nombre > 1 ? 'ردود' : 'رد'}`;
   return `${nombre} ${nombre > 1 ? 'réponses' : 'réponse'}`;
 }
 
+/** « Disponible » / « Indisponible » (« متوفر » / « غير متوفر » en arabe). */
+export function libelleDisponibilite(disponible: boolean, arabe = false): string {
+  if (arabe) return disponible ? 'متوفر' : 'غير متوفر';
+  return disponible ? 'Disponible' : 'Indisponible';
+}
+
 /** Nom de la wilaya d'un besoin (« Alger » plutot que « Wilaya 16 ») ; code brut si inconnu du referentiel. */
-export function libelleWilaya(code: string | null | undefined): string {
+export function libelleWilaya(code: string | null | undefined, arabe = false): string {
   if (!code) return '';
-  return wilayaParCode(String(code))?.nom ?? `Wilaya ${code}`;
+  const w = wilayaParCode(String(code));
+  if (arabe) return w?.nomAr ?? `ولاية ${code}`;
+  return w?.nom ?? `Wilaya ${code}`;
 }
 
 /**

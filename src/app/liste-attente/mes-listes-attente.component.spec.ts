@@ -8,6 +8,7 @@ import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { InscriptionAttente, ListeAttenteService } from './liste-attente.service';
+import { LangueService } from '../partage/langue.service';
 import { MesListesAttenteComponent } from './mes-listes-attente.component';
 
 const RECENTE: InscriptionAttente = { id: 'i1', patientId: 'p1', medecinId: 'm1', inscritLe: '2026-09-18T10:00:00Z' };
@@ -69,6 +70,7 @@ describe('MesListesAttenteComponent', () => {
     boutonDe(lignes()[0], 'Me retirer')!.click();
     await afficher();
     expect(texte()).toContain("Vous retirer de cette liste d'attente ?");
+    expect(texte()).toContain('Vous ne serez plus notifié des créneaux libérés.');
     boutonDe(lignes()[0], 'Oui, me retirer')!.click();
     await afficher();
   }
@@ -79,7 +81,7 @@ describe('MesListesAttenteComponent', () => {
     const items = lignes();
     expect(items.length).toBe(2);
     expect(items[0].querySelector('a[href="/medecins/m2"]')?.textContent).toContain('Dr Karim Haddad');
-    expect(items[0].textContent).toContain('Inscrit le 10 septembre 2026');
+    expect(items[0].textContent).toContain('Inscription le 10 septembre 2026');
     expect(items[1].querySelector('a[href="/medecins/m1"]')?.textContent).toContain('Dr Amina Belkacem');
     expect(items[1].querySelector('button')?.textContent).toContain('Me retirer');
     expect(annuaire.medecin).toHaveBeenCalledTimes(2);
@@ -95,6 +97,8 @@ describe('MesListesAttenteComponent', () => {
     expect(lignes().length).toBe(1);
     expect(texte()).not.toContain('Dr Karim Haddad');
     expect(service.mes).toHaveBeenCalledTimes(1);
+    // Comme dans l'appli : confirmation du retrait.
+    expect(texte()).toContain("Retrait de la liste d'attente effectué.");
   });
 
   it('ne retire rien sans confirmation, et « Non, rester inscrit » annule', async () => {
@@ -125,6 +129,9 @@ describe('MesListesAttenteComponent', () => {
     service.mes.and.returnValue(of([]));
     await afficher();
     expect(texte()).toContain("Vous n'êtes inscrit sur aucune liste d'attente.");
+    // Comme l'appli : on explique comment s'inscrire et ce qui se passe ensuite.
+    expect(texte()).toContain("Inscrivez-vous depuis la fiche d'un médecin");
+    expect(texte()).toContain("vous serez notifié dès qu'un créneau se libère");
 
     auth.estConnecte = () => false;
     fixture = TestBed.createComponent(MesListesAttenteComponent);
@@ -139,5 +146,63 @@ describe('MesListesAttenteComponent', () => {
 
     expect(texte()).toContain('Cette page est réservée aux patients.');
     expect(lignes().length).toBe(0);
+  });
+
+  it('affiche la page en arabe (de droite a gauche) avec les memes mots que l appli', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    service.retirer.and.returnValue(of(void 0));
+    await afficher();
+
+    expect(fixture.nativeElement.querySelector('main').getAttribute('dir')).toBe('rtl');
+    expect(texte()).toContain('قوائم الانتظار');
+    expect(texte()).not.toContain('Me retirer');
+    boutonDe(lignes()[0], 'انسحاب')!.click();
+    await afficher();
+    expect(texte()).toContain('الانسحاب من قائمة الانتظار هذه؟');
+    expect(texte()).toContain('لن يتم إشعارك بعد الآن بالمواعيد الشاغرة.');
+    boutonDe(lignes()[0], 'نعم، انسحب')!.click();
+    await afficher();
+    expect(texte()).toContain('تم الانسحاب من قائمة الانتظار.');
+    TestBed.inject(LangueService).ar.set(false);
+  });
+
+  it("sans date d'inscription : « Date d'inscription inconnue », jamais « Inscription le » vide, et la ligne passe en dernier", async () => {
+    service.mes.and.returnValue(of([{ id: 'i3', patientId: 'p1', medecinId: 'm1' }, ANCIENNE]));
+    await afficher();
+
+    expect(lignes()[1].textContent).toContain("Date d'inscription inconnue");
+    expect(lignes()[1].textContent).not.toContain('Inscription le');
+    expect(lignes()[0].textContent).toContain('Inscription le');
+  });
+
+  it('en arabe, avec une date : « سُجّل في » comme l\'appli (jamais « التسجيل في »)', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    service.mes.and.returnValue(of([ANCIENNE]));
+    await afficher();
+
+    expect(texte()).toContain('سُجّل في');
+    expect(texte()).not.toContain('التسجيل في');
+    TestBed.inject(LangueService).ar.set(false);
+  });
+
+  it("en arabe, sans date d'inscription : « تاريخ التسجيل غير معروف »", async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    service.mes.and.returnValue(of([{ id: 'i3', patientId: 'p1', medecinId: 'm1' }]));
+    await afficher();
+
+    expect(texte()).toContain('تاريخ التسجيل غير معروف');
+  });
+
+  it("liste vide : le lien « Trouver un praticien » a le même libellé arabe que l'appli (« ابحث عن ممارس »)", async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      service.mes.and.returnValue(of([]));
+      await afficher();
+
+      expect(texte()).toContain('ابحث عن ممارس');
+      expect(texte()).not.toContain('ابحث عن طبيب');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
   });
 });

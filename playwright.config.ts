@@ -7,7 +7,7 @@ export default defineConfig({
   timeout: 90_000,
   reporter: [['list']],
   use: {
-    baseURL: process.env.TABIBI_E2E_URL || 'https://tabibi.doctor',
+    baseURL: process.env.TABIBI_E2E_URL || 'https://ndawik.com',
     viewport: { width: 1440, height: 900 },
     ignoreHTTPSErrors: true,
     screenshot: 'only-on-failure',

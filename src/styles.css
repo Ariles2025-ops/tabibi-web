@@ -28,7 +28,7 @@ button:disabled { opacity:.6; cursor:default; }
   .side__nav { flex-direction:column; align-items:stretch; gap:3px; padding:0; }
   .side__nav a { display:block; padding:10px 12px; border-radius:10px; }
   .side__nav a:hover { background:rgba(255,255,255,.12); }
-  .side__nav a.actif { background:rgba(255,255,255,.18); font-weight:700; }
+  .side__nav a.actif { background:rgba(0,0,0,.22); font-weight:700; }
   .side__group { display:block; margin-top:14px; border-top:1px solid rgba(255,255,255,.18); padding-top:10px; }
   .side__grouptitle { text-transform:uppercase; letter-spacing:.05em; font-size:.72rem; padding:4px 12px; opacity:.85; width:auto; }
   .side__account { margin:auto 0 0; padding-top:14px; border-top:1px solid rgba(255,255,255,.18); flex-direction:column; align-items:stretch; gap:3px; }
@@ -58,7 +58,7 @@ button:disabled { opacity:.6; cursor:default; }
 /* Avis : note de 1 a 5. */
 .note { position:relative; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--vert); border-radius:12px; color:var(--vert); font-weight:600; cursor:pointer; background:#fff; }
 .note input { position:absolute; opacity:0; width:0; height:0; margin:0; }
-.note:focus-within { outline:2px solid #10241F; outline-offset:2px; }
+.note:focus-within { outline:2px solid var(--tbi-ink); outline-offset:2px; }
 .note-choisie { background:var(--vert); color:#fff; }
 
 /* Impression (ordonnance). */
@@ -70,17 +70,17 @@ button:disabled { opacity:.6; cursor:default; }
 
 /* Pied de page. */
 .pied { max-width:760px; margin:56px auto 0; padding:22px 16px 36px; border-top:1px solid #E7E0D2; display:flex; flex-wrap:wrap; gap:8px 20px; font-size:.9rem; }
-.pied a { color:#5C6B63; text-decoration:none; }
+.pied a { color:var(--tbi-slate); text-decoration:none; }
 .pied a:hover { color:#0F7560; }
 
-/* ===== Navigation facon Doctolib : barre horizontale en haut (logo gauche, actions droite), version Tabibi ===== */
+/* ===== Navigation facon Doctolib : barre horizontale en haut (logo gauche, actions droite), version Ndawik ===== */
 /* Boutons d'action de la barre (toutes tailles). Le vert porte l'action -> pastille blanche sur barre verte. */
 .side__pro { color:#fff; opacity:.92; white-space:nowrap; }
 .side__pro:hover { opacity:1; }
 .side__login { color:#fff; opacity:.95; cursor:pointer; font-weight:600; white-space:nowrap; }
 /* Sur petit ecran, on garde l'essentiel : Se connecter + Creer un compte (le lien medecin passe en pied / espace medecin). */
 
-.side .side__signup, .side__account .side__signup { background:#fff; color:var(--vert); font-weight:700; padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap; }
+.side .side__signup, .side__account .side__signup { background:#fff; color:var(--vert); opacity:1; font-weight:700; padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap; }
 .side .side__signup:hover { background:#f0f7f4; color:var(--vert); }
 
 /* Desktop : on annule la colonne de gauche, la nav devient une barre du haut pleine largeur. */
@@ -91,7 +91,7 @@ button:disabled { opacity:.6; cursor:default; }
   .side__nav { flex-direction:row; align-items:center; flex-wrap:wrap; gap:4px; padding:0; flex:1 1 auto; min-width:0; }
   .side__nav a { display:inline-block; padding:8px 12px; border-radius:999px; }
   .side__nav a:hover { background:rgba(255,255,255,.14); }
-  .side__nav a.actif { background:rgba(255,255,255,.2); font-weight:700; }
+  .side__nav a.actif { background:rgba(0,0,0,.22); font-weight:700; }
   .side__group { display:contents; margin:0; border:0; padding:0; }
   .side__grouptitle { display:none; }
   .side__account { margin-inline-start:auto; flex-direction:row; align-items:center; gap:14px; padding-top:0; border-top:0; }
@@ -112,7 +112,7 @@ button:disabled { opacity:.6; cursor:default; }
   .side__nav.ouvert { display:flex; }
   .side__nav a { display:block; padding:12px 12px; border-radius:10px; font-size:16px; }
   .side__nav a:hover { background:rgba(255,255,255,.12); }
-  .side__nav a.actif { background:rgba(255,255,255,.18); font-weight:700; }
+  .side__nav a.actif { background:rgba(0,0,0,.22); font-weight:700; }
   .side__group { display:block; margin-top:10px; border-top:1px solid rgba(255,255,255,.18); padding-top:8px; }
   .side__grouptitle { display:block; text-transform:uppercase; letter-spacing:.05em; font-size:.72rem; padding:4px 12px; opacity:.85; width:auto; }
   .side__account { margin:10px 0 0; padding-top:10px; border-top:1px solid rgba(255,255,255,.18); flex-direction:column; align-items:stretch; gap:2px; }
@@ -126,7 +126,7 @@ button:disabled { opacity:.6; cursor:default; }
 .side__help:hover { opacity:1; }
 
 
-/* ===== Grand pied de page « Aide et information » facon Doctolib, version Tabibi ===== */
+/* ===== Grand pied de page « Aide et information » facon Doctolib, version Ndawik ===== */
 .siteft { background:#f1f5f9; border-top:1px solid var(--border); margin-top:44px; }
 .siteft__in { max-width:1200px; margin:0 auto; padding:32px var(--gutter) 28px; box-sizing:border-box; }
 .siteft__top { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-bottom:20px; border-bottom:1px solid var(--border); }
@@ -150,13 +150,31 @@ button:disabled { opacity:.6; cursor:default; }
 .siteft__logo { font-weight:800; color:var(--vert); font-size:1.2rem; letter-spacing:-.02em; }
 .siteft__logo i { color:var(--or); font-style:normal; }
 .siteft__copy { color:var(--text3); font-size:13px; }
+.siteft__ancien { color:var(--text3); font-size:11px; opacity:.8; }
 @media (max-width:640px) { .siteft__cols { grid-template-columns:1fr 1fr; } }
 
 /* Pre-lancement : bandeau « Lancement prochainement » en haut de toutes les pages. */
-.lancement-bandeau { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 10px; padding:12px max(16px, env(safe-area-inset-left, 0px)); background:#D4A437; color:#10241F; text-align:center; font-size:15px; line-height:1.35; }
+.lancement-bandeau { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 10px; padding:12px max(16px, env(safe-area-inset-left, 0px)); background:#D4A437; color:var(--tbi-ink); text-align:center; font-size:15px; line-height:1.35; }
 .lancement-bandeau strong { font-size:17px; font-weight:800; letter-spacing:-.01em; }
-.lancement-bandeau__pastille { background:#10241F; color:#F6E7BF; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; padding:3px 10px; border-radius:999px; }
+.lancement-bandeau__pastille { background:var(--tbi-ink); color:#F6E7BF; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; padding:3px 10px; border-radius:999px; }
 @media (max-width:640px) { .lancement-bandeau__txt { display:none; } }
 
 /* Etiquette « Bientôt » (fonction visible mais pas encore ouverte, ex. teleconsultation). */
-.pastille-bientot { display:inline-block; margin-inline-start:6px; padding:1px 8px; border-radius:999px; background:#D4A437; color:#10241F; font-size:11px; font-weight:800; letter-spacing:.04em; vertical-align:middle; }
+.pastille-bientot { display:inline-block; margin-inline-start:6px; padding:1px 8px; border-radius:999px; background:#D4A437; color:var(--tbi-ink); font-size:11px; font-weight:800; letter-spacing:.04em; vertical-align:middle; }
+
+/* Logo Ndawik (croix + carreau or) */
+.side__brand, .siteft__logo { display:inline-flex; align-items:center; gap:8px; }
+.side__brand .marque, .siteft__logo .marque { width:1.15em; height:1.15em; flex:none; }
+
+/* Bandeau « Téléchargez l'appli » (pied de page) */
+.siteft__appli { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:18px 20px; margin-bottom:20px; border-radius:16px; background:var(--vert); color:#fff; }
+.siteft__appli-txt b { display:block; font-size:1.05rem; }
+.siteft__appli-txt span { opacity:.88; font-size:.9rem; }
+.siteft__stores { display:flex; gap:10px; flex-wrap:wrap; }
+.store { display:inline-flex; align-items:center; gap:10px; background:#0F2A24; color:#fff; text-decoration:none; padding:8px 16px; border-radius:12px; min-height:44px; }
+.store i { font-size:1.4rem; }
+.store span { display:flex; flex-direction:column; line-height:1.15; font-weight:700; }
+.store small { font-weight:400; font-size:.7rem; opacity:.85; }
+.store:hover { background:#000; }
+.store--bientot { opacity:.55; cursor:default; }
+.store--bientot:hover { background:#0F2A24; }

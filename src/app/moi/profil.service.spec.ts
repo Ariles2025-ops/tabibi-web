@@ -106,7 +106,15 @@ describe('ProfilService', () => {
       expect(validerProfil({ ...DEMANDE, telephone: '021123456', dateNaissance: '2026-09-18' }, AUJOURD_HUI)).toBeNull();
     });
 
+    it('renvoie les motifs en arabe quand l arabe est demande, comme l appli', () => {
+      expect(validerProfil({ ...DEMANDE, nomComplet: '' }, AUJOURD_HUI, true)).toBe('أدخل اسمك الكامل.');
+      expect(validerProfil({ ...DEMANDE, telephone: '12345' }, AUJOURD_HUI, true)).toContain('رقم الهاتف');
+      expect(validerProfil({ ...DEMANDE, dateNaissance: '2026-09-19' }, AUJOURD_HUI, true)).toBe('يجب أن يكون تاريخ الميلاد في الماضي.');
+      expect(validerProfil({ ...DEMANDE, nomComplet: 'Amina' }, AUJOURD_HUI, true)).toBeNull();
+    });
+
     it('exige un nom de 2 a 120 caracteres', () => {
+      expect(validerProfil({ ...DEMANDE, nomComplet: '' }, AUJOURD_HUI)).toBe('Indiquez votre nom complet.');
       expect(validerProfil({ ...DEMANDE, nomComplet: 'A' }, AUJOURD_HUI)).toBe('Le nom complet doit compter de 2 à 120 caractères.');
       expect(validerProfil({ ...DEMANDE, nomComplet: 'A'.repeat(121) }, AUJOURD_HUI)).toContain('120 caractères');
       expect(validerProfil({ ...DEMANDE, nomComplet: 'A'.repeat(120) }, AUJOURD_HUI)).toBeNull();

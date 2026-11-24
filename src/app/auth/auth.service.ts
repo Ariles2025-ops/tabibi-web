@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { ConfigService } from '../config/config.service';
 import { creerAuthConfig } from './auth.config';
-import { connexionFermee } from '../lancement';
+import { connexionFermee, inscriptionFermee } from '../lancement';
 
 /**
  * Fin wrapper d'OAuthService (Keycloak) : initialisation unique de l'OIDC
@@ -35,7 +35,9 @@ export class AuthService {
    */
   initialiser(): Promise<void> {
     if (!this.initialisation) {
-      this.initialisation = !this.navigateur
+      // Pre-lancement, visiteur sans acces equipe : personne ne peut se connecter, donc on ne contacte pas Keycloak
+      // (evite une requete discovery inutile, bloquee par CORS quand le site est ouvert depuis un autre domaine).
+      this.initialisation = !this.navigateur || connexionFermee()
         ? Promise.resolve()
         : this.config
             .charger()
@@ -53,6 +55,11 @@ export class AuthService {
   /** Resolue une fois l'initialisation terminee : a attendre avant de lire estConnecte(). */
   pret(): Promise<void> {
     return this.initialiser();
+  }
+
+  /** Faux tant que les comptes sont crees uniquement par l'equipe : les boutons « Créer un compte » sont masques. */
+  inscriptionOuverte(): boolean {
+    return !inscriptionFermee();
   }
 
   estConnecte(): boolean {
@@ -86,7 +93,8 @@ export class AuthService {
    */
   async sInscrireParEmail(retour: string = this.router.url): Promise<void> {
     if (!this.navigateur) return;
-    if (connexionFermee()) { this.router.navigateByUrl(this.pageBientot()); return; }
+    // Phase de test : pas d'inscription libre (comptes crees par l'equipe sur demande).
+    if (connexionFermee() || inscriptionFermee()) { this.router.navigateByUrl(this.pageBientot()); return; }
     await this.initialiser();
     const urlAuth = this.oauth.loginUrl || '';
     // Cibler l'endpoint precis (pas le "/auth" present dans l'hote auth.tabibi.doctor).

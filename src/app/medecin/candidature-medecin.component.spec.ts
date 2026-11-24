@@ -10,6 +10,7 @@ import { Candidature, DemandeCandidature } from '../admin/admin.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { CandidatureMedecinComponent } from './candidature-medecin.component';
+import { LangueService } from '../partage/langue.service';
 import { MedecinService } from './medecin.service';
 
 const DEMANDE: DemandeCandidature = {
@@ -120,6 +121,14 @@ describe('CandidatureMedecinComponent', () => {
     expect(texte()).not.toContain('Aucune candidature deposee.');
   });
 
+  it('limite la longueur du nom (160), du numero d ordre (40) et de la ville (80), comme l appli et l API', async () => {
+    await afficher();
+
+    expect((champ('nomComplet') as HTMLInputElement).maxLength).toBe(160);
+    expect((champ('numeroOrdre') as HTMLInputElement).maxLength).toBe(40);
+    expect((champ('ville') as HTMLInputElement).maxLength).toBe(80);
+  });
+
   it('refuse cote client un depot sans les champs obligatoires', async () => {
     await afficher();
 
@@ -146,12 +155,27 @@ describe('CandidatureMedecinComponent', () => {
     expect(formulaire()).toBeNull();
   });
 
+  it('lit le statut sans tenir compte de la casse, comme l\'appli', async () => {
+    service.maCandidature.and.returnValue(of({ ...EN_ATTENTE, statut: ' en_attente ' }));
+    await afficher();
+
+    expect(texte()).toContain("Votre candidature est en cours d'examen.");
+  });
+
+  it('refusee en minuscules : motif et formulaire de nouvelle candidature', async () => {
+    service.maCandidature.and.returnValue(of({ ...REFUSEE, statut: 'refusee' }));
+    await afficher();
+
+    expect(texte()).toContain('Votre candidature a été refusée');
+    expect(formulaire()).not.toBeNull();
+  });
+
   it('affiche une candidature validee avec le lien vers la fiche, sans formulaire', async () => {
     service.maCandidature.and.returnValue(of(VALIDEE));
     await afficher();
 
     expect(texte()).toContain('Validée');
-    expect(texte()).toContain('Votre candidature a été validée : vous figurez sur Tabibi.');
+    expect(texte()).toContain('Votre candidature a été validée : vous figurez sur Ndawik.');
     expect(fixture.nativeElement.querySelector('a[href="/medecins/m1"]')).not.toBeNull();
     expect(formulaire()).toBeNull();
     // Le role MEDECIN vient d'etre accorde : jeton et profil relus, acces direct a l'agenda.
@@ -232,5 +256,59 @@ describe('CandidatureMedecinComponent', () => {
     expect(depot.ficheReclamee).toBe('f1');
     expect(depot.nomComplet).toBe('BELKACEM Amina');
     expect(depot.ville).toBe('Hydra');
+  });
+
+  it('reclamation avec derniere candidature refusee : le formulaire garde l identite de la fiche', async () => {
+    annuaire.medecin.and.returnValue(of({
+      id: 'f1', nomComplet: 'BELKACEM Amina', specialiteSlug: 'cardiologue', specialiteFr: 'Cardiologue',
+      wilayaCode: '16', wilayaFr: 'Alger', ville: 'Hydra',
+    }));
+    service.maCandidature.and.returnValue(of({ ...REFUSEE, nomComplet: 'Ancien Nom', specialiteSlug: 'dentiste', specialiteFr: 'Dentiste', ville: 'Oran', wilayaCode: '31' }));
+    TestBed.inject(ActivatedRoute).snapshot.queryParams = { fiche: 'f1' };
+    await afficher();
+
+    expect(champ('nomComplet').value).toBe('BELKACEM Amina');
+    expect(champ('specialiteSlug').value).toBe('cardiologue');
+    expect(champ('numeroOrdre').value).toBe('ORD-123');
+  });
+
+  describe('en arabe', () => {
+    beforeEach(() => TestBed.inject(LangueService).definir(true));
+    afterEach(() => localStorage.removeItem('tabibi.langue'));
+
+    it('formulaire : titre, champs, listes en arabe et sens RTL, sans texte français', async () => {
+      await afficher();
+      const el: HTMLElement = fixture.nativeElement;
+      expect(el.querySelector('main')?.getAttribute('dir')).toBe('rtl');
+      expect(texte()).toContain('ترشحي');
+      expect(texte()).toContain('رقم التسجيل في الهيئة');
+      expect(texte()).toContain('إيداع ترشحي');
+      expect(texte()).toContain('طبيب القلب');
+      expect(texte()).not.toContain('Ma candidature');
+      expect(texte()).not.toContain('Spécialité');
+      expect(texte()).not.toContain('Déposer');
+    });
+
+    it('candidature en attente : statut, détails et dates en arabe', async () => {
+      service.maCandidature.and.returnValue(of(EN_ATTENTE));
+      await afficher();
+      expect(texte()).toContain('قيد الانتظار');
+      expect(texte()).toContain('ترشحك قيد الفحص.');
+      expect(texte()).toContain('طبيب القلب');
+      expect(texte()).toContain('18/09/2026');
+      expect(texte()).not.toContain('En attente');
+      expect(texte()).not.toContain('Déposée le');
+    });
+
+    it('refus : motif et message d erreur de saisie en arabe', async () => {
+      service.maCandidature.and.returnValue(of(REFUSEE));
+      await afficher();
+      expect(texte()).toContain('مرفوضة');
+      expect(texte()).toContain('تم رفض ترشحك');
+      await saisir({ numeroOrdre: '' });
+      formulaire()!.dispatchEvent(new Event('submit'));
+      await afficher();
+      expect(texte()).toContain('أدخل الاسم الكامل والتخصص والولاية ورقم التسجيل في الهيئة.');
+    });
   });
 });

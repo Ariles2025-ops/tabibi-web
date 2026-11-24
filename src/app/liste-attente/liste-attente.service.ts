@@ -8,8 +8,28 @@ export interface InscriptionAttente {
   id: string;
   patientId: string;
   medecinId: string;
-  /** Date d'inscription au format ISO 8601. */
-  inscritLe: string;
+  /** Date d'inscription au format ISO 8601 ; peut manquer ou etre illisible. */
+  inscritLe?: string | null;
+}
+
+/** Instant (ms) de l'inscription ; null si la date est absente ou illisible. */
+export function instantInscription(i: Pick<InscriptionAttente, 'inscritLe'>): number | null {
+  const instant = i.inscritLe ? Date.parse(i.inscritLe) : NaN;
+  return Number.isNaN(instant) ? null : instant;
+}
+
+/**
+ * Copie triee de la plus ancienne a la plus recente inscription (ordre de la file : les premiers inscrits sont
+ * prevenus en premier), comme `trierParInscription` de l'appli (liste_attente.dart) ; les dates absentes vont en fin.
+ */
+export function trierParInscription<T extends Pick<InscriptionAttente, 'inscritLe'>>(inscriptions: T[]): T[] {
+  return [...inscriptions].sort((a, b) => {
+    const da = instantInscription(a);
+    const db = instantInscription(b);
+    if (da === null) return db === null ? 0 : 1;
+    if (db === null) return -1;
+    return da - db;
+  });
 }
 
 /**
