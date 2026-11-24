@@ -329,6 +329,9 @@ describe('MoiComponent', () => {
       expect(texte()).toContain('ترشحي كطبيب');
       expect(texte()).toContain('تسجيل الخروج');
       expect(texte()).toContain('حذف حسابي');
+      // Même mot que l'appli (texteConfirmationSuppressionCompte) : « صفحتك العامة », pas « بطاقتك ».
+      expect(texte()).toContain('تُسحب صفحتك العامة');
+      expect(texte()).not.toContain('بطاقتك');
       expect(texte()).not.toContain('Mon compte');
       expect(texte()).not.toContain('Se déconnecter');
     });
