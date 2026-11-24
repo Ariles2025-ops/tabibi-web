@@ -70,11 +70,11 @@ function formulaireVide(): DemandeCandidature {
         <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             {{ l.t('Nom complet', 'الاسم الكامل') }} *
-            <input class="champ" [(ngModel)]="demande.nomComplet" name="nomComplet" required [placeholder]="l.t('Ex. Dr Amina Belkacem', 'مثال: د. أمينة بلقاسم')" style="color:var(--tbi-ink);font-size:1rem">
+            <input class="champ" [(ngModel)]="demande.nomComplet" name="nomComplet" required [maxlength]="nomMax" [placeholder]="l.t('Ex. Dr Amina Belkacem', 'مثال: د. أمينة بلقاسم')" style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             {{ l.t("Numéro d'inscription à l'ordre", 'رقم التسجيل في الهيئة') }} *
-            <input class="champ" [(ngModel)]="demande.numeroOrdre" name="numeroOrdre" required style="color:var(--tbi-ink);font-size:1rem">
+            <input class="champ" [(ngModel)]="demande.numeroOrdre" name="numeroOrdre" required [maxlength]="ordreMax" style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             {{ l.t('Spécialité', 'التخصص') }} *
@@ -92,7 +92,7 @@ function formulaireVide(): DemandeCandidature {
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             {{ l.t('Ville', 'المدينة') }}
-            <input class="champ" [(ngModel)]="demande.ville" name="ville" style="color:var(--tbi-ink);font-size:1rem">
+            <input class="champ" [(ngModel)]="demande.ville" name="ville" [maxlength]="villeMax" style="color:var(--tbi-ink);font-size:1rem">
           </label>
           <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
             {{ l.t('Téléphone', 'الهاتف') }}
@@ -116,6 +116,11 @@ export class CandidatureMedecinComponent implements OnInit {
   private annuaire = inject(AnnuaireService);
   private roles = inject(RoleService);
   l = inject(LangueService);
+
+  /** Longueurs maximales acceptees par l'API (les memes que l'appli et le formulaire /praticien). */
+  readonly nomMax = 160;
+  readonly ordreMax = 40;
+  readonly villeMax = 80;
 
   /** Listes du referentiel (slugs et codes exacts) : une specialite saisie a la main ne s'afficherait nulle part. */
   readonly specialites = SPECIALITES_SEO.filter((sp) => sp.slug !== 'pharmacie')
