@@ -121,6 +121,14 @@ describe('CandidatureMedecinComponent', () => {
     expect(texte()).not.toContain('Aucune candidature deposee.');
   });
 
+  it('limite la longueur du nom (160), du numero d ordre (40) et de la ville (80), comme l appli et l API', async () => {
+    await afficher();
+
+    expect((champ('nomComplet') as HTMLInputElement).maxLength).toBe(160);
+    expect((champ('numeroOrdre') as HTMLInputElement).maxLength).toBe(40);
+    expect((champ('ville') as HTMLInputElement).maxLength).toBe(80);
+  });
+
   it('refuse cote client un depot sans les champs obligatoires', async () => {
     await afficher();
 
