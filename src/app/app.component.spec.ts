@@ -7,6 +7,7 @@ import { AuthService } from './auth/auth.service';
 import { RoleService } from './auth/role.service';
 import { ApiDisponibleService } from './partage/api-disponible.service';
 import { LangueService } from './partage/langue.service';
+import { marquerCompteSupprime } from './moi/compte-supprime';
 import { NotificationService } from './notifications/notification.service';
 
 /** Test de fumee de la barre de navigation : liens publics, cloche des connectes, sections du medecin, de la pharmacie, de la secretaire et de l'administrateur. */
@@ -97,6 +98,15 @@ describe('AppComponent', () => {
     expect(pied.querySelector('a[href="/supprimer-mon-compte"]')).not.toBeNull();
   });
 
+  it('pied de page en arabe : le lien de suppression de compte s\'intitule « حذف حسابي », comme dans l\'appli et sur « حسابي »', async () => {
+    await afficher();
+    fixture.componentInstance.ar.set(true);
+    fixture.detectChanges();
+
+    const lien = fixture.nativeElement.querySelector('footer a[href="/ar/supprimer-mon-compte"]') as HTMLElement | null;
+    expect(lien?.textContent?.trim()).toBe('حذف حسابي');
+  });
+
   it('pied de page : la colonne des liens vers les wilayas s\'intitule « Wilayas » (pas « Villes »), comme son lien', async () => {
     await afficher();
 
@@ -182,7 +192,7 @@ describe('AppComponent', () => {
     expect(fixture.nativeElement.querySelector('a[href="/admin"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/admin/candidatures"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('a[href="/admin/avis"]')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
   });
 
@@ -193,8 +203,8 @@ describe('AppComponent', () => {
 
     expect(texteNav()).toContain('Espace pharmacie');
     expect(fixture.nativeElement.querySelector('a[href="/pharmacie"]')).not.toBeNull();
-    // Messagerie ouverte à tous les rôles, comme « Mon compte » de l'appli.
-    expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).not.toBeNull();
+    // L'API réserve la messagerie aux patients et aux médecins.
+    expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
     expect(texteNav()).not.toContain('Administration');
   });
@@ -206,7 +216,7 @@ describe('AppComponent', () => {
 
     expect(texteNav()).toContain('Espace secrétaire');
     expect(fixture.nativeElement.querySelector('a[href="/secretaire"]')).not.toBeNull();
-    expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/messagerie"]')).toBeNull();
     expect(texteNav()).not.toContain('Espace médecin');
     expect(texteNav()).not.toContain('Administration');
   });
@@ -251,5 +261,16 @@ describe('AppComponent', () => {
     expect(texte).not.toContain('Espace secrétaire');
     expect(texte).not.toContain('Agenda du cabinet');
     expect(texte).not.toContain('Invitations de cabinet');
+  });
+
+  it('confirme « Votre compte a été supprimé. » une seule fois après une suppression de compte', async () => {
+    marquerCompteSupprime();
+    fixture = TestBed.createComponent(AppComponent);
+    await afficher();
+    expect(fixture.nativeElement.querySelector('.compte-supprime')?.textContent).toContain('Votre compte a été supprimé.');
+
+    fixture = TestBed.createComponent(AppComponent);
+    await afficher();
+    expect(fixture.nativeElement.querySelector('.compte-supprime')).toBeNull();
   });
 });

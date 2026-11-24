@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { LangueService } from '../partage/langue.service';
+import { libelleMedecin } from '../messagerie/messagerie.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { Avis, AvisService, libelleStatutAvis } from './avis.service';
 import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
@@ -29,7 +30,7 @@ import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisi
           <li *ngFor="let a of avis()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
             <strong>{{ a.note }} / 5</strong>
             <span style="color:var(--text3)"> · {{ libelleStatut(a.statut) }} · <span *ngIf="dateLisible(a.deposeLe)" [attr.dir]="l.ar() ? 'ltr' : null">{{ a.deposeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span><ng-container *ngIf="!dateLisible(a.deposeLe)">{{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-container></span><br>
-            <a [routerLink]="['/medecins', a.medecinId]" style="color:var(--vert)">{{ noms()[a.medecinId] ?? l.t('Voir le praticien', 'عرض الطبيب') }}</a>
+            <a [routerLink]="['/medecins', a.medecinId]" style="color:var(--vert)">{{ noms()[a.medecinId] ?? libelleMedecin(a.medecinId, l.ar()) }}</a>
             <p *ngIf="a.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ a.commentaire }}</p>
           </li>
         </ul>
@@ -42,6 +43,7 @@ import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisi
   `
 })
 export class MesAvisComponent implements OnInit {
+  readonly libelleMedecin = libelleMedecin;
   l = inject(LangueService);
   private auth = inject(AuthService);
   private service = inject(AvisService);

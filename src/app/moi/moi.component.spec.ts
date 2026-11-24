@@ -6,7 +6,9 @@ import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
 import { Moi, MoiService } from './moi.service';
+import { consommerCompteSupprime } from './compte-supprime';
 import { LangueService } from '../partage/langue.service';
+import { ApiDisponibleService } from '../partage/api-disponible.service';
 import { MoiComponent } from './moi.component';
 
 const PROFIL: Moi = { sujet: '55555555-5555-5555-5555-555555555555', nom: 'patient.demo', roles: ['PATIENT'] };
@@ -21,6 +23,8 @@ describe('MoiComponent', () => {
     seConnecter: jasmine.Spy; sInscrireParEmail: jasmine.Spy; seDeconnecter: jasmine.Spy;
   };
   let service: jasmine.SpyObj<MoiService>;
+
+  afterEach(() => localStorage.removeItem('tabibi.langue')); // ne pas laisser « ar » aux autres suites
 
   beforeEach(() => {
     localStorage.removeItem('tabibi.langue');
@@ -101,6 +105,43 @@ describe('MoiComponent', () => {
     expect(lien('/mes-rendez-vous')).toBeNull();
   });
 
+  it('un compte à plusieurs rôles professionnels retrouve chacun de ses espaces, comme « Mon espace » de l\'appli', async () => {
+    moi.set({ ...PROFIL, roles: ['PATIENT', 'MEDECIN', 'SECRETAIRE', 'PHARMACIE', 'ADMIN'] });
+    await afficher();
+    for (const l of ['/medecin/agenda', '/secretaire', '/pharmacie', '/admin', '/messagerie', '/verifier', '/invitations']) expect(lien(l)).not.toBeNull();
+    expect(lien('/medecin/candidature')).toBeNull(); // déjà médecin
+    expect(lien('/mes-rendez-vous')).toBeNull();
+
+    moi.set({ ...PROFIL, roles: ['SECRETAIRE', 'PHARMACIE'] });
+    await afficher();
+    for (const l of ['/secretaire', '/pharmacie', '/medecin/candidature']) expect(lien(l)).not.toBeNull();
+    expect(lien('/medecin/agenda')).toBeNull();
+  });
+
+  it('propose « Invitations de cabinet » à tous les rôles, comme l\'appli', async () => {
+    for (const role of ['MEDECIN', 'SECRETAIRE', 'PHARMACIE', 'ADMIN', 'PATIENT']) {
+      moi.set({ ...PROFIL, roles: [role] });
+      await afficher();
+      expect(lien('/invitations')).withContext(role).not.toBeNull();
+    }
+  });
+
+  it('propose « Ma fiche » au médecin seulement quand la route de l\'API existe, comme « Mon espace » de l\'appli', async () => {
+    const api = TestBed.inject(ApiDisponibleService);
+    moi.set({ ...PROFIL, roles: ['MEDECIN'] });
+    await afficher();
+    expect(lien('/medecin/ma-fiche')).toBeNull();
+
+    api.ficheMedecin.set(true);
+    await afficher();
+    expect(lien('/medecin/ma-fiche')).not.toBeNull();
+    expect(texte()).toContain('Ma fiche');
+
+    moi.set(PROFIL);
+    await afficher();
+    expect(lien('/medecin/ma-fiche')).toBeNull();
+  });
+
   it('propose la messagerie au médecin et au patient, et au patient ses avis, listes d\'attente et Dawini, comme « Mon compte » de l\'appli', async () => {
     moi.set({ ...PROFIL, roles: ['MEDECIN'] });
     await afficher();
@@ -109,6 +150,25 @@ describe('MoiComponent', () => {
     moi.set({ ...PROFIL, roles: ['PATIENT'] });
     await afficher();
     for (const l of ['/messagerie', '/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).not.toBeNull();
+  });
+
+  it('ne propose pas « Mes avis », « Mes listes d\'attente » ni Dawini à un compte médecin, secrétaire ou pharmacie sans rôle PATIENT, comme « Mon compte » de l\'appli', async () => {
+    for (const role of ['MEDECIN', 'SECRETAIRE', 'PHARMACIE']) {
+      moi.set({ ...PROFIL, roles: [role] });
+      await afficher();
+      for (const l of ['/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).withContext(role + ' ' + l).toBeNull();
+      // La messagerie est réservée par l'API aux patients et aux médecins.
+      if (role === 'MEDECIN') expect(lien('/messagerie')).withContext(role).not.toBeNull();
+      else expect(lien('/messagerie')).withContext(role).toBeNull();
+    }
+  });
+
+  it('propose « Mes avis », « Mes listes d\'attente » et Dawini à un professionnel qui a aussi le rôle PATIENT, et à un administrateur', async () => {
+    for (const roles of [['MEDECIN', 'PATIENT'], ['SECRETAIRE', 'PATIENT'], ['PHARMACIE', 'PATIENT'], ['ADMIN']]) {
+      moi.set({ ...PROFIL, roles });
+      await afficher();
+      for (const l of ['/mes-avis', '/liste-attente', '/dawini']) expect(lien(l)).withContext(roles.join() + ' ' + l).not.toBeNull();
+    }
   });
 
   it('nomme l\'entrée Dawini « Dawini (pharmacies) » / « داويني (الصيدليات) », comme « Mon compte » de l\'appli', async () => {
@@ -133,11 +193,14 @@ describe('MoiComponent', () => {
     }
   });
 
-  it('propose la messagerie à la secrétaire, à la pharmacie et à l\'administrateur, comme « Mon compte » de l\'appli', async () => {
+  it('ne propose pas la messagerie à la secrétaire, à la pharmacie ni à l\'administrateur seuls (l\'API la refuse), mais la garde avec le rôle PATIENT', async () => {
     for (const role of ['SECRETAIRE', 'PHARMACIE', 'ADMIN']) {
+      moi.set({ ...PROFIL, roles: [role] });
+      await afficher();
+      expect(lien('/messagerie')).withContext(role).toBeNull();
       moi.set({ ...PROFIL, roles: ['PATIENT', role] });
       await afficher();
-      expect(lien('/messagerie')).not.toBeNull();
+      expect(lien('/messagerie')).withContext('PATIENT+' + role).not.toBeNull();
     }
   });
 
@@ -182,6 +245,8 @@ describe('MoiComponent', () => {
     await afficher();
     expect(service.supprimer).toHaveBeenCalledTimes(1);
     expect(auth.seDeconnecter).toHaveBeenCalled();
+    expect(consommerCompteSupprime()).toBeTrue();
+    expect(consommerCompteSupprime()).toBeFalse();
   });
 
   it('annuler la confirmation ne supprime rien ; un echec est explique', async () => {
@@ -235,7 +300,16 @@ describe('MoiComponent', () => {
   it('annonce la conservation légale des ordonnances, comme la page de suppression et l\'appli', async () => {
     await afficher();
 
-    expect(texte()).toContain('Seules les ordonnances et le journal de sécurité sont conservés le temps exigé par la loi');
+    expect(texte()).toContain('Les ordonnances et le journal de sécurité sont conservés le temps exigé par la loi');
+  });
+
+  it('dit que les rendez-vous passés et la note des avis sont conservés, et que les rendez-vous à venir sont annulés', async () => {
+    await afficher();
+
+    expect(texte()).toContain('vos rendez-vous à venir sont annulés');
+    expect(texte()).toContain("Vos rendez-vous passés restent, sans aucun lien avec vous, dans l'agenda du médecin");
+    expect(texte()).toContain('la note (sans commentaire) de vos avis est conservée');
+    expect(texte()).not.toContain('(profil, rendez-vous,');
   });
 
   describe('en arabe (comme l\'appli)', () => {
@@ -255,6 +329,9 @@ describe('MoiComponent', () => {
       expect(texte()).toContain('ترشحي كطبيب');
       expect(texte()).toContain('تسجيل الخروج');
       expect(texte()).toContain('حذف حسابي');
+      // Même mot que l'appli (texteConfirmationSuppressionCompte) : « صفحتك العامة », pas « بطاقتك ».
+      expect(texte()).toContain('تُسحب صفحتك العامة');
+      expect(texte()).not.toContain('بطاقتك');
       expect(texte()).not.toContain('Mon compte');
       expect(texte()).not.toContain('Se déconnecter');
     });

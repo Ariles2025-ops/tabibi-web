@@ -197,6 +197,13 @@ describe('DeposerAvisComponent', () => {
     expect(texte()).toContain('Vous pourrez donner votre avis une fois la consultation effectuée');
   });
 
+  it('garde le formulaire pour un rendez-vous honoré écrit en minuscules, comme l\'appli', async () => {
+    rendezVous.mes.and.returnValue(of([{ ...HONORE, statut: ' honore ' }]));
+    await afficher();
+
+    expect(formulaire()).not.toBeNull();
+  });
+
   it('affiche le { erreur } d un 400', async () => {
     service.deposer.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 400, error: { erreur: 'La note doit etre comprise entre 1 et 5.' } })),

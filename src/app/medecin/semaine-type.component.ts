@@ -7,7 +7,7 @@ import { AuthService } from '../auth/auth.service';
 import { ApiDisponibleService } from '../partage/api-disponible.service';
 import { LangueService } from '../partage/langue.service';
 import { DUREE_MAX_MINUTES, DUREE_MIN_MINUTES } from '../secretaire/secretaire.service';
-import { JOURS_SEMAINE, ResultatSemaineType, SEMAINES_MAX, SemaineType } from './semaine-type';
+import { JOURS_SEMAINE, messageSemaineType, ResultatSemaineType, SEMAINES_MAX, SemaineType } from './semaine-type';
 
 /**
  * Formulaire « Semaine type » : jours a cocher, plage horaire, duree, date de depart et nombre de semaines ; l'API
@@ -21,8 +21,8 @@ import { JOURS_SEMAINE, ResultatSemaineType, SEMAINES_MAX, SemaineType } from '.
     <form *ngIf="api.semaineType()" (ngSubmit)="envoyer()" #f="ngForm" style="display:grid;gap:12px;max-width:420px"
           [attr.dir]="l.ar() ? 'rtl' : null" [attr.lang]="l.ar() ? 'ar' : null">
       <p style="margin:0;color:var(--text3);font-size:.9rem">
-        {{ l.t('Cochez les jours de consultation : les créneaux sont créés chaque semaine sur la période choisie.',
-               'اختر أيام الاستشارة: تُنشأ المواعيد كل أسبوع خلال المدة المحددة.') }}
+        {{ l.t('Cochez les jours de consultation : les créneaux sont créés chaque semaine sur la période choisie. Les horaires déjà passés et les créneaux déjà ouverts à ce moment sont ignorés.',
+               'اختر أيام الاستشارة: تُنشأ المواعيد كل أسبوع خلال المدة المحددة. تُتجاهل الأوقات التي مضت والمواعيد المفتوحة أصلًا في الوقت نفسه.') }}
       </p>
       <fieldset style="border:1px solid var(--border);border-radius:var(--r12);padding:8px 12px;margin:0">
         <legend style="color:var(--text3);font-size:.9rem">{{ l.t('Jours', 'الأيام') }}</legend>
@@ -62,9 +62,7 @@ import { JOURS_SEMAINE, ResultatSemaineType, SEMAINES_MAX, SemaineType } from '.
         </button>
       </div>
       <p *ngIf="resultat() as r" role="status" style="color:var(--blue);margin:0">
-        {{ l.ar()
-            ? 'تم إنشاء ' + r.crees + ' موعدًا، وتم تجاهل ' + r.ignores
-            : r.crees + (r.crees > 1 ? ' créneaux créés, ' : ' créneau créé, ') + r.ignores + (r.ignores > 1 ? ' ignorés' : ' ignoré') }}
+        {{ message(r) }}
       </p>
       <p *ngIf="erreur()" role="alert" style="color:var(--red);margin:0">{{ erreur() }}</p>
     </form>
@@ -98,6 +96,10 @@ export class SemaineTypeComponent {
   envoi = signal(false);
   resultat = signal<ResultatSemaineType | null>(null);
   erreur = signal('');
+
+  message(r: ResultatSemaineType): string {
+    return messageSemaineType(r, this.l.ar());
+  }
 
   coche(code: string): boolean {
     return this.choisis().includes(code);

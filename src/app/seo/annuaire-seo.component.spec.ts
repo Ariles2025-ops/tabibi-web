@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { Meta } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AnnuaireSeoComponent, dePlace } from './annuaire-seo.component';
@@ -10,10 +11,10 @@ describe('AnnuaireSeoComponent', () => {
   let reponse: { status: jasmine.Spy };
   let annuaire: jasmine.SpyObj<AnnuaireService>;
 
-  function creer(params: Record<string, string>) {
+  function creer(params: Record<string, string>, liste: Medecin[] = []) {
     reponse = { status: jasmine.createSpy('status') };
     annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
-    annuaire.rechercher.and.returnValue(of([]));
+    annuaire.rechercher.and.returnValue(of(liste));
     annuaire.communes.and.returnValue(of([]));
     TestBed.configureTestingModule({
       imports: [AnnuaireSeoComponent],
@@ -40,6 +41,14 @@ describe('AnnuaireSeoComponent', () => {
     creer({ specialite: 'cardiologue', wilaya: 'alger' });
     expect(reponse.status).not.toHaveBeenCalled();
     expect(annuaire.rechercher).toHaveBeenCalledWith('cardiologue', '16', undefined, undefined);
+  });
+
+  it('page specialite x wilaya sans praticien : noindex, follow ; avec praticien : index, follow', () => {
+    creer({ specialite: 'hematologue', wilaya: 'tamanrasset' });
+    expect(TestBed.inject(Meta).getTag('name="robots"')?.content).toBe('noindex, follow');
+    TestBed.resetTestingModule();
+    creer({ specialite: 'cardiologue', wilaya: 'alger' }, [{ id: '1', nomComplet: 'Dr A' } as unknown as Medecin]);
+    expect(TestBed.inject(Meta).getTag('name="robots"')?.content).toBe('index, follow');
   });
 
   it('page wilaya : lien « Pharmacies à Alger », pharmacies absentes du maillage des specialites', () => {
@@ -213,6 +222,52 @@ describe('AnnuaireSeoComponent', () => {
     expect(ligne).not.toContain('Médecin');
   });
 
+  it('page arabe d\'une wilaya seule (/ar/wilayas/adrar) : « طبيب » et jamais « Médecin » (#350)', () => {
+    reponse = { status: jasmine.createSpy('status') };
+    annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
+    annuaire.communes.and.returnValue(of([]));
+    annuaire.rechercher.and.returnValue(of<Medecin[]>([
+      { id: 'a1', nomComplet: 'Dr Samir Kaci', specialiteSlug: '', specialiteFr: 'Médecin généraliste', wilayaCode: '01', wilayaFr: 'Adrar', ville: 'Adrar' },
+    ] as Medecin[]));
+    TestBed.configureTestingModule({
+      imports: [AnnuaireSeoComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { langue: 'ar' } }, paramMap: of(convertToParamMap({ wilaya: 'adrar' })) } },
+        { provide: AnnuaireService, useValue: annuaire },
+        { provide: REPONSE_HTTP, useValue: reponse },
+      ],
+    });
+    const f = TestBed.createComponent(AnnuaireSeoComponent);
+    f.detectChanges();
+    const ligne = f.nativeElement.querySelector('.seo-med__txt small').textContent as string;
+    expect(ligne).toContain('طبيب');
+    expect(f.nativeElement.textContent).not.toContain('Médecin');
+  });
+
+  it('lien « Vous êtes praticien ? » de la FAQ : /ar/praticien en arabe, /praticien en français (#277)', () => {
+    for (const [langue, href] of [['ar', '/ar/praticien'], [undefined, '/praticien']] as const) {
+      TestBed.resetTestingModule();
+      reponse = { status: jasmine.createSpy('status') };
+      annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
+      annuaire.communes.and.returnValue(of([]));
+      annuaire.rechercher.and.returnValue(of<Medecin[]>([]));
+      TestBed.configureTestingModule({
+        imports: [AnnuaireSeoComponent],
+        providers: [
+          provideRouter([]),
+          { provide: ActivatedRoute, useValue: { snapshot: { data: langue ? { langue } : {} }, paramMap: of(convertToParamMap({ wilaya: 'adrar' })) } },
+          { provide: AnnuaireService, useValue: annuaire },
+          { provide: REPONSE_HTTP, useValue: reponse },
+        ],
+      });
+      const f = TestBed.createComponent(AnnuaireSeoComponent);
+      f.detectChanges();
+      const liens = Array.from(f.nativeElement.querySelectorAll('details a')) as HTMLAnchorElement[];
+      expect(liens.some((a) => a.getAttribute('href') === href)).toBeTrue();
+    }
+  });
+
   it('page commune : cible et question FAQ avec « avec » / « مع » (FR et AR)', () => {
     const cas = [
       { langue: undefined, cible: 'avec un cardiologue à Sétif', q: 'Comment prendre rendez-vous avec un cardiologue à Sétif ?' },
@@ -240,6 +295,32 @@ describe('AnnuaireSeoComponent', () => {
       if (typeof c.cible === 'string') { expect(f.componentInstance.cible).toBe(c.cible); expect(q).toBe(c.q as string); }
       else { expect(f.componentInstance.cible).toMatch(c.cible); expect(q).toMatch(c.q as RegExp); }
     }
+  });
+
+  it('page commune : le nombre annonce est le total de l\'API communes, pas la taille de la page', () => {
+    TestBed.resetTestingModule();
+    reponse = { status: jasmine.createSpy('status') };
+    annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['rechercher', 'communes']);
+    const gens = Array.from({ length: 50 }, (_, i) => ({ id: `c${i}`, nomComplet: `Dr C${i}`, specialiteSlug: 'cardiologue', specialiteFr: 'Cardiologue', wilayaCode: '19', wilayaFr: 'Sétif', ville: 'Ain Arnat' })) as Medecin[];
+    annuaire.rechercher.and.returnValue(of(gens));
+    annuaire.communes.and.returnValue(of([{ slug: 'ain-arnat', nom: 'Ain Arnat', nombre: 120 }] as any));
+    TestBed.configureTestingModule({
+      imports: [AnnuaireSeoComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { data: {} }, paramMap: of(convertToParamMap({ specialite: 'cardiologue', wilaya: 'setif', commune: 'ain-arnat' })) } },
+        { provide: AnnuaireService, useValue: annuaire },
+        { provide: REPONSE_HTTP, useValue: reponse },
+      ],
+    });
+    const f = TestBed.createComponent(AnnuaireSeoComponent);
+    f.detectChanges();
+    const c = f.componentInstance;
+    expect(c.medecins().length).toBe(50);
+    expect(c.totalAffiche()).toBe(120);
+    expect(c.intro).toContain('120');
+    expect(c.intro).not.toContain('50 ');
+    expect((c as any).description).toContain('120');
   });
 
   it('elide « de » devant une wilaya commencant par une voyelle (d\'Alger, d\'Oran, de Blida)', () => {

@@ -7,7 +7,9 @@ import { VISIO_ACTIVE, inscriptionFermee } from '../lancement';
 import { RoleService } from '../auth/role.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
+import { ApiDisponibleService } from '../partage/api-disponible.service';
 import { MoiService } from './moi.service';
+import { marquerCompteSupprime } from './compte-supprime';
 
 /** Libelles francais des roles metier ; tout autre role (technique) n'est pas affiche. */
 const LIBELLES_ROLES: Partial<Record<string, [string, string]>> = {
@@ -52,7 +54,7 @@ interface Raccourci { lien: string; libelle: string; badge?: string; }
         <section aria-labelledby="titre-suppression" style="margin-top:32px;padding:16px;border:1px solid var(--border);border-radius:16px;background:#fff">
           <h2 id="titre-suppression" style="font-size:1.05rem;margin:0 0 6px">{{ l.t('Supprimer mon compte', 'حذف حسابي') }}</h2>
           <p style="color:var(--text3);margin:0 0 12px;font-size:.95rem">
-            {{ l.t("Votre compte et vos données personnelles (profil, rendez-vous, messages, listes d'attente) sont effacés définitivement. Seules les ordonnances et le journal de sécurité sont conservés le temps exigé par la loi.", 'يُحذف حسابك وبياناتك الشخصية (الملف الشخصي والمواعيد والرسائل وقوائم الانتظار) نهائيًا. لا يُحتفظ إلا بالوصفات الطبية وسجل الأمان للمدة التي يفرضها القانون.') }}
+            {{ l.t("Votre compte et vos données personnelles (profil, messages, listes d'attente) sont effacés définitivement, et vos rendez-vous à venir sont annulés. Les ordonnances et le journal de sécurité sont conservés le temps exigé par la loi. Vos rendez-vous passés restent, sans aucun lien avec vous, dans l'agenda du médecin, et la note (sans commentaire) de vos avis est conservée. Médecin : vos rendez-vous à venir sont annulés (patients prévenus) et votre fiche publique est retirée.", 'يُحذف حسابك وبياناتك الشخصية (الملف الشخصي والرسائل وقوائم الانتظار) نهائيًا، وتُلغى مواعيدك القادمة. يُحتفظ بالوصفات الطبية وسجل الأمان للمدة التي يفرضها القانون. تبقى مواعيدك السابقة، دون أي صلة بك، في أجندة الطبيب، ويُحتفظ بتقييم (النجوم) آرائك دون التعليق. الطبيب: تُلغى مواعيدك القادمة (ويُبلَّغ المرضى) وتُسحب صفحتك العامة.') }}
             <a routerLink="/supprimer-mon-compte" style="color:var(--vert)">{{ l.t('En savoir plus', 'اعرف المزيد') }}</a>
           </p>
           <button *ngIf="!confirmation()" type="button" class="bouton-secondaire" style="color:var(--red);border-color:var(--red)"
@@ -78,6 +80,7 @@ export class MoiComponent implements OnInit {
   private auth = inject(AuthService);
   private roleService = inject(RoleService);
   private moiService = inject(MoiService);
+  private apiDisponible = inject(ApiDisponibleService);
   connecte = signal(false);
   /** Profil /api/moi, lu depuis le cache de RoleService (une seule requete par chargement de page). */
   moi = this.roleService.moi;
@@ -100,7 +103,7 @@ export class MoiComponent implements OnInit {
     const invitations = { lien: '/invitations', libelle: t('Invitations de cabinet', 'دعوات العيادات') };
     // Comme « Ma candidature de médecin » du profil de l'appli : un compte non médecin peut déposer ou suivre sa candidature.
     const candidature = { lien: '/medecin/candidature', libelle: t('Ma candidature de médecin', 'ترشحي كطبيب') };
-    // Comme « Messagerie » de « Mon compte » dans l'appli, ouverte à tous les rôles.
+    // L'API (GET /api/conversations) réserve la messagerie aux rôles PATIENT et MEDECIN : pas de lien vers une impasse (403) pour les autres.
     const messagerie = { lien: '/messagerie', libelle: t('Messagerie', 'الرسائل') };
     // Comme « Vérifier une ordonnance » de « Mon compte » dans l'appli, ouvert à tous les rôles.
     const verifier = { lien: '/verifier', libelle: t('Vérifier une ordonnance', 'التحقق من وصفة طبية') };
@@ -110,8 +113,18 @@ export class MoiComponent implements OnInit {
       libelle: VISIO_ACTIVE ? t('Téléconsultations', 'الاستشارات عن بُعد') : t('Téléconsultation', 'الاستشارة عن بُعد'),
       badge: VISIO_ACTIVE ? undefined : t('Bientôt', 'قريبًا'),
     };
+    // Comme « Mon espace » de l'appli : un compte à plusieurs rôles professionnels retrouve chacun de ses espaces
+    // (médecin, secrétaire, pharmacie), pas seulement le premier.
+    // Comme « Mon activité » et « Services » de « Mon compte » de l'appli (comptePro) : un compte médecin, secrétaire ou
+    // pharmacie sans rôle PATIENT n'a pas « Mes avis », « Mes listes d'attente » ni Dawini (ces pages lui répondraient
+    // « réservée aux patients ») ; avec le rôle PATIENT en plus, il les garde.
+    const comptePro = ['MEDECIN', 'SECRETAIRE', 'PHARMACIE'].some((x) => r.includes(x)) && !r.includes('PATIENT');
+    const mesAvis = { lien: '/mes-avis', libelle: t('Mes avis', 'آرائي') };
+    const listesAttente = { lien: '/liste-attente', libelle: t("Mes listes d'attente", 'قوائم الانتظار') };
+    const dawini = { lien: '/dawini', libelle: t('Dawini (pharmacies)', 'داويني (الصيدليات)') };
+    const espaces: Raccourci[] = [];
     if (r.includes('MEDECIN')) {
-      return [
+      espaces.push(
         { lien: '/medecin/agenda', libelle: t('Mon agenda', 'المواعيد') },
         { lien: '/medecin/disponibilites', libelle: t('Disponibilités', 'الأوقات المتاحة') },
         // Comme « Mon espace » de l'appli : ordonnances rédigées, liste d'attente, avis et secrétaires du médecin.
@@ -119,16 +132,27 @@ export class MoiComponent implements OnInit {
         { lien: '/medecin/liste-attente', libelle: t("Liste d'attente", 'قائمة الانتظار') },
         { lien: '/medecin/avis', libelle: t('Avis des patients', 'آراء المرضى') },
         { lien: '/medecin/secretaires', libelle: t('Mes secrétaires', 'سكرتيراتي') },
-        messagerie,
+        // Comme « Ma fiche » de « Mon espace » dans l'appli : visible seulement si la route de l'API existe (sonde faite par le menu).
+        ...(this.apiDisponible.ficheMedecin() ? [{ lien: '/medecin/ma-fiche', libelle: t('Ma fiche', 'صفحتي') }] : []),
+      );
+    }
+    if (r.includes('SECRETAIRE')) espaces.push({ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') });
+    if (r.includes('PHARMACIE')) espaces.push({ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') });
+    if (r.includes('ADMIN')) espaces.push({ lien: '/admin', libelle: t('Administration', 'الإدارة') });
+    if (espaces.length > 0) {
+      return [
+        ...espaces,
+        ...(r.includes('PATIENT') || r.includes('MEDECIN') ? [messagerie] : []),
         visio,
+        ...(comptePro ? [] : [mesAvis, listesAttente, dawini]),
         verifier,
+        // Comme « Cabinet » de « Mon espace » dans l'appli : les invitations de cabinet sont ouvertes à tous les rôles.
+        invitations,
+        ...(r.includes('MEDECIN') || !(r.includes('SECRETAIRE') || r.includes('PHARMACIE')) ? [] : [candidature]),
         profil,
         notifications,
       ];
     }
-    if (r.includes('SECRETAIRE')) return [{ lien: '/secretaire', libelle: t('Agenda du cabinet', 'مواعيد العيادة') }, invitations, messagerie, visio, verifier, candidature, profil, notifications];
-    if (r.includes('PHARMACIE')) return [{ lien: '/pharmacie', libelle: t('Demandes de médicaments', 'طلبات الأدوية') }, messagerie, visio, verifier, candidature, profil, notifications];
-    if (r.includes('ADMIN')) return [{ lien: '/admin', libelle: t('Administration', 'الإدارة') }, messagerie, visio, verifier, profil, notifications];
     // Patient : « Mon activité » et « Services » de « Mon compte » de l'appli (messagerie, avis, listes d'attente, Dawini).
     return [
       profil,
@@ -136,9 +160,9 @@ export class MoiComponent implements OnInit {
       { lien: '/mes-ordonnances', libelle: t('Mes ordonnances', 'وصفاتي الطبية') },
       messagerie,
       visio,
-      { lien: '/mes-avis', libelle: t('Mes avis', 'آرائي') },
-      { lien: '/liste-attente', libelle: t("Mes listes d'attente", 'قوائم الانتظار') },
-      { lien: '/dawini', libelle: t('Dawini (pharmacies)', 'داويني (الصيدليات)') },
+      mesAvis,
+      listesAttente,
+      dawini,
       verifier,
       invitations,
       candidature,
@@ -171,6 +195,7 @@ export class MoiComponent implements OnInit {
     this.moiService.supprimer().subscribe({
       next: () => {
         this.suppressionEnCours.set(false);
+        marquerCompteSupprime();
         this.seDeconnecter();
       },
       error: (e: HttpErrorResponse) => {

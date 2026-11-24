@@ -3,7 +3,7 @@ import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import localeFr from '@angular/common/locales/fr';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
@@ -83,6 +83,30 @@ describe('EspaceSecretaireComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
   }
+
+  it("arrivee depuis l'acceptation d'une invitation : confirme « Invitation acceptée » (FR), comme l'appli", async () => {
+    spyOn(TestBed.inject(Router), 'getCurrentNavigation').and.returnValue({ extras: { state: { invitationAcceptee: true } } } as never);
+    fixture = TestBed.createComponent(EspaceSecretaireComponent);
+    await afficher();
+    expect(texte()).toContain('Invitation acceptée : votre espace secrétaire est ouvert.');
+  });
+
+  it("arrivee depuis l'acceptation d'une invitation : confirme en arabe", async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      spyOn(TestBed.inject(Router), 'getCurrentNavigation').and.returnValue({ extras: { state: { invitationAcceptee: true } } } as never);
+      fixture = TestBed.createComponent(EspaceSecretaireComponent);
+      await afficher();
+      expect(texte()).toContain('تم قبول الدعوة: تم فتح فضاء السكرتارية.');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
+  });
+
+  it("navigation ordinaire : aucune confirmation d'invitation", async () => {
+    await afficher();
+    expect(texte()).not.toContain('Invitation acceptée');
+  });
 
   function texte(): string {
     return fixture.nativeElement.textContent;
@@ -411,7 +435,7 @@ describe('EspaceSecretaireComponent', () => {
     it("refuse en arabe un compte qui n'est pas secretaire (403)", async () => {
       service.mesMedecins.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
       await afficher();
-      expect(texte()).toContain('هذه الصفحة مخصصة للسكرتارية.');
+      expect(texte()).toContain('هذه الصفحة مخصّصة للسكرتارية.');
     });
   });
 });

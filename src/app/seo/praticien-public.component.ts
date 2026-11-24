@@ -53,7 +53,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             </div>
           </div>
           <div class="pp-action">
-            <a class="bouton pp-btn" [routerLink]="['/medecins', m.id]">{{ reservable() ? (ar ? 'احجز موعدًا' : 'Prendre rendez-vous') : (ar ? 'عرض الصفحة' : 'Voir la fiche') }}</a>
+            <a class="bouton pp-btn" [routerLink]="['/medecins', m.id]">{{ reservable() ? (ar ? 'احجز موعدًا' : 'Prendre rendez-vous') : (ar ? 'عرض الملف' : 'Voir la fiche') }}</a>
             <small *ngIf="reservable()">{{ ar ? 'المواعيد المتاحة والحجز بحساب نداويك مجاني. الدفع في العيادة.' : 'Disponibilités et réservation avec un compte Ndawik gratuit. Paiement au cabinet.' }}</small>
           </div>
         </section>

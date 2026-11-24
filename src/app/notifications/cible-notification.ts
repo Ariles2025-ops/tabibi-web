@@ -28,7 +28,9 @@ export function cibleDuLien(lien: string | null | undefined): string | null {
     case 'dawini':
       return id === undefined ? `/${page}` : `/${page}/${id}`;
     case 'medecin':
-      return id === 'agenda' || id === 'avis' || id === 'secretaires' ? `/medecin/${id}` : null;
+      return id === 'agenda' || id === 'avis' || id === 'secretaires' || id === 'candidature' ? `/medecin/${id}` : null;
+    case 'admin':
+      return id === 'candidatures' || id === 'demandes' || id === 'avis' ? `/admin/${id}` : null;
     case 'secretaire':
     case 'invitations':
       return id === undefined ? `/${page}` : null;

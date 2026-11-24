@@ -44,14 +44,19 @@ import { referencerPage } from '../seo/page-seo';
         <h2>Ce qui est supprimé</h2>
         <ul>
           <li>Votre compte de connexion (téléphone, e-mail, mot de passe) et votre profil.</li>
-          <li>Vos rendez-vous, messages, listes d'attente, demandes Dawini et notifications.</li>
+          <li>Vos messages, listes d'attente, demandes Dawini et notifications.</li>
+          <li>Vos rendez-vous à venir sont annulés.</li>
         </ul>
         <h2>Ce qui peut être conservé</h2>
         <ul>
+          <li>Vos rendez-vous passés, sans aucun lien avec vous, dans l'agenda du médecin.</li>
+          <li>La note (sans commentaire) de vos avis.</li>
           <li>Les ordonnances, pour leur vérification par les pharmacies et les obligations légales : 10 ans au plus.</li>
           <li>Le journal de sécurité (accès au service) : 12 mois.</li>
           <li>Les sauvegardes, effacées d'elles-mêmes en 60 jours au plus.</li>
         </ul>
+        <h2>Si vous êtes médecin</h2>
+        <p>Vos rendez-vous à venir sont annulés (les patients concernés sont prévenus) et votre fiche publique est retirée de la plateforme.</p>
         <p>Pour en savoir plus, consultez notre <a href="/legal/confidentialite.html">politique de confidentialité</a>
           et les <a href="/legal/cgu.html">conditions d'utilisation</a>.</p>
       </section>
@@ -83,14 +88,19 @@ import { referencerPage } from '../seo/page-seo';
         <h2>ما يتم حذفه</h2>
         <ul>
           <li>حساب الدخول الخاص بك (الهاتف والبريد الإلكتروني وكلمة المرور) وملفك الشخصي.</li>
-          <li>مواعيدك ورسائلك وقوائم الانتظار وطلبات دَويني والإشعارات.</li>
+          <li>رسائلك وقوائم الانتظار وطلبات دَويني والإشعارات.</li>
+          <li>تُلغى مواعيدك القادمة.</li>
         </ul>
         <h2>ما قد يتم الاحتفاظ به</h2>
         <ul>
+          <li>مواعيدك السابقة، دون أي صلة بك، في أجندة الطبيب.</li>
+          <li>تقييم (النجوم) آرائك، دون التعليق.</li>
           <li>الوصفات الطبية، للتحقق منها من طرف الصيدليات ولأسباب قانونية: 10 سنوات على الأكثر.</li>
           <li>سجل الأمان (الدخول إلى الخدمة): 12 شهرًا.</li>
           <li>النسخ الاحتياطية، وتُمحى تلقائيًا في أجل أقصاه 60 يومًا.</li>
         </ul>
+        <h2>إذا كنت طبيبًا</h2>
+        <p>تُلغى مواعيدك القادمة (ويُبلَّغ المرضى المعنيون) وتُسحب صفحتك العامة من المنصة.</p>
         <p>لمعرفة المزيد، اطّلع على <a href="/legal/confidentialite.html">سياسة الخصوصية</a>
           و<a href="/legal/cgu.html">شروط الاستخدام</a>.</p>
       </section>

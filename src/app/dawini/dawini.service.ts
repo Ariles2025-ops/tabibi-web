@@ -54,6 +54,11 @@ export interface DemandeReponse {
   commentaire?: string | null;
 }
 
+/** Demande ouverte (statut lu sans tenir compte de la casse ni des espaces, comme `estOuvert` de l'appli). */
+export function estOuvert(besoin: Pick<Besoin, 'statut'>): boolean {
+  return (besoin.statut ?? '').trim().toUpperCase() === 'OUVERT';
+}
+
 /** Libelles francais des statuts de besoin connus ; un statut inconnu est affiche tel quel. */
 const LIBELLES_STATUT_BESOIN: Partial<Record<string, string>> = {
   OUVERT: 'Ouverte',
@@ -73,10 +78,13 @@ export function libelleStatutBesoin(statut: string | null | undefined, arabe = f
   return (arabe ? (LIBELLES_STATUT_BESOIN_AR[cle] ?? libelleStatutGeneriqueAr(statut)) : undefined) ?? LIBELLES_STATUT_BESOIN[cle] ?? libelleStatutGenerique(statut);
 }
 
-/** « 850 DA », « 1 250 DA » (milliers separes par une espace) ; chaine vide si le prix n'est pas renseigne. */
-export function formaterPrix(prixDa: number | null | undefined): string {
-  if (prixDa === null || prixDa === undefined) return '';
-  return `${Math.trunc(prixDa).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} DA`;
+/**
+ * « 850 DA » / « 850 دج » (milliers separes par une espace) ; chaine vide si le prix n'est pas renseigne ou negatif,
+ * comme `formaterPrix` de l'appli (dawini.dart).
+ */
+export function formaterPrix(prixDa: number | null | undefined, arabe = false): string {
+  if (prixDa === null || prixDa === undefined || prixDa < 0) return '';
+  return `${Math.trunc(prixDa).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} ${arabe ? 'دج' : 'DA'}`;
 }
 
 /** « 0 réponse », « 1 réponse », « 3 réponses ». */

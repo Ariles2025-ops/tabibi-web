@@ -52,7 +52,7 @@ import { Conversation, MessagerieService, abregerIdentifiant, trierParActivite }
           {{ l.t('Aucune conversation pour le moment.', 'لا توجد محادثات حاليًا.') }}
           <ng-container *ngIf="!estMedecin()">
             {{ l.t('Vous pouvez écrire à un médecin depuis sa fiche, une fois un rendez-vous pris.', 'يمكنك مراسلة طبيب من صفحته بعد حجز موعد.') }}
-            <a routerLink="/" style="color:var(--vert)">{{ l.t('Trouver un praticien', 'ابحث عن طبيب') }}</a>
+            <a routerLink="/" style="color:var(--vert)">{{ l.t('Trouver un praticien', 'ابحث عن ممارس') }}</a>
           </ng-container>
         </p>
       </ng-container>

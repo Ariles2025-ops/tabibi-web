@@ -53,6 +53,7 @@ describe('ReponsesDemandeComponent', () => {
   let auth: { pret: () => Promise<void>; estConnecte: () => boolean; seConnecter: jasmine.Spy };
 
   beforeEach(() => {
+    localStorage.removeItem('tabibi.langue'); // la langue memorisee par un autre test ne doit pas fuiter
     registerLocaleData(localeFr);
     service = jasmine.createSpyObj<DawiniService>('DawiniService', ['mesBesoins', 'reponses', 'cloturer']);
     service.mesBesoins.and.returnValue(of([OUVERTE]));
@@ -148,6 +149,13 @@ describe('ReponsesDemandeComponent', () => {
     expect(texte()).not.toContain('clôturée le');
   });
 
+  it('propose la cloture meme si l API renvoie le statut en minuscules, comme l appli', async () => {
+    service.mesBesoins.and.returnValue(of([{ ...OUVERTE, statut: ' ouvert ' }]));
+    await afficher();
+
+    expect(boutonCloturer()).toBeDefined();
+  });
+
   it('cloture la demande, confirme et retire le bouton', async () => {
     service.cloturer.and.returnValue(of(CLOTUREE));
     await afficher();
@@ -220,6 +228,8 @@ describe('ReponsesDemandeComponent', () => {
       expect(items[0].textContent).toContain('غير متوفر');
       expect(items[1].textContent).toContain('متوفر');
       expect(items[1].textContent).not.toContain('Disponible ·');
+      expect(items[1].textContent).toContain('1 250 دج');
+      expect(items[1].textContent).not.toContain('DA');
       expect(texte()).not.toContain('Indisponible');
       const bouton = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button')).find((b) => b.textContent?.includes('إغلاق الطلب'));
       expect(bouton).toBeDefined();

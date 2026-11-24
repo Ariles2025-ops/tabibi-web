@@ -18,6 +18,12 @@ describe('cibleDuLien', () => {
     expect(cibleDuLien('/medecin/agenda')).toBe('/medecin/agenda');
     expect(cibleDuLien('/medecin/avis')).toBe('/medecin/avis');
     expect(cibleDuLien('/medecin/secretaires')).toBe('/medecin/secretaires');
+    expect(cibleDuLien('/medecin/candidature')).toBe('/medecin/candidature');
+    expect(cibleDuLien('/admin/candidatures')).toBe('/admin/candidatures');
+    expect(cibleDuLien('/admin/demandes')).toBe('/admin/demandes');
+    expect(cibleDuLien('/admin/avis')).toBe('/admin/avis');
+    expect(cibleDuLien('/admin')).toBeNull();
+    expect(cibleDuLien('/admin/inconnu')).toBeNull();
     expect(cibleDuLien('/secretaire')).toBe('/secretaire');
     expect(cibleDuLien('/invitations')).toBe('/invitations');
     expect(cibleDuLien('/medecin')).toBeNull();

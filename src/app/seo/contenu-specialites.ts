@@ -514,4 +514,196 @@ export const CONTENU_SPECIALITES: Record<string, { fr: ContenuSpecialite; ar: Co
       ],
     },
   },
+  nutritionniste: {
+    fr: {
+      apropos: 'Un nutritionniste est un professionnel formé pour évaluer les besoins nutritionnels individuels et proposer des plans d\'alimentation adaptés. On doit consulter un nutritionniste lorsqu\'on souhaite améliorer son alimentation, prévenir ou gérer certaines pathologies liées à la nutrition, ou lors de la préparation à une chirurgie.',
+      faq: [
+        { q: 'Quel est l\'objectif principal d\'un nutritionniste?', r: 'L\'objectif principal d\'un nutritionniste est d\'aider les patients à adopter une alimentation saine et équilibrée qui répond à leurs besoins nutritionnels spécifiques.' },
+        { q: 'Peut-on consulter un nutritionniste si on n\'a pas de problème de santé?', r: 'Oui, on peut consulter un nutritionniste si on souhaite améliorer son mode de vie, prévenir les maladies liées à la nutrition ou simplement avoir des conseils sur une alimentation plus saine.' },
+      ],
+    },
+    ar: {
+      apropos: 'هو أخصائي التغذية مسؤول عن تقديم المشورة والتوجيه حول النظام الغذائي الصحي، والعمل على تحقيق التوازن في تناول الطعام لتحسين الصحة العامة. يُفضل استشارة أخصائي التغذية عند وجود مشاكل في الوزن، أو الحاجة لتنويع النظام الغذائي، أو عند البحث عن طرق صحية لتحسين الصحة العامة.',
+      faq: [
+        { q: 'ما هو الدور الرئيسي لأخصائي التغذية؟', r: 'أخصائي التغذية يقدم مشورات حول النظام الغذائي الصحي، ويعمل على تحقيق التوازن في تناول الطعام لتحسين الصحة العامة.' },
+        { q: 'متى يجب استشارة أخصائي التغذية؟', r: 'يجب استشارة أخصائي التغذية عند وجود مشاكل في الوزن أو الحاجة لتنويع النظام الغذائي، أو عند البحث عن طرق صحية لتحسين الصحة العامة.' },
+      ],
+    },
+  },
+  nephrologue: {
+    fr: {
+      apropos: 'Le néphrologue est un spécialiste médical qui se concentre sur le traitement des maladies rénales. Il est conseillé de consulter un néphrologue lorsque l\'on soupçonne un problème rénal, comme une insuffisance rénale ou une maladie rénale chronique.',
+      faq: [
+        { q: 'Quelles sont les principales fonctions d\'un néphrologue ?', r: 'Le néphrologue évalue et traite les problèmes liés aux reins, propose des traitements pour l\'insuffisance rénale et conseille sur la dialyse et les transplantations rénales.' },
+        { q: 'Comment peut-on prévenir les problèmes rénaux ?', r: 'Il est recommandé de maintenir une alimentation saine, de rester hydraté, de faire régulièrement des examens médicaux et de contrôler les maladies chroniques comme le diabète et l\'hypertension artérielle.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الكلى هو متخصص في علاج أمراض الكلى. يُستشير هذا الطبيب عند ظهور أعراض مثل التشنجات الدواليبية، والتغيرات في التبول، أو وجود البروتين في البول.',
+      faq: [
+        { q: 'هل يمكن لطبيب الكلى التشخيص والعلاج لجميع مشاكل الكلى؟', r: 'نعم، طبيب الكلى قادر على التشخيص والعلاج لمعظم حالات أمراض الكلى. R2: قد يحتاج بعض الحالات إلى استشارة متخصصين آخرين لتقديم العلاج الشامل.' },
+        { q: 'ما هي أعراض الأمراض الكلوية التي يجب استشارة طبيب الكلى؟ R1: قد تشمل الأعراض التشنجات الدواليبية، والتغيرات في التبول، أو وجود البروتين في البول.', r: 'قد يحتاج بعض الحالات إلى استشارة متخصصين آخرين لتقديم العلاج الشامل. Q2: ما هي أعراض الأمراض الكلوية التي يجب استشارة طبيب الكلى؟ R1: قد تشمل الأعراض التشنجات الدواليبية، والتغيرات في التبول، أو وجود البروتين في البول. R2: إذا ظهرت هذه الأعراض، يُنصح بزيارة طبيب الكلى للتشخيص والعلاج.' },
+      ],
+    },
+  },
+  oncologue: {
+    fr: {
+      apropos: 'L\'oncologue est un médecin qui se spécialise dans le diagnostic et le traitement des cancers. Il est conseillé de consulter un oncologue lorsque l\'on présente des symptômes suspects ou lorsqu\'un diagnostic de cancer a été posé.',
+      faq: [
+        { q: 'Quelles sont les principales méthodes de traitement utilisées par un oncologue?', r: 'Un oncologue utilise diverses méthodes de traitement, dont la chimiothérapie, la radiothérapie et l\'ostéopathie, en fonction du type et de l\'étendue du cancer.' },
+        { q: 'Comment peut-on prévenir le cancer?', r: 'La prévention du cancer peut impliquer des mesures telles que l\'adoption d\'un régime alimentaire équilibré, l\'exercice régulier et la limitation du tabagisme et de l\'alcool.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الأورام هو متخصص في تشخيص وعلاج الأمراض السرطانية. يُستشير الطبيب الأورام عادة بعد تشخيص السرطان أو عند الحاجة إلى تقييم علاج مُحدد.',
+      faq: [
+        { q: 'ما هي مهام طبيب الأورام؟', r: 'طبيب الأورام يقوم بتشخيص السرطان وتخطيط العلاج المناسب.' },
+        { q: 'متى يجب على الشخص استشارة طبيب الأورام؟', r: 'يجب استشارة طبيب الأورام عند ظهور أعراض محتملة للسرطان أو بعد إجراء فحوصات التشخيص المبكر.' },
+      ],
+    },
+  },
+  orthophoniste: {
+    fr: {
+      apropos: 'Un orthophoniste est un professionnel de la santé qui se spécialise dans l\'évaluation et le traitement des troubles de la parole, de la voix, de la langue et des troubles de la communication. Il est conseillé de consulter un orthophoniste lorsque des difficultés de communication ou de production de la parole sont observées chez un enfant ou un adulte.',
+      faq: [
+        { q: 'Quelles sont les causes les plus courantes qui peuvent amener à consulter un orthophoniste ?', r: 'Les causes peuvent être diverses, notamment des troubles de la parole, des problèmes de langage, des troubles du développement ou des conséquences d\'un accident cérébral.' },
+        { q: 'Comment peut-on reconnaître que l\'on a besoin d\'un orthophoniste ?', r: 'Il est possible de reconnaître ces besoins par une articulation difficile, un bégaiement persistant, une maîtrise limitée de la langue, ou encore une communication expressive et réceptive compromise.' },
+      ],
+    },
+    ar: {
+      apropos: 'هو أخصائي تقويم النطق متخصص في الكشف عن مشاكل الإيقاع الصوتي واللarynx لدى الأطفال والكبار. يُستشار هذا النوع من الأخصائيين عند ظهور علامات مشكلات النطق لدى الطفل قبل سن الثالثة أو عند وجود صعوبات في النطق والفهم لدى البالغين.',
+      faq: [
+        { q: 'هل يمكن للاخصائي تقويم النطق الكشف عن مشاكل الحواسيب الصوتية؟', r: 'نعم، يمكن للأخصائي تقويم النطق الكشف عن مشاكل الحواسيب الصوتية، وذلك عن طريق إجراء الفحوصات اللازمة وتحليل النطق والصوت للشخص المريض.' },
+        { q: 'متى يجب استشارة أخصائي تقويم النطق؟', r: 'يجب استشارة الأخصائي تقويم النطق عند ظهور مشاكل في النطق أو فهم اللغة لدى الطفل قبل سن الثالثة، وكذلك عند البالغين الذين يواجهون صعوبات في النطق أو الفهم.' },
+      ],
+    },
+  },
+  orthopediste: {
+    fr: {
+      apropos: 'Un orthopédiste est un médecin spécialisé dans le diagnostic et le traitement des troubles de l\'appareil locomoteur, y compris les articulations, les muscles et les os. Il est conseillé de consulter un orthopédiste lorsque l\'on ressent des douleurs ou des limitations de mouvement qui persistent ou s\'aggravent.',
+      faq: [
+        { q: 'Quelles sont les principales fonctions d\'un orthopédiste?', r: 'Un orthopédiste évalue et diagnostique les problèmes articulaires et musculaires, propose des traitements non chirurgicaux tels que des bandages, des appareillages ou des exercices physiques, et conseille sur la prévention des blessures.' },
+        { q: 'Comment peut-on identifier une blessure nécessitant un avis orthopédique?', r: 'Une douleur persistante ou une limitation de mouvement qui empêche les activités quotidiennes peuvent indiquer la nécessité d\'une consultation orthopédique.' },
+      ],
+    },
+    ar: {
+      apropos: 'يُعد أخصائي العظام متخصصًا في التشخيص والعلاج والوقاية من أمراض العظام والأنسجة المحيطة بها. يُفضل استشارة هذا النوع من الأطباء عند الشعور بألم في العظام أو الظهر أو المفاصل أو عندما يكون هناك خطر على صحة العظام.',
+      faq: [
+        { q: 'ما هي الأعراض التي يجب استشارة أخصائي العظام بشأنها؟', r: 'يجب التوجه إلى أخصائي العظام إذا شعرت بألم شديد في العظام أو المفاصل، أو إذا كان لديك تاريخ عائلي للعظام الضعيفة.' },
+        { q: 'كيف يمكن للاخصائي العظام المساعدة في تقوية العظام؟', r: 'يمكن للأخصائي العظام تقديم نصائح حول النظام الغذائي المناسب ونوعية الفيتامينات والمعادن التي يجب تناولها لتعزيز صحة العظام، كما يمكنه أيضاً تقديم تمارين محددة لتعزيز قوة العظام.' },
+      ],
+    },
+  },
+  orthodontiste: {
+    fr: {
+      apropos: 'Un orthodontiste est un professionnel de la santé dentaire spécialiste de l\'alignement et de l\'organisation des dents et de la maxillo-facial. Il est conseillé de consulter un orthodontiste lorsque les dents ne sont pas correctement alignées ou lorsque des problèmes de mordante persistent.',
+      faq: [
+        { q: 'Quelles sont les raisons pour lesquelles on doit consulter un orthodontiste ?', r: 'On doit consulter un orthodontiste si les dents sont espacées, superposées, ou si la mordante est incorrecte. Cela peut également être nécessaire pour corriger des problèmes de croissance de la mâchoire.' },
+        { q: 'Quels sont les signes d\'une mordante incorrecte ?', r: 'Une mordante incorrecte peut se manifester par des douleurs à la tête ou au visage, des difficultés pour mâcher ou boire, et une mauvaise apparence dentaire, comme des dents qui pointent vers l\'intérieur ou l\'extérieur.' },
+      ],
+    },
+    ar: {
+      apropos: 'أخصائي تقويم الأسنان هو مهني طبي متخصص في تقويم وتوجيه أوجه الأسنان واللثة لدى المرضى من جميع الأعمار. يُنصح بالاستشارة معه عند ظهور مشاكل في ترتيب الأسنان أو في وظيفتها أو في شكلها.',
+      faq: [
+        { q: 'متى يمكن أن أستشير أخصائي تقويم الأسنان؟', r: 'يمكن الاستشارة معه عند ظهور مشاكل في ترتيب الأسنان أو في وظيفتها أو في شكلها. يمكن أيضاً التوجه إليه لإجراء تقويم أسنان مبكر للأطفال بين 6 و 12 عامًا.' },
+        { q: 'ما هي الأجهزة التي يستخدمها أخصائي تقويم الأسنان؟', r: 'يستخدم أخصائي تقويم الأسنان أجهزة مثل الألواح والأسلاك والجسور لضبط وتحريك الأسنان. كما يستخدم الأجهزة الرقمية والبرامج الكمبيوترية لتحليل وتصميم خطط العلاج.' },
+      ],
+    },
+  },
+  pneumologue: {
+    fr: {
+      apropos: 'Le pneumologue est un médecin spécialisé dans le diagnostic, le traitement et la prévention des maladies respiratoires. Il est recommandé de consulter un pneumologue en cas de troubles respiratoires persistants ou récurrents.',
+      faq: [
+        { q: 'Quels sont les symptômes qui devraient m\'inciter à consulter un pneumologue ?', r: 'Il est prudent de consulter un pneumologue si vous souffrez de toux persistante, d\'oppression thoracique, d\'essoufflement, de fièvre récurrente ou de sifflement respiratoire.' },
+        { q: 'Quelles sont les principales maladies traitées par un pneumologue ?', r: 'Un pneumologue traite diverses maladies comme l\'asthme, la bronchite chronique, la pneumonie, l\'emphysème, ainsi que des problèmes de santé liés aux poumons tels que le tabagisme.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الأمراض الصدرية هو متخصص يعالج الأمراض التي تصيب الجهاز التنفسي، مثل الأور叹和你提到的“الأور叹”，看起来像是输入错误。假设你想表达的是关于呼吸系统疾病的医生，以下是你要求的格式内容： APROPOS: طبيب الأمراض الصدرية هو متخصص فيDiagnosis and treatment of diseases related to the respiratory system such as asthma and pneumonia. يُستشار هذا الطبيب عندما يواجه الشخص مشاكل في الجهاز التنفسي مثل صعوبة التنفس أو التهاب الحلق المستمر.',
+      faq: [
+        { q: 'هل يمكن لهذا الطبيب تشخيص أمراض الجهاز التنفسي فقط؟', r: 'لا، يمكنه أيضاً تقديم المشورة حول الوقاية من الأمراض التنفسية والتعليم حول كيفية العناية بالجهاز التنفسي.' },
+        { q: 'ما الذي يجب أن أفعله إذا لاحظت أعراض مثل السعال المستمر أو صعوبة التنفس؟', r: 'يجب استشارة طبيب الأمراض الصدرية إذا ظلت الأعراض لفترة طويلة أو إذا كانت تؤثر على جودة حياتك اليومية.' },
+      ],
+    },
+  },
+  podologue: {
+    fr: {
+      apropos: 'Le podologue est un professionnel de santé spécialisé dans le diagnostic et le traitement des troubles de la marche et des pieds. Il est conseillé de consulter un podologue en cas de douleurs aux pieds, de blessures ou lorsqu\'on souhaite améliorer la posture et la mobilité.',
+      faq: [
+        { q: 'Quels sont les symptômes qui justifient de consulter un podologue?', r: 'Vous devriez consulter un podologue si vous éprouvez des douleurs, des engourdissements ou des modifications anormales dans l\'apparence de vos pieds.' },
+        { q: 'Peut-on consulter un podologue pour des problèmes de marche?', r: 'Oui, un podologue peut aider à corriger et à améliorer les problèmes de marche, qu\'ils soient dus à une mauvaise posture ou à des conditions comme l\'arthrite.' },
+      ],
+    },
+    ar: {
+      apropos: 'هو أخصائي أمراض القدم متخصص في التشخيص والعلاج للأمراض التي تصيب القدمين والركبتين. يُنصح بالاستعانة بهذا النوع من الأطباء عند الشعور بألم أو إصابة في القدمين أو الركبتين.',
+      faq: [
+        { q: 'هل يمكن أن أ去看阿拉伯文翻译结果： 关于：他是足病专科医生，专门治疗脚和膝盖的疾病。当出现脚或膝盖疼痛或受伤时，建议咨询此类医生。 Q1:我可以预约此类医生吗？', r: '当然可以，您可以通过诊所或医院的预约系统进行预约。 R2: 也可以直接联系医生或医疗机构进行咨询和预约。' },
+        { q: '这类医生能治疗哪些常见问题？ R1: 他们可以治疗脚踝扭伤、足底筋膜炎、足跟痛、脚趾变形等问题。', r: '也可以直接联系医生或医疗机构进行咨询和预约。 Q2:这类医生能治疗哪些常见问题？ R1: 他们可以治疗脚踝扭伤、足底筋膜炎、足跟痛、脚趾变形等问题。 R2: 此外，他们还能处理与关节相关的各种疾病，如膝盖炎等。' },
+      ],
+    },
+  },
+  rhumatologue: {
+    fr: {
+      apropos: 'Un rhumatologue est un médecin spécialisé dans le diagnostic et le traitement des maladies touchant les articulations, les muscles et les os. Il est conseillé de consulter ce spécialiste lorsqu\'on éprouve des douleurs articulaires persistantes ou des limitations de mouvement.',
+      faq: [
+        { q: 'Quels sont les symptômes courants qui pourraient indiquer le besoin de consulter un rhumatologue ?', r: 'Des douleurs articulaires récurrentes, une raideur matinale pouvant durer plus de 30 minutes et des nodules sous la peau sont des signes fréquents à ne pas ignorer.' },
+        { q: 'Peut-on consulter un rhumatologue sans prescription médicale ?', r: 'En Algérie, il est généralement possible de consulter un rhumatologue directement, sans prescription, pour un premier avis, mais un rendez-vous médical peut être nécessaire pour certains cas nécessitant un diagnostic plus approfondi.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب الروماتيزم هو متخصص يتعامل مع أمراض العظام والعضلات والألياف التيسية، مثل الروماتيزم والتهاب المفاصل. يجب استشارة هذا الطبيب عند الشعور بألم مستمر في العظام أو الأوتار أو التهاب في المفاصل.',
+      faq: [
+        { q: 'هل يمكن لطبيب الروماتيزم مساعدتي في علاج التهاب المفاصل؟', r: 'نعم، يمكن له مساعدتك في تشخيص وعلاج التهاب المفاصل. يتضمن العلاج عادة استخدام الأدوية والعلاجات التكميلية والتمارين الرياضية.' },
+        { q: 'كيف يمكنني الوقاية من أمراض الروماتيزم؟', r: 'الوقاية تشمل الحفاظ على وزن صحي، تناول طعام صحي، القيام بالتمارين الرياضية بانتظام، والابتعاد عن التدخين.' },
+      ],
+    },
+  },
+  'sage-femme': {
+    fr: {
+      apropos: 'La sage-femme joue un rôle essentiel dans le processus d\'accouchement et dans la prise en charge des femmes enceintes. Elle est consultée dès la confirmation de la grossesse jusqu\'au suivi post-natal.',
+      faq: [
+        { q: 'Quelle est la fonction principale d\'une sage-femme durant la grossesse?', r: 'La sage-femme évalue l\'état de santé de la future mère et de son fœtus, et offre des conseils sur la nutrition et le bien-être.' },
+        { q: 'Peut-on consulter une sage-femme si on n\'est pas enceinte?', r: 'Bien que la sage-femme soit principalement spécialisée dans le suivi des femmes enceintes, elle peut aussi conseiller sur la santé féminine en général et assister lors de certains examens gynécologiques.' },
+      ],
+    },
+    ar: {
+      apropos: 'تقدم القابلة خدماتها في مرحلة الحمل والولادة، وتعتبر عنصراً أساسياً في الرعاية الصحية الأولية. يجب استشارة القابلة خلال الحمل وفترة ما بعد الولادة لضمان صحة الأم والطفل.',
+      faq: [
+        { q: 'هل يمكن القابلة تشخيص مشاكل الحمل؟', r: 'لا، القابلة تستند إلى المساعدات الطبية لتشخيص أي مشاكل قد تواجه الحمل. R2: واجهة القابلة تشمل الرعاية التمريضية والدعم النفسي لامرأة الحمل.' },
+        { q: 'كيف يمكنني تحديد موعد مع القابلة؟ R1: يمكنك التواصل مع المستشفى أو المركز الصحي للحصول على مزيد من المعلومات حول كيفية تحديد المواعيد.', r: 'واجهة القابلة تشمل الرعاية التمريضية والدعم النفسي لامرأة الحمل. Q2: كيف يمكنني تحديد موعد مع القابلة؟ R1: يمكنك التواصل مع المستشفى أو المركز الصحي للحصول على مزيد من المعلومات حول كيفية تحديد المواعيد. R2: عادةً ما تكون المواعيد متاحة على مستوى الخدمات الصحية المحلية وفقًا للإمكانيات المتاحة.' },
+      ],
+    },
+  },
+  pharmacie: {
+    fr: {
+      apropos: 'La pharmacie joue un rôle crucial dans la prévention, le diagnostic initial et le suivi des maladies sous la supervision médicale. Elle est conseillée pour tout besoin en médicaments, que ce soit pour une prise en charge d\'une maladie existante ou pour la prévention de futurs problèmes de santé.',
+      faq: [
+        { q: 'Quelles sont les heures d\'ouverture d\'une pharmacie en Algérie ?', r: 'En Algérie, les pharmacies sont généralement ouvertes de 8h à 21h, du lundi au vendredi, et de 8h à 13h le samedi. Certaines restent ouvertes toute la nuit dans les zones urbaines et de forte population.' },
+        { q: 'Quels types de médicaments peut-on acheter sans ordonnance ?', r: 'En Algérie, les médicaments sur ordonnance ne peuvent être achetés qu\'après consultation d\'un médecin. Cependant, certains médicaments sur prescription peuvent être accessibles avec une ordonnance valide, tandis que d\'autres produits non处方药如感冒药、止痛药等可以在药店直接购买，但需注意不要超出推荐剂量。' },
+      ],
+    },
+    ar: {
+      apropos: 'صيدلية هي مؤسسة طبية تُقدم الأدوية وتقديم المشورة العامة حول الأدوية. يجب استشارة الصيدلية عند الحاجة إلى إعداد أو توضيح الوصفات الطبية أو عند البحث عن معلومات عامة حول الأدوية.',
+      faq: [
+        { q: 'هل يمكنني الحصول على معلومات عامة حول الأدوية من الصيدلية؟', r: 'نعم، يمكنك طلب معلومات عامة حول الأدوية وفوائدها وأعراض побّاعتها من الصيدلية.' },
+        { q: 'كيف يمكنني معرفة ما إذا كانت الأدوية التي أنقلها من الخارج صالحة للمستعمل؟', r: 'يجب استشارة الصيدلية للتحقق من صحة الأدوية المستوردة وإمكانية استخدامها بشكل آمن.' },
+      ],
+    },
+  },
+  urologue: {
+    fr: {
+      apropos: 'Un urologue est un médecin spécialisé dans la santé des reins, du système urinaire et des voies génitales chez les hommes et les femmes. Il est conseillé de consulter un urologue en cas de problèmes tels que l\'incontinence urinaire, les infections urinaires, la lithiase rénale ou la dysfonction érectile.',
+      faq: [
+        { q: 'Quels sont les symptômes courants qui nécessitent une consultation avec un urologue ?', r: 'Des douleurs récurrentes à l\'urination, une augmentation de la fréquence urinaire nocturne, des incontinences urinaires, et les troubles de l\'érection peuvent indiquer la nécessité d\'une consultation.' },
+        { q: 'Comment peut-on prévenir les problèmes d\'urologie ?', r: 'Une alimentation équilibrée, une hygiène personnelle correcte, une bonne hydratation et une activité physique régulière contribuent à prévenir de nombreux problèmes urologiques.' },
+      ],
+    },
+    ar: {
+      apropos: 'طبيب المسالك البولية هو متخصص في تشخيص وعلاج أمراض الجهاز البولي.u0004当他换行时，使用u0004标签保持格式。这意味着在转换为其他格式时，换行会被保留。以下是根据您的要求编写的阿拉伯语内容： APROPOS: طبيب المسالك البولية هو متخصص في تشخيص وعلاج أمراض الجهاز البولي. يُشجّع على استشارة هذا الطبيب عند الشك بأي مشاكل في الجهاز البولي أو عند الإصابة بأعراض مثل التشنجات البولية أو الفيضان البولي. u0004',
+      faq: [
+        { q: 'ما هي الأعراض الشائعة التي تشير إلى الحاجة لزيارة طبيب المسالك البولية؟', r: 'الأعراض الشائعة تشمل التشنجات البولية، الفيضان البولي، وجود الدم في البول، وجع البطن والظهر. u0004' },
+        { q: 'كم من الوقت يحتاج المريض عادةً للانتظار قبل مشاهدة طبيب المسالك البولية؟', r: 'الوقت المطلوب للانتظار يمكن أن يختلف حسب الحاجة، ولكن يُشجّع على الاتصال بالمكتب الطبي للحصول على معلومات دقيقة حول ترتيب المواعيد.' },
+      ],
+    },
+  },
 };

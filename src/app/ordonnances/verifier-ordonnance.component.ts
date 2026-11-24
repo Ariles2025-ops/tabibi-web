@@ -30,13 +30,13 @@ import { instantLisible } from '../partage/dates-lisibles';
         <ng-container [ngSwitch]="r.statut">
           <p *ngSwitchCase="'DELIVREE'" class="verif-delivree" style="color:var(--red);font-weight:600">
             <ng-container *ngIf="!ar">Déjà délivrée<ng-container *ngIf="dateLisible(r.delivreeLe)"> le {{ r.delivreeLe | date:'d MMMM yyyy' }}</ng-container> : cette ordonnance ne peut pas être délivrée une nouvelle fois.</ng-container>
-            <ng-container *ngIf="ar">سُلّمت من قبل<ng-container *ngIf="dateLisible(r.delivreeLe)"> بتاريخ <span dir="ltr">{{ r.delivreeLe | date:'dd/MM/yyyy' }}</span></ng-container>: لا يمكن تسليم هذه الوصفة مرة أخرى.</ng-container>
+            <ng-container *ngIf="ar">سبق صرفها<ng-container *ngIf="dateLisible(r.delivreeLe)"> في <span dir="ltr">{{ r.delivreeLe | date:'dd/MM/yyyy' }}</span></ng-container> : لا تصرفها مرة أخرى.</ng-container>
           </p>
           <p *ngSwitchCase="'ANNULEE'" class="verif-annulee" style="color:var(--red);font-weight:600">
-            {{ t('Annulée : cette ordonnance a été annulée par le médecin et ne doit pas être délivrée.', 'ملغاة: ألغى الطبيب هذه الوصفة ولا يجب تسليمها.') }}
+            {{ t('Annulée : cette ordonnance a été annulée par le médecin et ne doit pas être délivrée.', 'ألغاها الطبيب: لا تصرفها.') }}
           </p>
           <p *ngSwitchCase="'EXPIREE'" class="verif-expiree" style="color:var(--red);font-weight:600">
-            {{ t("Expirée : cette ordonnance n'est plus valable et ne doit pas être délivrée.", 'منتهية الصلاحية: لم تعد هذه الوصفة صالحة ولا يجب تسليمها.') }}
+            {{ t("Expirée : cette ordonnance n'est plus valable et ne doit pas être délivrée.", 'منتهية الصلاحية: الوصفة لم تعد صالحة، لا تصرفها.') }}
           </p>
           <ng-container *ngSwitchDefault>
             <p *ngIf="r.valide" style="color:var(--vert);font-weight:600">

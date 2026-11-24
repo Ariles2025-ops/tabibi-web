@@ -8,6 +8,7 @@ import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { LigneOrdonnance, OrdonnanceService } from '../ordonnances/ordonnance.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
+import { estEligibleOrdonnance } from './agenda-utils';
 import { MedecinService } from './medecin.service';
 import { PatientResume, PatientsService } from './patients.service';
 
@@ -111,7 +112,7 @@ export class NouvelleOrdonnanceComponent implements OnInit {
   /** Patients proposes, par nom : seuls ceux avec un RDV confirme ou honore (sinon l'API refuse en 403) ; un patient prerempli inconnu de la liste reste selectionnable. */
   options = computed<PatientResume[]>(() => {
     const eligibles = new Set(
-      this.rendezVous().filter((r) => r.statut === 'CONFIRME' || r.statut === 'HONORE').map((r) => r.patientId),
+      this.rendezVous().filter(estEligibleOrdonnance).map((r) => r.patientId),
     );
     const filtre = this.agendaCharge();
     const liste = this.patients().filter((p) => !filtre || eligibles.has(p.patientId)).sort((a, b) => a.nomComplet.localeCompare(b.nomComplet, 'fr'));
@@ -125,7 +126,7 @@ export class NouvelleOrdonnanceComponent implements OnInit {
   /** Rendez-vous confirmes ou honores (seuls acceptes par l'API) du patient choisi chez ce medecin, les plus recents d'abord. */
   rendezVousDuPatient = computed(() =>
     this.rendezVous()
-      .filter((r) => r.patientId === this.patientId() && (r.statut === 'CONFIRME' || r.statut === 'HONORE'))
+      .filter((r) => r.patientId === this.patientId() && estEligibleOrdonnance(r))
       .sort((a, b) => Date.parse(b.debut) - Date.parse(a.debut)),
   );
   lignes: LigneSaisie[] = [this.nouvelleLigne()];
@@ -194,7 +195,7 @@ export class NouvelleOrdonnanceComponent implements OnInit {
     this.enCours.set(true);
     this.erreur.set('');
     this.service.emettre({ patientId, lignes, ...(rendezVousId ? { rendezVousId } : {}) }).subscribe({
-      next: (o) => this.router.navigate(['/ordonnances', o.id]),
+      next: (o) => this.router.navigate(['/ordonnances', o.id], { state: { ordonnanceEmise: true } }),
       error: (e: HttpErrorResponse) => {
         this.enCours.set(false);
         if (e.status === 401) {

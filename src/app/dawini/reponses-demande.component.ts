@@ -6,7 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { instantLisible, trierParDateAncienneDabord } from '../partage/dates-lisibles';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
-import { Besoin, DawiniService, Reponse, formaterPrix, libelleDisponibilite, libelleStatutBesoin, libelleWilaya } from './dawini.service';
+import { Besoin, DawiniService, Reponse, estOuvert, formaterPrix, libelleDisponibilite, libelleStatutBesoin, libelleWilaya } from './dawini.service';
 
 /**
  * Reponses des pharmacies a l'une de mes demandes (GET /api/dawini/besoins/{id}/reponses, les plus anciennes
@@ -40,10 +40,10 @@ import { Besoin, DawiniService, Reponse, formaterPrix, libelleDisponibilite, lib
             </ng-container>
             <ng-container *ngIf="b.precision"><br>{{ b.precision }}</ng-container>
           </p>
-          <p *ngIf="b.statut === 'OUVERT' && !aConfirmer()" style="margin:0 0 16px">
+          <p *ngIf="estOuvert(b) && !aConfirmer()" style="margin:0 0 16px">
             <button type="button" class="bouton-secondaire" (click)="aConfirmer.set(true)" [disabled]="enCours()">{{ l.t('Clôturer la demande', 'إغلاق الطلب') }}</button>
           </p>
-          <div *ngIf="b.statut === 'OUVERT' && aConfirmer()" role="group" [attr.aria-label]="l.t('Confirmer la clôture', 'تأكيد الإغلاق')"
+          <div *ngIf="estOuvert(b) && aConfirmer()" role="group" [attr.aria-label]="l.t('Confirmer la clôture', 'تأكيد الإغلاق')"
                style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 16px">
             <span style="font-weight:600">{{ l.t('Clôturer cette demande ? Les pharmacies ne la verront plus.', 'إغلاق هذا الطلب؟ لن تراه الصيدليات بعد الآن.') }}</span>
             <button type="button" class="bouton" (click)="cloturer()" [disabled]="enCours()">{{ enCours() ? l.t('Clôture…', 'جارٍ الإغلاق…') : l.t('Oui, clôturer', 'نعم، أغلق') }}</button>
@@ -156,6 +156,8 @@ export class ReponsesDemandeComponent implements OnInit {
     });
   }
 
+  estOuvert = estOuvert;
+
   libelleStatut(statut: string): string {
     return libelleStatutBesoin(statut, this.l.ar());
   }
@@ -165,7 +167,7 @@ export class ReponsesDemandeComponent implements OnInit {
   }
 
   prix(prixDa: number | null): string {
-    return formaterPrix(prixDa);
+    return formaterPrix(prixDa, this.l.ar());
   }
 
   /** Retrouve la demande dans mes demandes (statut, bouton de cloture) ; a defaut, seules les reponses s'affichent. */

@@ -91,4 +91,20 @@ describe('SyntheseAvisComponent', () => {
     expect(texte()).toContain('Service indisponible.');
     expect(texte()).not.toContain('4,5 / 5');
   });
+
+  it('en arabe, un échec de chargement affiche « الآراء غير متاحة حاليًا. » sans le message français de l API', () => {
+    service.synthese.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500, error: { erreur: 'Service indisponible.' } })));
+    fixture.componentRef.setInput('arabe', true);
+    fixture.detectChanges();
+
+    expect(texte()).toContain('الآراء غير متاحة حاليًا.');
+    expect(texte()).not.toContain('Service indisponible.');
+  });
+
+  it('en français, sans message de l API, affiche « Avis indisponibles pour le moment. », comme l appli', () => {
+    service.synthese.and.returnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
+    fixture.detectChanges();
+
+    expect(texte()).toContain('Avis indisponibles pour le moment.');
+  });
 });

@@ -119,7 +119,7 @@ describe('MesTeleconsultationsComponent', () => {
     expect(texte()).not.toContain('Rejoindre la téléconsultation');
     expect(texte()).toContain('Planifiée');
     expect(texte()).toContain('Dr Amina Belkacem');
-    expect(texte()).toContain('Rendez-vous du');
+    expect(texte()).toContain('Rendez-vous le');
     expect(texte()).toContain('7 décembre 2026');
   });
 
@@ -139,6 +139,26 @@ describe('MesTeleconsultationsComponent', () => {
     expect(lien.getAttribute('href')).toBe(CONSENTIE.lienSalle);
     expect(lien.getAttribute('rel')).toBe('noopener');
     expect(texte()).toContain('consentement donné le');
+  });
+
+  it('confirme « Consentement enregistré » apres le consentement, comme l\'appli, et rien avant', async () => {
+    service.consentir.and.returnValue(of(CONSENTIE));
+    await afficher();
+    expect(texte()).not.toContain('Consentement enregistré');
+
+    bouton('Je donne mon consentement')!.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.consentement-enregistre')?.getAttribute('role')).toBe('status');
+    expect(texte()).toContain('Consentement enregistré');
+  });
+
+  it('un consentement refuse (500) n\'affiche pas la confirmation', async () => {
+    service.consentir.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    await afficher();
+    bouton('Je donne mon consentement')!.click();
+    fixture.detectChanges();
+    expect(texte()).not.toContain('Consentement enregistré');
   });
 
   it('affiche directement le lien quand le consentement est deja donne, mais pas une fois terminee', async () => {
@@ -187,7 +207,7 @@ describe('MesTeleconsultationsComponent', () => {
     fixture.componentInstance.charger();
     fixture.detectChanges();
     expect(lienSalle()).toBeNull();
-    expect(texte()).toContain('Le créneau de cette téléconsultation est passé');
+    expect(texte()).toContain('Le créneau de ce rendez-vous est passé');
   });
 
   it('affiche le motif { erreur } d un 409 au consentement et recharge la liste', async () => {
@@ -236,7 +256,7 @@ describe('MesTeleconsultationsComponent', () => {
     await afficher();
 
     expect(texte()).toContain('Téléconsultation proposée le');
-    expect(texte()).not.toContain('Rendez-vous du');
+    expect(texte()).not.toContain('Rendez-vous le');
   });
 
   it('classe les téléconsultations sans date lisible en fin de liste', async () => {
@@ -283,6 +303,15 @@ describe('MesTeleconsultationsComponent', () => {
       expect(bouton('أوافق')).toBeDefined();
       expect(texte()).not.toContain('Je donne mon consentement');
       expect(texte()).not.toContain('Planifiée');
+    });
+
+    it('confirme le consentement en arabe', async () => {
+      service.consentir.and.returnValue(of(CONSENTIE));
+      await afficher();
+      bouton('أوافق')!.click();
+      fixture.detectChanges();
+      expect(texte()).toContain('تم تسجيل موافقتك');
+      expect(texte()).not.toContain('Consentement enregistré');
     });
 
     it('explique en arabe qu\'une teleconsultation terminee ou annulee n\'a plus d\'action', async () => {

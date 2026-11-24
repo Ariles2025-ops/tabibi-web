@@ -2,6 +2,7 @@ import { Component, LOCALE_ID, OnInit, computed, inject, signal } from '@angular
 import { CommonModule, formatDate } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { DeplacerRendezVousComponent } from '../rendezvous/deplacer-rendez-vous.component';
 import { AnnuaireService, Creneau } from '../annuaire/annuaire.service';
@@ -13,7 +14,7 @@ import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { abregerIdentifiant } from '../messagerie/messagerie.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
-import { libelleStatutRendezVous, libelleStatutRendezVousAr } from '../rendezvous/statut-rendez-vous';
+import { estAbsent, libelleStatutRendezVous, libelleStatutRendezVousAr } from '../rendezvous/statut-rendez-vous';
 import { Rattachement, SecretaireService } from './secretaire.service';
 
 /**
@@ -70,7 +71,7 @@ import { Rattachement, SecretaireService } from './secretaire.service';
                 style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:var(--r12);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
               <div>
                 <strong style="color:var(--ink)">{{ r.debut | date:'HH:mm' }}</strong>
-                <span class="badge-statut" [style.background]="r.statut === 'ABSENT' ? 'var(--red-l)' : 'var(--blue-l)'" [style.color]="r.statut === 'ABSENT' ? 'var(--red)' : 'var(--blue-d)'"
+                <span class="badge-statut" [style.background]="estAbsent(r.statut) ? 'var(--red-l)' : 'var(--blue-l)'" [style.color]="estAbsent(r.statut) ? 'var(--red)' : 'var(--blue-d)'"
                       style="display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-inline-start:6px">{{ libelleStatut(r.statut) }}</span><br>
                 <span style="color:var(--text2)">{{ r.nomPatient || nom(r.patientId) }}</span>
                 <span *ngIf="r.source === 'TELEPHONE'" style="margin-inline-start:6px;color:var(--text3);font-size:.8rem">📞</span>
@@ -126,6 +127,8 @@ export class EspaceSecretaireComponent implements OnInit {
   private annuaire = inject(AnnuaireService);
   private patients = inject(PatientsService);
   private locale = inject(LOCALE_ID);
+  /** Vrai si l'on arrive de l'acceptation d'une invitation (etat de navigation) : la page le confirme, comme l'appli. */
+  private invitationAcceptee = inject(Router).getCurrentNavigation()?.extras.state?.['invitationAcceptee'] === true;
 
   rattachements = signal<Rattachement[]>([]);
   /** Nom complet des medecins (annuaire), par identifiant ; a defaut, un identifiant abrege est affiche. */
@@ -176,13 +179,16 @@ export class EspaceSecretaireComponent implements OnInit {
         this.charge.set(false);
         // Un seul cabinet : il est choisi d'office.
         if (liste.length === 1) this.choisir(liste[0].medecinId);
+        if (this.invitationAcceptee) {
+          this.succes.set(this.l.t('Invitation acceptée : votre espace secrétaire est ouvert.', 'تم قبول الدعوة: تم فتح فضاء السكرتارية.'));
+        }
       },
       error: (e: HttpErrorResponse) => {
         this.charge.set(false);
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.l.t('Cette page est réservée aux secrétaires.', 'هذه الصفحة مخصصة للسكرتارية.'));
+          this.erreur.set(this.l.t('Cette page est réservée aux secrétaires.', 'هذه الصفحة مخصّصة للسكرتارية.'));
         } else {
           this.erreur.set(e.error?.erreur ?? this.l.t('Impossible de charger vos cabinets.', 'تعذّر تحميل عياداتك.'));
         }
@@ -224,6 +230,7 @@ export class EspaceSecretaireComponent implements OnInit {
 
   /** CONFIRME ou RESERVE : actions proposees (voir agenda-utils). */
   estConfirme = estConfirme;
+  estAbsent = estAbsent;
 
   peutAnnulerCabinet(r: RendezVous): boolean {
     return peutAnnulerCabinet(r, Date.now());

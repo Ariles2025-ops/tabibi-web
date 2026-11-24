@@ -1,5 +1,5 @@
 import { RendezVous } from '../rendezvous/rendezvous.service';
-import { cleJour, instantAlger, valeurDateHeureLocale, estConfirme, peutAnnulerCabinet, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation } from './agenda-utils';
+import { cleJour, instantAlger, valeurDateHeureLocale, estConfirme, estEligibleOrdonnance, peutAnnulerCabinet, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation } from './agenda-utils';
 
 /** Statut RESERVE (reservation du patient) traite comme CONFIRME : les boutons restent visibles. */
 describe('agenda-utils : RESERVE traite comme CONFIRME', () => {
@@ -54,5 +54,19 @@ describe('agenda-utils : heure d\'Algérie indépendante du fuseau du navigateur
 
   it('valeurDateHeureLocale affiche l\'heure d\'Algérie', () => {
     expect(valeurDateHeureLocale(new Date('2026-07-15T08:00:00Z'))).toBe('2026-07-15T09:00');
+  });
+});
+
+describe('agenda-utils : statuts sans tenir compte de la casse', () => {
+  it('estConfirme accepte « confirme » et « Reserve » avec espaces', () => {
+    expect(estConfirme({ statut: 'confirme' })).toBeTrue();
+    expect(estConfirme({ statut: ' Reserve ' })).toBeTrue();
+    expect(estConfirme({ statut: 'honore' })).toBeFalse();
+  });
+
+  it('estEligibleOrdonnance : CONFIRME ou HONORE seulement, casse ignoree', () => {
+    expect(estEligibleOrdonnance({ statut: 'honore' })).toBeTrue();
+    expect(estEligibleOrdonnance({ statut: 'Confirme' })).toBeTrue();
+    for (const s of ['ANNULE', 'ABSENT', 'RESERVE', '']) expect(estEligibleOrdonnance({ statut: s })).withContext(s).toBeFalse();
   });
 });

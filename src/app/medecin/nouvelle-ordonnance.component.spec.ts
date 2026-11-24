@@ -123,7 +123,7 @@ describe('NouvelleOrdonnanceComponent', () => {
       rendezVousId: 'r1',
       lignes: [{ medicament: 'Paracétamol 1 g', posologie: '', duree: '' }],
     });
-    expect(navigation).toHaveBeenCalledWith(['/ordonnances', 'o1']);
+    expect(navigation).toHaveBeenCalledWith(['/ordonnances', 'o1'], { state: { ordonnanceEmise: true } });
   });
 
   it("affiche le message de l'API (403 ou 409) au lieu d'un texte generique", async () => {

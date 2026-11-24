@@ -8,6 +8,7 @@ import { AuthService } from '../auth/auth.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { RendezVous, RendezVousService } from '../rendezvous/rendezvous.service';
+import { estHonore } from '../rendezvous/statut-rendez-vous';
 import { AvisService, LONGUEUR_MAX_COMMENTAIRE, NOTE_MAX, NOTE_MIN } from './avis.service';
 
 /** Notes proposees, de 1 a 5. */
@@ -54,7 +55,7 @@ const NOTES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, i) => NOTE_MIN
               <label *ngFor="let n of notes" class="note" [class.note-choisie]="note === n" [attr.aria-label]="l.ar() ? 'التقييم ' + n + ' من 5' : 'Note ' + n + ' sur 5'">
                 <input type="radio" name="note" [value]="n" [(ngModel)]="note">{{ n }}
               </label>
-              <span style="color:var(--text3);font-size:.9rem;margin-left:4px"><span [attr.dir]="l.ar() ? 'ltr' : null">{{ note !== null ? note + ' / 5' : l.t('Choisissez une note de 1 à 5', 'اختر تقييمًا من 1 إلى 5') }}</span></span>
+              <span style="color:var(--text3);font-size:.9rem;margin-inline-start:4px"><span [attr.dir]="l.ar() ? 'ltr' : null">{{ note !== null ? note + ' / 5' : l.t('Choisissez une note de 1 à 5', 'اختر تقييمًا من 1 إلى 5') }}</span></span>
             </div>
           </fieldset>
 
@@ -149,7 +150,7 @@ export class DeposerAvisComponent implements OnInit {
   /** Vrai si le rendez-vous est retrouve et n'est pas encore honore : l'avis n'est pas encore possible. */
   nonHonore(): boolean {
     const r = this.rendezVous();
-    return r !== null && r.statut !== 'HONORE';
+    return r !== null && !estHonore(r.statut);
   }
 
   commentaireTropLong(): boolean {

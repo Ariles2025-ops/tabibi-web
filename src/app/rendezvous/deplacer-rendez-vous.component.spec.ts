@@ -5,7 +5,7 @@ import localeFr from '@angular/common/locales/fr';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { Creneau } from '../annuaire/annuaire.service';
-import { DeplacerRendezVousComponent, MESSAGE_CRENEAU_PRIS } from './deplacer-rendez-vous.component';
+import { DeplacerRendezVousComponent, MESSAGE_CRENEAU_PRIS, MESSAGE_CRENEAU_PRIS_CABINET } from './deplacer-rendez-vous.component';
 import { RendezVous } from './rendezvous.service';
 
 const RDV: RendezVous = { id: 'r1', patientId: 'p1', medecinId: 'm1', debut: '2099-01-05T09:00:00Z', statut: 'CONFIRME', creneauId: 'c1' };
@@ -42,6 +42,22 @@ describe('DeplacerRendezVousComponent', () => {
     f.componentInstance.confirmer(creneau('c2'));
     expect(f.componentInstance.erreur()).toBe(MESSAGE_CRENEAU_PRIS);
     expect(f.componentInstance.libres()).toEqual([]);
+  });
+
+  it("cote cabinet (medecin, secretaire), le message ne parle pas de « votre » rendez-vous, comme l'appli", () => {
+    const f = creer(() => throwError(() => new HttpErrorResponse({ status: 409 })));
+    f.componentRef.setInput('avertirPatient', true);
+    f.componentInstance.confirmer(creneau('c2'));
+    expect(f.componentInstance.erreur()).toBe(MESSAGE_CRENEAU_PRIS_CABINET);
+    expect(f.componentInstance.erreur()).not.toContain('Votre');
+  });
+
+  it('cote cabinet en arabe : « لم يتغيّر الموعد » et non « موعدك »', () => {
+    const f = creer(() => throwError(() => new HttpErrorResponse({ status: 409 })));
+    f.componentRef.setInput('arabe', true);
+    f.componentRef.setInput('avertirPatient', true);
+    f.componentInstance.confirmer(creneau('c2'));
+    expect(f.componentInstance.erreur()).toBe('هذا الموعد حُجز للتوّ. لم يتغيّر الموعد: اختر موعدًا آخر.');
   });
 
   it('affiche le panneau et le message « creneau pris » en arabe quand l ecran est en arabe', () => {

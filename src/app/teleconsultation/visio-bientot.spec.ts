@@ -40,5 +40,7 @@ describe('VisioBientotComponent : langue', () => {
     expect(el.querySelector('main')?.getAttribute('dir')).toBe('rtl');
     expect(el.querySelector('.visio-texte')?.textContent).toContain('نداويك');
     expect(el.textContent).not.toContain('Téléconsultation');
+    // Même graphie que l'appli : « بُعد » (avec la damma).
+    expect(el.querySelector('h1')?.textContent).toContain('الاستشارة عن بُعد');
   });
 });

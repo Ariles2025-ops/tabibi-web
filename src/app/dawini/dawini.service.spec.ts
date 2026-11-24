@@ -138,6 +138,9 @@ describe('DawiniService', () => {
       expect(formaterPrix(0)).toBe('0 DA');
       expect(formaterPrix(null)).toBe('');
       expect(formaterPrix(undefined)).toBe('');
+      expect(formaterPrix(-5)).toBe('');
+      expect(formaterPrix(850, true)).toBe('850 دج');
+      expect(formaterPrix(1250, true)).toBe('1 250 دج');
     });
 
     it('traduit le statut d un besoin et accorde le nombre de reponses', () => {

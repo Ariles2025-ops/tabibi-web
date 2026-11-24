@@ -92,7 +92,7 @@ export class RdvTelephoneComponent {
         } else if (e.status === 404) this.api.rdvTelephone.set(false); // route absente (404 sans corps) : le bouton disparait, sans erreur
         else if (e.status === 401) this.auth.seConnecter();
         else if (e.status === 403) this.erreur.set(this.message403());
-        else if (e.status === 409) this.erreur.set(this.l.t('Ce créneau vient d’être pris.', 'تم حجز هذا الموعد للتو.'));
+        else if (e.status === 409) this.erreur.set(this.l.t('Ce créneau vient d’être pris.', 'هذا الموعد حُجز للتوّ.'));
         else this.erreur.set(e.error?.erreur ?? this.l.t("L'enregistrement a échoué, veuillez réessayer.", 'فشل التسجيل، حاول مجددًا.'));
       },
     });

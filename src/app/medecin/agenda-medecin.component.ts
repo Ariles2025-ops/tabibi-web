@@ -9,7 +9,7 @@ import { AuthService } from '../auth/auth.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { RendezVous } from '../rendezvous/rendezvous.service';
-import { estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from '../rendezvous/statut-rendez-vous';
+import { estAbsent, estAnnule, libelleStatutRendezVous, libelleStatutRendezVousAr } from '../rendezvous/statut-rendez-vous';
 import { TeleconsultationService } from '../teleconsultation/teleconsultation.service';
 import { VISIO_ACTIVE } from '../lancement';
 import { ActionEnCours, estConfirme, peutAnnulerCabinet, peutHonorer, peutMarquerAbsent, peutProposerTeleconsultation, rendezVousAVenir, rendezVousPasses, styleOnglet } from './agenda-utils';
@@ -62,10 +62,10 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
               style="background:#fff;border:1px solid var(--border);border-radius:var(--r12);box-shadow:var(--s1);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
             <div>
               <strong style="color:var(--ink)"><i class="fa fa-clock fa-xs" style="color:var(--blue)"></i> {{ r.debut | date:'HH:mm' }}</strong>
-              <span class="badge-statut" [style.background]="r.statut === 'ABSENT' ? 'var(--red-l)' : 'var(--blue-l)'" [style.color]="r.statut === 'ABSENT' ? 'var(--red)' : 'var(--blue-d)'"
-                    style="display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-left:6px">{{ libelleStatut(r.statut) }}</span><br>
+              <span class="badge-statut" [style.background]="estAbsent(r.statut) ? 'var(--red-l)' : 'var(--blue-l)'" [style.color]="estAbsent(r.statut) ? 'var(--red)' : 'var(--blue-d)'"
+                    style="display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-inline-start:6px">{{ libelleStatut(r.statut) }}</span><br>
               <span style="color:var(--text2)"><i class="fa fa-user fa-xs"></i> {{ r.nomPatient || nom(r.patientId) }}</span>
-              <a *ngIf="r.telephonePatient || telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-left:8px;text-decoration:none">
+              <a *ngIf="r.telephonePatient || telephone(r.patientId) as tel" [href]="'tel:' + tel" style="color:var(--text3);margin-inline-start:8px;text-decoration:none">
                 <i class="fa fa-phone fa-xs"></i> {{ tel }}
               </a>
             </div>
@@ -197,7 +197,7 @@ export class AgendaMedecinComponent implements OnInit {
         if (e.status === 401) {
           this.auth.seConnecter();
         } else if (e.status === 403) {
-          this.erreur.set(this.l.t('Cette page est réservée aux médecins.', 'هذه الصفحة مخصصة للأطباء.'));
+          this.erreur.set(this.l.t('Cette page est réservée aux médecins.', 'هذه الصفحة مخصّصة للأطباء.'));
         } else {
           this.erreur.set(e.error?.erreur ?? this.l.t("Impossible de charger l'agenda.", 'تعذّر تحميل المواعيد.'));
         }
@@ -220,6 +220,7 @@ export class AgendaMedecinComponent implements OnInit {
 
   /** CONFIRME ou RESERVE : actions proposees (voir agenda-utils). */
   estConfirme = estConfirme;
+  estAbsent = estAbsent;
 
   peutAnnulerCabinet(r: RendezVous): boolean {
     return peutAnnulerCabinet(r, Date.now());
@@ -350,8 +351,15 @@ export class AgendaMedecinComponent implements OnInit {
   }
 
   /** Ordonnance possible sauf rendez-vous annule (ANNULE ou ANNULEE), patient absent ou rendez-vous pris par telephone (sans compte patient). */
-  peutRedigerOrdonnance(r: { statut: string; source?: string | null }): boolean {
-    return !estAnnule(r.statut) && r.statut !== 'ABSENT' && r.source !== 'TELEPHONE';
+  peutRedigerOrdonnance(r: { statut: string; source?: string | null; patientId?: string | null }): boolean {
+    // Comme `peutRedigerOrdonnance` de l'appli : statut et source lus sans tenir compte de la casse ni des espaces,
+    // et pas de lien sans patient (l'appli exige aussi un patientId).
+    return (
+      !estAnnule((r.statut ?? '').trim()) &&
+      !estAbsent(r.statut) &&
+      (r.source ?? '').trim().toUpperCase() !== 'TELEPHONE' &&
+      !!(r.patientId ?? '').toString().trim()
+    );
   }
 
   libelleStatut(statut: string): string {

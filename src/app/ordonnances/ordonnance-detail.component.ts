@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
 import { RoleService } from '../auth/role.service';
@@ -9,7 +9,7 @@ import { ProfilService } from '../moi/profil.service';
 import { Ordonnance, OrdonnanceService } from './ordonnance.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
-import { libelleStatutOrdonnance, libelleStatutOrdonnanceAr } from './statut-ordonnance';
+import { estStatutOrdonnance, libelleStatutOrdonnance, libelleStatutOrdonnanceAr } from './statut-ordonnance';
 import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.component';
 import { instantLisible } from '../partage/dates-lisibles';
 
@@ -26,6 +26,7 @@ import { instantLisible } from '../partage/dates-lisibles';
         <app-selecteur-langue />
       </div>
 
+      <p *ngIf="emise()" class="ordonnance-emise sans-impression" role="status" style="margin:0 0 16px;color:var(--vert);font-weight:600">{{ l.t('Ordonnance émise.', 'تم إصدار الوصفة.') }}</p>
       <p *ngIf="charge()">{{ l.t('Chargement…', 'جارٍ التحميل…') }}</p>
       <p *ngIf="erreur()" style="color:#b3261e">{{ erreur() }}</p>
 
@@ -36,8 +37,8 @@ import { instantLisible } from '../partage/dates-lisibles';
             <p style="color:var(--text3);margin:0">
               <ng-container *ngIf="dateLisible(o.emiseLe); else emiseInconnue">{{ l.t('Émise le', 'صدرت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.emiseLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span></ng-container><ng-template #emiseInconnue>{{ l.t('Date inconnue', 'تاريخ غير معروف') }}</ng-template> · <app-badge-statut-ordonnance [statut]="o.statut" [arabe]="l.ar()" />
             </p>
-            <p *ngIf="o.statut === 'ANNULEE'" style="color:var(--red);margin:4px 0 0">{{ l.t('Annulée par le médecin', 'ألغاها الطبيب') }}<ng-container *ngIf="o.motifAnnulation"> : {{ o.motifAnnulation }}</ng-container></p>
-            <p *ngIf="o.statut === 'DELIVREE'" style="color:var(--text2);margin:4px 0 0">{{ l.t('Délivrée en pharmacie', 'صُرفت في الصيدلية') }}<ng-container *ngIf="dateLisible(o.delivreeLe)">{{ l.t(' le ', ' في ') }}<span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.delivreeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></ng-container></p>
+            <p *ngIf="est(o.statut, 'ANNULEE')" style="color:var(--red);margin:4px 0 0">{{ l.t('Annulée par le médecin', 'ألغاها الطبيب') }}<ng-container *ngIf="o.motifAnnulation"> : {{ o.motifAnnulation }}</ng-container></p>
+            <p *ngIf="est(o.statut, 'DELIVREE')" style="color:var(--text2);margin:4px 0 0">{{ l.t('Délivrée en pharmacie', 'صُرفت في الصيدلية') }}<ng-container *ngIf="dateLisible(o.delivreeLe)">{{ l.t(' le ', ' في ') }}<span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.delivreeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></ng-container></p>
             <p style="color:var(--text3);margin:4px 0 0">
               {{ l.t('Praticien', 'الممارس') }} : {{ medecin()?.nomComplet ?? l.t('Votre médecin', 'طبيبك') }}
               <ng-container *ngIf="nomPatient()"><br>{{ l.t('Patient', 'المريض') }} : {{ nomPatient() }}</ng-container>
@@ -91,6 +92,8 @@ export class OrdonnanceDetailComponent implements OnInit {
   /** Vrai si la date est lisible (sinon « Date inconnue », comme dans l'appli). */
   dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
   private route = inject(ActivatedRoute);
+  /** Vrai juste apres l'emission par le medecin (« Ordonnance émise. », comme l'appli) ; jamais apres un rechargement. */
+  emise = signal(inject(Router).getCurrentNavigation()?.extras.state?.['ordonnanceEmise'] === true);
   private auth = inject(AuthService);
   private service = inject(OrdonnanceService);
   private annuaire = inject(AnnuaireService);
@@ -140,6 +143,8 @@ export class OrdonnanceDetailComponent implements OnInit {
       this.codeCopie.set(false);
     }
   }
+
+  readonly est = estStatutOrdonnance;
 
   libelleStatut(statut: string): string {
     return this.l.ar() ? libelleStatutOrdonnanceAr(statut) : libelleStatutOrdonnance(statut);

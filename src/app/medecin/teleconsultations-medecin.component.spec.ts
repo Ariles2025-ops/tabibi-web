@@ -219,7 +219,7 @@ describe('TeleconsultationsMedecinComponent', () => {
     it('traduit le message d erreur 403', () => {
       service.duMedecin.and.returnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
       fixture.detectChanges();
-      expect(texte()).toContain('هذه الصفحة مخصصة للأطباء.');
+      expect(texte()).toContain('هذه الصفحة مخصّصة للأطباء.');
     });
   });
 });

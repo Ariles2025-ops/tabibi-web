@@ -57,7 +57,14 @@ export function rendezVousPasses(liste: RendezVous[], maintenant = Date.now()): 
  * comme confirme — les actions (honorer, absent, annuler) restent proposees au medecin et a la secretaire.
  */
 export function estConfirme(r: { statut: string }): boolean {
-  return r.statut === 'CONFIRME' || r.statut === 'RESERVE';
+  const s = (r.statut ?? '').trim().toUpperCase();
+  return s === 'CONFIRME' || s === 'RESERVE';
+}
+
+/** Rendez-vous sur lequel on peut rediger une ordonnance : CONFIRME ou HONORE, sans tenir compte de la casse (comme l'appli). */
+export function estEligibleOrdonnance(r: { statut: string }): boolean {
+  const s = (r.statut ?? '').trim().toUpperCase();
+  return s === 'CONFIRME' || s === 'HONORE';
 }
 
 /** Un rendez-vous ne peut etre marque honore qu'une fois commence, et s'il est confirme. */

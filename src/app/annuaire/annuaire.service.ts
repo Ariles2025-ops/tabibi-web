@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ConfigService } from '../config/config.service';
 
 export interface Medecin {
@@ -20,6 +20,9 @@ export interface Medecin {
   presentation?: string | null;
   langues?: string[] | null;
 }
+
+/** Une page de medecins et le nombre total de resultats (X-Total-Count). */
+export interface PageMedecins { medecins: Medecin[]; total: number; }
 
 /** Commune renvoyee par GET /api/medecins/communes. */
 export interface CommuneApi { slug: string; nom: string; nombre: number; }
@@ -52,6 +55,23 @@ export class AnnuaireService {
     if (q) params = params.set('q', q);
     if (commune) params = params.set('commune', commune);
     return this.http.get<Medecin[]>(`${this.base}/api/medecins`, { params });
+  }
+
+  /** Une page de resultats (page 0 = premiere) avec le total reel lu dans l'en-tete X-Total-Count (repli : taille de la page). */
+  rechercherPage(specialite?: string, wilaya?: string, q?: string, commune?: string, page = 0): Observable<PageMedecins> {
+    let params = new HttpParams();
+    if (specialite) params = params.set('specialite', specialite);
+    if (wilaya) params = params.set('wilaya', wilaya);
+    if (q) params = params.set('q', q);
+    if (commune) params = params.set('commune', commune);
+    if (page > 0) params = params.set('page', String(page));
+    return this.http.get<Medecin[]>(`${this.base}/api/medecins`, { params, observe: 'response' }).pipe(
+      map((r) => {
+        const medecins = r.body ?? [];
+        const total = Number(r.headers.get('X-Total-Count'));
+        return { medecins, total: Number.isFinite(total) && r.headers.has('X-Total-Count') ? total : medecins.length };
+      }),
+    );
   }
 
   /** Communes (>= 3 praticiens) d'une specialite dans une wilaya : GET /api/medecins/communes. */

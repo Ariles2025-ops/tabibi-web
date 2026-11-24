@@ -80,7 +80,7 @@ import {
         <div class="seo-entete">
           <h2>{{ sousTitre }}</h2>
           <span *ngIf="!charge() && medecins().length" class="seo-nb">
-            {{ pharmacie ? t.nombrePharma(medecins().length) : t.nombre(medecins().length) }}
+            {{ pharmacie ? t.nombrePharma(totalAffiche()) : t.nombre(totalAffiche()) }}
           </span>
         </div>
         <p *ngIf="charge()" class="seo-muet">{{ pharmacie ? t.chargementPharma : t.chargement }}</p>
@@ -151,7 +151,7 @@ import {
         <details><summary>{{ t.q1(cible) }}</summary><p>{{ t.r1 }}</p></details>
         <details><summary>{{ t.q2 }}</summary><p>{{ t.r2 }}</p></details>
         <details><summary>{{ t.q3 }}</summary>
-          <p>{{ t.r3 }} <a routerLink="/praticien">{{ t.praticien }}</a></p></details>
+          <p>{{ t.r3 }} <a [routerLink]="p + '/praticien'">{{ t.praticien }}</a></p></details>
       </section>
     </main>
   `,
@@ -221,6 +221,10 @@ export class AnnuaireSeoComponent implements OnInit {
   communeSlug = '';
   nomCommune = '';
   communesListe: Commune[] = [];
+  /** Vrai nombre de praticiens de la commune (0 hors page commune) ; la liste affichee est plafonnee par l'API. */
+  totalCommune = 0;
+
+  totalAffiche(): number { return this.totalCommune || this.medecins().length; }
   t2 = TEXTES_COMMUNE.fr;
 
   /** Langue de la page (donnee de route) : '' en francais, '/ar' en arabe. */
@@ -284,6 +288,7 @@ export class AnnuaireSeoComponent implements OnInit {
     this.communeSlug = communeSlug || '';
     this.nomCommune = '';
     this.communesListe = [];
+    this.totalCommune = 0;
     this.specialite = specSlug ? SPECIALITES_SEO.find((s) => s.slug === specSlug) ?? null : null;
     this.wilaya = wilSlug ? WILAYAS_SEO.find((w) => w.slug === wilSlug) ?? null : null;
     this.introuvable = (!!specSlug && !this.specialite) || (!!wilSlug && !this.wilaya)
@@ -372,6 +377,10 @@ export class AnnuaireSeoComponent implements OnInit {
         next: ([liste, communes]) => {
           if (avecCommunes) this.appliquerCommunes(liste, communes, s!, w!, chemin);
           else this.medecins.set(liste);
+          // Page specialite x wilaya sans aucun praticien : pas indexable (et absente du plan du site).
+          if (s && w && !this.communeSlug && !this.introuvable && liste.length === 0) {
+            this.meta.updateTag({ name: 'robots', content: 'noindex, follow' });
+          }
           this.charge.set(false);
           this.donneesStructurees(this.cheminLd);
         },
@@ -406,14 +415,17 @@ export class AnnuaireSeoComponent implements OnInit {
       nom: this.communesListe.find((c) => c.slug === this.communeSlug)?.nom || gens[0].ville.trim(),
     };
     this.nomCommune = commune.nom;
+    // L'API plafonne la liste (50 fiches) : le vrai total est le champ « nombre » de l'API communes.
+    const totalCommune = this.communesListe.find((c) => c.slug === this.communeSlug)?.medecins || gens.length;
+    this.totalCommune = Math.max(totalCommune, gens.length);
     this.medecins.set(gens);
     const ns = this.nomS(s), nw = this.nomW(w), t2 = this.t2;
     const chemCommune = `${chemin}/${commune.slug}`;
     this.titre = t2.titre(ns, commune.nom, nw);
     this.sousTitre = t2.sousTitre(ns, commune.nom);
     this.cible = t2.cible(ns, commune.nom, avecArticle(s));
-    this.intro = t2.intro(ns, commune.nom, nw, gens.length);
-    const description = t2.description(ns, commune.nom, nw, gens.length);
+    this.intro = t2.intro(ns, commune.nom, nw, this.totalCommune);
+    const description = t2.description(ns, commune.nom, nw, this.totalCommune);
     this.description = description;
     this.title.setTitle(`${this.titre} — ${this.t.suffixeTitre} | Ndawik`);
     this.meta.updateTag({ name: 'description', content: description });

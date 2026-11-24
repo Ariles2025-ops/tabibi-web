@@ -154,9 +154,15 @@ function formulaireVide(): FormulaireReponse {
 
         <div *ngIf="verification() as v" class="resultat-verification" style="margin:12px 0 0">
           <ng-container [ngSwitch]="v.statut">
-            <p *ngSwitchCase="'DELIVREE'" style="color:var(--red);font-weight:600;margin:0">
+            <p *ngSwitchCase="'DELIVREE'" class="delivree-ok" [style.color]="vientDeDelivrer() ? 'var(--green)' : 'var(--red)'" style="font-weight:600;margin:0">
+              <ng-container *ngIf="vientDeDelivrer()">
+                <ng-container *ngIf="!l.ar()">Ordonnance délivrée<ng-container *ngIf="dateLisible(v.delivreeLe)"> le {{ v.delivreeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container>.</ng-container>
+                <ng-container *ngIf="l.ar()">تم صرف الوصفة<ng-container *ngIf="dateLisible(v.delivreeLe)"> في <span dir="ltr">{{ v.delivreeLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container>.</ng-container>
+              </ng-container>
+              <ng-container *ngIf="!vientDeDelivrer()">
               <ng-container *ngIf="!l.ar()">Déjà délivrée<ng-container *ngIf="dateLisible(v.delivreeLe)"> le {{ v.delivreeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container> : ne pas délivrer une nouvelle fois.</ng-container>
               <ng-container *ngIf="l.ar()">سبق صرفها<ng-container *ngIf="dateLisible(v.delivreeLe)"> في <span dir="ltr">{{ v.delivreeLe | date:'dd/MM/yyyy HH:mm' }}</span></ng-container> : لا تصرفها مرة أخرى.</ng-container>
+              </ng-container>
             </p>
             <p *ngSwitchCase="'ANNULEE'" style="color:var(--red);font-weight:600;margin:0">{{ l.t('Annulée par le médecin : ne pas délivrer.', 'ألغاها الطبيب: لا تصرفها.') }}</p>
             <p *ngSwitchCase="'EXPIREE'" style="color:var(--red);font-weight:600;margin:0">{{ l.t('Expirée : ordonnance plus valable, ne pas délivrer.', 'منتهية الصلاحية: الوصفة لم تعد صالحة، لا تصرفها.') }}</p>
@@ -173,7 +179,7 @@ function formulaireVide(): FormulaireReponse {
                   {{ delivranceEnCours() ? l.t('Enregistrement…', 'جارٍ الحفظ…') : l.t('Marquer comme délivrée', 'تسجيل الصرف') }}
                 </button>
               </ng-container>
-              <p *ngIf="!v.valide" style="color:var(--red);font-weight:600;margin:0">{{ l.t('Code inconnu.', 'رمز غير معروف.') }}</p>
+              <p *ngIf="!v.valide" style="color:var(--red);font-weight:600;margin:0">{{ l.t('Code inconnu : aucune ordonnance ne correspond à ce code.', 'رمز غير معروف: لا توجد أي وصفة تطابق هذا الرمز.') }}</p>
             </ng-container>
           </ng-container>
         </div>
@@ -225,6 +231,8 @@ export class EspacePharmacieComponent implements OnInit {
   /** Verification / delivrance d'une ordonnance par son code. */
   codeOrdonnance = '';
   verification = signal<Verification | null>(null);
+  /** Vrai juste apres « Marquer comme delivree » : le statut DELIVREE est alors un succes, pas un refus (comme l'appli). */
+  vientDeDelivrer = signal(false);
   /** Code effectivement verifie (celui qu'on marquera delivre). */
   private codeVerifie = '';
   verificationEnCours = signal(false);
@@ -302,11 +310,13 @@ export class EspacePharmacieComponent implements OnInit {
       next: (v) => {
         this.verificationEnCours.set(false);
         this.codeVerifie = code;
+        this.vientDeDelivrer.set(false);
         this.verification.set(v);
       },
       error: (e: HttpErrorResponse) => {
         this.verificationEnCours.set(false);
         if (e.status === 404) {
+          this.vientDeDelivrer.set(false);
           this.verification.set({ valide: false, emiseLe: null, statut: null });
         } else {
           this.erreurOrdonnance.set(e.error?.erreur ?? this.l.t('La vérification a échoué, veuillez réessayer.', 'فشل التحقق، يرجى المحاولة مرة أخرى.'));
@@ -324,6 +334,7 @@ export class EspacePharmacieComponent implements OnInit {
     this.ordonnances.delivrer(this.codeVerifie).subscribe({
       next: (d) => {
         this.delivranceEnCours.set(false);
+        this.vientDeDelivrer.set(true);
         this.verification.set({ ...v, statut: d.statut, delivreeLe: d.delivreeLe });
         this.succesOrdonnance.set(this.l.t('Ordonnance marquée comme délivrée.', 'تم تسجيل صرف الوصفة.'));
       },
