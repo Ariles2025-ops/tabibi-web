@@ -69,7 +69,7 @@ describe('Suppression de compte : libelles identiques a l\'appli', () => {
     expect(ar).toContain('تُلغى مواعيدك القادمة');
     expect(ar).toContain('مواعيدك السابقة، دون أي صلة بك، في أجندة الطبيب');
     expect(ar).toContain('دون التعليق');
-    expect(ar).toContain('تُسحب بطاقتك العامة');
+    expect(ar).toContain('تُسحب صفحتك العامة');
   });
 
   it('la page française propose le lien vers la version arabe', () => {
