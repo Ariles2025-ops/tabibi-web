@@ -139,6 +139,7 @@ function formulaireVide(): FormulaireReponse {
           </form>
         </li>
       </ul>
+      <p *ngIf="!wilayaCode && !recherchee() && !charge() && !erreur()" class="invite-wilaya" style="color:var(--text3)">{{ l.t('Choisissez votre wilaya pour voir les demandes.', 'اختر ولايتك لعرض الطلبات.') }}</p>
       <p *ngIf="recherchee() && !charge() && !erreur() && besoins().length === 0">{{ l.t('Aucune demande ouverte dans cette wilaya.', 'لا توجد طلبات مفتوحة في هذه الولاية.') }}</p>
 
       <section class="bloc-delivrance" style="margin:32px 0 0;padding:16px;background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:var(--r16)">

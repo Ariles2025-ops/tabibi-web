@@ -152,6 +152,14 @@ describe('EspacePharmacieComponent', () => {
     formulaireReponse()!.dispatchEvent(new Event('submit'));
   }
 
+  it('invite a choisir sa wilaya tant qu aucune n est choisie (comme l\'appli), puis l\'invitation disparait', async () => {
+    await afficher();
+    expect(texte()).toContain('Choisissez votre wilaya pour voir les demandes.');
+
+    await chercher('16');
+    expect(texte()).not.toContain('Choisissez votre wilaya pour voir les demandes.');
+  });
+
   it('exige une wilaya puis liste les demandes ouvertes avec un formulaire de reponse par demande', async () => {
     await afficher();
 
