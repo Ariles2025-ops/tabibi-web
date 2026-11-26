@@ -60,7 +60,7 @@ import { Besoin, DawiniService, Reponse, estOuvert, formaterPrix, libelleDisponi
           <li *ngFor="let r of reponses()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
             <strong>{{ r.nomPharmacie }}</strong>
             <span [style.color]="r.disponible ? 'var(--vert)' : '#b3261e'"> · {{ dispo(r.disponible) }}</span>
-            <span *ngIf="r.prixDa !== null" style="color:var(--text3)"> · {{ prix(r.prixDa) }}</span>
+            <span *ngIf="r.disponible && r.prixDa !== null" style="color:var(--text3)"> · {{ prix(r.prixDa) }}</span>
             <span style="color:var(--text3)"> · <ng-container *ngIf="dateLisible(r.repondueLe); else dateReponseInconnue"><span [attr.dir]="l.ar() ? 'ltr' : null">{{ r.repondueLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM à HH:mm') }}</span></ng-container><ng-template #dateReponseInconnue>{{ l.t('date inconnue', 'تاريخ غير معروف') }}</ng-template></span>
             <p *ngIf="r.commentaire" style="margin:6px 0 0;white-space:pre-wrap">{{ r.commentaire }}</p>
           </li>

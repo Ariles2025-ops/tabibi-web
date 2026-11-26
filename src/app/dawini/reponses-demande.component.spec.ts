@@ -83,6 +83,13 @@ describe('ReponsesDemandeComponent', () => {
     return fixture.nativeElement.textContent;
   }
 
+  it('une reponse « Indisponible » n\'affiche jamais de prix, meme si l\'API en renvoie un', async () => {
+    service.reponses.and.returnValue(of([{ ...INDISPONIBLE, prixDa: 850 }]));
+    await afficher();
+    expect(texte()).toContain('Pharmacie du Centre');
+    expect(texte()).not.toContain('850');
+  });
+
   function bouton(libelle: string): HTMLButtonElement | undefined {
     const boutons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
     return boutons.find((b) => b.textContent?.trim() === libelle);

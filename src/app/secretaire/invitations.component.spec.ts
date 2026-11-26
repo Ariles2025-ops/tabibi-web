@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { AnnuaireService } from '../annuaire/annuaire.service';
 import { AuthService } from '../auth/auth.service';
@@ -103,6 +104,34 @@ describe('InvitationsComponent', () => {
       const c = fixture.componentInstance;
       c.refuser({ id: 'i1' } as never);
       expect(c.succes()).toBe('تم رفض الدعوة وتم إعلام الطبيب.');
+    });
+
+    for (const action of ['accepter', 'refuser'] as const) {
+      it(`${action} : un echec (500) garde son message affiche pendant le rechargement de la liste`, async () => {
+        const { fixture, service } = creer(false);
+        service.accepterInvitation = jasmine.createSpy().and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+        service.refuserInvitation.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404, error: { erreur: 'Invitation introuvable.' } })));
+        fixture.detectChanges();
+        await fixture.whenStable(); // fin du ngOnInit (premier chargement)
+        service.invitations.calls.reset();
+        const c = fixture.componentInstance;
+        c[action]({ id: 'i1' } as never);
+        await fixture.whenStable();
+        fixture.detectChanges();
+        expect(c.erreur()).toBe(action === 'accepter' ? "L'opération a échoué, veuillez réessayer." : 'Invitation introuvable.');
+        expect(service.invitations).toHaveBeenCalledTimes(1);
+        expect(fixture.nativeElement.textContent).toContain(c.erreur());
+      });
+    }
+
+    it('un echec en arabe garde le message arabe', async () => {
+      const { fixture, service } = creer(true);
+      service.refuserInvitation.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.componentInstance.refuser({ id: 'i1' } as never);
+      await fixture.whenStable();
+      expect(fixture.componentInstance.erreur()).toBe('فشلت العملية، يرجى المحاولة مرة أخرى.');
     });
   });
 });

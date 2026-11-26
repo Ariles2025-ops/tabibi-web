@@ -13,6 +13,9 @@ import { MedecinService } from './medecin.service';
 import { PatientsService, RepertoirePatients, nomPatient } from './patients.service';
 import { instantLisible } from '../partage/dates-lisibles';
 
+/** Longueur maximale du motif d'annulation (Ordonnance.LONGUEUR_MAX_MOTIF de l'API ; au-dela, 400). */
+export const LONGUEUR_MAX_MOTIF = 300;
+
 /** Ordonnances emises par le medecin connecte (GET /api/medecin/ordonnances), avec le nom du patient. */
 @Component({
     selector: 'app-ordonnances-redigees',
@@ -51,7 +54,8 @@ import { instantLisible } from '../partage/dates-lisibles';
                  style="background:var(--red-l);border-radius:var(--r12);padding:12px;display:grid;gap:8px">
               <strong style="color:var(--red)">{{ l.t('Annuler cette ordonnance ? Le patient en sera informé et elle ne pourra plus être délivrée.', 'إلغاء هذه الوصفة؟ سيتم إعلام المريض ولن يمكن صرفها بعد الآن.') }}</strong>
               <label style="display:grid;gap:4px;color:var(--text2);font-size:14px">{{ l.t('Motif (facultatif)', 'السبب (اختياري)') }}
-                <textarea class="champ" rows="2" [(ngModel)]="motif" name="motif-{{ o.id }}" maxlength="500"></textarea>
+                <textarea class="champ" rows="2" [(ngModel)]="motif" name="motif-{{ o.id }}" [maxlength]="LONGUEUR_MAX_MOTIF"></textarea>
+                <small data-testid="compteur-motif" style="color:var(--text3)">{{ motif.length }} / {{ LONGUEUR_MAX_MOTIF }}</small>
               </label>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button type="button" class="bouton" (click)="confirmerAnnulation(o)" [disabled]="enCours() !== null">
@@ -84,6 +88,8 @@ export class OrdonnancesRedigeesComponent implements OnInit {
   aAnnuler = signal<string | null>(null);
   /** Ordonnance en cours d'annulation cote serveur, ou null. */
   enCours = signal<string | null>(null);
+  /** Longueur maximale du motif d'annulation acceptee par l'API (au-dela : 400). */
+  readonly LONGUEUR_MAX_MOTIF = LONGUEUR_MAX_MOTIF;
   motif = '';
 
   ngOnInit() {

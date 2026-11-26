@@ -242,6 +242,21 @@ describe('EspacePharmacieComponent', () => {
     expect(lireMemorise()).toBeNull();
   });
 
+  it('« Non » : le champ prix disparait et aucun prix n\'est envoye, meme saisi avant', async () => {
+    profils.monProfil.and.returnValue(of(PROFIL));
+    service.repondre.and.returnValue(of(REPONSE));
+    await afficher();
+
+    await cocherDisponible(true);
+    await saisirDansReponse('input[type="number"]', '850');
+    await cocherDisponible(false);
+    expect(formulaireReponse()!.querySelector('input[type="number"]')).toBeNull();
+    repondre();
+    await afficher();
+
+    expect(service.repondre).toHaveBeenCalledWith('b1', { nomPharmacie: 'Pharmacie El Amel', disponible: false, prixDa: null, commentaire: null });
+  });
+
   it('affiche le { erreur } d un 409 (demande cloturee ou deja repondue) et recharge la liste', async () => {
     service.repondre.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 409, error: { erreur: 'Cette pharmacie a deja repondu a ce besoin.' } })),

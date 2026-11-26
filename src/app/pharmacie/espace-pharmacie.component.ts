@@ -122,7 +122,7 @@ function formulaireVide(): FormulaireReponse {
               </label>
             </fieldset>
             <div style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
-              <label style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
+              <label *ngIf="f.disponible !== false" class="champ-prix" style="display:grid;gap:4px;color:var(--text3);font-size:.9rem">
                 {{ l.t('Prix (DA)', 'السعر (دج)') }}
                 <input class="champ" type="number" min="0" step="1" [(ngModel)]="f.prixDa" [name]="'prix-' + b.id" [placeholder]="l.t('Ex. 850', 'مثال: 850')" style="color:var(--tbi-ink);font-size:1rem">
               </label>
@@ -396,7 +396,8 @@ export class EspacePharmacieComponent implements OnInit {
     // Le nom vient du profil (l'API l'impose) ; sans profil, on oriente vers le formulaire de profil.
     const nomPharmacie = this.profil()?.nomComplet?.trim() ?? '';
     const prixSaisi = f.prixDa === null || f.prixDa === undefined ? '' : String(f.prixDa).trim();
-    const prixDa = prixSaisi === '' ? null : Number(prixSaisi);
+    // Un medicament indisponible n'a pas de prix : un prix reste eventuellement saisi avant de cocher « Non », on l'ecarte.
+    const prixDa = prixSaisi === '' || f.disponible === false ? null : Number(prixSaisi);
     const commentaire = f.commentaire.trim();
     this.succes.set('');
     if (!this.profil()) {
