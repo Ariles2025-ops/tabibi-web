@@ -7,7 +7,7 @@ import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { AuthService } from '../auth/auth.service';
 import { Ordonnance } from '../ordonnances/ordonnance.service';
-import { estStatutOrdonnance, libelleStatutOrdonnance } from '../ordonnances/statut-ordonnance';
+import { estStatutOrdonnance, libelleStatutOrdonnance, motifAnnulationPropre } from '../ordonnances/statut-ordonnance';
 import { BadgeStatutOrdonnanceComponent } from '../ordonnances/badge-statut-ordonnance.component';
 import { MedecinService } from './medecin.service';
 import { PatientsService, RepertoirePatients, nomPatient } from './patients.service';
@@ -38,7 +38,7 @@ import { instantLisible } from '../partage/dates-lisibles';
               <span style="color:var(--text3)"><span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.emiseLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span></span>
               <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
                 <app-badge-statut-ordonnance [statut]="o.statut" [arabe]="l.ar()" />
-                <span *ngIf="est(o.statut, 'ANNULEE') && o.motifAnnulation" style="color:var(--text3);font-size:13px">{{ l.t('Motif :', 'السبب:') }} {{ o.motifAnnulation }}</span>
+                <span *ngIf="est(o.statut, 'ANNULEE') && motifAnnulation(o.motifAnnulation)" style="color:var(--text3);font-size:13px">{{ l.t('Motif :', 'السبب:') }} {{ motifAnnulation(o.motifAnnulation) }}</span>
                 <span *ngIf="est(o.statut, 'DELIVREE') && dateLisible(o.delivreeLe)" style="color:var(--text3);font-size:13px">{{ l.t('le', 'في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.delivreeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></span>
               </span>
             </span>
@@ -113,6 +113,7 @@ export class OrdonnancesRedigeesComponent implements OnInit {
   }
 
   readonly est = estStatutOrdonnance;
+  readonly motifAnnulation = motifAnnulationPropre;
 
   libelleStatut(statut: string): string {
     return libelleStatutOrdonnance(statut);
