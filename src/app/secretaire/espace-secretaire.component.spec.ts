@@ -249,7 +249,7 @@ describe('EspaceSecretaireComponent', () => {
     await afficher();
 
     expect(service.annuler).toHaveBeenCalledWith('r3');
-    expect(texte()).toContain('annulé : le patient est prévenu.');
+    expect(texte()).toContain('annulé : le créneau est de nouveau proposé et le patient est prévenu.');
     expect(service.agenda).toHaveBeenCalledTimes(2);
   });
 
@@ -269,6 +269,29 @@ describe('EspaceSecretaireComponent', () => {
     expect(service.annuler).toHaveBeenCalledWith('r3');
     expect(texte()).toContain('annulé : le créneau est de nouveau proposé.');
     expect(texte()).not.toContain('le patient est prévenu.');
+  });
+
+  describe('message apres deplacement', () => {
+    const CRENEAU = { id: 'c9', medecinId: 'm2', debut: '2027-01-05T10:00:00Z', dureeMinutes: 30, disponible: false };
+
+    async function deplacer(rdv: RendezVous): Promise<string> {
+      service.agenda.and.returnValue(of([rdv]));
+      await afficher();
+      const c = fixture.componentInstance;
+      c.aDeplacer.set(rdv.id);
+      c.apresDeplacement(CRENEAU);
+      return c.succes();
+    }
+
+    it('rendez-vous pris sur la plateforme : le patient est prévenu, comme chez le médecin', async () => {
+      expect(await deplacer(FUTUR)).toContain('le patient est prévenu.');
+    });
+
+    it('rendez-vous pris par téléphone : ne dit pas que le patient est prévenu', async () => {
+      const message = await deplacer({ ...FUTUR, source: 'TELEPHONE', nomPatient: 'Karim Ziani' });
+      expect(message).toContain('Rendez-vous déplacé au');
+      expect(message).not.toContain('prévenu');
+    });
   });
 
   it('affiche le motif { erreur } d un 409 (plus confirme) et recharge l agenda', async () => {
