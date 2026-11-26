@@ -52,7 +52,10 @@ function formulaireVide(): DemandeCandidature {
           {{ l.t('Déposée le', 'أُودع في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ c.deposeeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span><ng-container *ngIf="c.traiteeLe"> · {{ l.t('traitée le', 'عولج في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ c.traiteeLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'd MMMM yyyy à HH:mm') }}</span></ng-container>
         </span>
         <p *ngIf="statutDe(c) === 'EN_ATTENTE'" style="margin:10px 0 0">{{ l.t("Votre candidature est en cours d'examen.", 'ترشحك قيد الفحص.') }}</p>
-        <div *ngIf="statutDe(c) === 'VALIDEE'" style="margin:10px 0 0">
+        <p *ngIf="statutDe(c) === 'VALIDEE' && c.suspendu" style="margin:10px 0 0;color:#b3261e">
+          {{ l.t("Votre compte médecin est suspendu : votre fiche n'est plus publiée. Écrivez à contact@ndawik.com pour en savoir plus.", 'حسابك كطبيب موقوف: لم يعد ملفك منشورًا. راسلنا على contact@ndawik.com لمعرفة المزيد.') }}
+        </p>
+        <div *ngIf="statutDe(c) === 'VALIDEE' && !c.suspendu" style="margin:10px 0 0">
           <p style="margin:0 0 10px;color:var(--vert)">
             {{ l.t('Votre candidature a été validée : vous figurez sur Ndawik.', 'تم قبول ترشحك: أنت تظهر على نداويك.') }}
             <a [routerLink]="['/medecins', c.medecinId]" style="color:var(--vert)">{{ l.t('Voir ma fiche', 'عرض ملفي') }}</a>
@@ -263,7 +266,7 @@ export class CandidatureMedecinComponent implements OnInit {
   /** Affiche la candidature ; le formulaire (prerempli) n'est propose que si elle a ete refusee. */
   private afficher(c: Candidature) {
     this.candidature.set(c);
-    if (this.statutDe(c) === 'VALIDEE') {
+    if (this.statutDe(c) === 'VALIDEE' && !c.suspendu) {
       // Le role MEDECIN vient d'etre accorde : on relit le jeton puis le profil pour ouvrir l'espace medecin.
       this.auth.actualiserRoles().then(() => this.roles.recharger());
     }

@@ -186,6 +186,18 @@ describe('CandidatureMedecinComponent', () => {
     expect(agenda?.textContent).toContain('Ouvrir mon agenda');
   });
 
+  it('candidature validee mais suspendue : message de suspension, sans fiche ni agenda', async () => {
+    service.maCandidature.and.returnValue(of({ ...VALIDEE, suspendu: true }));
+    await afficher();
+
+    expect(texte()).toContain('Votre compte médecin est suspendu');
+    expect(texte()).toContain('contact@ndawik.com');
+    expect(texte()).not.toContain('vous figurez sur Ndawik');
+    expect(fixture.nativeElement.querySelector('a[href="/medecins/m1"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href="/medecin/agenda"]')).toBeNull();
+    expect(auth.actualiserRoles).not.toHaveBeenCalled();
+  });
+
   it('affiche le motif d une candidature refusee et un formulaire de nouveau depot prerempli', async () => {
     service.maCandidature.and.returnValue(of(REFUSEE));
     await afficher();
