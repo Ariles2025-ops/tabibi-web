@@ -36,7 +36,8 @@ interface Raccourci { lien: string; libelle: string; badge?: string; }
         <app-selecteur-langue />
       </div>
       <div *ngIf="!connecte()" style="display:flex;flex-direction:column;gap:12px;max-width:420px">
-        <p style="color:var(--text3);margin:0">{{ l.t('Créez votre compte avec votre adresse e-mail, ou connectez-vous par téléphone (code SMS), pour prendre rendez-vous.', 'أنشئ حسابك ببريدك الإلكتروني، أو سجّل الدخول برقم هاتفك (رمز SMS)، لحجز موعد.') }}</p>
+        <p *ngIf="inscriptionOuverte()" style="color:var(--text3);margin:0">{{ l.t('Créez votre compte avec votre adresse e-mail, ou connectez-vous par téléphone (code SMS), pour prendre rendez-vous.', 'أنشئ حسابك ببريدك الإلكتروني، أو سجّل الدخول برقم هاتفك (رمز SMS)، لحجز موعد.') }}</p>
+        <p *ngIf="!inscriptionOuverte()" style="color:var(--text3);margin:0">{{ l.t('Connectez-vous avec votre compte Ndawik. Les comptes sont créés sur demande pendant la phase de test.', 'سجّل الدخول بحسابك في نداويك. تُنشأ الحسابات عند الطلب خلال مرحلة التجربة.') }} {{ l.t('Médecin ? Faites votre demande sur la page', 'طبيب؟ قدّم طلبك في صفحة') }} <a routerLink="/praticien" style="color:var(--vert)">{{ l.t('Vous êtes praticien ?', 'هل أنت ممارس صحي؟') }}</a></p>
         <button type="button" class="bouton" (click)="seConnecter()">{{ l.t('Se connecter', 'تسجيل الدخول') }}</button>
         <button *ngIf="inscriptionOuverte()" type="button" class="bouton-secondaire" (click)="sInscrireParEmail()">{{ l.t('Créer un compte', 'إنشاء حساب') }}</button>
       </div>
