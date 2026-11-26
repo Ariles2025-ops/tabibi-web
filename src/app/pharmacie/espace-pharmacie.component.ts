@@ -154,7 +154,7 @@ function formulaireVide(): FormulaireReponse {
         </form>
 
         <div *ngIf="verification() as v" class="resultat-verification" style="margin:12px 0 0">
-          <ng-container [ngSwitch]="v.statut">
+          <ng-container [ngSwitch]="statutVerifie(v.statut)">
             <p *ngSwitchCase="'DELIVREE'" class="delivree-ok" [style.color]="vientDeDelivrer() ? 'var(--green)' : 'var(--red)'" style="font-weight:600;margin:0">
               <ng-container *ngIf="vientDeDelivrer()">
                 <ng-container *ngIf="!l.ar()">Ordonnance délivrée<ng-container *ngIf="dateLisible(v.delivreeLe)"> le {{ v.delivreeLe | date:'d MMMM yyyy à HH:mm' }}</ng-container>.</ng-container>
@@ -240,6 +240,11 @@ export class EspacePharmacieComponent implements OnInit {
   delivranceEnCours = signal(false);
   succesOrdonnance = signal('');
   erreurOrdonnance = signal('');
+
+  /** Statut normalise (espaces retires, majuscules), comme `toUpperCase()` de l'appli (pharmacie_pages.dart). */
+  statutVerifie(statut: string | null | undefined): string {
+    return (statut ?? '').trim().toUpperCase();
+  }
 
   ngOnInit() {
     this.http

@@ -401,6 +401,17 @@ describe('EspacePharmacieComponent', () => {
     expect(texte()).not.toContain('Ordonnance valide');
   });
 
+  it('lit le statut sans tenir compte de la casse, comme l\'appli (« expiree » = Expirée)', async () => {
+    ordonnances.verifier.and.returnValue(of({ valide: true, emiseLe: '2026-01-18T10:00:00Z', statut: ' expiree ' }));
+    await afficher();
+    await saisir('codeOrdonnance', 'AB12CD34');
+    fixture.nativeElement.querySelector('section.bloc-delivrance form').dispatchEvent(new Event('submit'));
+    await afficher();
+
+    expect(texte()).toContain('Expirée');
+    expect(texte()).not.toContain('Marquer comme délivrée');
+  });
+
   describe('en arabe (comme l\'appli)', () => {
     beforeEach(() => TestBed.inject(LangueService).ar.set(true));
 
