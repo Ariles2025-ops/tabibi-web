@@ -39,6 +39,13 @@ describe('cibleDuLien', () => {
     expect(cibleDuLien('/ordonnances')).toBe('/mes-ordonnances');
   });
 
+  it('un identifiant mal encodé n\'est pas suivi (comme l\'appli), un identifiant encodé l\'est', () => {
+    expect(cibleDuLien('/medecins/%E0%A4%A')).toBeNull();
+    expect(cibleDuLien('/ordonnances/%')).toBeNull();
+    expect(cibleDuLien('/messagerie/%E0%A4%A')).toBeNull();
+    expect(cibleDuLien('/medecins/a%20b')).toBe('/medecins/a%20b');
+  });
+
   it('un lien sans page correspondante n\'est pas suivi', () => {
     for (const lien of ['', '   ', null, undefined, 'https://exemple.org', '//exemple.org', '/', '/medecins',
       '/inconnu', '/mes-rendez-vous/x', '/a/b/c']) {

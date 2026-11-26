@@ -15,6 +15,9 @@ export function cibleDuLien(lien: string | null | undefined): string | null {
   const segments = brut.split(/[?#]/)[0].split('/').filter((s) => s.length > 0);
   if (segments.length === 0 || segments.length > 2) return null;
   const [page, id] = segments;
+  // Identifiant mal encode (« %E0%A4% ») : lien inutilisable, pas de « Voir » (comme `decoderSegment` de l'appli),
+  // au lieu d'une erreur de navigation du routeur.
+  if (id !== undefined && !segmentBienEncode(id)) return null;
   switch (page) {
     case 'mes-rendez-vous':
     case 'mes-avis':
@@ -38,5 +41,14 @@ export function cibleDuLien(lien: string | null | undefined): string | null {
       return id === undefined && VISIO_ACTIVE ? '/teleconsultations' : null;
     default:
       return null;
+  }
+}
+
+function segmentBienEncode(segment: string): boolean {
+  try {
+    decodeURIComponent(segment);
+    return true;
+  } catch {
+    return false;
   }
 }
