@@ -284,7 +284,9 @@ export class EspaceSecretaireComponent implements OnInit {
 
   /** Annulation apres « Oui » : le creneau est remis a disposition et le patient prevenu. */
   annuler(rdv: RendezVous) {
-    this.agir(rdv, 'annuler', this.service.annuler(rdv.id), this.l.t(`Rendez-vous du ${this.formaterDate(rdv.debut)} annulé : ${rdv.source === 'TELEPHONE' ? 'le créneau est de nouveau proposé.' : 'le patient est prévenu.'}`, `تم إلغاء الموعد في ${this.formaterDate(rdv.debut)}: ${rdv.source === 'TELEPHONE' ? 'الموعد متاح من جديد.' : 'تم إعلام المريض.'}`));
+    const prevenu = rdv.source !== 'TELEPHONE';
+    const date = this.formaterDate(rdv.debut);
+    this.agir(rdv, 'annuler', this.service.annuler(rdv.id), this.l.t(`Rendez-vous du ${date} annulé : le créneau est de nouveau proposé${prevenu ? ' et le patient est prévenu' : ''}.`, `تم إلغاء الموعد في ${date}: الموعد متاح من جديد${prevenu ? ' وتم إعلام المريض' : ''}.`));
   }
 
   /** Patient absent, apres « Oui » (POST /api/secretaire/rendezvous/{id}/absent). */
@@ -301,9 +303,13 @@ export class EspaceSecretaireComponent implements OnInit {
   deplacerFn = (rdv: RendezVous, creneauId: string) => this.service.deplacer(rdv.id, creneauId);
 
   apresDeplacement(creneau: Creneau) {
+    // Le patient n'est prévenu que pour un rendez-vous pris sur la plateforme, pas par téléphone (comme le médecin et l'appli).
+    const rdv = this.rendezVous().find((r) => r.id === this.aDeplacer());
+    const prevenu = rdv?.source !== 'TELEPHONE';
     this.aDeplacer.set(null);
     this.erreurAgenda.set('');
-    this.succes.set(this.l.t(`Rendez-vous déplacé au ${this.formaterDate(creneau.debut)}.`, `تم نقل الموعد إلى ${this.formaterDate(creneau.debut)}.`));
+    const date = this.formaterDate(creneau.debut);
+    this.succes.set(this.l.t(`Rendez-vous déplacé au ${date}${prevenu ? ' : le patient est prévenu.' : '.'}`, `تم نقل الموعد إلى ${date}${prevenu ? ': تم إعلام المريض.' : '.'}`));
     this.chargerAgenda();
   }
 
