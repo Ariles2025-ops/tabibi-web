@@ -30,3 +30,19 @@ export function libelleStatutOrdonnanceAr(statut: string | null | undefined): st
 export function estStatutOrdonnance(statut: string | null | undefined, valeur: string): boolean {
   return (statut ?? '').trim().toUpperCase() === valeur;
 }
+
+/** Motif d'annulation nettoye (espaces retires) ; chaine vide s'il est absent ou blanc, comme `infoStatutOrdonnance` de l'appli. */
+export function motifAnnulationPropre(motif: string | null | undefined): string {
+  return (motif ?? '').trim();
+}
+
+/**
+ * « Annulée par le médecin » suivi du motif s'il y en a un, comme `infoStatutOrdonnance` de l'appli (ordonnances.dart) :
+ * « Annulée par le médecin : motif » / « ألغاها الطبيب: motif » ; jamais de « : » orphelin pour un motif vide.
+ */
+export function infoAnnulationOrdonnance(motif: string | null | undefined, arabe: boolean): string {
+  const m = motifAnnulationPropre(motif);
+  const base = arabe ? 'ألغاها الطبيب' : 'Annulée par le médecin';
+  if (!m) return base;
+  return arabe ? `${base}: ${m}` : `${base} : ${m}`;
+}

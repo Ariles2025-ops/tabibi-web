@@ -66,7 +66,7 @@ describe('MesOrdonnancesComponent', () => {
       expect(texte).toContain('وصفاتي الطبية');
       expect(texte).toContain('ملغاة');
       expect(texte).toContain('مُسلَّمة');
-      expect(texte).toContain('ألغاها الطبيب : Erreur de dosage');
+      expect(texte).toContain('ألغاها الطبيب: Erreur de dosage');
       expect(texte).toContain('صُرفت في الصيدلية في 12/09/2026');
       expect(texte).not.toContain('Délivrée');
       expect(texte).not.toContain('Annulée');
@@ -115,5 +115,13 @@ describe('MesOrdonnancesComponent', () => {
     await afficher();
 
     expect(fixture.nativeElement.textContent).toContain('Annulée par le médecin : Erreur de dosage');
+  });
+
+  it('n\'affiche pas de « : » après « Annulée par le médecin » quand le motif est blanc, comme l\'appli', async () => {
+    service.mes.and.returnValue(of([{ ...ANNULEE, motifAnnulation: '   ' }]));
+    await afficher();
+
+    const info = fixture.nativeElement.querySelector('.info-statut') as HTMLElement;
+    expect(info.textContent?.trim()).toBe('Annulée par le médecin');
   });
 });

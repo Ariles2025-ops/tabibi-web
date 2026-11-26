@@ -9,7 +9,7 @@ import { ProfilService } from '../moi/profil.service';
 import { Ordonnance, OrdonnanceService } from './ordonnance.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
-import { estStatutOrdonnance, libelleStatutOrdonnance, libelleStatutOrdonnanceAr } from './statut-ordonnance';
+import { estStatutOrdonnance, infoAnnulationOrdonnance, libelleStatutOrdonnance, libelleStatutOrdonnanceAr } from './statut-ordonnance';
 import { BadgeStatutOrdonnanceComponent } from './badge-statut-ordonnance.component';
 import { instantLisible } from '../partage/dates-lisibles';
 
@@ -37,7 +37,7 @@ import { instantLisible } from '../partage/dates-lisibles';
             <p style="color:var(--text3);margin:0">
               <ng-container *ngIf="dateLisible(o.emiseLe); else emiseInconnue">{{ l.t('Émise le', 'صدرت في') }} <span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.emiseLe | date:(l.ar() ? 'dd/MM/yyyy HH:mm' : 'EEEE d MMMM yyyy à HH:mm') }}</span></ng-container><ng-template #emiseInconnue>{{ l.t('Date inconnue', 'تاريخ غير معروف') }}</ng-template> · <app-badge-statut-ordonnance [statut]="o.statut" [arabe]="l.ar()" />
             </p>
-            <p *ngIf="est(o.statut, 'ANNULEE')" style="color:var(--red);margin:4px 0 0">{{ l.t('Annulée par le médecin', 'ألغاها الطبيب') }}<ng-container *ngIf="o.motifAnnulation"> : {{ o.motifAnnulation }}</ng-container></p>
+            <p *ngIf="est(o.statut, 'ANNULEE')" style="color:var(--red);margin:4px 0 0">{{ infoAnnulation(o.motifAnnulation, l.ar()) }}</p>
             <p *ngIf="est(o.statut, 'DELIVREE')" style="color:var(--text2);margin:4px 0 0">{{ l.t('Délivrée en pharmacie', 'صُرفت في الصيدلية') }}<ng-container *ngIf="dateLisible(o.delivreeLe)">{{ l.t(' le ', ' في ') }}<span [attr.dir]="l.ar() ? 'ltr' : null">{{ o.delivreeLe | date:(l.ar() ? 'dd/MM/yyyy' : 'd MMMM yyyy') }}</span></ng-container></p>
             <p style="color:var(--text3);margin:4px 0 0">
               {{ l.t('Praticien', 'الممارس') }} : {{ medecin()?.nomComplet ?? l.t('Votre médecin', 'طبيبك') }}
@@ -145,6 +145,7 @@ export class OrdonnanceDetailComponent implements OnInit {
   }
 
   readonly est = estStatutOrdonnance;
+  readonly infoAnnulation = infoAnnulationOrdonnance;
 
   libelleStatut(statut: string): string {
     return this.l.ar() ? libelleStatutOrdonnanceAr(statut) : libelleStatutOrdonnance(statut);
