@@ -229,7 +229,8 @@ const GOOGLE_PLAY = 'https://play.google.com/store/apps/details?id=dz.tabibi.app
         <div class="docs-gate__card">
           <span class="docs-gate__ic"><i class="fa fa-lock" aria-hidden="true"></i></span>
           <h3>{{ texteNombre() }}</h3>
-          <p>{{ t("La liste des médecins et leurs disponibilités sont réservées aux membres de Ndawik — c'est gratuit.", 'قائمة الأطباء ومواعيدهم المتاحة مخصّصة لأعضاء نداويك — والتسجيل مجاني.') }}</p>
+          <p *ngIf="inscriptionOuverte()">{{ t("La liste des médecins et leurs disponibilités sont réservées aux membres de Ndawik — c'est gratuit.", 'قائمة الأطباء ومواعيدهم المتاحة مخصّصة لأعضاء نداويك — والتسجيل مجاني.') }}</p>
+          <p *ngIf="!inscriptionOuverte()">{{ t("La liste des médecins et leurs disponibilités sont réservées aux membres de Ndawik. Pendant la phase de test, les comptes sont créés sur demande.", 'قائمة الأطباء ومواعيدهم المتاحة مخصّصة لأعضاء نداويك. خلال مرحلة التجربة تُنشأ الحسابات عند الطلب.') }}</p>
           <div class="docs-gate__btns">
             <a *ngIf="inscriptionOuverte()" class="bouton" (click)="sInscrire()" tabindex="0" role="button" style="cursor:pointer">{{ t('Créer un compte', 'إنشاء حساب') }}</a>
             <a class="bouton-secondaire" (click)="seConnecter()" tabindex="0" role="button" style="cursor:pointer">{{ t('Se connecter', 'تسجيل الدخول') }}</a>

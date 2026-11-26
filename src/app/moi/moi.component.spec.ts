@@ -275,6 +275,9 @@ describe('MoiComponent', () => {
     await afficher();
 
     expect(bouton('Créer un compte')).toBeUndefined();
+    expect(texte()).not.toContain('Créez votre compte');
+    expect(texte()).toContain('Les comptes sont créés sur demande pendant la phase de test');
+    expect(fixture.nativeElement.querySelector('a[href="/praticien"]')).not.toBeNull();
     bouton('Se connecter')!.click();
     expect(auth.seConnecter).toHaveBeenCalled();
   });
@@ -354,7 +357,8 @@ describe('MoiComponent', () => {
       await afficher();
 
       expect(bouton('تسجيل الدخول')).toBeDefined();
-      expect(texte()).toContain('لحجز موعد');
+      expect(texte()).toContain('تُنشأ الحسابات عند الطلب');
+      expect(texte()).not.toContain('أنشئ حسابك');
     });
   });
 });
