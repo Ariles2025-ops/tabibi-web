@@ -193,6 +193,24 @@ describe('EspaceSecretaireComponent', () => {
     expect(service.agenda).toHaveBeenCalledTimes(2);
   });
 
+  it("fiche d'un médecin indisponible : « Médecin » et l'identifiant abrégé, en arabe « طبيب » comme l'appli", async () => {
+    const cabinet = { ...CABINET_2, medecinId: 'abcdef12-0000-0000-0000-000000000009' };
+    service.mesMedecins.and.returnValue(of([CABINET_1, cabinet]));
+    annuaire.medecin.and.callFake((id: string) => (id === cabinet.medecinId ? throwError(() => new Error('x')) : of(MEDECINS[id])));
+    await afficher();
+    expect(Array.from(selecteur()!.options).map((o) => o.textContent?.trim())).toContain('Médecin abcdef12');
+
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      await afficher();
+      const options = Array.from(selecteur()!.options).map((o) => o.textContent?.trim());
+      expect(options).toContain('طبيب abcdef12');
+      expect(options.some((o) => o?.includes('الطبيب'))).toBeFalse();
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
+  });
+
   it('propose le choix du medecin quand il y a plusieurs cabinets, puis charge son agenda', async () => {
     service.mesMedecins.and.returnValue(of([CABINET_2, CABINET_1]));
     await afficher();

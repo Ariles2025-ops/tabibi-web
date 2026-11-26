@@ -12,7 +12,7 @@ import { GestionCreneauxComponent, SourceCreneaux } from '../medecin/gestion-cre
 import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } from '../medecin/patients.service';
 import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
-import { abregerIdentifiant } from '../messagerie/messagerie.service';
+import { libelleMedecin } from '../messagerie/messagerie.service';
 import { RendezVous } from '../rendezvous/rendezvous.service';
 import { estAbsent, libelleStatutRendezVous, libelleStatutRendezVousAr } from '../rendezvous/statut-rendez-vous';
 import { Rattachement, SecretaireService } from './secretaire.service';
@@ -217,7 +217,7 @@ export class EspaceSecretaireComponent implements OnInit {
   }
 
   nomMedecin(medecinId: string): string {
-    return this.noms()[medecinId] ?? `${this.l.t('Médecin', 'الطبيب')} ${abregerIdentifiant(medecinId)}`;
+    return this.noms()[medecinId] ?? libelleMedecin(medecinId, this.l.ar());
   }
 
   nom(patientId: string): string {
