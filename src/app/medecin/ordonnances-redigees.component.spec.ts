@@ -79,4 +79,14 @@ describe('OrdonnancesRedigeesComponent', () => {
     expect(texte()).toContain('تم إلغاء الوصفة.');
     expect(texte()).not.toContain('Ordonnance annulée.');
   });
+
+  it('le motif d\'annulation est limite a 300 caracteres, comme l\'API, avec un compteur', () => {
+    fixture.detectChanges();
+    fixture.componentInstance.demanderAnnulation(EMISE);
+    fixture.componentInstance.motif = 'a'.repeat(120);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('textarea')?.getAttribute('maxlength')).toBe('300');
+    expect(el.querySelector('[data-testid="compteur-motif"]')?.textContent?.trim()).toBe('120 / 300');
+  });
 });

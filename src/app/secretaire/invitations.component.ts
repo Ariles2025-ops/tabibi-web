@@ -85,9 +85,10 @@ export class InvitationsComponent implements OnInit {
     this.charger();
   }
 
-  charger() {
+  /** Recharge la liste ; [conserverMessages] garde le message d'echec deja affiche (apres un refus de l'API). */
+  charger(conserverMessages = false) {
     this.charge.set(true);
-    this.erreur.set('');
+    if (!conserverMessages) this.erreur.set('');
     this.service.invitations().subscribe({
       next: (liste) => {
         if (liste.length === 0) {
@@ -152,7 +153,7 @@ export class InvitationsComponent implements OnInit {
       this.auth.seConnecter('/invitations');
     } else {
       this.erreur.set(e.error?.erreur ?? this.l.t("L'opération a échoué, veuillez réessayer.", 'فشلت العملية، يرجى المحاولة مرة أخرى.'));
-      this.charger();
+      this.charger(true);
     }
   }
 }
