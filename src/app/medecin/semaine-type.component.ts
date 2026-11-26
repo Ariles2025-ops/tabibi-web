@@ -123,6 +123,10 @@ export class SemaineTypeComponent {
       return this.erreur.set(this.l.t(`Indiquez une durée entre ${DUREE_MIN_MINUTES} et ${DUREE_MAX_MINUTES} minutes.`,
         `أدخل مدة بين ${DUREE_MIN_MINUTES} و${DUREE_MAX_MINUTES} دقيقة.`));
     }
+    // Comme l'appli (erreurSemaineType) : une plage plus courte que la durée d'un créneau ne créerait rien.
+    if (minutes(this.fin) - minutes(this.debut) < duree) {
+      return this.erreur.set(this.l.t('La plage horaire est trop courte pour la durée choisie.', 'الفترة الزمنية أقصر من المدة المختارة.'));
+    }
     if (!this.aPartirDu) return this.erreur.set(this.l.t('Indiquez la date de départ.', 'أدخل تاريخ البداية.'));
     if (!Number.isInteger(semaines) || semaines < 1 || semaines > SEMAINES_MAX) {
       return this.erreur.set(this.l.t(`Le nombre de semaines doit être compris entre 1 et ${SEMAINES_MAX}.`,
@@ -144,4 +148,10 @@ export class SemaineTypeComponent {
       },
     });
   }
+}
+
+/** « 09:30 » -> 570 minutes depuis minuit. */
+function minutes(heure: string): number {
+  const [h, m] = heure.split(':').map(Number);
+  return h * 60 + (m || 0);
 }

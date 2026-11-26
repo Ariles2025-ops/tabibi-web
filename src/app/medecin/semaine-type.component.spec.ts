@@ -63,6 +63,35 @@ describe('SemaineTypeComponent', () => {
     expect(fixture.nativeElement.querySelector('form').getAttribute('dir')).toBe('rtl');
   });
 
+  it('refuse une plage plus courte que la durée d\'un créneau, comme l\'appli', async () => {
+    await afficher();
+    const c = fixture.componentInstance;
+    c.basculer('LUNDI');
+    c.aPartirDu = '2026-11-23';
+    c.debut = '09:00';
+    c.fin = '09:20';
+    c.duree = 30;
+    c.envoyer();
+    expect(appel).not.toHaveBeenCalled();
+    expect(c.erreur()).toBe('La plage horaire est trop courte pour la durée choisie.');
+    c.fin = '09:30';
+    c.envoyer();
+    expect(appel).toHaveBeenCalledTimes(1);
+  });
+
+  it('dit la plage trop courte en arabe', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    await afficher();
+    const c = fixture.componentInstance;
+    c.basculer('LUNDI');
+    c.aPartirDu = '2026-11-23';
+    c.debut = '09:00';
+    c.fin = '09:20';
+    c.duree = 30;
+    c.envoyer();
+    expect(c.erreur()).toBe('الفترة الزمنية أقصر من المدة المختارة.');
+  });
+
   it('refuse plus de 8 semaines', async () => {
     await afficher();
     const c = fixture.componentInstance;
