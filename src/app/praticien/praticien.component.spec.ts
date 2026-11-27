@@ -76,6 +76,16 @@ describe('PraticienComponent (promesses)', () => {
     expect(texte).not.toMatch(/paiement en ligne|payer en ligne/i);
   });
 
+  it('inscription fermee : aucun texte ne promet de « créer son compte » soi-même, on parle de demande', () => {
+    TestBed.configureTestingModule({ imports: [PraticienComponent], providers: [provideRouter([]), provideHttpClient(),
+      { provide: AuthService, useValue: { pret: () => Promise.resolve(), estConnecte: () => false, sInscrireParEmail: () => undefined } }] });
+    const fixture = TestBed.createComponent(PraticienComponent);
+    fixture.detectChanges();
+    const texte = (fixture.nativeElement as HTMLElement).textContent || '';
+    expect(texte).not.toMatch(/créez votre compte|créer mon compte/i);
+    expect(texte).toContain('notre équipe crée votre compte');
+  });
+
   it('version arabe (data.langue = ar) : textes arabes, dir=rtl, sans français visible', () => {
     TestBed.configureTestingModule({ imports: [PraticienComponent], providers: [provideRouter([]), provideHttpClient(),
       { provide: ActivatedRoute, useValue: { snapshot: { data: { langue: 'ar' } } } },
