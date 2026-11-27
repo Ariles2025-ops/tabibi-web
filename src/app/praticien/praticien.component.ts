@@ -49,7 +49,7 @@ import { DemandePraticienService } from './demande-praticien.service';
         <div class="prat-form-wrap">
           <h2 class="prat-h2" style="margin-bottom:6px">{{ t('Retrouvez votre fiche', 'اعثر على صفحتك') }}</h2>
           <p style="text-align:center;color:var(--text3);margin:0 0 20px;font-size:14px">
-            {{ t('Plus de 75 000 praticiens sont déjà référencés. Cherchez votre nom, puis créez votre compte pour gérer votre fiche.', 'أكثر من 75 000 ممارس مسجَّلون بالفعل. ابحث عن اسمك ثم أنشئ حسابك لإدارة صفحتك.') }}
+            {{ inscriptionOuverte() ? t('Plus de 75 000 praticiens sont déjà référencés. Cherchez votre nom, puis créez votre compte pour gérer votre fiche.', 'أكثر من 75 000 ممارس مسجَّلون بالفعل. ابحث عن اسمك ثم أنشئ حسابك لإدارة صفحتك.') : t('Plus de 75 000 praticiens sont déjà référencés. Cherchez votre nom, puis faites votre demande : notre équipe crée votre compte.', 'أكثر من 75 000 ممارس مسجَّلون بالفعل. ابحث عن اسمك ثم قدّم طلبك: يُنشئ فريقنا حسابك.') }}
           </p>
           <div class="prat-cherche">
             <label class="pf"><span>{{ t('Votre nom', 'اسمك') }}</span>
@@ -80,7 +80,7 @@ import { DemandePraticienService } from './demande-praticien.service';
       <section class="prat-sec">
         <h2 class="prat-h2">{{ t('Comment rejoindre Ndawik ?', 'كيف تنضم إلى نداويك؟') }}</h2>
         <div class="prat-steps">
-          <div class="prat-step"><span class="prat-num">1</span><h3>{{ t('Trouvez votre fiche', 'اعثر على صفحتك') }}</h3><p>{{ t("Cherchez votre nom, puis créez votre compte en un clic (ou déposez une candidature si votre fiche n'existe pas).", 'ابحث عن اسمك ثم أنشئ حسابك بنقرة واحدة (أو قدّم ترشحًا إذا لم تكن صفحتك موجودة).') }}</p></div>
+          <div class="prat-step"><span class="prat-num">1</span><h3>{{ t('Trouvez votre fiche', 'اعثر على صفحتك') }}</h3><p>{{ inscriptionOuverte() ? t("Cherchez votre nom, puis créez votre compte en un clic (ou déposez une candidature si votre fiche n'existe pas).", 'ابحث عن اسمك ثم أنشئ حسابك بنقرة واحدة (أو قدّم ترشحًا إذا لم تكن صفحتك موجودة).') : t("Cherchez votre nom, puis faites votre demande en un clic (même si votre fiche n'existe pas) : notre équipe crée votre compte.", 'ابحث عن اسمك ثم قدّم طلبك بنقرة واحدة (حتى لو لم تكن صفحتك موجودة): يُنشئ فريقنا حسابك.') }}</p></div>
           <div class="prat-step"><span class="prat-num">2</span><h3>{{ t('Vérification', 'التحقق') }}</h3><p>{{ t("Ajoutez votre numéro d'inscription à l'ordre : notre équipe confirme que c'est bien vous.", 'أضف رقم تسجيلك في الهيئة: يتأكد فريقنا أنك أنت.') }}</p></div>
           <div class="prat-step"><span class="prat-num">3</span><h3>{{ t('Recevez vos RDV', 'استقبل مواعيدك') }}</h3><p>{{ t('Gérez vos disponibilités et recevez vos rendez-vous en ligne, avec rappels automatiques.', 'أدِر أوقات توفّرك واستقبل مواعيدك عبر الإنترنت مع تذكيرات تلقائية.') }}</p></div>
         </div>
