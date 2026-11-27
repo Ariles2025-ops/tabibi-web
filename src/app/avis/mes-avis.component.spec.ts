@@ -119,6 +119,18 @@ describe('MesAvisComponent', () => {
     }
   });
 
+  it('un statut d avis autre que publie, signale ou masque est traduit en arabe, comme dans l appli', async () => {
+    service.mes.and.returnValue(of([{ ...ANCIEN, statut: 'EN_ATTENTE' }]));
+    TestBed.inject(LangueService).ar.set(true);
+    try {
+      await afficher();
+      expect(texte()).toContain('قيد الانتظار');
+      expect(texte()).not.toContain('En attente');
+    } finally {
+      TestBed.inject(LangueService).ar.set(false);
+    }
+  });
+
   it('un avis sans date lisible affiche « date inconnue » et passe en fin de liste, comme dans l appli', async () => {
     service.mes.and.returnValue(of([{ ...ANCIEN, id: 'a3', deposeLe: 'illisible' }, ANCIEN, RECENT]));
     await afficher();

@@ -8,6 +8,7 @@ import { LangueService } from '../partage/langue.service';
 import { libelleMedecin } from '../messagerie/messagerie.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { Avis, AvisService, libelleStatutAvis } from './avis.service';
+import { libelleStatutGeneriqueAr } from '../partage/statut-generique';
 import { instantLisible, trierParDateRecenteDabord } from '../partage/dates-lisibles';
 
 /** Avis deposes par le patient connecte (GET /api/avis/mes), tous statuts, les plus recents d'abord. */
@@ -100,7 +101,7 @@ export class MesAvisComponent implements OnInit {
     if (brut === 'SIGNALE') return this.l.t('En cours de vérification', 'قيد التحقق');
     if (brut === 'MASQUE') return this.l.t('Masqué par la modération', 'أخفته الإدارة');
     if (brut === 'PUBLIE') return this.l.t('Publié', 'منشور');
-    return libelleStatutAvis(statut);
+    return this.l.ar() ? libelleStatutGeneriqueAr(statut) : libelleStatutAvis(statut);
   }
 
   /** Recupere (une seule fois par praticien) le nom des medecins notes. */
