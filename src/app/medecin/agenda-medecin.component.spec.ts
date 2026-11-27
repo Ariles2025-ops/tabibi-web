@@ -137,6 +137,18 @@ describe('AgendaMedecinComponent', () => {
     expect(medecinService.agenda).toHaveBeenCalledTimes(2);
   });
 
+  it('previent que le rendez-vous commence sera honore d office apres 24 h (pas sur un rendez-vous a venir)', () => {
+    medecinService.agenda.and.returnValue(of([COMMENCE]));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.note-cloture').length).toBe(1);
+    expect(texte()).toContain('24 h après son début');
+
+    medecinService.agenda.and.returnValue(of([CONFIRME]));
+    fixture = TestBed.createComponent(AgendaMedecinComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.note-cloture').length).toBe(0);
+  });
+
   it('pas de bouton « Annuler » sur un rendez-vous passe (le serveur le refuse)', () => {
     medecinService.agenda.and.returnValue(of([COMMENCE]));
     fixture.detectChanges();

@@ -86,6 +86,9 @@ import { PatientsService, RepertoirePatients, nomPatient, telephonePatient } fro
               <button type="button" class="bouton-secondaire" (click)="absentAConfirmer.set(null)" [disabled]="enCours() !== null">{{ l.t('Non', 'لا') }}</button>
             </div>
 
+            <p *ngIf="peutHonorer(r) && aConfirmer() !== r.id && absentAConfirmer() !== r.id" class="note-cloture" style="margin:0 0 8px;font-size:13px;color:var(--text2)">
+              {{ l.t('Sans action de votre part, ce rendez-vous sera marqué honoré 24 h après son début.', 'إذا لم تتخذوا أي إجراء، سيُسجَّل هذا الموعد تلقائيًا كموعد تم الحضور إليه بعد 24 ساعة من موعد بدايته.') }}
+            </p>
             <div *ngIf="aConfirmer() !== r.id && absentAConfirmer() !== r.id" style="display:flex;gap:8px;flex-wrap:wrap">
               <button *ngIf="peutHonorer(r)" type="button" class="bouton" (click)="honorer(r)" [disabled]="enCours() !== null">
                 {{ estEnCours(r, 'honorer') ? l.t('Enregistrement…', 'جارٍ التسجيل…') : l.t('Marquer honoré', 'تسجيل الحضور') }}
