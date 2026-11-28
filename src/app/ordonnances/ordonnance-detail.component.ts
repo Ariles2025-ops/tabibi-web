@@ -59,8 +59,8 @@ import { instantLisible } from '../partage/dates-lisibles';
           <tbody>
             <tr *ngFor="let l of o.lignes">
               <td style="padding:8px;border-bottom:1px solid var(--border)"><strong>{{ l.medicament }}</strong></td>
-              <td style="padding:8px;border-bottom:1px solid var(--border)">{{ l.posologie }}</td>
-              <td style="padding:8px;border-bottom:1px solid var(--border)">{{ l.duree }}</td>
+              <td style="padding:8px;border-bottom:1px solid var(--border)">{{ l.posologie || '-' }}</td>
+              <td style="padding:8px;border-bottom:1px solid var(--border)">{{ l.duree || '-' }}</td>
             </tr>
           </tbody>
         </table>

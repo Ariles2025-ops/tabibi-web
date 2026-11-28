@@ -65,6 +65,12 @@ describe('OrdonnanceDetailComponent', () => {
     expect(el.querySelectorAll('tbody tr').length).toBe(1);
   });
 
+  it('affiche « - » quand la posologie ou la durée manque, comme l\'appli', async () => {
+    const el = await afficher([{ medicament: 'Doliprane', posologie: '', duree: null } as any]);
+    const cellules = Array.from(el.querySelectorAll('tbody tr td')).map((c) => c.textContent?.trim());
+    expect(cellules).toEqual(['Doliprane', '-', '-']);
+  });
+
   it('propose « Copier le code », copie le code et confirme « Code copié »', async () => {
     const ecrire = jasmine.createSpy('writeText').and.resolveTo();
     spyOnProperty(navigator, 'clipboard', 'get').and.returnValue({ writeText: ecrire } as unknown as Clipboard);
