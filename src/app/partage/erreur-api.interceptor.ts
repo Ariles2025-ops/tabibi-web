@@ -69,7 +69,7 @@ export function messageConflit(e: HttpErrorResponse, langue: LangueService): str
   // Refus propres au cabinet (avant « pris » / « réservé », qui les captaient a tort) : suppression d'un creneau reserve,
   // ouverture d'un creneau deja existant, rendez-vous pris par telephone (patient sans compte).
   if (m.includes("annulez d'abord") || m.includes('annulez d’abord')) return 'هذا الموعد محجوز: ألغِ الحجز أولًا.';
-  if (m.includes('existe déjà') || m.includes('existe deja')) return 'يوجد موعد في هذا الوقت بالفعل.';
+  if (m.includes('créneau existe déjà') || m.includes('creneau existe deja')) return 'يوجد موعد في هذا الوقت بالفعل.';
   if (m.includes('par téléphone') || m.includes('par telephone')) return 'هذا الموعد حُجز عبر الهاتف: ليس للمريض حساب.';
   if (m.includes('pris') || m.includes('réservé')) return 'هذا الموعد حُجز للتوّ.';
   if (m.includes('créneau') || m.includes('creneau')) return 'هذا الموعد لم يعد متاحًا.';

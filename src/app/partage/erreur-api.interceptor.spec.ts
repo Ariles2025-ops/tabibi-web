@@ -79,6 +79,9 @@ describe('erreurApiInterceptor', () => {
       expect(e409('/api/k', 'Ce créneau est réservé : annulez d\'abord le rendez-vous.')).toBe('هذا الموعد محجوز: ألغِ الحجز أولًا.');
       expect(e409('/api/l', 'Un créneau existe déjà à cette heure-là.')).toBe('يوجد موعد في هذا الوقت بالفعل.');
       expect(e409('/api/m', 'Un créneau existe déjà sur cet horaire.')).toBe('يوجد موعد في هذا الوقت بالفعل.');
+      // Autres 409 « existe déjà » : message générique, pas celui du créneau.
+      expect(e409('/api/o', 'Un compte existe déjà avec cette adresse e-mail.')).toBe('تعذّر الإجراء: تغيّر الوضع في الأثناء');
+      expect(e409('/api/p', 'Une téléconsultation existe déjà pour ce rendez-vous.')).toBe('تعذّر الإجراء: تغيّر الوضع في الأثناء');
       expect(e409('/api/n', 'Ce rendez-vous a été pris par téléphone : le patient n\'a pas de compte.')).toBe('هذا الموعد حُجز عبر الهاتف: ليس للمريض حساب.');
     });
 
