@@ -24,7 +24,13 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     <main class="pp" [attr.dir]="ar ? 'rtl' : null" [attr.lang]="ar ? 'ar' : 'fr'">
       <p *ngIf="charge()" class="pp-muet">{{ ar ? 'جارٍ التحميل…' : 'Chargement…' }}</p>
 
-      <ng-container *ngIf="!charge() && !medecin()">
+      <ng-container *ngIf="!charge() && !medecin() && erreurTemporaire()">
+        <h1>{{ ar ? 'تعذّر تحميل الصفحة' : 'Fiche momentanément indisponible' }}</h1>
+        <p class="pp-muet">{{ ar ? 'تعذّر تحميل صفحة الطبيب. أعد المحاولة بعد لحظات.' : "La fiche n'a pas pu être chargée. Réessayez dans un instant." }}
+          <button type="button" class="pp-reessayer" (click)="reessayer()">{{ ar ? 'إعادة المحاولة' : 'Réessayer' }}</button></p>
+      </ng-container>
+
+      <ng-container *ngIf="!charge() && !medecin() && !erreurTemporaire()">
         <h1>{{ ar ? 'الطبيب غير موجود' : 'Praticien introuvable' }}</h1>
         <p class="pp-muet">{{ ar ? 'هذه الصفحة لم تعد موجودة.' : "Cette fiche n'existe plus." }}
           <a [routerLink]="p + '/specialites'">{{ ar ? 'ابحث عن طبيب' : 'Trouver un médecin' }}</a></p>
@@ -147,6 +153,9 @@ export class PraticienPublicComponent implements OnInit {
   reservable = signal(false);
   confreres = signal<Medecin[]>([]);
   charge = signal(true);
+  /** Panne passagere (reseau, 5xx) : la fiche existe peut-etre, on propose de reessayer au lieu de la dire disparue. */
+  erreurTemporaire = signal(false);
+  private idCourant = '';
   specialiteConnue = false;
   /** Fiche d'une pharmacie : ni consultation ni cabinet (pas de ligne « Paiement »). */
   pharmacie = false;
@@ -180,7 +189,11 @@ export class PraticienPublicComponent implements OnInit {
     return this.ar ? 'الطبيب غير موجود | نداويك' : 'Praticien introuvable | Ndawik';
   }
 
+  reessayer() { this.charger(this.idCourant); }
+
   private charger(id: string) {
+    this.idCourant = id;
+    this.erreurTemporaire.set(false);
     this.medecin.set(null);
     this.confreres.set([]);
     this.reservable.set(false);
@@ -224,9 +237,14 @@ export class PraticienPublicComponent implements OnInit {
       error: (e: { status?: number }) => {
         this.charge.set(false);
         // Fiche inexistante : vraie 404 au rendu serveur (une API indisponible ne doit pas desindexer la page).
-        if (e?.status === 404) this.statut.introuvable();
-        this.title.setTitle(this.titreIntrouvable());
-        this.meta.updateTag({ name: 'robots', content: 'noindex' });
+        if (e?.status === 404) {
+          this.statut.introuvable();
+          this.title.setTitle(this.titreIntrouvable());
+          this.meta.updateTag({ name: 'robots', content: 'noindex' });
+        } else {
+          this.erreurTemporaire.set(true);
+          this.title.setTitle(this.ar ? 'الصفحة غير متاحة مؤقتًا | نداويك' : 'Fiche momentanément indisponible | Ndawik');
+        }
       },
     });
   }

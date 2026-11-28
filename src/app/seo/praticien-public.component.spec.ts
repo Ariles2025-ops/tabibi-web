@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AnnuaireService, Medecin } from '../annuaire/annuaire.service';
 import { PraticienPublicComponent } from './praticien-public.component';
 import { REPONSE_HTTP } from './statut-http';
@@ -95,6 +95,59 @@ describe('PraticienPublicComponent (JSON-LD)', () => {
       TestBed.createComponent(PraticienPublicComponent).detectChanges();
       expect(document.title).toBe(attendu);
     }
+  });
+
+  it('panne de l API (500, réseau) : message de réessai, pas « n existe plus », pas de noindex ni de 404 ; Réessayer recharge', () => {
+    for (const [langue, attendu, absent] of [['fr', 'Réessayez', "n'existe plus"], ['ar', 'أعد المحاولة', 'لم تعد موجودة']] as const) {
+      TestBed.resetTestingModule();
+      document.head.querySelectorAll('meta[name="robots"]').forEach((e) => e.remove());
+      const id = '3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48';
+      const status = jasmine.createSpy('status');
+      const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'rechercher']);
+      annuaire.medecin.and.returnValues(throwError(() => ({ status: 503 })), of({ ...dentiste, id }));
+      annuaire.rechercher.and.returnValue(of([]));
+      TestBed.configureTestingModule({
+        imports: [PraticienPublicComponent],
+        providers: [
+          provideRouter([]),
+          { provide: ActivatedRoute, useValue: { snapshot: { data: { langue } }, paramMap: of(convertToParamMap({ id })) } },
+          { provide: AnnuaireService, useValue: annuaire },
+          { provide: REPONSE_HTTP, useValue: { status } },
+        ],
+      });
+      const fixture = TestBed.createComponent(PraticienPublicComponent);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.textContent).toContain(attendu);
+      expect(el.textContent).not.toContain(absent);
+      expect(status).not.toHaveBeenCalled();
+      expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content') ?? '').not.toContain('noindex');
+      (el.querySelector('.pp-reessayer') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(el.querySelector('.pp-reessayer')).toBeNull();
+      expect(el.textContent).toContain('Amine Benali');
+    }
+  });
+
+  it('fiche absente (404) : message « n existe plus », noindex et statut 404 conservés', () => {
+    const id = '3f2a1c9e-8b4d-4e6a-9c1f-5d7e2a0b6c48';
+    const status = jasmine.createSpy('status');
+    const annuaire = jasmine.createSpyObj<AnnuaireService>('AnnuaireService', ['medecin', 'rechercher']);
+    annuaire.medecin.and.returnValue(throwError(() => ({ status: 404 })));
+    TestBed.configureTestingModule({
+      imports: [PraticienPublicComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { langue: 'fr' } }, paramMap: of(convertToParamMap({ id })) } },
+        { provide: AnnuaireService, useValue: annuaire },
+        { provide: REPONSE_HTTP, useValue: { status } },
+      ],
+    });
+    const fixture = TestBed.createComponent(PraticienPublicComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain("n'existe plus");
+    expect(status).toHaveBeenCalledWith(404);
+    expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex');
   });
 
   const ld = (id: string) => {

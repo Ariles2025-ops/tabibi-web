@@ -51,6 +51,14 @@ describe('OrdonnanceDetailComponent', () => {
     expect(el.querySelector('table')).toBeNull();
   });
 
+  it('le lien « Vérifier une ordonnance » mène à /ar/verifier en arabe et à /verifier en français', async () => {
+    expect((await afficher([])).querySelector('a[href^="/verifier"]')).not.toBeNull();
+    TestBed.resetTestingModule();
+    const el = await afficher([], 'EMISE', true);
+    expect(el.querySelector('a[href^="/ar/verifier"]')).not.toBeNull();
+    expect(el.querySelector('a[href^="/verifier"]')).toBeNull();
+  });
+
   it('confirme « Ordonnance émise. » (FR/AR) juste après l\'émission, et pas quand on ouvre ou recharge la page', async () => {
     expect((await afficher([])).querySelector('.ordonnance-emise')).toBeNull();
     TestBed.resetTestingModule();

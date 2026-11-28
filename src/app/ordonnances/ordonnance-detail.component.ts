@@ -76,11 +76,11 @@ import { instantLisible } from '../partage/dates-lisibles';
           <p *ngIf="codeCopie()" class="code-copie sans-impression" role="status" style="margin:8px 0 0;color:var(--vert)">{{ l.t('Code copié', 'تم نسخ الرمز') }}</p>
           <p *ngIf="aPresenter(o.statut)" class="a-presenter" style="margin:8px 0 0;color:var(--text3);font-size:.9rem">
             {{ l.t('À présenter en pharmacie ; vérifiable sans compte via', 'يُقدَّم في الصيدلية؛ ويمكن التحقق منه دون حساب عبر') }}
-            <a routerLink="/verifier" [queryParams]="{ code: o.codeVerification }" style="color:var(--vert)">{{ l.t('Vérifier une ordonnance', 'التحقق من وصفة') }}</a>.
+            <a [routerLink]="l.ar() ? '/ar/verifier' : '/verifier'" [queryParams]="{ code: o.codeVerification }" style="color:var(--vert)">{{ l.t('Vérifier une ordonnance', 'التحقق من وصفة') }}</a>.
           </p>
           <p *ngIf="!aPresenter(o.statut)" style="margin:8px 0 0;color:var(--text3);font-size:.9rem">
             {{ l.t('Authenticité vérifiable sur Ndawik, page', 'يمكن التحقق من صحتها على نداويك، صفحة') }}
-            <a routerLink="/verifier" [queryParams]="{ code: o.codeVerification }" style="color:var(--vert)">{{ l.t('Vérifier une ordonnance', 'التحقق من وصفة') }}</a>.
+            <a [routerLink]="l.ar() ? '/ar/verifier' : '/verifier'" [queryParams]="{ code: o.codeVerification }" style="color:var(--vert)">{{ l.t('Vérifier une ordonnance', 'التحقق من وصفة') }}</a>.
           </p>
         </section>
       </article>

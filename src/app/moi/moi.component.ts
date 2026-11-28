@@ -107,7 +107,7 @@ export class MoiComponent implements OnInit {
     // L'API (GET /api/conversations) réserve la messagerie aux rôles PATIENT et MEDECIN : pas de lien vers une impasse (403) pour les autres.
     const messagerie = { lien: '/messagerie', libelle: t('Messagerie', 'الرسائل') };
     // Comme « Vérifier une ordonnance » de « Mon compte » dans l'appli, ouvert à tous les rôles.
-    const verifier = { lien: '/verifier', libelle: t('Vérifier une ordonnance', 'التحقق من وصفة طبية') };
+    const verifier = { lien: this.l.ar() ? '/ar/verifier' : '/verifier', libelle: t('Vérifier une ordonnance', 'التحقق من وصفة طبية') };
     // Comme « Téléconsultation » de « Mon compte » dans l'appli : toujours visible, avec « Bientôt » tant que la visio n'est pas ouverte.
     const visio = {
       lien: r.includes('MEDECIN') ? '/medecin/teleconsultations' : '/teleconsultations',
