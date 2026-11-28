@@ -193,6 +193,13 @@ describe('MoiComponent', () => {
     }
   });
 
+  it('« التحقق من وصفة طبية » mène à la page arabe /ar/verifier', async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    await afficher();
+    expect(lien('/ar/verifier')).not.toBeNull();
+    expect(lien('/verifier')).toBeNull();
+  });
+
   it('ne propose pas la messagerie à la secrétaire, à la pharmacie ni à l\'administrateur seuls (l\'API la refuse), mais la garde avec le rôle PATIENT', async () => {
     for (const role of ['SECRETAIRE', 'PHARMACIE', 'ADMIN']) {
       moi.set({ ...PROFIL, roles: [role] });
