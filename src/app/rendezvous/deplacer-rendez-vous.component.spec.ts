@@ -5,7 +5,7 @@ import localeFr from '@angular/common/locales/fr';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { Creneau } from '../annuaire/annuaire.service';
-import { DeplacerRendezVousComponent, MESSAGE_CRENEAU_PRIS, MESSAGE_CRENEAU_PRIS_CABINET } from './deplacer-rendez-vous.component';
+import { DeplacerRendezVousComponent, MESSAGE_CRENEAU_PRIS, MESSAGE_CRENEAU_PRIS_CABINET, MESSAGE_SESSION_EXPIREE } from './deplacer-rendez-vous.component';
 import { RendezVous } from './rendezvous.service';
 
 const RDV: RendezVous = { id: 'r1', patientId: 'p1', medecinId: 'm1', debut: '2099-01-05T09:00:00Z', statut: 'CONFIRME', creneauId: 'c1' };
@@ -42,6 +42,26 @@ describe('DeplacerRendezVousComponent', () => {
     f.componentInstance.confirmer(creneau('c2'));
     expect(f.componentInstance.erreur()).toBe(MESSAGE_CRENEAU_PRIS);
     expect(f.componentInstance.libres()).toEqual([]);
+  });
+
+  it("session perdue (401) : message de l'appli, en francais puis en arabe, et non « le deplacement a echoue »", () => {
+    const f = creer(() => throwError(() => new HttpErrorResponse({ status: 401 })));
+    f.componentInstance.confirmer(creneau('c2'));
+    expect(f.componentInstance.erreur()).toBe(MESSAGE_SESSION_EXPIREE);
+    f.componentRef.setInput('arabe', true);
+    f.componentInstance.confirmer(creneau('c2'));
+    expect(f.componentInstance.erreur()).toBe('انتهت الجلسة: سجّل الدخول من جديد ثم أعد المحاولة');
+  });
+
+  it("401 au chargement des creneaux : meme message de session expiree", () => {
+    registerLocaleData(localeFr);
+    TestBed.configureTestingModule({ imports: [DeplacerRendezVousComponent], providers: [{ provide: LOCALE_ID, useValue: 'fr' }] });
+    const fixture = TestBed.createComponent(DeplacerRendezVousComponent);
+    fixture.componentRef.setInput('rendezVous', RDV);
+    fixture.componentRef.setInput('lister', () => throwError(() => new HttpErrorResponse({ status: 401 })));
+    fixture.componentRef.setInput('deplacer', () => of({}));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.erreur()).toBe(MESSAGE_SESSION_EXPIREE);
   });
 
   it("cote cabinet (medecin, secretaire), le message ne parle pas de « votre » rendez-vous, comme l'appli", () => {

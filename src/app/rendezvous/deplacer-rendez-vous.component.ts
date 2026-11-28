@@ -7,6 +7,9 @@ import { RendezVous } from './rendezvous.service';
 
 /** Message affiche quand le nouveau creneau vient d'etre pris (409). */
 export const MESSAGE_CRENEAU_PRIS = "Ce créneau vient d'être pris. Votre rendez-vous n'a pas changé : choisissez un autre créneau.";
+/** Session perdue (401) pendant le déplacement : même texte que l'appli, au lieu d'un « déplacement a échoué » trompeur. */
+export const MESSAGE_SESSION_EXPIREE = 'Session expirée : reconnectez-vous puis réessayez';
+const MESSAGE_SESSION_EXPIREE_AR = 'انتهت الجلسة: سجّل الدخول من جديد ثم أعد المحاولة';
 const MESSAGE_CRENEAU_PRIS_AR = 'هذا الموعد حُجز للتوّ. لم يتغيّر موعدك: اختر موعدًا آخر.';
 /** Meme message cote cabinet (medecin, secretaire) : ce n'est pas « votre » rendez-vous, comme dans l'appli. */
 export const MESSAGE_CRENEAU_PRIS_CABINET = "Ce créneau vient d'être pris. Le rendez-vous n'a pas changé : choisissez un autre créneau.";
@@ -85,9 +88,11 @@ export class DeplacerRendezVousComponent implements OnInit {
         );
         this.chargement.set(false);
       },
-      error: () => {
+      error: (e: HttpErrorResponse) => {
         this.chargement.set(false);
-        this.erreur.set(this.t('Impossible de charger les créneaux disponibles.', 'تعذّر تحميل المواعيد المتاحة.'));
+        this.erreur.set(e.status === 401
+          ? this.t(MESSAGE_SESSION_EXPIREE, MESSAGE_SESSION_EXPIREE_AR)
+          : this.t('Impossible de charger les créneaux disponibles.', 'تعذّر تحميل المواعيد المتاحة.'));
       },
     });
   }
@@ -111,6 +116,8 @@ export class DeplacerRendezVousComponent implements OnInit {
               : (cabinet ? MESSAGE_CRENEAU_PRIS_CABINET : MESSAGE_CRENEAU_PRIS),
           );
           this.libres.update((l) => l.filter((c) => c.id !== creneau.id));
+        } else if (e.status === 401) {
+          this.erreur.set(this.t(MESSAGE_SESSION_EXPIREE, MESSAGE_SESSION_EXPIREE_AR));
         } else {
           this.erreur.set(e.error?.erreur ?? this.t('Le déplacement a échoué, veuillez réessayer.', 'فشل النقل، يرجى المحاولة مرة أخرى.'));
         }
