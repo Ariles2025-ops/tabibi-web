@@ -427,6 +427,21 @@ describe('EspacePharmacieComponent', () => {
     expect(texte()).not.toContain('Marquer comme délivrée');
   });
 
+  it("une demande sans nom de médicament affiche « Médicament » (jamais vide), comme l'appli", async () => {
+    service.besoinsOuverts.and.returnValue(of([{ ...BESOIN, medicament: '  ' }]));
+    await afficher();
+    await chercher('16');
+    expect(fixture.nativeElement.querySelector('li strong').textContent.trim()).toBe('Médicament');
+  });
+
+  it("en arabe, une demande sans nom de médicament affiche « دواء »", async () => {
+    TestBed.inject(LangueService).ar.set(true);
+    service.besoinsOuverts.and.returnValue(of([{ ...BESOIN, medicament: '' }]));
+    await afficher();
+    await chercher('16');
+    expect(fixture.nativeElement.querySelector('li strong').textContent.trim()).toBe('دواء');
+  });
+
   describe('en arabe (comme l\'appli)', () => {
     beforeEach(() => TestBed.inject(LangueService).ar.set(true));
 

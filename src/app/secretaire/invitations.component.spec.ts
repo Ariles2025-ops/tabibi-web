@@ -98,6 +98,17 @@ describe('InvitationsComponent', () => {
       expect(fixture.nativeElement.textContent).not.toContain('Invalid');
     });
 
+    it("médecin sans fiche : « Médecin » + identifiant abrégé (comme l'appli), en arabe « طبيب »", async () => {
+      for (const arabe of [false, true]) {
+        TestBed.resetTestingModule();
+        const { fixture } = creer(arabe, [{ id: 'i1', medecinId: '1a2b3c4d-5e6f' } as Invitation]);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+        expect(fixture.nativeElement.textContent).toContain(`${arabe ? 'طبيب' : 'Médecin'} 1a2b3c4d`);
+      }
+    });
+
     it('en arabe : refuser affiche la confirmation en arabe', async () => {
       const { fixture } = creer(true);
       fixture.detectChanges();
