@@ -22,7 +22,7 @@ import { Besoin, DawiniService, Reponse, estOuvert, formaterPrix, libelleDisponi
         <a routerLink="/dawini" style="color:var(--vert)">{{ l.t('Retour à mes demandes', 'العودة إلى طلباتي') }}</a>
         <app-selecteur-langue />
       </div>
-      <h1 style="color:var(--vert);margin:0 0 8px">{{ besoin()?.medicament ?? l.t('Ma demande', 'طلبي') }}</h1>
+      <h1 style="color:var(--vert);margin:0 0 8px">{{ besoin()?.medicament?.trim() || l.t('Ma demande', 'طلبي') }}</h1>
 
 
       <ng-container *ngIf="connecte()">

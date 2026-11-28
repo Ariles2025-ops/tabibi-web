@@ -10,6 +10,7 @@ import { LangueService } from '../partage/langue.service';
 import { SelecteurLangueComponent } from '../partage/selecteur-langue.component';
 import { Invitation, SecretaireService } from './secretaire.service';
 import { instantLisible } from '../partage/dates-lisibles';
+import { libelleMedecin } from '../messagerie/messagerie.service';
 
 interface InvitationAffichee extends Invitation {
   medecinNom: string;
@@ -99,8 +100,8 @@ export class InvitationsComponent implements OnInit {
         forkJoin(
           liste.map((i) =>
             this.annuaire.medecin(i.medecinId).pipe(
-              map((m) => ({ ...i, medecinNom: m.nomComplet, medecinDetail: [m.specialiteFr, m.ville || m.wilayaFr].filter(Boolean).join(' · ') })),
-              catchError(() => of({ ...i, medecinNom: this.l.t('Un médecin', 'طبيب'), medecinDetail: '' })),
+              map((m) => ({ ...i, medecinNom: m.nomComplet?.trim() || libelleMedecin(i.medecinId, this.l.ar()), medecinDetail: [m.specialiteFr, m.ville || m.wilayaFr].filter(Boolean).join(' · ') })),
+              catchError(() => of({ ...i, medecinNom: libelleMedecin(i.medecinId, this.l.ar()), medecinDetail: '' })),
             ),
           ),
         ).subscribe((affichees) => {

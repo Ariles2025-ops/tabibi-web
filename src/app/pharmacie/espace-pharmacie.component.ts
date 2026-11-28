@@ -92,7 +92,7 @@ function formulaireVide(): FormulaireReponse {
 
       <ul style="list-style:none;padding:0;margin:0;display:grid;gap:10px">
         <li *ngFor="let b of besoins()" style="background:#fff;box-shadow:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px">
-          <strong>{{ b.medicament }}</strong>
+          <strong>{{ nomMedicament(b) }}</strong>
           <span style="color:var(--text3)">
             · {{ wilaya(b.wilayaCode) }}<ng-container *ngIf="b.commune"> · {{ b.commune }}</ng-container>
             <ng-container *ngIf="dateLisible(b.publieLe); else dateInconnue">
@@ -194,6 +194,8 @@ export class EspacePharmacieComponent implements OnInit {
   /** Nom de la wilaya (referentiel) plutot que son code. */
   wilaya = (code: string | null | undefined): string => libelleWilaya(code, this.l.ar());
   l = inject(LangueService);
+  /** Nom du médicament demandé ; « Médicament » si l'API ne le renvoie pas (jamais vide ni « null »), comme l'appli. */
+  nomMedicament = (b: Pick<Besoin, 'medicament'>): string => b.medicament?.trim() || this.l.t('Médicament', 'دواء');
   dateLisible = (iso: string | null | undefined) => instantLisible(iso) !== null;
   private auth = inject(AuthService);
   private service = inject(DawiniService);
@@ -423,7 +425,7 @@ export class EspacePharmacieComponent implements OnInit {
       next: () => {
         this.enCours.set(null);
         this.repondus.update((ids) => new Set(ids).add(b.id));
-        this.succes.set(this.l.t(`Réponse envoyée pour « ${b.medicament} » : le patient est prévenu.`, `تم إرسال الرد بخصوص «${b.medicament}»: المريض مُبلَّغ.`));
+        this.succes.set(this.l.t(`Réponse envoyée pour « ${this.nomMedicament(b)} » : le patient est prévenu.`, `تم إرسال الرد بخصوص «${this.nomMedicament(b)}»: المريض مُبلَّغ.`));
         this.charger(b.wilayaCode);
       },
       error: (e: HttpErrorResponse) => {
