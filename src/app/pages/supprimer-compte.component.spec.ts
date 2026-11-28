@@ -72,6 +72,12 @@ describe('Suppression de compte : libelles identiques a l\'appli', () => {
     expect(ar).toContain('تُسحب صفحتك العامة');
   });
 
+  it('la page arabe écrit Dawini « داويني » comme partout ailleurs, jamais « دَويني »', () => {
+    const texte = pageSuppression('ar').textContent ?? '';
+    expect(texte).toContain('داويني');
+    expect(texte).not.toContain('دَويني');
+  });
+
   it('la page française propose le lien vers la version arabe', () => {
     const page = pageSuppression();
     expect(page.querySelector('a[href="/ar/supprimer-mon-compte"]')).not.toBeNull();
